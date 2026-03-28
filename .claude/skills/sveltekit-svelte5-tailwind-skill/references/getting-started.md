@@ -16,29 +16,34 @@ Get a working SvelteKit 2, Svelte 5, and Tailwind v4 integration running in unde
 Verify your environment meets these requirements before starting:
 
 **Required versions:**
+
 - Node.js 18.0 or higher
 - npm 9.0+ or pnpm 8.0+
 - Modern terminal (bash, zsh, or PowerShell)
 
 **Check your versions:**
+
 ```bash
 node --version  # Should be v18.0.0 or higher
 npm --version   # Should be 9.0.0 or higher
 ```
 
 ❌ **Wrong: Using outdated Node**
+
 ```bash
 node --version
 # v16.14.0  (Too old - will cause build errors)
 ```
 
 ✅ **Right: Using supported Node version**
+
 ```bash
 node --version
 # v20.10.0  (Perfect for this stack)
 ```
 
 **Install Node 20 LTS if needed:**
+
 ```bash
 # Using nvm (recommended)
 nvm install 20
@@ -52,11 +57,13 @@ nvm use 20
 Use the official SvelteKit scaffolding to initialize your project with Svelte 5 support.
 
 **Create project with recommended settings:**
+
 ```bash
 npm create svelte@latest my-app
 ```
 
 **Interactive prompts - choose these options:**
+
 ```
 ┌  Welcome to SvelteKit!
 │
@@ -80,12 +87,14 @@ npm create svelte@latest my-app
 ```
 
 **Install dependencies:**
+
 ```bash
 cd my-app
 npm install
 ```
 
 ❌ **Wrong: Skipping the Svelte 5 preview option**
+
 ```bash
 # This installs Svelte 4 - incompatible with runes
 ◆  Try the Svelte 5 preview?
@@ -93,6 +102,7 @@ npm install
 ```
 
 ✅ **Right: Explicitly enabling Svelte 5**
+
 ```bash
 # This installs Svelte 5 with runes support
 ◆  Try the Svelte 5 preview?
@@ -100,11 +110,13 @@ npm install
 ```
 
 **Verify Svelte 5 installation:**
+
 ```bash
 cat package.json | grep "svelte"
 ```
 
 **Expected output:**
+
 ```json
 "svelte": "^5.0.0",
 "@sveltejs/kit": "^2.0.0",
@@ -116,44 +128,52 @@ cat package.json | grep "svelte"
 Install Tailwind v4 using the `@next` tag and the new Vite plugin.
 
 **Install Tailwind packages:**
+
 ```bash
 npm install -D tailwindcss@next @tailwindcss/vite@next
 ```
 
 ❌ **Wrong: Installing Tailwind v3**
+
 ```bash
 npm install -D tailwindcss
 # This installs v3.x which uses different config
 ```
 
 ✅ **Right: Installing Tailwind v4**
+
 ```bash
 npm install -D tailwindcss@next @tailwindcss/vite@next
 # The @next tag ensures v4 installation
 ```
 
 **Verify installation:**
+
 ```bash
 npm list tailwindcss
 ```
 
 **Expected output:**
+
 ```
 my-app@0.0.1 /Users/you/my-app
 └── tailwindcss@4.0.0-alpha.x
 ```
 
 **Create Tailwind CSS file:**
+
 ```bash
 touch src/app.css
 ```
 
 **Add Tailwind directives to `src/app.css`:**
+
 ```css
 @import "tailwindcss";
 ```
 
 ❌ **Wrong: Using v3 directives**
+
 ```css
 /* v3 syntax - doesn't work in v4 */
 @tailwind base;
@@ -162,6 +182,7 @@ touch src/app.css
 ```
 
 ✅ **Right: Using v4 import syntax**
+
 ```css
 /* v4 simplified syntax */
 @import "tailwindcss";
@@ -172,55 +193,61 @@ touch src/app.css
 Configure Vite with the correct plugin order - this is critical for preventing build errors.
 
 **Edit `vite.config.js`:**
+
 ```js
-import { sveltekit } from '@sveltejs/kit/vite';
-import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
+import { sveltekit } from "@sveltejs/kit/vite";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [
     tailwindcss(), // MUST be before sveltekit()
-    sveltekit()
-  ]
+    sveltekit(),
+  ],
 });
 ```
 
 ❌ **Wrong: Incorrect plugin order**
+
 ```js
 export default defineConfig({
   plugins: [
     sveltekit(),
-    tailwindcss()  // Too late - CSS won't process correctly
-  ]
+    tailwindcss(), // Too late - CSS won't process correctly
+  ],
 });
 ```
 
 ✅ **Right: Tailwind before SvelteKit**
+
 ```js
 export default defineConfig({
   plugins: [
     tailwindcss(), // Processes CSS first
-    sveltekit()    // Transforms Svelte components second
-  ]
+    sveltekit(), // Transforms Svelte components second
+  ],
 });
 ```
 
 **Create Tailwind config (optional for v4):**
+
 ```bash
 touch tailwind.config.js
 ```
 
 **Basic `tailwind.config.js` (minimal for v4):**
+
 ```js
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./src/**/*.{html,js,svelte,ts}']
+  content: ["./src/**/*.{html,js,svelte,ts}"],
 };
 ```
 
 **Import CSS in root layout:**
 
 Edit `src/routes/+layout.svelte`:
+
 ```svelte
 <script>
   import '../app.css';
@@ -230,6 +257,7 @@ Edit `src/routes/+layout.svelte`:
 ```
 
 ❌ **Wrong: Importing in individual pages**
+
 ```svelte
 <!-- +page.svelte -->
 <script>
@@ -238,6 +266,7 @@ Edit `src/routes/+layout.svelte`:
 ```
 
 ✅ **Right: Import once in root layout**
+
 ```svelte
 <!-- +layout.svelte -->
 <script>
@@ -250,11 +279,13 @@ Edit `src/routes/+layout.svelte`:
 Test that all three tools work together correctly.
 
 **Start dev server:**
+
 ```bash
 npm run dev
 ```
 
 **Expected output:**
+
 ```
   VITE v5.x.x  ready in xxx ms
 
@@ -266,6 +297,7 @@ npm run dev
 **Create test page with Tailwind styles:**
 
 Edit `src/routes/+page.svelte`:
+
 ```svelte
 <script>
   let count = $state(0);
@@ -294,34 +326,40 @@ Edit `src/routes/+page.svelte`:
 ```
 
 **Open browser:**
+
 ```
 http://localhost:5173
 ```
 
 **Verify these work:**
+
 - [ ] Tailwind styles render (gradient background, rounded corners)
 - [ ] Svelte 5 runes work (`$state()` updates on button click)
 - [ ] Hot Module Reload updates without page refresh
 - [ ] No console errors in browser DevTools
 
 **Test production build:**
+
 ```bash
 npm run build
 ```
 
 **Expected successful output:**
+
 ```
 vite v5.x.x building for production...
 ✓ built in 2.34s
 ```
 
 ❌ **Wrong: Build fails with CSS errors**
+
 ```
 Error: Could not resolve @tailwindcss/vite
 Failed to build
 ```
 
 ✅ **Right: Clean build with no errors**
+
 ```
 ✓ built in 2.34s
 .svelte-kit/output/...
@@ -334,6 +372,7 @@ Failed to build
 **Cause:** Tailwind v4 package not installed or wrong version.
 
 **Fix:**
+
 ```bash
 npm install -D tailwindcss@next @tailwindcss/vite@next
 ```
@@ -343,6 +382,7 @@ npm install -D tailwindcss@next @tailwindcss/vite@next
 **Cause:** Svelte 4 installed instead of Svelte 5.
 
 **Fix:**
+
 ```bash
 npm install svelte@^5.0.0 @sveltejs/kit@^2.0.0
 ```
@@ -352,12 +392,13 @@ npm install svelte@^5.0.0 @sveltejs/kit@^2.0.0
 **Cause:** Plugin order wrong in `vite.config.js`.
 
 **Fix - check plugin order:**
+
 ```js
 export default defineConfig({
   plugins: [
     tailwindcss(), // MUST be first
-    sveltekit()
-  ]
+    sveltekit(),
+  ],
 });
 ```
 
@@ -366,6 +407,7 @@ export default defineConfig({
 **Cause:** CSS not imported in root layout.
 
 **Fix - verify `src/routes/+layout.svelte`:**
+
 ```svelte
 <script>
   import '../app.css'; // Must be present
@@ -379,14 +421,15 @@ export default defineConfig({
 **Cause:** File watching conflicts between Tailwind and Vite.
 
 **Fix - add to `vite.config.js`:**
+
 ```js
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
   server: {
     watch: {
-      ignored: ['**/node_modules/**', '**/.git/**']
-    }
-  }
+      ignored: ["**/node_modules/**", "**/.git/**"],
+    },
+  },
 });
 ```
 
@@ -395,6 +438,7 @@ export default defineConfig({
 **Cause:** TypeScript config not extending SvelteKit generated config.
 
 **Fix - verify `tsconfig.json`:**
+
 ```json
 {
   "extends": "./.svelte-kit/tsconfig.json",
@@ -415,6 +459,7 @@ Now that your integration is working:
 5. **Deploy your app** - See `deployment-guide.md` for platform-specific configuration
 
 **Quick reference checklist:**
+
 - ✅ Node 18+ installed
 - ✅ SvelteKit project created with Svelte 5 enabled
 - ✅ Tailwind v4 installed with `@next` tag

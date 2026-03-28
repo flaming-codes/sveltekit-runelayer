@@ -18,30 +18,34 @@ Tailwind CSS v4 brings a simplified configuration approach and better performanc
 Install and configure Tailwind v4 with the new Vite plugin architecture.
 
 **Installation:**
+
 ```bash
 npm install -D tailwindcss@next @tailwindcss/vite@next
 ```
 
 **Create `src/app.css`:**
+
 ```css
 @import "tailwindcss";
 ```
 
 **Configure `vite.config.js`:**
+
 ```js
-import { sveltekit } from '@sveltejs/kit/vite';
-import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
+import { sveltekit } from "@sveltejs/kit/vite";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [
     tailwindcss(), // Must be before sveltekit()
-    sveltekit()
-  ]
+    sveltekit(),
+  ],
 });
 ```
 
 **Import CSS in `src/routes/+layout.svelte`:**
+
 ```svelte
 <script>
   import '../app.css';
@@ -51,6 +55,7 @@ export default defineConfig({
 ```
 
 ❌ **Wrong: Using v3 syntax**
+
 ```css
 /* app.css */
 @tailwind base;
@@ -59,16 +64,18 @@ export default defineConfig({
 ```
 
 ✅ **Right: Using v4 import**
+
 ```css
 /* app.css */
 @import "tailwindcss";
 ```
 
 **Optional `tailwind.config.js` (v4 works without it):**
+
 ```js
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./src/**/*.{html,js,svelte,ts}']
+  content: ["./src/**/*.{html,js,svelte,ts}"],
 };
 ```
 
@@ -77,6 +84,7 @@ export default {
 Choose the right CSS import location for your needs.
 
 **Strategy 1: Root layout import (recommended)**
+
 ```svelte
 <!-- src/routes/+layout.svelte -->
 <script>
@@ -87,31 +95,36 @@ Choose the right CSS import location for your needs.
 ```
 
 **Benefits:**
+
 - Explicit and predictable
 - Works correctly with SSR
 - HMR-friendly
 - CSS available to all routes
 
 **Strategy 2: Vite config only (no import needed)**
+
 ```js
 // vite.config.js
 export default defineConfig({
   plugins: [
     tailwindcss(), // Auto-injects CSS
-    sveltekit()
-  ]
+    sveltekit(),
+  ],
 });
 ```
 
 **Benefits:**
+
 - Less boilerplate
 - Automatic injection
 
 **Drawbacks:**
+
 - Less explicit
 - Harder to debug CSS loading issues
 
 ❌ **Wrong: Importing in every page**
+
 ```svelte
 <!-- +page.svelte -->
 <script>
@@ -120,6 +133,7 @@ export default defineConfig({
 ```
 
 ✅ **Right: Import once in root layout**
+
 ```svelte
 <!-- +layout.svelte -->
 <script>
@@ -128,6 +142,7 @@ export default defineConfig({
 ```
 
 **Custom theme CSS alongside Tailwind:**
+
 ```css
 /* src/app.css */
 @import "tailwindcss";
@@ -139,7 +154,7 @@ export default defineConfig({
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: "Inter", system-ui, sans-serif;
 }
 ```
 
@@ -148,19 +163,21 @@ body {
 Configure Tailwind to detect classes in Svelte's template syntax.
 
 **Basic content configuration:**
+
 ```js
 // tailwind.config.js
 export default {
   content: [
-    './src/**/*.{html,js,svelte,ts}',
-    './src/**/*.{svelte,js,ts}' // Redundant but explicit
-  ]
+    "./src/**/*.{html,js,svelte,ts}",
+    "./src/**/*.{svelte,js,ts}", // Redundant but explicit
+  ],
 };
 ```
 
 **Problem: Dynamic classes in conditionals**
 
 ❌ **Wrong: Template literals hide classes from purging**
+
 ```svelte
 <script>
   let type = $state('primary');
@@ -172,6 +189,7 @@ export default {
 ```
 
 ✅ **Right: Use class: directive with full class names**
+
 ```svelte
 <script>
   let type = $state('primary');
@@ -186,36 +204,39 @@ export default {
 ```
 
 **Safelisting dynamic classes:**
+
 ```js
 // tailwind.config.js
 export default {
-  content: ['./src/**/*.{html,js,svelte,ts}'],
+  content: ["./src/**/*.{html,js,svelte,ts}"],
   safelist: [
-    'bg-red-500',
-    'bg-green-500',
-    'bg-blue-500',
+    "bg-red-500",
+    "bg-green-500",
+    "bg-blue-500",
     {
       pattern: /bg-(red|green|blue)-(400|500|600)/,
-      variants: ['hover', 'focus']
-    }
-  ]
+      variants: ["hover", "focus"],
+    },
+  ],
 };
 ```
 
 **Svelte-specific content patterns:**
+
 ```js
 export default {
   content: [
-    './src/**/*.{html,js,svelte,ts}',
-    './src/routes/**/*.{svelte,js,ts}',  // Routes
-    './src/lib/**/*.{svelte,js,ts}'      // Components
-  ]
+    "./src/**/*.{html,js,svelte,ts}",
+    "./src/routes/**/*.{svelte,js,ts}", // Routes
+    "./src/lib/**/*.{svelte,js,ts}", // Components
+  ],
 };
 ```
 
 **Content detection for Svelte control blocks:**
 
 Tailwind v4 correctly detects classes in:
+
 - `{#if}` blocks
 - `{#each}` blocks
 - `{#await}` blocks
@@ -239,6 +260,7 @@ Tailwind v4 correctly detects classes in:
 Style reusable components with Tailwind utilities.
 
 **Base component pattern:**
+
 ```svelte
 <!-- Button.svelte -->
 <script>
@@ -277,6 +299,7 @@ Style reusable components with Tailwind utilities.
 ```
 
 **Using the component:**
+
 ```svelte
 <script>
   import Button from '$components/ui/Button.svelte';
@@ -288,6 +311,7 @@ Style reusable components with Tailwind utilities.
 ```
 
 ❌ **Wrong: Using @apply for component styles**
+
 ```svelte
 <style>
   .btn {
@@ -299,6 +323,7 @@ Style reusable components with Tailwind utilities.
 ```
 
 ✅ **Right: Using utility classes directly**
+
 ```svelte
 <button class="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600">
   Button
@@ -306,6 +331,7 @@ Style reusable components with Tailwind utilities.
 ```
 
 **Prop-based styling with runes:**
+
 ```svelte
 <!-- Card.svelte -->
 <script>
@@ -330,10 +356,11 @@ Style reusable components with Tailwind utilities.
 ```
 
 **Class composition helper:**
+
 ```ts
 // src/lib/utils/classes.ts
 export function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(' ');
+  return classes.filter(Boolean).join(" ");
 }
 ```
 
@@ -359,6 +386,7 @@ export function cn(...classes: (string | boolean | undefined)[]) {
 Use Tailwind's arbitrary value syntax in Svelte templates.
 
 **Basic arbitrary values:**
+
 ```svelte
 <!-- Colors -->
 <div class="bg-[#1da1f2]">Twitter blue</div>
@@ -372,6 +400,7 @@ Use Tailwind's arbitrary value syntax in Svelte templates.
 ```
 
 **Arbitrary values with CSS variables:**
+
 ```css
 /* app.css */
 @import "tailwindcss";
@@ -389,6 +418,7 @@ Use Tailwind's arbitrary value syntax in Svelte templates.
 ```
 
 **Dynamic arbitrary values with runes:**
+
 ```svelte
 <script>
   let width = $state(250);
@@ -403,11 +433,13 @@ Use Tailwind's arbitrary value syntax in Svelte templates.
 ```
 
 ❌ **Wrong: Template literal in arbitrary value**
+
 ```svelte
 <div class="w-[{width}px]">Won't work</div>
 ```
 
 ✅ **Right: Use inline styles for truly dynamic values**
+
 ```svelte
 <div style="width: {width}px" class="bg-blue-500">Works</div>
 ```
@@ -417,15 +449,17 @@ Use Tailwind's arbitrary value syntax in Svelte templates.
 Implement dark mode with Tailwind's class strategy.
 
 **Configure dark mode:**
+
 ```js
 // tailwind.config.js
 export default {
-  darkMode: 'class', // or 'media' for system preference
-  content: ['./src/**/*.{html,js,svelte,ts}']
+  darkMode: "class", // or 'media' for system preference
+  content: ["./src/**/*.{html,js,svelte,ts}"],
 };
 ```
 
 **Dark mode toggle component:**
+
 ```svelte
 <!-- DarkModeToggle.svelte -->
 <script>
@@ -466,6 +500,7 @@ export default {
 ```
 
 **Using dark mode classes:**
+
 ```svelte
 <div class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
   <h1 class="text-3xl font-bold dark:text-blue-400">
@@ -478,6 +513,7 @@ export default {
 ```
 
 **Dark mode with CSS variables:**
+
 ```css
 /* app.css */
 @import "tailwindcss";
@@ -504,6 +540,7 @@ export default {
 Extend Tailwind with custom utilities and plugins.
 
 **Custom utilities in CSS:**
+
 ```css
 /* app.css */
 @import "tailwindcss";
@@ -525,6 +562,7 @@ Extend Tailwind with custom utilities and plugins.
 ```
 
 **Using custom utilities:**
+
 ```svelte
 <p class="text-balance">
   This text will balance across lines
@@ -536,52 +574,54 @@ Extend Tailwind with custom utilities and plugins.
 ```
 
 **Theme customization:**
+
 ```js
 // tailwind.config.js
 export default {
-  content: ['./src/**/*.{html,js,svelte,ts}'],
+  content: ["./src/**/*.{html,js,svelte,ts}"],
   theme: {
     extend: {
       colors: {
         brand: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          500: '#3b82f6',
-          900: '#1e3a8a'
-        }
+          50: "#eff6ff",
+          100: "#dbeafe",
+          500: "#3b82f6",
+          900: "#1e3a8a",
+        },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['Fira Code', 'monospace']
+        sans: ["Inter", "system-ui", "sans-serif"],
+        mono: ["Fira Code", "monospace"],
       },
       spacing: {
-        18: '4.5rem',
-        88: '22rem'
-      }
-    }
-  }
+        18: "4.5rem",
+        88: "22rem",
+      },
+    },
+  },
 };
 ```
 
 **Custom plugin:**
+
 ```js
 // tailwind.config.js
-import plugin from 'tailwindcss/plugin';
+import plugin from "tailwindcss/plugin";
 
 export default {
-  content: ['./src/**/*.{html,js,svelte,ts}'],
+  content: ["./src/**/*.{html,js,svelte,ts}"],
   plugins: [
-    plugin(function({ addUtilities }) {
+    plugin(function ({ addUtilities }) {
       addUtilities({
-        '.card': {
-          padding: '1rem',
-          borderRadius: '0.5rem',
-          backgroundColor: 'white',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-        }
+        ".card": {
+          padding: "1rem",
+          borderRadius: "0.5rem",
+          backgroundColor: "white",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        },
       });
-    })
-  ]
+    }),
+  ],
 };
 ```
 
@@ -590,6 +630,7 @@ export default {
 Use Tailwind's responsive modifiers effectively.
 
 **Mobile-first approach:**
+
 ```svelte
 <div class="
   p-4 md:p-6 lg:p-8
@@ -601,6 +642,7 @@ Use Tailwind's responsive modifiers effectively.
 ```
 
 **Responsive layout patterns:**
+
 ```svelte
 <!-- Stack on mobile, sidebar on desktop -->
 <div class="flex flex-col md:flex-row">
@@ -614,6 +656,7 @@ Use Tailwind's responsive modifiers effectively.
 ```
 
 **Container queries (Tailwind v4):**
+
 ```svelte
 <div class="@container">
   <div class="@md:grid @md:grid-cols-2 @lg:grid-cols-3">
@@ -623,6 +666,7 @@ Use Tailwind's responsive modifiers effectively.
 ```
 
 **Responsive utilities with runes:**
+
 ```svelte
 <script>
   import { browser } from '$app/environment';
@@ -653,6 +697,7 @@ Use Tailwind's responsive modifiers effectively.
 Use built-in animations and create custom transitions.
 
 **Built-in animations:**
+
 ```svelte
 <div class="animate-spin">⏳</div>
 <div class="animate-bounce">⬇️</div>
@@ -660,6 +705,7 @@ Use built-in animations and create custom transitions.
 ```
 
 **Custom animations:**
+
 ```js
 // tailwind.config.js
 export default {
@@ -667,20 +713,20 @@ export default {
     extend: {
       keyframes: {
         slideIn: {
-          '0%': { transform: 'translateX(-100%)' },
-          '100%': { transform: 'translateX(0)' }
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(0)" },
         },
         fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' }
-        }
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
       },
       animation: {
-        'slide-in': 'slideIn 0.3s ease-out',
-        'fade-in': 'fadeIn 0.3s ease-out'
-      }
-    }
-  }
+        "slide-in": "slideIn 0.3s ease-out",
+        "fade-in": "fadeIn 0.3s ease-out",
+      },
+    },
+  },
 };
 ```
 
@@ -691,6 +737,7 @@ export default {
 ```
 
 **Transition utilities:**
+
 ```svelte
 <button class="
   transition-all duration-200
@@ -703,6 +750,7 @@ export default {
 ```
 
 **Svelte transitions with Tailwind classes:**
+
 ```svelte
 <script>
   import { fade, slide } from 'svelte/transition';
@@ -725,13 +773,15 @@ export default {
 **Issue 1: Classes not applying**
 
 ❌ **Cause: Plugin order wrong**
+
 ```js
-plugins: [sveltekit(), tailwindcss()] // Wrong order
+plugins: [sveltekit(), tailwindcss()]; // Wrong order
 ```
 
 ✅ **Fix:**
+
 ```js
-plugins: [tailwindcss(), sveltekit()] // Correct order
+plugins: [tailwindcss(), sveltekit()]; // Correct order
 ```
 
 **Issue 2: FOUC (Flash of Unstyled Content)**
@@ -739,6 +789,7 @@ plugins: [tailwindcss(), sveltekit()] // Correct order
 ❌ **Cause: CSS not loaded before render**
 
 ✅ **Fix: Import in root layout**
+
 ```svelte
 <!-- +layout.svelte -->
 <script>
@@ -749,19 +800,22 @@ plugins: [tailwindcss(), sveltekit()] // Correct order
 **Issue 3: Purged classes**
 
 ❌ **Cause: Dynamic class names**
+
 ```svelte
 <div class="bg-{color}-500">Won't work</div>
 ```
 
 ✅ **Fix: Use safelist or class: directive**
+
 ```js
 // tailwind.config.js
-safelist: ['bg-red-500', 'bg-blue-500']
+safelist: ["bg-red-500", "bg-blue-500"];
 ```
 
 **Issue 4: SSR hydration mismatch**
 
 ❌ **Cause: Client-only dark mode**
+
 ```svelte
 <script>
   let dark = localStorage.getItem('dark');
@@ -769,6 +823,7 @@ safelist: ['bg-red-500', 'bg-blue-500']
 ```
 
 ✅ **Fix: Match server and client**
+
 ```svelte
 <script>
   import { browser } from '$app/environment';
@@ -783,6 +838,7 @@ safelist: ['bg-red-500', 'bg-blue-500']
 ```
 
 **Debugging checklist:**
+
 - [ ] Vite plugin order correct (Tailwind before SvelteKit)
 - [ ] CSS imported in root layout
 - [ ] Content paths include all files
@@ -793,6 +849,7 @@ safelist: ['bg-red-500', 'bg-blue-500']
 - [ ] Styles work in production build
 
 **Next steps:**
+
 - Learn component patterns in `styling-patterns.md`
 - Migrate from v3 in `tailwind-v4-migration.md`
 - Optimize production in `performance-optimization.md`

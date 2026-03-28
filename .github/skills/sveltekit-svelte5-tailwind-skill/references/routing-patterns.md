@@ -18,6 +18,7 @@ SvelteKit's file-based routing combined with Svelte 5's new snippet system provi
 SvelteKit uses filesystem-based routing where files create routes automatically.
 
 **Basic route structure:**
+
 ```
 src/routes/
 ├── +page.svelte          → /
@@ -33,6 +34,7 @@ src/routes/
 ```
 
 **Route files:**
+
 - `+page.svelte` - Page component
 - `+page.ts` - Universal load function
 - `+page.server.ts` - Server-only load function
@@ -41,6 +43,7 @@ src/routes/
 - `+server.ts` - API endpoint
 
 ❌ **Wrong: React-style routing**
+
 ```svelte
 <!-- ❌ No route configuration files -->
 <Router>
@@ -49,11 +52,13 @@ src/routes/
 ```
 
 ✅ **Right: File-based routing**
+
 ```
 src/routes/+page.svelte → Creates / route automatically
 ```
 
 **Example page:**
+
 ```svelte
 <!-- src/routes/products/+page.svelte -->
 <script>
@@ -83,6 +88,7 @@ export async function load() {
 Use Svelte 5 snippets for flexible layout composition.
 
 **Basic layout:**
+
 ```svelte
 <!-- src/routes/+layout.svelte -->
 <script>
@@ -111,6 +117,7 @@ Use Svelte 5 snippets for flexible layout composition.
 ```
 
 **Nested layouts:**
+
 ```
 src/routes/
 ├── +layout.svelte          # Root layout (nav, footer)
@@ -143,6 +150,7 @@ src/routes/
 ```
 
 **Named snippets for flexible layouts:**
+
 ```svelte
 <!-- +layout.svelte -->
 <script>
@@ -188,6 +196,7 @@ src/routes/
 ```
 
 ❌ **Wrong: Svelte 4 slot syntax**
+
 ```svelte
 <!-- ❌ Old syntax doesn't work in Svelte 5 -->
 <slot name="header" />
@@ -195,6 +204,7 @@ src/routes/
 ```
 
 ✅ **Right: Svelte 5 snippet syntax**
+
 ```svelte
 {#if header}
   {@render header()}
@@ -207,17 +217,18 @@ src/routes/
 Create dynamic routes with route parameters.
 
 **Single parameter:**
+
 ```
 src/routes/blog/[slug]/+page.svelte → /blog/hello-world
 ```
 
 ```ts
 // +page.server.ts
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params }) => {
   const post = await db.post.findUnique({
-    where: { slug: params.slug }
+    where: { slug: params.slug },
   });
 
   return { post };
@@ -237,6 +248,7 @@ export const load: PageServerLoad = async ({ params }) => {
 ```
 
 **Multiple parameters:**
+
 ```
 src/routes/[category]/[product]/+page.svelte
 → /electronics/laptop-15
@@ -248,12 +260,13 @@ export const load: PageServerLoad = async ({ params }) => {
 
   return {
     category: await db.category.findUnique({ where: { slug: category } }),
-    product: await db.product.findUnique({ where: { slug: product } })
+    product: await db.product.findUnique({ where: { slug: product } }),
   };
 };
 ```
 
 **Optional parameters:**
+
 ```
 src/routes/blog/[[page]]/+page.svelte
 → /blog (page is undefined)
@@ -265,7 +278,7 @@ export const load: PageServerLoad = async ({ params }) => {
   const page = Number(params.page) || 1;
   const posts = await db.post.findMany({
     skip: (page - 1) * 10,
-    take: 10
+    take: 10,
   });
 
   return { posts, page };
@@ -273,6 +286,7 @@ export const load: PageServerLoad = async ({ params }) => {
 ```
 
 **Rest parameters:**
+
 ```
 src/routes/docs/[...path]/+page.svelte
 → /docs/guide/getting-started (path is "guide/getting-started")
@@ -281,7 +295,7 @@ src/routes/docs/[...path]/+page.svelte
 
 ```ts
 export const load: PageServerLoad = async ({ params }) => {
-  const segments = params.path.split('/');
+  const segments = params.path.split("/");
   const doc = await findDoc(segments);
 
   return { doc };
@@ -293,6 +307,7 @@ export const load: PageServerLoad = async ({ params }) => {
 Handle loading states reactively with Svelte 5 runes.
 
 **Navigation loading indicator:**
+
 ```svelte
 <!-- +layout.svelte -->
 <script>
@@ -309,6 +324,7 @@ Handle loading states reactively with Svelte 5 runes.
 ```
 
 **Page-level loading:**
+
 ```svelte
 <!-- +page.svelte -->
 <script>
@@ -334,6 +350,7 @@ Handle loading states reactively with Svelte 5 runes.
 ```
 
 **Streaming data with loading states:**
+
 ```ts
 // +page.server.ts
 export async function load() {
@@ -343,7 +360,7 @@ export async function load() {
 
     // Streamed data
     posts: fetchPosts(),
-    comments: fetchComments()
+    comments: fetchComments(),
   };
 }
 ```
@@ -372,6 +389,7 @@ export async function load() {
 ```
 
 **Optimistic navigation:**
+
 ```svelte
 <script>
   import { goto, beforeNavigate } from '$app/navigation';
@@ -407,6 +425,7 @@ export async function load() {
 Handle errors gracefully with error pages.
 
 **Error page:**
+
 ```svelte
 <!-- src/routes/+error.svelte -->
 <script>
@@ -434,24 +453,25 @@ Handle errors gracefully with error pages.
 ```
 
 **Throwing errors in load functions:**
+
 ```ts
 // +page.server.ts
-import { error } from '@sveltejs/kit';
+import { error } from "@sveltejs/kit";
 
 export const load: PageServerLoad = async ({ params }) => {
   const product = await db.product.findUnique({
-    where: { id: params.id }
+    where: { id: params.id },
   });
 
   if (!product) {
     throw error(404, {
-      message: 'Product not found',
-      details: `No product with ID ${params.id}`
+      message: "Product not found",
+      details: `No product with ID ${params.id}`,
     });
   }
 
   if (!product.published) {
-    throw error(403, 'This product is not available');
+    throw error(403, "This product is not available");
   }
 
   return { product };
@@ -459,6 +479,7 @@ export const load: PageServerLoad = async ({ params }) => {
 ```
 
 **Nested error pages:**
+
 ```
 src/routes/
 ├── +error.svelte           # Root error page
@@ -469,6 +490,7 @@ src/routes/
 ```
 
 **Error recovery:**
+
 ```svelte
 <!-- +page.svelte -->
 <script>
@@ -504,6 +526,7 @@ src/routes/
 Organize complex applications with nested layouts.
 
 **Layout hierarchy:**
+
 ```
 (marketing)/
 ├── +layout.svelte      # Marketing layout
@@ -524,11 +547,12 @@ Organize complex applications with nested layouts.
 ```
 
 **Shared data in layouts:**
+
 ```ts
 // (app)/+layout.server.ts
 export async function load({ locals }) {
   return {
-    user: locals.user  // Available to all child routes
+    user: locals.user, // Available to all child routes
   };
 }
 ```
@@ -543,15 +567,17 @@ export async function load({ locals }) {
 ```
 
 **Layout groups (don't affect URL):**
+
 ```
 (marketing)/about/+page.svelte → /about
 (app)/dashboard/+page.svelte   → /dashboard
 ```
 
 **Breaking out of layouts:**
+
 ```ts
 // +page.ts
-export const layout = false;  // Don't use parent layout
+export const layout = false; // Don't use parent layout
 ```
 
 ## Route Organization Strategies
@@ -559,6 +585,7 @@ export const layout = false;  // Don't use parent layout
 Structure large applications maintainably.
 
 **Feature-based organization:**
+
 ```
 src/routes/
 ├── (marketing)/
@@ -578,6 +605,7 @@ src/routes/
 ```
 
 **API organization:**
+
 ```
 src/routes/api/
 ├── users/
@@ -594,6 +622,7 @@ src/routes/api/
 ```
 
 **Shared components:**
+
 ```
 src/lib/
 ├── components/
@@ -609,13 +638,14 @@ src/lib/
 ```
 
 **Route guards:**
+
 ```ts
 // (app)/+layout.server.ts
-import { redirect } from '@sveltejs/kit';
+import { redirect } from "@sveltejs/kit";
 
 export async function load({ locals }) {
   if (!locals.user) {
-    throw redirect(302, '/login');
+    throw redirect(302, "/login");
   }
 
   return { user: locals.user };
@@ -623,6 +653,7 @@ export async function load({ locals }) {
 ```
 
 **Checklist for routing:**
+
 - [ ] Use file-based routing
 - [ ] Layouts for shared UI
 - [ ] Dynamic routes for parameters
@@ -633,6 +664,7 @@ export async function load({ locals }) {
 - [ ] Organize by feature
 
 **Next steps:**
+
 - Load data in `data-loading.md`
 - Handle forms in `forms-and-actions.md`
 - Style routes in `styling-with-tailwind.md`

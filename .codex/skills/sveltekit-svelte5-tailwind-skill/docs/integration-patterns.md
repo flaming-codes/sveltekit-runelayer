@@ -31,44 +31,45 @@ npm install tailwindcss@next @tailwindcss/vite@next
 ### Configuration Files
 
 **vite.config.js:**
+
 ```js
-import { sveltekit } from '@sveltejs/kit/vite';
-import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
+import { sveltekit } from "@sveltejs/kit/vite";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "vite";
 
 export default defineConfig({
-	plugins: [
-		sveltekit(),
-		tailwindcss()
-	]
+  plugins: [sveltekit(), tailwindcss()],
 });
 ```
 
 **svelte.config.js:**
+
 ```js
-import adapter from '@sveltejs/adapter-auto';
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import adapter from "@sveltejs/adapter-auto";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 
 export default {
-	preprocess: vitePreprocess(),
-	kit: {
-		adapter: adapter()
-	}
+  preprocess: vitePreprocess(),
+  kit: {
+    adapter: adapter(),
+  },
 };
 ```
 
 **src/app.css:**
+
 ```css
 @import "tailwindcss";
 
 @theme {
-	--color-primary: #0ea5e9;
-	--color-secondary: #8b5cf6;
-	--font-sans: Inter, system-ui, sans-serif;
+  --color-primary: #0ea5e9;
+  --color-secondary: #8b5cf6;
+  --font-sans: Inter, system-ui, sans-serif;
 }
 ```
 
 **src/routes/+layout.svelte:**
+
 ```svelte
 <script>
 	import '../app.css';
@@ -168,6 +169,7 @@ export default {
 ```
 
 **Usage:**
+
 ```svelte
 <script>
 	import Button from '$lib/components/Button.svelte';
@@ -223,6 +225,7 @@ export default {
 ```
 
 **Usage:**
+
 ```svelte
 <script>
 	import Input from '$lib/components/Input.svelte';
@@ -502,32 +505,32 @@ export default {
 
 ```js
 // routes/contact/+page.server.js
-import { fail } from '@sveltejs/kit';
+import { fail } from "@sveltejs/kit";
 
 export const actions = {
-	default: async ({ request }) => {
-		const data = await request.formData();
-		const email = data.get('email');
-		const name = data.get('name');
-		const message = data.get('message');
+  default: async ({ request }) => {
+    const data = await request.formData();
+    const email = data.get("email");
+    const name = data.get("name");
+    const message = data.get("message");
 
-		// Validation
-		if (!email || !email.includes('@')) {
-			return fail(400, {
-				errors: { email: 'Valid email required' }
-			});
-		}
+    // Validation
+    if (!email || !email.includes("@")) {
+      return fail(400, {
+        errors: { email: "Valid email required" },
+      });
+    }
 
-		// Send email (implementation depends on your email service)
-		try {
-			await sendEmail({ email, name, message });
-			return { success: true };
-		} catch (error) {
-			return fail(500, {
-				errors: { general: 'Failed to send message' }
-			});
-		}
-	}
+    // Send email (implementation depends on your email service)
+    try {
+      await sendEmail({ email, name, message });
+      return { success: true };
+    } catch (error) {
+      return fail(500, {
+        errors: { general: "Failed to send message" },
+      });
+    }
+  },
 };
 ```
 
@@ -576,10 +579,10 @@ export const actions = {
 ```js
 // routes/blog/[slug]/+page.server.js
 export async function load({ params }) {
-	return {
-		post: await db.getPost(params.slug),     // Awaited
-		comments: db.getComments(params.slug)     // Streamed
-	};
+  return {
+    post: await db.getPost(params.slug), // Awaited
+    comments: db.getComments(params.slug), // Streamed
+  };
 }
 ```
 
@@ -684,6 +687,7 @@ export async function load({ params }) {
 ```
 
 **Usage in layout:**
+
 ```svelte
 <!-- routes/+layout.svelte -->
 <script>
@@ -713,23 +717,23 @@ export async function load({ params }) {
 
 ```js
 // vite.config.js
-import { sveltekit } from '@sveltejs/kit/vite';
-import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
+import { sveltekit } from "@sveltejs/kit/vite";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "vite";
 
 export default defineConfig(({ mode }) => ({
-	plugins: [
-		sveltekit(),
-		tailwindcss({
-			optimize: mode === 'production'
-		})
-	],
+  plugins: [
+    sveltekit(),
+    tailwindcss({
+      optimize: mode === "production",
+    }),
+  ],
 
-	build: {
-		cssCodeSplit: true,
-		cssMinify: 'lightningcss',
-		sourcemap: mode !== 'production'
-	}
+  build: {
+    cssCodeSplit: true,
+    cssMinify: "lightningcss",
+    sourcemap: mode !== "production",
+  },
 }));
 ```
 
@@ -763,16 +767,14 @@ export default defineConfig(({ mode }) => ({
 ```js
 // tailwind.config.js
 export default {
-	content: ['./src/**/*.{html,js,svelte,ts}'],
-	theme: {
-		extend: {
-			colors: {
-				primary: process.env.NODE_ENV === 'production'
-					? '#0ea5e9'
-					: '#ef4444'  // Different color in dev
-			}
-		}
-	}
+  content: ["./src/**/*.{html,js,svelte,ts}"],
+  theme: {
+    extend: {
+      colors: {
+        primary: process.env.NODE_ENV === "production" ? "#0ea5e9" : "#ef4444", // Different color in dev
+      },
+    },
+  },
 };
 ```
 
@@ -780,19 +782,19 @@ export default {
 
 ```js
 // svelte.config.js
-import adapter from '@sveltejs/adapter-static';
+import adapter from "@sveltejs/adapter-static";
 
 export default {
-	kit: {
-		adapter: adapter({
-			pages: 'build',
-			assets: 'build',
-			precompress: true
-		}),
-		prerender: {
-			entries: ['*']
-		}
-	}
+  kit: {
+    adapter: adapter({
+      pages: "build",
+      assets: "build",
+      precompress: true,
+    }),
+    prerender: {
+      entries: ["*"],
+    },
+  },
 };
 ```
 
@@ -821,6 +823,7 @@ src/
 ```
 
 This integration provides:
+
 - ✅ Full SSR with SvelteKit
 - ✅ Reactive components with Svelte 5 runes
 - ✅ Utility-first styling with Tailwind CSS v4

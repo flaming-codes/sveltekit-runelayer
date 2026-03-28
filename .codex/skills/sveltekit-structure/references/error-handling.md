@@ -64,19 +64,19 @@ src/routes/
 
 ```typescript
 // +page.server.ts
-import { error } from '@sveltejs/kit';
+import { error } from "@sveltejs/kit";
 
 export const load = async ({ params }) => {
-	const post = await getPost(params.id);
+  const post = await getPost(params.id);
 
-	if (!post) {
-		throw error(404, {
-			message: 'Post not found',
-			postId: params.id,
-		});
-	}
+  if (!post) {
+    throw error(404, {
+      message: "Post not found",
+      postId: params.id,
+    });
+  }
 
-	return { post };
+  return { post };
 };
 ```
 
@@ -138,10 +138,10 @@ export const load = async ({ params }) => {
 ```typescript
 // src/routes/dashboard/+layout.server.ts
 export const load = async ({ locals }) => {
-	if (!locals.user) {
-		throw error(401, 'Not logged in'); // Caught by +error.svelte ABOVE dashboard
-	}
-	return { user: locals.user };
+  if (!locals.user) {
+    throw error(401, "Not logged in"); // Caught by +error.svelte ABOVE dashboard
+  }
+  return { user: locals.user };
 };
 ```
 
@@ -150,7 +150,7 @@ export const load = async ({ locals }) => {
 ```typescript
 // src/routes/dashboard/settings/+page.server.ts
 export const load = async () => {
-	throw error(404, 'Settings not found'); // Caught by nearest +error.svelte
+  throw error(404, "Settings not found"); // Caught by nearest +error.svelte
 };
 ```
 
@@ -160,10 +160,10 @@ export const load = async () => {
 
 ```typescript
 // User requests invalid resource
-if (!post) throw error(404, 'Post not found');
+if (!post) throw error(404, "Post not found");
 
 // User lacks permission
-if (post.authorId !== user.id) throw error(403, 'Not your post');
+if (post.authorId !== user.id) throw error(403, "Not your post");
 ```
 
 **Unexpected (let it bubble):**
@@ -178,17 +178,17 @@ const posts = await db.query.posts.findMany(); // Might throw
 
 ```typescript
 // src/hooks.server.ts
-import type { HandleServerError } from '@sveltejs/kit';
+import type { HandleServerError } from "@sveltejs/kit";
 
 export const handleError: HandleServerError = ({ error, event }) => {
-	// Log to error tracking service
-	console.error('Error:', error, 'Path:', event.url.pathname);
+  // Log to error tracking service
+  console.error("Error:", error, "Path:", event.url.pathname);
 
-	// Return user-friendly message (don't expose internals)
-	return {
-		message: 'An unexpected error occurred',
-		code: error?.code ?? 'UNKNOWN',
-	};
+  // Return user-friendly message (don't expose internals)
+  return {
+    message: "An unexpected error occurred",
+    code: error?.code ?? "UNKNOWN",
+  };
 };
 ```
 
@@ -199,9 +199,9 @@ export const handleError: HandleServerError = ({ error, event }) => {
 ```typescript
 // +page.server.ts
 export const load = async ({ params }) => {
-	const user = await getUser(params.id);
-	if (!user) throw error(404, 'User not found'); // Shows +error.svelte
-	return { user };
+  const user = await getUser(params.id);
+  if (!user) throw error(404, "User not found"); // Shows +error.svelte
+  return { user };
 };
 ```
 
@@ -251,12 +251,12 @@ Always have a root `+error.svelte`:
 ```typescript
 // +page.server.ts
 export const load = async ({ url }) => {
-	// Test error page in dev
-	if (url.searchParams.has('test-error')) {
-		throw error(500, 'Test error');
-	}
+  // Test error page in dev
+  if (url.searchParams.has("test-error")) {
+    throw error(500, "Test error");
+  }
 
-	return {};
+  return {};
 };
 ```
 

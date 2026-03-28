@@ -22,23 +22,23 @@ errors, throw `redirect()` to navigate, throw `error()` for failures.
 
 ```typescript
 // +page.server.ts
-import { fail, redirect } from '@sveltejs/kit';
+import { fail, redirect } from "@sveltejs/kit";
 
 export const load = async ({ locals }) => {
-	const user = await db.users.get(locals.userId);
-	return { user }; // Must be JSON-serializable
+  const user = await db.users.get(locals.userId);
+  return { user }; // Must be JSON-serializable
 };
 
 export const actions = {
-	default: async ({ request }) => {
-		const data = await request.formData();
-		const email = data.get('email');
+  default: async ({ request }) => {
+    const data = await request.formData();
+    const email = data.get("email");
 
-		if (!email) return fail(400, { email, missing: true });
+    if (!email) return fail(400, { email, missing: true });
 
-		await updateEmail(email);
-		throw redirect(303, '/success');
-	},
+    await updateEmail(email);
+    throw redirect(303, "/success");
+  },
 };
 ```
 

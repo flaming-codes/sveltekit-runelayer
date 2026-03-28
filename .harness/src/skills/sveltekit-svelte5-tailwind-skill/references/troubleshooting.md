@@ -71,6 +71,7 @@ When unsure where error occurs, cut code in half repeatedly:
 If error disappears, problem is in hidden half. Repeat on that section.
 
 ❌ **Wrong: Random changes**
+
 ```
 // Try everything at once
 - Change Vite config
@@ -81,6 +82,7 @@ If error disappears, problem is in hidden half. Repeat on that section.
 ```
 
 ✅ **Right: One change at a time**
+
 ```
 1. Test: Change Vite plugin order → Still broken
 2. Test: Clear .svelte-kit cache → Still broken
@@ -121,12 +123,14 @@ npm run dev
 Check console for errors:
 
 ❌ **Error: "EADDRINUSE"**
+
 ```
 Fix: Port already in use
 npm run dev -- --port 5174
 ```
 
 ❌ **Error: "EMFILE: too many open files"**
+
 ```
 Fix: Increase file descriptor limit
 ulimit -n 10240
@@ -134,6 +138,7 @@ npm run dev
 ```
 
 ❌ **Error: "Cannot find module"**
+
 ```
 Fix: Missing dependency
 npm install
@@ -149,19 +154,15 @@ export default defineConfig({
   server: {
     watch: {
       // Ignore unnecessary files
-      ignored: [
-        '**/node_modules/**',
-        '**/.git/**',
-        '**/.svelte-kit/**'
-      ]
+      ignored: ["**/node_modules/**", "**/.git/**", "**/.svelte-kit/**"],
     },
 
     // Enable HMR
     hmr: {
       overlay: true,
-      port: 5173
-    }
-  }
+      port: 5173,
+    },
+  },
 });
 ```
 
@@ -182,17 +183,17 @@ DEBUG=* npm run dev
 
 ```js
 // svelte.config.js
-import adapter from '@sveltejs/adapter-auto';
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import adapter from "@sveltejs/adapter-auto";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 
-console.log('SvelteKit config loaded');  // Add logging
+console.log("SvelteKit config loaded"); // Add logging
 
 const config = {
   preprocess: vitePreprocess(),
 
   kit: {
-    adapter: adapter()
-  }
+    adapter: adapter(),
+  },
 };
 
 export default config;
@@ -227,7 +228,7 @@ grep ERROR build.log
 ```ts
 // Find which page fails
 // +page.ts or +layout.ts
-export const prerender = false;  // Disable temporarily
+export const prerender = false; // Disable temporarily
 
 // Then enable one by one to find culprit
 ```
@@ -268,14 +269,14 @@ npm install -D rollup-plugin-visualizer
 
 ```js
 // vite.config.js
-import { visualizer } from 'rollup-plugin-visualizer';
+import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig({
   plugins: [
     tailwindcss(),
     sveltekit(),
-    visualizer({ open: true })  // Opens bundle analysis
-  ]
+    visualizer({ open: true }), // Opens bundle analysis
+  ],
 });
 ```
 
@@ -366,11 +367,11 @@ grep -r "class=.*{" src/
 ```js
 // tailwind.config.js
 export default {
-  content: ['./src/**/*.{html,js,svelte,ts}'],
+  content: ["./src/**/*.{html,js,svelte,ts}"],
   safelist: [
-    'bg-red-500',  // Add classes that are being purged
-    'bg-blue-500'
-  ]
+    "bg-red-500", // Add classes that are being purged
+    "bg-blue-500",
+  ],
 };
 ```
 
@@ -382,12 +383,12 @@ export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
 
   css: {
-    devSourcemap: true  // Enable CSS source maps in dev
+    devSourcemap: true, // Enable CSS source maps in dev
   },
 
   build: {
-    sourcemap: true  // Enable in production
-  }
+    sourcemap: true, // Enable in production
+  },
 });
 ```
 
@@ -418,16 +419,19 @@ node -c vite.config.js
 **Issue 1: Plugin order**
 
 ❌ **Wrong:**
+
 ```js
-plugins: [sveltekit(), tailwindcss()]
+plugins: [sveltekit(), tailwindcss()];
 ```
 
 ✅ **Right:**
+
 ```js
-plugins: [tailwindcss(), sveltekit()]
+plugins: [tailwindcss(), sveltekit()];
 ```
 
 **Test:**
+
 ```bash
 # Swap order and rebuild
 npm run build
@@ -439,17 +443,17 @@ npm run build
 
 ```js
 // vite.config.js
-import path from 'path';
+import path from "path";
 
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
 
   resolve: {
     alias: {
-      $components: path.resolve('./src/lib/components'),
-      $utils: path.resolve('./src/lib/utils')
-    }
-  }
+      $components: path.resolve("./src/lib/components"),
+      $utils: path.resolve("./src/lib/utils"),
+    },
+  },
 });
 ```
 
@@ -471,15 +475,15 @@ export default defineConfig({
 
   server: {
     port: 5173,
-    host: true,  // Listen on all addresses
-    strictPort: false,  // Try next port if busy
+    host: true, // Listen on all addresses
+    strictPort: false, // Try next port if busy
 
     // File watching
     watch: {
-      usePolling: false,  // Set to true if HMR not working
-      ignored: ['**/node_modules/**', '**/.git/**']
-    }
-  }
+      usePolling: false, // Set to true if HMR not working
+      ignored: ["**/node_modules/**", "**/.git/**"],
+    },
+  },
 });
 ```
 
@@ -490,20 +494,20 @@ export default defineConfig({
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
 
-  logLevel: 'info',  // 'silent' | 'error' | 'warn' | 'info'
+  logLevel: "info", // 'silent' | 'error' | 'warn' | 'info'
 
   // Custom logger
   customLogger: {
     info(msg) {
-      console.log('[Vite Info]', msg);
+      console.log("[Vite Info]", msg);
     },
     warn(msg) {
-      console.warn('[Vite Warn]', msg);
+      console.warn("[Vite Warn]", msg);
     },
     error(msg) {
-      console.error('[Vite Error]', msg);
-    }
-  }
+      console.error("[Vite Error]", msg);
+    },
+  },
 });
 ```
 
@@ -519,12 +523,12 @@ export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
 
   build: {
-    sourcemap: true  // Generate .map files
+    sourcemap: true, // Generate .map files
   },
 
   css: {
-    devSourcemap: true  // CSS source maps in dev
-  }
+    devSourcemap: true, // CSS source maps in dev
+  },
 });
 ```
 
@@ -614,6 +618,7 @@ Use browser tools to debug effectively.
 ```
 
 **Filter network requests:**
+
 ```
 - CSS: Filter by "css"
 - JS: Filter by "js"
@@ -672,6 +677,7 @@ Watch for these subtle integration issues.
 **Gotcha 1: Async in runes**
 
 ❌ **Doesn't work:**
+
 ```svelte
 <script>
   let data = $state(null);
@@ -685,10 +691,11 @@ Watch for these subtle integration issues.
 ```
 
 ✅ **Works:**
+
 ```ts
 // +page.server.ts
 export async function load() {
-  return { data: await fetch('/api') };
+  return { data: await fetch("/api") };
 }
 ```
 
@@ -723,8 +730,9 @@ Always use SvelteKit's `fetch` in load functions:
 
 ```ts
 // +page.ts
-export async function load({ fetch }) {  // Use this fetch
-  const res = await fetch('/api/data');
+export async function load({ fetch }) {
+  // Use this fetch
+  const res = await fetch("/api/data");
   return { data: await res.json() };
 }
 ```
@@ -733,11 +741,11 @@ export async function load({ fetch }) {  // Use this fetch
 
 ```ts
 // ❌ Won't work: Private var on client
-import { PRIVATE_KEY } from '$env/static/private';
+import { PRIVATE_KEY } from "$env/static/private";
 // Can only use on server
 
 // ✅ Works: Public var on client
-import { PUBLIC_API_URL } from '$env/static/public';
+import { PUBLIC_API_URL } from "$env/static/public";
 ```
 
 ## Getting Help Effectively
@@ -752,6 +760,7 @@ When stuck, ask for help the right way.
    - Discord: Search history
 
 2. **Create minimal reproduction:**
+
    ```bash
    npm create svelte@latest repro
    # Add only code needed to reproduce
@@ -767,20 +776,25 @@ When stuck, ask for help the right way.
 
 ```markdown
 ## Description
+
 CSS not loading in production build
 
 ## Steps to Reproduce
+
 1. npm run build
 2. npm run preview
 3. Open http://localhost:4173
 
 ## Expected Behavior
+
 Tailwind styles should be visible
 
 ## Actual Behavior
+
 Page is unstyled
 
 ## Environment
+
 - SvelteKit: 2.0.0
 - Svelte: 5.0.0
 - Tailwind: 4.0.0-alpha.25
@@ -788,9 +802,11 @@ Page is unstyled
 - OS: macOS 14.0
 
 ## Reproduction
+
 https://github.com/user/repro
 
 ## Config Files
+
 [Paste vite.config.js]
 [Paste svelte.config.js]
 ```
@@ -803,6 +819,7 @@ https://github.com/user/repro
 - **Reddit r/sveltejs**: General discussion
 
 **Checklist before asking:**
+
 - [ ] Searched existing issues
 - [ ] Created minimal reproduction
 - [ ] Included all relevant info
@@ -811,6 +828,7 @@ https://github.com/user/repro
 - [ ] Checked docs for solution
 
 **Next steps:**
+
 - Fix common issues in `common-issues.md`
 - Optimize performance in `performance-optimization.md`
 - Follow best practices in `best-practices.md`

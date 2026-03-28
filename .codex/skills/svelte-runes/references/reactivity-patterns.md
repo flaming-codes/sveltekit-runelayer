@@ -311,26 +311,26 @@ without `$effect`. Per official best practices: use this instead of
 `$effect` when you need to observe something external to Svelte.
 
 ```ts
-import { createSubscriber } from 'svelte/reactivity';
+import { createSubscriber } from "svelte/reactivity";
 
 function createLocationStore() {
-	let location = window.location.href;
+  let location = window.location.href;
 
-	const subscribe = createSubscriber((update) => {
-		const handler = () => {
-			location = window.location.href;
-			update();
-		};
-		window.addEventListener('popstate', handler);
-		return () => window.removeEventListener('popstate', handler);
-	});
+  const subscribe = createSubscriber((update) => {
+    const handler = () => {
+      location = window.location.href;
+      update();
+    };
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  });
 
-	return {
-		get href() {
-			subscribe();
-			return location;
-		}
-	};
+  return {
+    get href() {
+      subscribe();
+      return location;
+    },
+  };
 }
 ```
 

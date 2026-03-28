@@ -16,6 +16,7 @@ Configure your SvelteKit project for scalability and maintainability. This guide
 Organize your project to separate concerns and support growth from prototype to production.
 
 **Complete directory structure:**
+
 ```
 my-app/
 ├── src/
@@ -85,6 +86,7 @@ my-app/
 ```
 
 ❌ **Wrong: Flat structure that doesn't scale**
+
 ```
 src/
 ├── lib/
@@ -98,6 +100,7 @@ src/
 ```
 
 ✅ **Right: Organized by concern and function**
+
 ```
 src/
 ├── lib/
@@ -108,6 +111,7 @@ src/
 ```
 
 **Directory conventions:**
+
 - `lib/components/ui/` - Reusable, styled-only components accepting props
 - `lib/components/features/` - Business logic components using UI components
 - `lib/server/` - Server-only code (database, external APIs, secrets)
@@ -118,16 +122,17 @@ src/
 Configure Vite for optimal development experience and production builds.
 
 **Complete `vite.config.js`:**
+
 ```js
-import { sveltekit } from '@sveltejs/kit/vite';
-import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
-import path from 'path';
+import { sveltekit } from "@sveltejs/kit/vite";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "vite";
+import path from "path";
 
 export default defineConfig({
   plugins: [
     tailwindcss(), // Must be before sveltekit()
-    sveltekit()
+    sveltekit(),
   ],
 
   // CSS configuration
@@ -142,14 +147,14 @@ export default defineConfig({
     host: true, // Listen on all addresses
     watch: {
       // Prevent watching too many files
-      ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**']
-    }
+      ignored: ["**/node_modules/**", "**/.git/**", "**/dist/**"],
+    },
   },
 
   // Preview server (production build testing)
   preview: {
     port: 4173,
-    strictPort: true
+    strictPort: true,
   },
 
   // Build optimizations
@@ -159,62 +164,69 @@ export default defineConfig({
       output: {
         manualChunks: {
           // Split vendor code for better caching
-          'vendor': ['svelte'],
-        }
-      }
-    }
+          vendor: ["svelte"],
+        },
+      },
+    },
   },
 
   // Resolve configuration
   resolve: {
     alias: {
       // Add path aliases (also configure in tsconfig.json)
-      $components: path.resolve('./src/lib/components'),
-      $utils: path.resolve('./src/lib/utils'),
-      $server: path.resolve('./src/lib/server'),
-      $styles: path.resolve('./src/lib/styles')
-    }
+      $components: path.resolve("./src/lib/components"),
+      $utils: path.resolve("./src/lib/utils"),
+      $server: path.resolve("./src/lib/server"),
+      $styles: path.resolve("./src/lib/styles"),
+    },
   },
 
   // Optimizations
   optimizeDeps: {
-    include: ['svelte'], // Pre-bundle these dependencies
-    exclude: [] // Don't pre-bundle these
-  }
+    include: ["svelte"], // Pre-bundle these dependencies
+    exclude: [], // Don't pre-bundle these
+  },
 });
 ```
 
 ❌ **Wrong: Minimal config missing optimizations**
+
 ```js
 export default defineConfig({
-  plugins: [tailwindcss(), sveltekit()]
+  plugins: [tailwindcss(), sveltekit()],
   // Missing: source maps, aliases, optimizations
 });
 ```
 
 ✅ **Right: Full config for development and production**
+
 ```js
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
   css: { devSourcemap: true },
   build: { sourcemap: true },
-  resolve: { alias: { /* ... */ } }
+  resolve: {
+    alias: {
+      /* ... */
+    },
+  },
 });
 ```
 
 **Plugin order is critical:**
+
 ```js
 // ✅ Correct order
 plugins: [
   tailwindcss(), // 1. Process CSS first
-  sveltekit()    // 2. Transform Svelte components
-]
+  sveltekit(), // 2. Transform Svelte components
+];
 
 // ❌ Wrong order causes CSS processing failures
 plugins: [
   sveltekit(),
-  tailwindcss()  // Too late!
-]
+  tailwindcss(), // Too late!
+];
 ```
 
 ## TypeScript Configuration
@@ -222,6 +234,7 @@ plugins: [
 Configure TypeScript for type safety across the entire stack.
 
 **Complete `tsconfig.json`:**
+
 ```json
 {
   "extends": "./.svelte-kit/tsconfig.json",
@@ -262,22 +275,13 @@ Configure TypeScript for type safety across the entire stack.
       "$styles/*": ["./src/lib/styles/*"]
     }
   },
-  "include": [
-    "src/**/*.d.ts",
-    "src/**/*.ts",
-    "src/**/*.js",
-    "src/**/*.svelte"
-  ],
-  "exclude": [
-    "node_modules",
-    ".svelte-kit",
-    "dist",
-    "build"
-  ]
+  "include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte"],
+  "exclude": ["node_modules", ".svelte-kit", "dist", "build"]
 }
 ```
 
 ❌ **Wrong: Not extending SvelteKit's generated config**
+
 ```json
 {
   "compilerOptions": {
@@ -288,6 +292,7 @@ Configure TypeScript for type safety across the entire stack.
 ```
 
 ✅ **Right: Extending SvelteKit's base config**
+
 ```json
 {
   "extends": "./.svelte-kit/tsconfig.json",
@@ -298,6 +303,7 @@ Configure TypeScript for type safety across the entire stack.
 ```
 
 **Type definitions in `src/app.d.ts`:**
+
 ```ts
 // See https://svelte.dev/docs/kit/types
 declare global {
@@ -311,7 +317,7 @@ declare global {
       };
     }
     interface PageData {
-      user?: App.Locals['user'];
+      user?: App.Locals["user"];
     }
     // interface PageState {}
     // interface Platform {}
@@ -328,22 +334,24 @@ Configure path aliases for cleaner imports across your project.
 **Configure in both `vite.config.js` and `tsconfig.json`:**
 
 **`vite.config.js` aliases:**
+
 ```js
-import path from 'path';
+import path from "path";
 
 export default defineConfig({
   resolve: {
     alias: {
-      $components: path.resolve('./src/lib/components'),
-      $utils: path.resolve('./src/lib/utils'),
-      $server: path.resolve('./src/lib/server'),
-      $styles: path.resolve('./src/lib/styles')
-    }
-  }
+      $components: path.resolve("./src/lib/components"),
+      $utils: path.resolve("./src/lib/utils"),
+      $server: path.resolve("./src/lib/server"),
+      $styles: path.resolve("./src/lib/styles"),
+    },
+  },
 });
 ```
 
 **`tsconfig.json` paths (must match):**
+
 ```json
 {
   "compilerOptions": {
@@ -365,6 +373,7 @@ export default defineConfig({
 **Using aliases in your code:**
 
 ❌ **Wrong: Relative imports that break on refactoring**
+
 ```svelte
 <script>
   import Button from '../../../lib/components/ui/Button.svelte';
@@ -373,6 +382,7 @@ export default defineConfig({
 ```
 
 ✅ **Right: Absolute imports with aliases**
+
 ```svelte
 <script>
   import Button from '$components/ui/Button.svelte';
@@ -381,6 +391,7 @@ export default defineConfig({
 ```
 
 **Built-in SvelteKit aliases (always available):**
+
 - `$lib` - Resolves to `src/lib`
 - `$app/environment` - SvelteKit environment utilities
 - `$app/forms` - Form action utilities
@@ -393,6 +404,7 @@ export default defineConfig({
 Manage configuration and secrets properly across environments.
 
 **Create `.env` file (gitignored):**
+
 ```bash
 # Public variables (exposed to client)
 PUBLIC_API_URL=http://localhost:3000/api
@@ -406,6 +418,7 @@ SESSION_SECRET=super-secret-session-key-change-this
 ```
 
 **Create `.env.example` template (committed to git):**
+
 ```bash
 # Public variables
 PUBLIC_API_URL=http://localhost:3000/api
@@ -419,6 +432,7 @@ SESSION_SECRET=
 ```
 
 **Add to `.gitignore`:**
+
 ```
 .env
 .env.*
@@ -428,6 +442,7 @@ SESSION_SECRET=
 **Using environment variables in code:**
 
 ❌ **Wrong: Using private variables in client code**
+
 ```svelte
 <!-- +page.svelte (runs on client) -->
 <script>
@@ -437,16 +452,17 @@ SESSION_SECRET=
 ```
 
 ✅ **Right: Private variables only in server code**
+
 ```ts
 // +page.server.ts (runs on server)
-import { PRIVATE_API_KEY } from '$env/static/private';
-import { PUBLIC_API_URL } from '$env/static/public';
+import { PRIVATE_API_KEY } from "$env/static/private";
+import { PUBLIC_API_URL } from "$env/static/public";
 
 export async function load() {
   const response = await fetch(PUBLIC_API_URL, {
     headers: {
-      'Authorization': `Bearer ${PRIVATE_API_KEY}`
-    }
+      Authorization: `Bearer ${PRIVATE_API_KEY}`,
+    },
   });
   return { data: await response.json() };
 }
@@ -454,14 +470,15 @@ export async function load() {
 
 **Environment variable types:**
 
-| Import | Where | When Available | Use Case |
-|--------|-------|----------------|----------|
-| `$env/static/private` | Server only | Build time | API keys, secrets |
-| `$env/static/public` | Anywhere | Build time | Public config |
-| `$env/dynamic/private` | Server only | Runtime | Dynamic config |
-| `$env/dynamic/public` | Anywhere | Runtime | Runtime config |
+| Import                 | Where       | When Available | Use Case          |
+| ---------------------- | ----------- | -------------- | ----------------- |
+| `$env/static/private`  | Server only | Build time     | API keys, secrets |
+| `$env/static/public`   | Anywhere    | Build time     | Public config     |
+| `$env/dynamic/private` | Server only | Runtime        | Dynamic config    |
+| `$env/dynamic/public`  | Anywhere    | Runtime        | Runtime config    |
 
 **Type definitions in `src/app.d.ts`:**
+
 ```ts
 declare global {
   namespace App {
@@ -480,11 +497,12 @@ declare global {
 Configure different behaviors for development and production environments.
 
 **Conditional configuration in `svelte.config.js`:**
-```js
-import adapter from '@sveltejs/adapter-auto';
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
-const dev = process.env.NODE_ENV === 'development';
+```js
+import adapter from "@sveltejs/adapter-auto";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+
+const dev = process.env.NODE_ENV === "development";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -496,56 +514,58 @@ const config = {
     // Development-specific settings
     ...(dev && {
       csp: {
-        mode: 'auto',
+        mode: "auto",
         directives: {
-          'default-src': ['self']
-        }
-      }
+          "default-src": ["self"],
+        },
+      },
     }),
 
     // Production-specific settings
     ...(!dev && {
       prerender: {
-        entries: ['*'],
-        crawl: true
-      }
+        entries: ["*"],
+        crawl: true,
+      },
     }),
 
     alias: {
-      $components: 'src/lib/components',
-      $utils: 'src/lib/utils',
-      $server: 'src/lib/server',
-      $styles: 'src/lib/styles'
-    }
-  }
+      $components: "src/lib/components",
+      $utils: "src/lib/utils",
+      $server: "src/lib/server",
+      $styles: "src/lib/styles",
+    },
+  },
 };
 
 export default config;
 ```
 
 **Tailwind configuration for environments:**
+
 ```js
 // tailwind.config.js
-const production = process.env.NODE_ENV === 'production';
+const production = process.env.NODE_ENV === "production";
 
 export default {
-  content: ['./src/**/*.{html,js,svelte,ts}'],
+  content: ["./src/**/*.{html,js,svelte,ts}"],
 
   // Production optimizations
   ...(production && {
     // Additional purge patterns for production
-    safelist: []
+    safelist: [],
   }),
 
   theme: {
-    extend: {}
+    extend: {},
   },
 
-  plugins: []
+  plugins: [],
 };
 ```
 
 **Runtime environment detection:**
+
 ```svelte
 <script>
   import { dev } from '$app/environment';
@@ -570,15 +590,16 @@ export default {
 Validate your setup to catch issues early.
 
 **Create validation script `src/lib/server/validate-env.ts`:**
+
 ```ts
-import { PRIVATE_API_KEY, DATABASE_URL } from '$env/static/private';
-import { PUBLIC_API_URL } from '$env/static/public';
+import { PRIVATE_API_KEY, DATABASE_URL } from "$env/static/private";
+import { PUBLIC_API_URL } from "$env/static/public";
 
 export function validateEnvironment() {
   const required = {
     PRIVATE_API_KEY,
     DATABASE_URL,
-    PUBLIC_API_URL
+    PUBLIC_API_URL,
   };
 
   const missing = Object.entries(required)
@@ -586,9 +607,7 @@ export function validateEnvironment() {
     .map(([key]) => key);
 
   if (missing.length > 0) {
-    throw new Error(
-      `Missing required environment variables: ${missing.join(', ')}`
-    );
+    throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
   }
 
   return true;
@@ -596,9 +615,10 @@ export function validateEnvironment() {
 ```
 
 **Run validation in `src/hooks.server.ts`:**
+
 ```ts
-import { validateEnvironment } from '$lib/server/validate-env';
-import type { Handle } from '@sveltejs/kit';
+import { validateEnvironment } from "$lib/server/validate-env";
+import type { Handle } from "@sveltejs/kit";
 
 // Validate on startup
 validateEnvironment();
@@ -609,6 +629,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 ```
 
 **Verify configuration checklist:**
+
 ```bash
 # 1. Check Vite config syntax
 npx vite --help
@@ -629,12 +650,14 @@ npm run preview
 ```
 
 ❌ **Wrong: Deploying without validation**
+
 ```bash
 git push
 # Fails in production due to missing env vars
 ```
 
 ✅ **Right: Validate before deployment**
+
 ```bash
 npm run build  # Catches config errors
 npm run preview  # Tests production build locally
@@ -642,6 +665,7 @@ npm run preview  # Tests production build locally
 ```
 
 **Configuration testing checklist:**
+
 - [ ] Dev server starts without errors
 - [ ] TypeScript compiles without errors
 - [ ] Tailwind styles render correctly
@@ -652,6 +676,7 @@ npm run preview  # Tests production build locally
 - [ ] Source maps work in DevTools
 
 **Next steps:**
+
 - Learn about Svelte 5 runes in `svelte5-runes.md`
 - Configure styling patterns in `styling-with-tailwind.md`
 - Set up forms in `forms-and-actions.md`

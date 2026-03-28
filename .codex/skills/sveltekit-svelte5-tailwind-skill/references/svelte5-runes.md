@@ -18,6 +18,7 @@ Svelte 5 introduces runes - a new reactivity system that replaces stores and rea
 Runes provide fine-grained reactivity but have strict server-side constraints in SvelteKit.
 
 **The five core runes:**
+
 - `$state()` - Reactive state (client-only)
 - `$derived()` - Computed values (works on server, doesn't re-run)
 - `$effect()` - Side effects (client-only)
@@ -28,6 +29,7 @@ Runes provide fine-grained reactivity but have strict server-side constraints in
 Most runes don't run on the server. You must separate server data loading from client reactivity.
 
 ❌ **Wrong: Using $state() in SSR context**
+
 ```svelte
 <!-- +page.svelte (rendered on server) -->
 <script>
@@ -37,6 +39,7 @@ Most runes don't run on the server. You must separate server data loading from c
 ```
 
 ✅ **Right: Load data on server, use runes on client**
+
 ```ts
 // +page.server.ts
 export function load() {
@@ -55,19 +58,20 @@ export function load() {
 
 **Rune server compatibility table:**
 
-| Rune | SSR | Hydration | Use Case |
-|------|-----|-----------|----------|
-| `$state()` | ❌ No | ✅ Yes | Client-only reactive state |
-| `$derived()` | ⚠️ Partial | ✅ Yes | Computed values (doesn't re-run on server) |
-| `$effect()` | ❌ No | ✅ Yes | Side effects (client-only) |
-| `$props()` | ✅ Yes | ✅ Yes | Component props |
-| `$bindable()` | ✅ Yes | ✅ Yes | Two-way binding props |
+| Rune          | SSR        | Hydration | Use Case                                   |
+| ------------- | ---------- | --------- | ------------------------------------------ |
+| `$state()`    | ❌ No      | ✅ Yes    | Client-only reactive state                 |
+| `$derived()`  | ⚠️ Partial | ✅ Yes    | Computed values (doesn't re-run on server) |
+| `$effect()`   | ❌ No      | ✅ Yes    | Side effects (client-only)                 |
+| `$props()`    | ✅ Yes     | ✅ Yes    | Component props                            |
+| `$bindable()` | ✅ Yes     | ✅ Yes    | Two-way binding props                      |
 
 ## State Management with $state()
 
 Use `$state()` for reactive values that change based on user interaction.
 
 **Basic usage (client-only components):**
+
 ```svelte
 <script>
   let count = $state(0);
@@ -83,6 +87,7 @@ Use `$state()` for reactive values that change based on user interaction.
 ```
 
 **Object and array state:**
+
 ```svelte
 <script>
   let user = $state({
@@ -105,6 +110,7 @@ Use `$state()` for reactive values that change based on user interaction.
 ```
 
 ❌ **Wrong: Mutating without reactivity**
+
 ```svelte
 <script>
   let items = [1, 2, 3]; // Not reactive
@@ -113,6 +119,7 @@ Use `$state()` for reactive values that change based on user interaction.
 ```
 
 ✅ **Right: Using $state for arrays**
+
 ```svelte
 <script>
   let items = $state([1, 2, 3]);
@@ -121,6 +128,7 @@ Use `$state()` for reactive values that change based on user interaction.
 ```
 
 **SSR-safe pattern with load data:**
+
 ```ts
 // +page.server.ts
 export async function load() {
@@ -146,6 +154,7 @@ export async function load() {
 ```
 
 **Class fields with $state:**
+
 ```ts
 class Counter {
   count = $state(0);
@@ -167,6 +176,7 @@ const counter = new Counter();
 Use `$derived()` for computed values that automatically update when dependencies change.
 
 **Basic derived values:**
+
 ```svelte
 <script>
   let count = $state(0);
@@ -182,6 +192,7 @@ Use `$derived()` for computed values that automatically update when dependencies
 ```
 
 ❌ **Wrong: Using Svelte 4 reactive statements**
+
 ```svelte
 <script>
   let count = $state(0);
@@ -190,6 +201,7 @@ Use `$derived()` for computed values that automatically update when dependencies
 ```
 
 ✅ **Right: Using $derived with runes**
+
 ```svelte
 <script>
   let count = $state(0);
@@ -198,6 +210,7 @@ Use `$derived()` for computed values that automatically update when dependencies
 ```
 
 **Complex derivations:**
+
 ```svelte
 <script>
   let items = $state([
@@ -222,6 +235,7 @@ Use `$derived()` for computed values that automatically update when dependencies
 ```
 
 **$derived.by() for complex logic:**
+
 ```svelte
 <script>
   let users = $state([/* ... */]);
@@ -238,6 +252,7 @@ Use `$derived()` for computed values that automatically update when dependencies
 ```
 
 **SSR behavior - derived runs once on server:**
+
 ```svelte
 <script>
   export let data;
@@ -255,6 +270,7 @@ Use `$derived()` for computed values that automatically update when dependencies
 Use `$effect()` for side effects that should run when dependencies change. Always client-only.
 
 **Basic effects:**
+
 ```svelte
 <script>
   import { browser } from '$app/environment';
@@ -276,6 +292,7 @@ Use `$effect()` for side effects that should run when dependencies change. Alway
 ```
 
 ❌ **Wrong: Effect runs on server (crashes)**
+
 ```svelte
 <script>
   let theme = $state('dark');
@@ -288,6 +305,7 @@ Use `$effect()` for side effects that should run when dependencies change. Alway
 ```
 
 ✅ **Right: Guard with browser check**
+
 ```svelte
 <script>
   import { browser } from '$app/environment';
@@ -303,6 +321,7 @@ Use `$effect()` for side effects that should run when dependencies change. Alway
 ```
 
 **Effect cleanup:**
+
 ```svelte
 <script>
   let count = $state(0);
@@ -320,6 +339,7 @@ Use `$effect()` for side effects that should run when dependencies change. Alway
 ```
 
 **$effect.pre() for pre-update effects:**
+
 ```svelte
 <script>
   let items = $state([1, 2, 3]);
@@ -338,6 +358,7 @@ Use `$effect()` for side effects that should run when dependencies change. Alway
 ```
 
 **Effect vs onMount:**
+
 ```svelte
 <script>
   import { onMount } from 'svelte';
@@ -367,6 +388,7 @@ Use `$effect()` for side effects that should run when dependencies change. Alway
 Use `$props()` to receive data from load functions or parent components.
 
 **Basic props:**
+
 ```svelte
 <script>
   let { data, form } = $props();
@@ -379,6 +401,7 @@ Use `$props()` to receive data from load functions or parent components.
 ```
 
 **Props with defaults:**
+
 ```svelte
 <script>
   let {
@@ -390,6 +413,7 @@ Use `$props()` to receive data from load functions or parent components.
 ```
 
 **Destructuring with rest:**
+
 ```svelte
 <script>
   let { data, ...rest } = $props();
@@ -398,6 +422,7 @@ Use `$props()` to receive data from load functions or parent components.
 ```
 
 **$bindable() for two-way binding:**
+
 ```svelte
 <!-- Counter.svelte -->
 <script>
@@ -421,6 +446,7 @@ Use `$props()` to receive data from load functions or parent components.
 ```
 
 ❌ **Wrong: Mutating props directly**
+
 ```svelte
 <script>
   let { data } = $props();
@@ -432,6 +458,7 @@ Use `$props()` to receive data from load functions or parent components.
 ```
 
 ✅ **Right: Create local state from props**
+
 ```svelte
 <script>
   let { data } = $props();
@@ -448,6 +475,7 @@ Use `$props()` to receive data from load functions or parent components.
 Understanding what runs on the server vs client prevents runtime errors.
 
 **Server-side behavior:**
+
 - `+page.svelte` renders on server for initial HTML
 - `$state()` is NOT available on server
 - `$effect()` does NOT run on server
@@ -455,6 +483,7 @@ Understanding what runs on the server vs client prevents runtime errors.
 - `$props()` works on server
 
 **Client-side hydration:**
+
 1. Server generates HTML without rune reactivity
 2. Client receives HTML and JavaScript
 3. Svelte "hydrates" - attaches event listeners and initializes runes
@@ -463,6 +492,7 @@ Understanding what runs on the server vs client prevents runtime errors.
 **Pattern: Separate server and client concerns**
 
 ❌ **Wrong: Client-only code in SSR component**
+
 ```svelte
 <!-- +page.svelte -->
 <script>
@@ -472,6 +502,7 @@ Understanding what runs on the server vs client prevents runtime errors.
 ```
 
 ✅ **Right: Guard with browser check or separate components**
+
 ```svelte
 <!-- +page.svelte -->
 <script>
@@ -488,6 +519,7 @@ Understanding what runs on the server vs client prevents runtime errors.
 ```
 
 **Client-only component pattern:**
+
 ```svelte
 <!-- ClientCounter.svelte -->
 <script>
@@ -512,6 +544,7 @@ Understanding what runs on the server vs client prevents runtime errors.
 ```
 
 **Using load functions for server data:**
+
 ```ts
 // +page.server.ts
 export async function load() {
@@ -538,6 +571,7 @@ Convert Svelte 4 reactive patterns to Svelte 5 runes.
 **Stores to $state:**
 
 ❌ **Svelte 4: Writable stores**
+
 ```svelte
 <script>
   import { writable } from 'svelte/store';
@@ -550,6 +584,7 @@ Convert Svelte 4 reactive patterns to Svelte 5 runes.
 ```
 
 ✅ **Svelte 5: $state rune**
+
 ```svelte
 <script>
   let count = $state(0);
@@ -563,6 +598,7 @@ Convert Svelte 4 reactive patterns to Svelte 5 runes.
 **Reactive statements to $derived:**
 
 ❌ **Svelte 4: Reactive statements**
+
 ```svelte
 <script>
   let count = 0;
@@ -572,6 +608,7 @@ Convert Svelte 4 reactive patterns to Svelte 5 runes.
 ```
 
 ✅ **Svelte 5: $derived rune**
+
 ```svelte
 <script>
   let count = $state(0);
@@ -583,6 +620,7 @@ Convert Svelte 4 reactive patterns to Svelte 5 runes.
 **Lifecycle hooks to $effect:**
 
 ❌ **Svelte 4: onMount and afterUpdate**
+
 ```svelte
 <script>
   import { onMount, afterUpdate } from 'svelte';
@@ -599,6 +637,7 @@ Convert Svelte 4 reactive patterns to Svelte 5 runes.
 ```
 
 ✅ **Svelte 5: $effect rune**
+
 ```svelte
 <script>
   $effect(() => {
@@ -611,6 +650,7 @@ Convert Svelte 4 reactive patterns to Svelte 5 runes.
 **Event forwarding to callback props:**
 
 ❌ **Svelte 4: Event forwarding**
+
 ```svelte
 <!-- Button.svelte -->
 <button on:click>
@@ -619,6 +659,7 @@ Convert Svelte 4 reactive patterns to Svelte 5 runes.
 ```
 
 ✅ **Svelte 5: Callback props**
+
 ```svelte
 <!-- Button.svelte -->
 <script>
@@ -637,6 +678,7 @@ Avoid these frequent errors when using runes in SvelteKit.
 **Mistake 1: Using $state in load functions**
 
 ❌ **Wrong:**
+
 ```ts
 // +page.server.ts
 export function load() {
@@ -646,6 +688,7 @@ export function load() {
 ```
 
 ✅ **Right:**
+
 ```ts
 // +page.server.ts
 export function load() {
@@ -656,6 +699,7 @@ export function load() {
 **Mistake 2: Forgetting browser guards**
 
 ❌ **Wrong:**
+
 ```svelte
 <script>
   let theme = $state(localStorage.getItem('theme'));
@@ -664,6 +708,7 @@ export function load() {
 ```
 
 ✅ **Right:**
+
 ```svelte
 <script>
   import { browser } from '$app/environment';
@@ -681,6 +726,7 @@ export function load() {
 **Mistake 3: Mutating props**
 
 ❌ **Wrong:**
+
 ```svelte
 <script>
   let { user } = $props();
@@ -689,6 +735,7 @@ export function load() {
 ```
 
 ✅ **Right:**
+
 ```svelte
 <script>
   let { user } = $props();
@@ -700,6 +747,7 @@ export function load() {
 **Mistake 4: Overusing $derived**
 
 ❌ **Wrong: Derived for simple expressions**
+
 ```svelte
 <script>
   let firstName = $state('John');
@@ -711,6 +759,7 @@ export function load() {
 ```
 
 ✅ **Right: Use template expressions**
+
 ```svelte
 <script>
   let firstName = $state('John');
@@ -723,6 +772,7 @@ export function load() {
 **Mistake 5: Effect dependencies**
 
 ❌ **Wrong: Manual dependency tracking**
+
 ```svelte
 <script>
   let count = $state(0);
@@ -734,6 +784,7 @@ export function load() {
 ```
 
 ✅ **Right: Automatic dependency tracking**
+
 ```svelte
 <script>
   let count = $state(0);
@@ -745,6 +796,7 @@ export function load() {
 ```
 
 **Debugging runes:**
+
 ```svelte
 <script>
   import { $inspect } from 'svelte';
@@ -758,6 +810,7 @@ export function load() {
 ```
 
 **Checklist for runes in SvelteKit:**
+
 - [ ] Never use `$state()` in `.server.ts` files
 - [ ] Guard browser APIs with `if (browser)` check
 - [ ] Load data from server, make reactive on client
@@ -768,6 +821,7 @@ export function load() {
 - [ ] Check console for hydration mismatch warnings
 
 **Next steps:**
+
 - Learn form handling in `forms-and-actions.md`
 - Understand data loading in `data-loading.md`
 - Configure SSR in `server-rendering.md`

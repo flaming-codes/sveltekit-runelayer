@@ -1,0 +1,27 @@
+{
+  "name": "runekit",
+  "version": "0.0.1",
+  "description": "A CMS-as-a-package for SvelteKit apps — handles admin routes, storage, db, schemas, types, and auth.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./admin": "./src/admin/index.ts",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "test": "vp test",
+    "check": "vp check"
+  },
+  "devDependencies": {
+    "@sveltejs/kit": "catalog:",
+    "svelte": "catalog:",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "@sveltejs/kit": "^2.0.0",
+    "svelte": "^5.0.0"
+  }
+}

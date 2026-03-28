@@ -19,28 +19,28 @@
 
 ```typescript
 // src/routes/profile/+page.server.ts
-import type { PageServerLoad } from './$types';
-import { db } from '$lib/server/database';
+import type { PageServerLoad } from "./$types";
+import { db } from "$lib/server/database";
 
 export const load: PageServerLoad = async ({ locals, params }) => {
-	// Access server-only resources
-	const user = await db.query.users.findFirst({
-		where: eq(users.id, locals.userId),
-	});
+  // Access server-only resources
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, locals.userId),
+  });
 
-	const posts = await db.query.posts.findMany({
-		where: eq(posts.authorId, user.id),
-	});
+  const posts = await db.query.posts.findMany({
+    where: eq(posts.authorId, user.id),
+  });
 
-	// Must return serializable data
-	return {
-		user: {
-			id: user.id,
-			name: user.name,
-			email: user.email,
-		},
-		posts,
-	};
+  // Must return serializable data
+  return {
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    },
+    posts,
+  };
 };
 ```
 
@@ -60,27 +60,24 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
 ```typescript
 // src/routes/dashboard/+page.ts
-import type { PageLoad } from './$types';
+import type { PageLoad } from "./$types";
 
 export const load: PageLoad = async ({ data, fetch }) => {
-	// `data` comes from +page.server.ts if it exists
-	const { user } = data;
+  // `data` comes from +page.server.ts if it exists
+  const { user } = data;
 
-	// Fetch additional data (works on both server and client)
-	const response = await fetch('/api/stats');
-	const stats = await response.json();
+  // Fetch additional data (works on both server and client)
+  const response = await fetch("/api/stats");
+  const stats = await response.json();
 
-	// Can access browser APIs (but check if in browser first)
-	const theme =
-		typeof window !== 'undefined'
-			? localStorage.getItem('theme')
-			: null;
+  // Can access browser APIs (but check if in browser first)
+  const theme = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
 
-	return {
-		user,
-		stats,
-		theme,
-	};
+  return {
+    user,
+    stats,
+    theme,
+  };
 };
 ```
 
@@ -130,14 +127,14 @@ export const load = async ({ data }) => {
 ```typescript
 // +page.server.ts - Fetch sensitive data
 export const load = async ({ locals }) => {
-	const user = await getUser(locals.session);
-	return { user };
+  const user = await getUser(locals.session);
+  return { user };
 };
 
 // +page.ts - Fetch public data
 export const load = async ({ data, fetch }) => {
-	const publicPosts = await fetch('/api/posts').then((r) => r.json());
-	return { ...data, publicPosts };
+  const publicPosts = await fetch("/api/posts").then((r) => r.json());
+  return { ...data, publicPosts };
 };
 ```
 
@@ -145,18 +142,18 @@ export const load = async ({ data, fetch }) => {
 
 ```typescript
 // +page.ts
-import { browser } from '$app/environment';
+import { browser } from "$app/environment";
 
 export const load = async ({ fetch }) => {
-	const serverData = await fetch('/api/data').then((r) => r.json());
+  const serverData = await fetch("/api/data").then((r) => r.json());
 
-	// Only run in browser
-	let clientOnlyData = null;
-	if (browser) {
-		clientOnlyData = localStorage.getItem('cache');
-	}
+  // Only run in browser
+  let clientOnlyData = null;
+  if (browser) {
+    clientOnlyData = localStorage.getItem("cache");
+  }
 
-	return { serverData, clientOnlyData };
+  return { serverData, clientOnlyData };
 };
 ```
 
@@ -165,15 +162,15 @@ export const load = async ({ fetch }) => {
 ```typescript
 // +page.ts
 export const load = async ({ fetch, depends }) => {
-	depends('app:posts'); // Invalidate with invalidate('app:posts')
+  depends("app:posts"); // Invalidate with invalidate('app:posts')
 
-	const posts = await fetch('/api/posts').then((r) => r.json());
-	return { posts };
+  const posts = await fetch("/api/posts").then((r) => r.json());
+  return { posts };
 };
 
 // Somewhere else:
-import { invalidate } from '$app/navigation';
-invalidate('app:posts'); // Re-runs load function
+import { invalidate } from "$app/navigation";
+invalidate("app:posts"); // Re-runs load function
 ```
 
 ## Common Mistakes
@@ -182,11 +179,11 @@ invalidate('app:posts'); // Re-runs load function
 
 ```typescript
 // +page.ts - WRONG
-import { db } from '$lib/server/database'; // ERROR - can't import server code
+import { db } from "$lib/server/database"; // ERROR - can't import server code
 
 export const load = async () => {
-	const users = await db.query.users.findMany(); // Won't work
-	return { users };
+  const users = await db.query.users.findMany(); // Won't work
+  return { users };
 };
 ```
 
@@ -197,8 +194,8 @@ export const load = async () => {
 ```typescript
 // +page.server.ts - WRONG
 export const load = async () => {
-	const user = await User.findOne(); // Returns class instance
-	return { user }; // ERROR - class instances aren't serializable
+  const user = await User.findOne(); // Returns class instance
+  return { user }; // ERROR - class instances aren't serializable
 };
 ```
 
@@ -206,14 +203,14 @@ export const load = async () => {
 
 ```typescript
 export const load = async () => {
-	const user = await User.findOne();
-	return {
-		user: {
-			id: user.id,
-			name: user.name,
-			email: user.email,
-		},
-	};
+  const user = await User.findOne();
+  return {
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    },
+  };
 };
 ```
 
@@ -222,51 +219,47 @@ export const load = async () => {
 ```typescript
 // +page.ts - WRONG
 export const load = async () => {
-	const theme = localStorage.getItem('theme'); // ERROR on server
-	return { theme };
+  const theme = localStorage.getItem("theme"); // ERROR on server
+  return { theme };
 };
 ```
 
 **Fix:** Check for browser
 
 ```typescript
-import { browser } from '$app/environment';
+import { browser } from "$app/environment";
 
 export const load = async () => {
-	const theme = browser ? localStorage.getItem('theme') : 'light';
-	return { theme };
+  const theme = browser ? localStorage.getItem("theme") : "light";
+  return { theme };
 };
 ```
 
 ## TypeScript
 
 ```typescript
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({
-	locals,
-	params,
-	url,
-}) => {
-	// TypeScript knows return type must be serializable
-	return {
-		user: {
-			id: 1,
-			name: 'Alice',
-		},
-	};
+export const load: PageServerLoad = async ({ locals, params, url }) => {
+  // TypeScript knows return type must be serializable
+  return {
+    user: {
+      id: 1,
+      name: "Alice",
+    },
+  };
 };
 ```
 
 ```typescript
-import type { PageLoad } from './$types';
+import type { PageLoad } from "./$types";
 
 export const load: PageLoad = async ({ data, fetch, params }) => {
-	// `data` is typed from +page.server.ts return type
-	return {
-		...data,
-		extra: 'data',
-	};
+  // `data` is typed from +page.server.ts return type
+  return {
+    ...data,
+    extra: "data",
+  };
 };
 ```
 

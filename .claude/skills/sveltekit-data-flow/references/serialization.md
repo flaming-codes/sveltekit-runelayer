@@ -41,9 +41,9 @@ Data travels from server → client as JSON. Non-JSON types break.
 ```typescript
 // +page.server.ts - WRONG
 export const load = async () => {
-	return {
-		createdAt: new Date(), // Serializes as string, not Date object
-	};
+  return {
+    createdAt: new Date(), // Serializes as string, not Date object
+  };
 };
 ```
 
@@ -61,15 +61,15 @@ export const load = async () => {
 ```typescript
 // +page.server.ts - RIGHT
 export const load = async () => {
-	const user = await db.users.findFirst();
+  const user = await db.users.findFirst();
 
-	return {
-		user: {
-			id: user.id,
-			name: user.name,
-			createdAt: user.createdAt.toISOString(), // Convert to string
-		},
-	};
+  return {
+    user: {
+      id: user.id,
+      name: user.name,
+      createdAt: user.createdAt.toISOString(), // Convert to string
+    },
+  };
 };
 ```
 
@@ -86,19 +86,19 @@ export const load = async () => {
 ```typescript
 // +page.server.ts - WRONG
 class User {
-	constructor(
-		public id: number,
-		public name: string,
-	) {}
+  constructor(
+    public id: number,
+    public name: string,
+  ) {}
 
-	getDisplayName() {
-		return `User: ${this.name}`;
-	}
+  getDisplayName() {
+    return `User: ${this.name}`;
+  }
 }
 
 export const load = async () => {
-	const user = new User(1, 'Alice');
-	return { user }; // Methods are lost during serialization
+  const user = new User(1, "Alice");
+  return { user }; // Methods are lost during serialization
 };
 ```
 
@@ -114,16 +114,16 @@ export const load = async () => {
 ```typescript
 // +page.server.ts - RIGHT
 export const load = async () => {
-	const user = await db.users.findFirst();
+  const user = await db.users.findFirst();
 
-	return {
-		user: {
-			id: user.id,
-			name: user.name,
-			email: user.email,
-			// Only plain data, no methods
-		},
-	};
+  return {
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      // Only plain data, no methods
+    },
+  };
 };
 ```
 
@@ -132,10 +132,10 @@ export const load = async () => {
 ```typescript
 // +page.server.ts - WRONG
 export const load = async () => {
-	return {
-		name: 'Alice',
-		email: undefined, // Removed during JSON.stringify
-	};
+  return {
+    name: "Alice",
+    email: undefined, // Removed during JSON.stringify
+  };
 };
 ```
 
@@ -151,10 +151,10 @@ export const load = async () => {
 ```typescript
 // +page.server.ts - RIGHT
 export const load = async () => {
-	return {
-		name: 'Alice',
-		email: null, // Preserved
-	};
+  return {
+    name: "Alice",
+    email: null, // Preserved
+  };
 };
 ```
 
@@ -163,13 +163,13 @@ export const load = async () => {
 ```typescript
 // +page.server.ts - WRONG
 export const load = async () => {
-	const tags = new Set(['svelte', 'typescript']);
-	const metadata = new Map([['version', '1.0']]);
+  const tags = new Set(["svelte", "typescript"]);
+  const metadata = new Map([["version", "1.0"]]);
 
-	return {
-		tags, // Becomes {}
-		metadata, // Becomes {}
-	};
+  return {
+    tags, // Becomes {}
+    metadata, // Becomes {}
+  };
 };
 ```
 
@@ -178,13 +178,13 @@ export const load = async () => {
 ```typescript
 // +page.server.ts - RIGHT
 export const load = async () => {
-	const tags = new Set(['svelte', 'typescript']);
-	const metadata = new Map([['version', '1.0']]);
+  const tags = new Set(["svelte", "typescript"]);
+  const metadata = new Map([["version", "1.0"]]);
 
-	return {
-		tags: Array.from(tags), // ['svelte', 'typescript']
-		metadata: Object.fromEntries(metadata), // { version: '1.0' }
-	};
+  return {
+    tags: Array.from(tags), // ['svelte', 'typescript']
+    metadata: Object.fromEntries(metadata), // { version: '1.0' }
+  };
 };
 ```
 
@@ -195,15 +195,15 @@ Most ORMs return plain objects with Date fields:
 ```typescript
 // +page.server.ts
 export const load = async () => {
-	const user = await db.query.users.findFirst();
-	// user = { id: 1, name: 'Alice', createdAt: Date }
+  const user = await db.query.users.findFirst();
+  // user = { id: 1, name: 'Alice', createdAt: Date }
 
-	return {
-		user: {
-			...user,
-			createdAt: user.createdAt.toISOString(), // Convert Date
-		},
-	};
+  return {
+    user: {
+      ...user,
+      createdAt: user.createdAt.toISOString(), // Convert Date
+    },
+  };
 };
 ```
 
@@ -211,12 +211,12 @@ Or use a helper:
 
 ```typescript
 function serialize<T extends Record<string, any>>(obj: T): T {
-	return JSON.parse(JSON.stringify(obj)); // Forces serialization
+  return JSON.parse(JSON.stringify(obj)); // Forces serialization
 }
 
 export const load = async () => {
-	const user = await db.query.users.findFirst();
-	return { user: serialize(user) };
+  const user = await db.query.users.findFirst();
+  return { user: serialize(user) };
 };
 ```
 
@@ -225,16 +225,16 @@ export const load = async () => {
 ```typescript
 // +page.server.ts - WRONG
 export const load = async () => {
-	return {
-		userId: 123456789012345678901234567890n, // ERROR - can't serialize
-	};
+  return {
+    userId: 123456789012345678901234567890n, // ERROR - can't serialize
+  };
 };
 
 // +page.server.ts - RIGHT
 export const load = async () => {
-	return {
-		userId: '123456789012345678901234567890', // String
-	};
+  return {
+    userId: "123456789012345678901234567890", // String
+  };
 };
 ```
 
@@ -254,10 +254,10 @@ Error: Data returned from `load` while rendering / is not serializable:
 const data = { user: new User() };
 
 try {
-	JSON.parse(JSON.stringify(data));
-	console.log('✅ Serializable');
+  JSON.parse(JSON.stringify(data));
+  console.log("✅ Serializable");
 } catch (e) {
-	console.log('❌ Not serializable');
+  console.log("❌ Not serializable");
 }
 ```
 
@@ -266,16 +266,16 @@ try {
 Use `satisfies` to catch issues at compile time:
 
 ```typescript
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad } from "./$types";
 
 export const load = (async () => {
-	return {
-		user: {
-			id: 1,
-			name: 'Alice',
-			createdAt: new Date(), // TypeScript allows this, but it's problematic
-		},
-	};
+  return {
+    user: {
+      id: 1,
+      name: "Alice",
+      createdAt: new Date(), // TypeScript allows this, but it's problematic
+    },
+  };
 }) satisfies PageServerLoad;
 ```
 
@@ -283,23 +283,23 @@ Better: Create a type that only allows primitives:
 
 ```typescript
 type Serializable =
-	| string
-	| number
-	| boolean
-	| null
-	| { [key: string]: Serializable }
-	| Serializable[];
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Serializable }
+  | Serializable[];
 
 export const load: PageServerLoad = async () => {
-	const data: Serializable = {
-		user: {
-			id: 1,
-			name: 'Alice',
-			createdAt: new Date().toISOString(), // Must be string
-		},
-	};
+  const data: Serializable = {
+    user: {
+      id: 1,
+      name: "Alice",
+      createdAt: new Date().toISOString(), // Must be string
+    },
+  };
 
-	return data;
+  return data;
 };
 ```
 

@@ -18,6 +18,7 @@ SvelteKit renders pages on the server by default. Understanding how Svelte 5 run
 SvelteKit generates HTML on the server, then "hydrates" on the client.
 
 **SSR flow:**
+
 1. Server runs `+page.server.ts` load function
 2. Server renders `+page.svelte` to HTML string
 3. Server sends HTML + CSS + JavaScript to browser
@@ -26,17 +27,20 @@ SvelteKit generates HTML on the server, then "hydrates" on the client.
 6. Page becomes fully interactive
 
 **SSR benefits:**
+
 - Fast first contentful paint (FCP)
 - SEO-friendly (search engines see content)
 - Works without JavaScript
 - Better perceived performance
 
 **SSR challenges with Svelte 5:**
+
 - Most runes don't run on server
 - CSS must load before HTML renders
 - Hydration mismatches cause errors
 
 ❌ **Wrong: Client-only code in SSR component**
+
 ```svelte
 <!-- +page.svelte (renders on server) -->
 <script>
@@ -49,6 +53,7 @@ SvelteKit generates HTML on the server, then "hydrates" on the client.
 ```
 
 ✅ **Right: Separate server data from client state**
+
 ```ts
 // +page.server.ts (runs only on server)
 export async function load() {
@@ -78,15 +83,16 @@ Understand which runes work on the server and which don't.
 
 **Rune SSR compatibility:**
 
-| Rune | SSR | Behavior |
-|------|-----|----------|
-| `$state()` | ❌ No | Not available on server - crashes |
-| `$derived()` | ⚠️ Partial | Runs once, doesn't re-run |
-| `$effect()` | ❌ No | Skipped entirely on server |
-| `$props()` | ✅ Yes | Receives data from load function |
-| `$bindable()` | ✅ Yes | Props work normally |
+| Rune          | SSR        | Behavior                          |
+| ------------- | ---------- | --------------------------------- |
+| `$state()`    | ❌ No      | Not available on server - crashes |
+| `$derived()`  | ⚠️ Partial | Runs once, doesn't re-run         |
+| `$effect()`   | ❌ No      | Skipped entirely on server        |
+| `$props()`    | ✅ Yes     | Receives data from load function  |
+| `$bindable()` | ✅ Yes     | Props work normally               |
 
 **$state() - client-only:**
+
 ```svelte
 <script>
   let { data } = $props();
@@ -101,6 +107,7 @@ Understand which runes work on the server and which don't.
 ```
 
 **$derived() - runs once on server:**
+
 ```svelte
 <script>
   let { data } = $props();
@@ -116,6 +123,7 @@ Understand which runes work on the server and which don't.
 ```
 
 **$effect() - client-only:**
+
 ```svelte
 <script>
   import { browser } from '$app/environment';
@@ -135,6 +143,7 @@ Understand which runes work on the server and which don't.
 ```
 
 **SSR-safe pattern:**
+
 ```ts
 // +page.server.ts
 export async function load() {
@@ -144,7 +153,7 @@ export async function load() {
   return {
     user,
     posts,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
 }
 ```
@@ -185,19 +194,20 @@ export async function load() {
 Use load functions to fetch data on the server, pass to client as props.
 
 **Server-only load function:**
+
 ```ts
 // +page.server.ts
-import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { error } from "@sveltejs/kit";
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const user = locals.user; // From hooks
   const product = await db.product.findUnique({
-    where: { id: params.id }
+    where: { id: params.id },
   });
 
   if (!product) {
-    throw error(404, 'Product not found');
+    throw error(404, "Product not found");
   }
 
   return {
@@ -205,16 +215,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     product,
     relatedProducts: await db.product.findMany({
       where: { categoryId: product.categoryId },
-      take: 4
-    })
+      take: 4,
+    }),
   };
 };
 ```
 
 **Universal load function (runs on server AND client):**
+
 ```ts
 // +page.ts (no .server suffix)
-import type { PageLoad } from './$types';
+import type { PageLoad } from "./$types";
 
 export const load: PageLoad = async ({ fetch, params }) => {
   // Use SvelteKit's fetch for SSR + client compatibility
@@ -226,6 +237,7 @@ export const load: PageLoad = async ({ fetch, params }) => {
 ```
 
 **Using load data in component:**
+
 ```svelte
 <!-- +page.svelte -->
 <script>
@@ -251,6 +263,7 @@ export const load: PageLoad = async ({ fetch, params }) => {
 ```
 
 **Streaming data with promises:**
+
 ```ts
 // +page.server.ts
 export async function load() {
@@ -259,7 +272,7 @@ export async function load() {
     user: await fetchUser(),
 
     // Streamed (doesn't block SSR)
-    posts: fetchPosts()
+    posts: fetchPosts(),
   };
 }
 ```
@@ -290,6 +303,7 @@ export async function load() {
 Ensure Tailwind CSS loads before HTML renders to prevent flash of unstyled content.
 
 **Root layout CSS import (recommended):**
+
 ```svelte
 <!-- src/routes/+layout.svelte -->
 <script>
@@ -300,11 +314,13 @@ Ensure Tailwind CSS loads before HTML renders to prevent flash of unstyled conte
 ```
 
 **Why this works:**
+
 - SvelteKit includes CSS in `<head>` before body
 - Browser blocks render until CSS loads (no FOUC)
 - Works correctly in both dev and production
 
 ❌ **Wrong: Importing CSS in pages**
+
 ```svelte
 <!-- +page.svelte -->
 <script>
@@ -313,6 +329,7 @@ Ensure Tailwind CSS loads before HTML renders to prevent flash of unstyled conte
 ```
 
 ✅ **Right: Import once in root layout**
+
 ```svelte
 <!-- +layout.svelte -->
 <script>
@@ -321,6 +338,7 @@ Ensure Tailwind CSS loads before HTML renders to prevent flash of unstyled conte
 ```
 
 **Critical CSS inlining (advanced):**
+
 ```svelte
 <!-- src/app.html -->
 <head>
@@ -342,6 +360,7 @@ Ensure Tailwind CSS loads before HTML renders to prevent flash of unstyled conte
 ```
 
 **Loading states during hydration:**
+
 ```svelte
 <script>
   import { browser } from '$app/environment';
@@ -369,6 +388,7 @@ Ensure Tailwind CSS loads before HTML renders to prevent flash of unstyled conte
 ```
 
 **Preloading fonts to prevent FOIT:**
+
 ```svelte
 <!-- +layout.svelte -->
 <svelte:head>
@@ -387,12 +407,14 @@ Ensure Tailwind CSS loads before HTML renders to prevent flash of unstyled conte
 Ensure server-rendered HTML matches client-hydrated HTML.
 
 **Hydration mismatch causes:**
+
 1. Using browser APIs directly
 2. Date/time rendering without normalization
 3. Random values
 4. Conditionals based on client-only state
 
 ❌ **Wrong: Hydration mismatch**
+
 ```svelte
 <script>
   // Server renders nothing, client renders date
@@ -404,6 +426,7 @@ Ensure server-rendered HTML matches client-hydrated HTML.
 ```
 
 ✅ **Right: Server and client match**
+
 ```svelte
 <script>
   import { browser } from '$app/environment';
@@ -423,6 +446,7 @@ Ensure server-rendered HTML matches client-hydrated HTML.
 ```
 
 **Suppressing hydration warnings:**
+
 ```svelte
 <!-- Only when intentional mismatch is acceptable -->
 <div data-sveltekit-preload-data="off">
@@ -431,6 +455,7 @@ Ensure server-rendered HTML matches client-hydrated HTML.
 ```
 
 **Client-only components:**
+
 ```svelte
 <!-- ClientOnly.svelte -->
 <script>
@@ -456,6 +481,7 @@ Ensure server-rendered HTML matches client-hydrated HTML.
 ```
 
 **Testing for hydration issues:**
+
 ```bash
 # Run build
 npm run build
@@ -472,6 +498,7 @@ npm run preview
 Stream slow data without blocking initial page render.
 
 **Streaming pattern:**
+
 ```ts
 // +page.server.ts
 export async function load() {
@@ -481,7 +508,7 @@ export async function load() {
 
     // Slow data (streamed)
     analytics: fetchAnalytics(), // Promise, not awaited
-    recommendations: fetchRecommendations()
+    recommendations: fetchRecommendations(),
   };
 }
 ```
@@ -522,6 +549,7 @@ export async function load() {
 ```
 
 **Tailwind classes in loading states:**
+
 ```svelte
 {#await data.posts}
   <!-- Skeleton loader with Tailwind -->
@@ -548,38 +576,41 @@ export async function load() {
 Organize code by where it runs.
 
 **Server-only code (`lib/server/`):**
+
 ```ts
 // src/lib/server/db.ts
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { drizzle } from "drizzle-orm/node-postgres";
 
 export const db = drizzle(process.env.DATABASE_URL);
 ```
 
 ```ts
 // src/lib/server/auth.ts
-import { PRIVATE_API_KEY } from '$env/static/private';
+import { PRIVATE_API_KEY } from "$env/static/private";
 
 export async function verifyToken(token: string) {
   // Server-only logic
-  return fetch('https://api.example.com/verify', {
-    headers: { 'Authorization': `Bearer ${PRIVATE_API_KEY}` }
+  return fetch("https://api.example.com/verify", {
+    headers: { Authorization: `Bearer ${PRIVATE_API_KEY}` },
   });
 }
 ```
 
 **Client-friendly utilities (`lib/utils/`):**
+
 ```ts
 // src/lib/utils/format.ts
 export function formatDate(date: Date): string {
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }
 ```
 
 **Component organization:**
+
 ```
 src/lib/components/
 ├── ui/              # Universal components (work on server)
@@ -593,16 +624,17 @@ src/lib/components/
 ```
 
 **Enforcing server-only imports:**
+
 ```ts
 // vite.config.js
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
   resolve: {
-    conditions: ['browser', 'module', 'import']
+    conditions: ["browser", "module", "import"],
   },
   ssr: {
-    noExternal: [] // Force SSR for certain packages
-  }
+    noExternal: [], // Force SSR for certain packages
+  },
 });
 ```
 
@@ -611,6 +643,7 @@ export default defineConfig({
 Optimize server-side rendering for faster Time to First Byte (TTFB).
 
 **Parallel data fetching:**
+
 ```ts
 // +page.server.ts
 export async function load() {
@@ -619,26 +652,24 @@ export async function load() {
   // const posts = await fetchPosts();
 
   // ✅ Parallel (fast)
-  const [user, posts] = await Promise.all([
-    fetchUser(),
-    fetchPosts()
-  ]);
+  const [user, posts] = await Promise.all([fetchUser(), fetchPosts()]);
 
   return { user, posts };
 }
 ```
 
 **Caching expensive operations:**
+
 ```ts
 // +page.server.ts
-import { setHeaders } from '@sveltejs/kit';
+import { setHeaders } from "@sveltejs/kit";
 
 export async function load({ setHeaders }) {
   const data = await expensiveOperation();
 
   // Cache for 1 hour
   setHeaders({
-    'cache-control': 'public, max-age=3600'
+    "cache-control": "public, max-age=3600",
   });
 
   return { data };
@@ -646,6 +677,7 @@ export async function load({ setHeaders }) {
 ```
 
 **Lazy-loading components:**
+
 ```svelte
 <script>
   let { data } = $props();
@@ -666,18 +698,20 @@ export async function load({ setHeaders }) {
 ```
 
 **Prerendering static pages:**
+
 ```ts
 // +page.ts
 export const prerender = true;
 
 export function load() {
   return {
-    staticContent: 'This page is pre-rendered at build time'
+    staticContent: "This page is pre-rendered at build time",
   };
 }
 ```
 
 **Selective SSR:**
+
 ```ts
 // +page.ts
 export const ssr = false; // Disable SSR for this page
@@ -691,6 +725,7 @@ export const ssr = true;
 **Error 1: "$state is not defined"**
 
 ❌ **Cause:**
+
 ```svelte
 <script>
   let count = $state(0); // Used in SSR context
@@ -698,6 +733,7 @@ export const ssr = true;
 ```
 
 ✅ **Fix:**
+
 ```svelte
 <script>
   let { data } = $props();
@@ -708,6 +744,7 @@ export const ssr = true;
 **Error 2: "localStorage is not defined"**
 
 ❌ **Cause:**
+
 ```svelte
 <script>
   let theme = localStorage.getItem('theme'); // Runs on server
@@ -715,6 +752,7 @@ export const ssr = true;
 ```
 
 ✅ **Fix:**
+
 ```svelte
 <script>
   import { browser } from '$app/environment';
@@ -732,11 +770,13 @@ export const ssr = true;
 **Error 3: "Hydration mismatch"**
 
 ❌ **Cause:**
+
 ```svelte
 <p>{Math.random()}</p> <!-- Different on server and client -->
 ```
 
 ✅ **Fix:**
+
 ```svelte
 <script>
   let { data } = $props();
@@ -748,17 +788,20 @@ export const ssr = true;
 **Error 4: "CSS not loading"**
 
 ❌ **Cause:**
+
 ```js
 // vite.config.js
-plugins: [sveltekit(), tailwindcss()] // Wrong order
+plugins: [sveltekit(), tailwindcss()]; // Wrong order
 ```
 
 ✅ **Fix:**
+
 ```js
-plugins: [tailwindcss(), sveltekit()] // Correct order
+plugins: [tailwindcss(), sveltekit()]; // Correct order
 ```
 
 **Debugging SSR issues:**
+
 ```bash
 # Check server-side logs
 npm run build
@@ -772,6 +815,7 @@ node build/index.js
 ```
 
 **SSR checklist:**
+
 - [ ] Load functions fetch data on server
 - [ ] No `$state()` in SSR components
 - [ ] Guard browser APIs with `if (browser)`
@@ -782,6 +826,7 @@ node build/index.js
 - [ ] Streaming used for slow data
 
 **Next steps:**
+
 - Learn data loading patterns in `data-loading.md`
 - Understand runes constraints in `svelte5-runes.md`
 - Optimize performance in `performance-optimization.md`

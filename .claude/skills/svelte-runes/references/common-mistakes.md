@@ -820,6 +820,7 @@ which one triggered an update.
 ```
 
 **When to use:**
+
 - Something is not updating when it should
 - An effect or derived is running more often than expected
 - You need to identify which dependency triggered a re-run

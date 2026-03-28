@@ -31,34 +31,36 @@ npm install -D @sveltejs/adapter-auto
 
 ```js
 // svelte.config.js
-import adapter from '@sveltejs/adapter-auto';
+import adapter from "@sveltejs/adapter-auto";
 
 export default {
-	kit: {
-		adapter: adapter()
-	}
+  kit: {
+    adapter: adapter(),
+  },
 };
 ```
 
 ### Supported Platforms
 
-| Platform | Auto-Detected Adapter |
-|----------|----------------------|
-| Cloudflare Pages | `@sveltejs/adapter-cloudflare` |
-| Netlify | `@sveltejs/adapter-netlify` |
-| Vercel | `@sveltejs/adapter-vercel` |
-| Azure Static Web Apps | `svelte-adapter-azure-swa` |
-| AWS via SST | `svelte-kit-sst` |
-| Google Cloud Run | `@sveltejs/adapter-node` |
+| Platform              | Auto-Detected Adapter          |
+| --------------------- | ------------------------------ |
+| Cloudflare Pages      | `@sveltejs/adapter-cloudflare` |
+| Netlify               | `@sveltejs/adapter-netlify`    |
+| Vercel                | `@sveltejs/adapter-vercel`     |
+| Azure Static Web Apps | `svelte-adapter-azure-swa`     |
+| AWS via SST           | `svelte-kit-sst`               |
+| Google Cloud Run      | `@sveltejs/adapter-node`       |
 
 ### When to Use
 
 ✅ **Good for:**
+
 - Quick prototyping
 - Standard deployments
 - Projects without platform-specific needs
 
 ❌ **Not suitable for:**
+
 - Platform-specific configuration (edge runtime, regions, etc.)
 - Advanced adapter options
 - Custom deployment requirements
@@ -77,14 +79,14 @@ npm install -D @sveltejs/adapter-vercel
 
 ```js
 // svelte.config.js
-import adapter from '@sveltejs/adapter-vercel';
+import adapter from "@sveltejs/adapter-vercel";
 
 export default {
-	kit: {
-		adapter: adapter({
-			edge: true  // Now you can use platform-specific options
-		})
-	}
+  kit: {
+    adapter: adapter({
+      edge: true, // Now you can use platform-specific options
+    }),
+  },
 };
 ```
 
@@ -102,12 +104,12 @@ npm install -D @sveltejs/adapter-node
 
 ```js
 // svelte.config.js
-import adapter from '@sveltejs/adapter-node';
+import adapter from "@sveltejs/adapter-node";
 
 export default {
-	kit: {
-		adapter: adapter()
-	}
+  kit: {
+    adapter: adapter(),
+  },
 };
 ```
 
@@ -115,15 +117,15 @@ export default {
 
 ```js
 adapter({
-	// Output directory (default: 'build')
-	out: 'build',
+  // Output directory (default: 'build')
+  out: "build",
 
-	// Precompress files with gzip and brotli (default: true)
-	precompress: true,
+  // Precompress files with gzip and brotli (default: true)
+  precompress: true,
 
-	// Environment variable prefix (default: '')
-	envPrefix: ''
-})
+  // Environment variable prefix (default: '')
+  envPrefix: "",
+});
 ```
 
 ### Environment Variables
@@ -212,8 +214,8 @@ node --env-file=.env build
 ```js
 // svelte.config.js
 adapter({
-	envPrefix: 'MY_APP_'
-})
+  envPrefix: "MY_APP_",
+});
 ```
 
 ```bash
@@ -235,16 +237,17 @@ Adapter-node handles graceful shutdown automatically:
 5. Force-closes remaining connections after `SHUTDOWN_TIMEOUT`
 
 **Listening to shutdown events:**
+
 ```js
 // your-app-code.js
-process.on('sveltekit:shutdown', async (reason) => {
-	// reason is 'SIGINT', 'SIGTERM', or 'IDLE'
+process.on("sveltekit:shutdown", async (reason) => {
+  // reason is 'SIGINT', 'SIGTERM', or 'IDLE'
 
-	// Close database connections
-	await db.close();
+  // Close database connections
+  await db.close();
 
-	// Stop background jobs
-	await jobs.stop();
+  // Stop background jobs
+  await jobs.stop();
 });
 ```
 
@@ -288,29 +291,30 @@ Create your own server using the exported handler.
 
 ```js
 // my-server.js
-import { handler } from './build/handler.js';
-import express from 'express';
+import { handler } from "./build/handler.js";
+import express from "express";
 
 const app = express();
 
 // Add custom routes
-app.get('/healthcheck', (req, res) => {
-	res.end('ok');
+app.get("/healthcheck", (req, res) => {
+  res.end("ok");
 });
 
 // SvelteKit handles everything else
 app.use(handler);
 
 app.listen(3000, () => {
-	console.log('listening on port 3000');
+  console.log("listening on port 3000");
 });
 ```
 
 **With middleware:**
+
 ```js
-import { handler } from './build/handler.js';
-import express from 'express';
-import compression from '@polka/compression';
+import { handler } from "./build/handler.js";
+import express from "express";
+import compression from "@polka/compression";
 
 const app = express();
 
@@ -318,7 +322,7 @@ const app = express();
 app.use(compression());
 
 // Custom API routes
-app.use('/api/custom', customApiRouter);
+app.use("/api/custom", customApiRouter);
 
 // SvelteKit
 app.use(handler);
@@ -377,18 +381,18 @@ npm install -D @sveltejs/adapter-static
 
 ```js
 // svelte.config.js
-import adapter from '@sveltejs/adapter-static';
+import adapter from "@sveltejs/adapter-static";
 
 export default {
-	kit: {
-		adapter: adapter({
-			pages: 'build',
-			assets: 'build',
-			fallback: undefined,
-			precompress: false,
-			strict: true
-		})
-	}
+  kit: {
+    adapter: adapter({
+      pages: "build",
+      assets: "build",
+      fallback: undefined,
+      precompress: false,
+      strict: true,
+    }),
+  },
 };
 ```
 
@@ -396,21 +400,21 @@ export default {
 
 ```js
 adapter({
-	// Output directory for prerendered pages (default: 'build')
-	pages: 'build',
+  // Output directory for prerendered pages (default: 'build')
+  pages: "build",
 
-	// Output directory for static assets (default: same as pages)
-	assets: 'build',
+  // Output directory for static assets (default: same as pages)
+  assets: "build",
 
-	// SPA fallback page (e.g., '200.html', '404.html')
-	fallback: undefined,
+  // SPA fallback page (e.g., '200.html', '404.html')
+  fallback: undefined,
 
-	// Precompress files with gzip and brotli (default: false)
-	precompress: false,
+  // Precompress files with gzip and brotli (default: false)
+  precompress: false,
 
-	// Require all pages to be prerendered (default: true)
-	strict: true
-})
+  // Require all pages to be prerendered (default: true)
+  strict: true,
+});
 ```
 
 ### Enable Prerendering
@@ -421,6 +425,7 @@ export const prerender = true;
 ```
 
 **Or per-route:**
+
 ```js
 // src/routes/about/+page.js
 export const prerender = true;
@@ -433,7 +438,7 @@ Important for static hosting:
 ```js
 // src/routes/+layout.js
 export const prerender = true;
-export const trailingSlash = 'always';  // Creates /page/index.html instead of /page.html
+export const trailingSlash = "always"; // Creates /page/index.html instead of /page.html
 ```
 
 ### SPA Mode
@@ -443,14 +448,14 @@ Create a single-page application with a fallback page.
 ```js
 // svelte.config.js
 adapter({
-	fallback: '200.html'  // Or '404.html' depending on host
-})
+  fallback: "200.html", // Or '404.html' depending on host
+});
 ```
 
 ```js
 // src/routes/+layout.js
-export const prerender = false;  // Don't prerender in SPA mode
-export const ssr = false;        // Client-side only
+export const prerender = false; // Don't prerender in SPA mode
+export const ssr = false; // Client-side only
 ```
 
 **Performance impact:** SPAs have worse initial load times and SEO. Prefer static generation when possible.
@@ -459,17 +464,17 @@ export const ssr = false;        // Client-side only
 
 ```js
 // svelte.config.js
-import adapter from '@sveltejs/adapter-static';
+import adapter from "@sveltejs/adapter-static";
 
 export default {
-	kit: {
-		adapter: adapter({
-			fallback: '404.html'
-		}),
-		paths: {
-			base: process.argv.includes('dev') ? '' : process.env.BASE_PATH
-		}
-	}
+  kit: {
+    adapter: adapter({
+      fallback: "404.html",
+    }),
+    paths: {
+      base: process.argv.includes("dev") ? "" : process.env.BASE_PATH,
+    },
+  },
 };
 ```
 
@@ -529,14 +534,15 @@ jobs:
 ```js
 // svelte.config.js
 adapter({
-	pages: 'build',
-	assets: 'build',
-	fallback: '404.html',
-	precompress: true
-})
+  pages: "build",
+  assets: "build",
+  fallback: "404.html",
+  precompress: true,
+});
 ```
 
 Create `static/_redirects`:
+
 ```
 /*    /index.html   200
 ```
@@ -544,14 +550,15 @@ Create `static/_redirects`:
 ### Vercel
 
 Zero-config support:
+
 ```js
 // svelte.config.js
-import adapter from '@sveltejs/adapter-static';
+import adapter from "@sveltejs/adapter-static";
 
 export default {
-	kit: {
-		adapter: adapter()  // No options needed for Vercel
-	}
+  kit: {
+    adapter: adapter(), // No options needed for Vercel
+  },
 };
 ```
 
@@ -569,12 +576,12 @@ npm install -D @sveltejs/adapter-vercel
 
 ```js
 // svelte.config.js
-import adapter from '@sveltejs/adapter-vercel';
+import adapter from "@sveltejs/adapter-vercel";
 
 export default {
-	kit: {
-		adapter: adapter()
-	}
+  kit: {
+    adapter: adapter(),
+  },
 };
 ```
 
@@ -582,36 +589,37 @@ export default {
 
 ```js
 adapter({
-	// Run on Vercel Edge Runtime (default: false)
-	edge: false,
+  // Run on Vercel Edge Runtime (default: false)
+  edge: false,
 
-	// External dependencies (not bundled)
-	external: [],
+  // External dependencies (not bundled)
+  external: [],
 
-	// Split API routes into separate functions (default: false)
-	split: false,
+  // Split API routes into separate functions (default: false)
+  split: false,
 
-	// Regions for edge deployment
-	regions: ['iad1', 'sfo1'],
+  // Regions for edge deployment
+  regions: ["iad1", "sfo1"],
 
-	// ISR configuration
-	isr: {
-		expiration: 60,
-		bypassToken: process.env.BYPASS_TOKEN
-	}
-})
+  // ISR configuration
+  isr: {
+    expiration: 60,
+    bypassToken: process.env.BYPASS_TOKEN,
+  },
+});
 ```
 
 ### Edge Runtime
 
 ```js
 adapter({
-	edge: true,
-	regions: ['iad1', 'sfo1']  // Deploy to specific regions
-})
+  edge: true,
+  regions: ["iad1", "sfo1"], // Deploy to specific regions
+});
 ```
 
 **Limitations:**
+
 - No Node.js APIs
 - No file system access
 - Limited package compatibility
@@ -621,19 +629,19 @@ adapter({
 ```js
 // svelte.config.js
 adapter({
-	isr: {
-		expiration: 60,  // Revalidate every 60 seconds
-		bypassToken: process.env.BYPASS_TOKEN
-	}
-})
+  isr: {
+    expiration: 60, // Revalidate every 60 seconds
+    bypassToken: process.env.BYPASS_TOKEN,
+  },
+});
 ```
 
 ```js
 // src/routes/blog/[slug]/+page.server.js
 export const config = {
-	isr: {
-		expiration: 60
-	}
+  isr: {
+    expiration: 60,
+  },
 };
 ```
 
@@ -641,16 +649,18 @@ export const config = {
 
 ```js
 adapter({
-	split: true  // Each route becomes a separate serverless function
-})
+  split: true, // Each route becomes a separate serverless function
+});
 ```
 
 **Benefits:**
+
 - Smaller function sizes
 - Faster cold starts
 - Independent scaling
 
 **Trade-offs:**
+
 - More functions to manage
 - Potential cold start latency
 
@@ -668,17 +678,17 @@ npm install -D @sveltejs/adapter-cloudflare
 
 ```js
 // svelte.config.js
-import adapter from '@sveltejs/adapter-cloudflare';
+import adapter from "@sveltejs/adapter-cloudflare";
 
 export default {
-	kit: {
-		adapter: adapter({
-			routes: {
-				include: ['/*'],
-				exclude: ['<all>']
-			}
-		})
-	}
+  kit: {
+    adapter: adapter({
+      routes: {
+        include: ["/*"],
+        exclude: ["<all>"],
+      },
+    }),
+  },
 };
 ```
 
@@ -687,6 +697,7 @@ export default {
 Automatic deployment when connected to GitHub.
 
 **wrangler.toml:**
+
 ```toml
 name = "my-app"
 compatibility_date = "2024-01-01"
@@ -699,12 +710,10 @@ bucket = ".svelte-kit/cloudflare"
 
 ```js
 // wrangler.toml
-name = "my-worker"
-main = ".svelte-kit/cloudflare/index.js"
-compatibility_date = "2024-01-01"
-
-[build]
-command = "npm run build"
+name = "my-worker";
+main = ".svelte-kit/cloudflare/index.js";
+compatibility_date = "2024-01-01"[build];
+command = "npm run build";
 ```
 
 ### Platform Context
@@ -714,14 +723,14 @@ Access Cloudflare-specific features:
 ```js
 // src/routes/+page.server.js
 export async function load({ platform }) {
-	// Access KV namespaces
-	const value = await platform.env.MY_KV.get('key');
+  // Access KV namespaces
+  const value = await platform.env.MY_KV.get("key");
 
-	// Access Durable Objects
-	const id = platform.env.MY_DO.idFromName('name');
-	const stub = platform.env.MY_DO.get(id);
+  // Access Durable Objects
+  const id = platform.env.MY_DO.idFromName("name");
+  const stub = platform.env.MY_DO.get(id);
 
-	return { value };
+  return { value };
 }
 ```
 
@@ -739,15 +748,15 @@ npm install -D @sveltejs/adapter-netlify
 
 ```js
 // svelte.config.js
-import adapter from '@sveltejs/adapter-netlify';
+import adapter from "@sveltejs/adapter-netlify";
 
 export default {
-	kit: {
-		adapter: adapter({
-			edge: false,
-			split: false
-		})
-	}
+  kit: {
+    adapter: adapter({
+      edge: false,
+      split: false,
+    }),
+  },
 };
 ```
 
@@ -755,8 +764,8 @@ export default {
 
 ```js
 adapter({
-	edge: true
-})
+  edge: true,
+});
 ```
 
 ### Netlify Forms
@@ -771,15 +780,15 @@ adapter({
 
 ## Platform Comparison
 
-| Feature | Node | Static | Vercel | Cloudflare | Netlify |
-|---------|------|--------|--------|------------|---------|
-| SSR | ✅ | ❌ | ✅ | ✅ | ✅ |
-| SSG | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Edge Runtime | ❌ | ❌ | ✅ | ✅ | ✅ |
-| File System | ✅ | ✅ | Limited | ❌ | Limited |
-| WebSockets | ✅ | ❌ | ❌ | ✅ | ❌ |
-| Streaming | ✅ | ❌ | ✅ | ✅ | ✅ |
-| Custom Server | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Feature       | Node | Static | Vercel  | Cloudflare | Netlify |
+| ------------- | ---- | ------ | ------- | ---------- | ------- |
+| SSR           | ✅   | ❌     | ✅      | ✅         | ✅      |
+| SSG           | ✅   | ✅     | ✅      | ✅         | ✅      |
+| Edge Runtime  | ❌   | ❌     | ✅      | ✅         | ✅      |
+| File System   | ✅   | ✅     | Limited | ❌         | Limited |
+| WebSockets    | ✅   | ❌     | ❌      | ✅         | ❌      |
+| Streaming     | ✅   | ❌     | ✅      | ✅         | ✅      |
+| Custom Server | ✅   | ❌     | ❌      | ❌         | ❌      |
 
 ## Writing Custom Adapters
 
@@ -788,29 +797,29 @@ adapter({
 ```js
 // my-adapter/index.js
 export default function adapter(options) {
-	return {
-		name: 'my-adapter',
+  return {
+    name: "my-adapter",
 
-		async adapt(builder) {
-			// Clean output directory
-			builder.rimraf(options.out);
+    async adapt(builder) {
+      // Clean output directory
+      builder.rimraf(options.out);
 
-			// Write server files
-			builder.writeServer(options.out);
+      // Write server files
+      builder.writeServer(options.out);
 
-			// Write client files
-			builder.writeClient(options.out);
+      // Write client files
+      builder.writeClient(options.out);
 
-			// Write prerendered files
-			builder.writePrerendered(options.out);
+      // Write prerendered files
+      builder.writePrerendered(options.out);
 
-			// Copy static files
-			builder.copy('static', options.out);
+      // Copy static files
+      builder.copy("static", options.out);
 
-			// Generate platform-specific files
-			builder.generateManifest({ format: 'esm' });
-		}
-	};
+      // Generate platform-specific files
+      builder.generateManifest({ format: "esm" });
+    },
+  };
 }
 ```
 
@@ -818,33 +827,34 @@ export default function adapter(options) {
 
 ```typescript
 interface Builder {
-	// Clean directory
-	rimraf(dir: string): void;
+  // Clean directory
+  rimraf(dir: string): void;
 
-	// Create directory
-	mkdirp(dir: string): void;
+  // Create directory
+  mkdirp(dir: string): void;
 
-	// Write files
-	writeClient(dest: string): void;
-	writeServer(dest: string): void;
-	writePrerendered(dest: string): void;
+  // Write files
+  writeClient(dest: string): void;
+  writeServer(dest: string): void;
+  writePrerendered(dest: string): void;
 
-	// Copy files
-	copy(from: string, to: string, opts?: {
-		filter?: (file: string) => boolean;
-		replace?: Record<string, string>;
-	}): void;
+  // Copy files
+  copy(
+    from: string,
+    to: string,
+    opts?: {
+      filter?: (file: string) => boolean;
+      replace?: Record<string, string>;
+    },
+  ): void;
 
-	// Generate manifest
-	generateManifest(opts: {
-		format: 'esm' | 'cjs';
-		relativePath?: string;
-	}): void;
+  // Generate manifest
+  generateManifest(opts: { format: "esm" | "cjs"; relativePath?: string }): void;
 
-	// App configuration
-	config: Record<string, any>;
-	prerendered: Map<string, string>;
-	routes: Route[];
+  // App configuration
+  config: Record<string, any>;
+  prerendered: Map<string, string>;
+  routes: Route[];
 }
 ```
 

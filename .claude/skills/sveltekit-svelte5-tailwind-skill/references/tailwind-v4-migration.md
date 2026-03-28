@@ -19,17 +19,20 @@ Tailwind CSS v4 introduces a new architecture with CSS-first configuration and a
 Understand what's changed before starting migration:
 
 **Configuration changes:**
+
 - JS config file (`tailwind.config.js`) → CSS-based configuration
 - `@apply` directive deprecated in favor of utility classes
 - Custom plugin API completely rewritten
 - PostCSS configuration no longer required
 
 **Build system changes:**
+
 - New `@tailwindcss/vite` plugin required
 - JIT mode always enabled (no configuration needed)
 - Faster build times with new engine
 
 **Vite plugin order matters:**
+
 ```js
 // ❌ WRONG: Old v3 pattern
 import { sveltekit } from '@sveltejs/kit/vite';
@@ -52,6 +55,7 @@ export default {
 ```
 
 **CSS import changes:**
+
 ```css
 /* ❌ v3 approach */
 @tailwind base;
@@ -73,36 +77,38 @@ export default {
 Transform your JavaScript config to CSS-based configuration:
 
 **Before (v3 tailwind.config.js):**
+
 ```js
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./src/**/*.{html,js,svelte,ts}'],
+  content: ["./src/**/*.{html,js,svelte,ts}"],
   theme: {
     extend: {
       colors: {
         brand: {
-          primary: '#3B82F6',
-          secondary: '#10B981'
-        }
+          primary: "#3B82F6",
+          secondary: "#10B981",
+        },
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif']
-      }
-    }
+        sans: ["Inter", "sans-serif"],
+      },
+    },
   },
-  plugins: []
+  plugins: [],
 };
 ```
 
 **After (v4 app.css with CSS configuration):**
+
 ```css
 /* src/app.css */
 @import "tailwindcss";
 
 /* Custom theme configuration */
 @theme {
-  --color-brand-primary: #3B82F6;
-  --color-brand-secondary: #10B981;
+  --color-brand-primary: #3b82f6;
+  --color-brand-secondary: #10b981;
 
   --font-sans: Inter, sans-serif;
 }
@@ -116,13 +122,14 @@ export default {
 **Decision rule:** Use CSS configuration for theme customization instead of JS config. The v4 approach integrates better with SvelteKit's HMR.
 
 **Alternative approach - keep minimal JS config:**
+
 ```js
 // tailwind.config.js (optional in v4)
 export default {
   // Only use for complex plugin configurations
   plugins: [
     // Custom plugins if needed
-  ]
+  ],
 };
 ```
 
@@ -131,15 +138,17 @@ export default {
 Content scanning works differently in v4:
 
 **v3 content configuration:**
+
 ```js
 // tailwind.config.js
 export default {
-  content: ['./src/**/*.{html,js,svelte,ts}'],
-  safelist: ['bg-red-500', 'text-blue-600']
+  content: ["./src/**/*.{html,js,svelte,ts}"],
+  safelist: ["bg-red-500", "text-blue-600"],
 };
 ```
 
 **v4 automatic content detection:**
+
 ```css
 /* app.css */
 @import "tailwindcss";
@@ -153,6 +162,7 @@ export default {
 ```
 
 **SvelteKit-specific patterns:**
+
 ```css
 /* Include all route files */
 @source "src/routes/**/*.svelte";
@@ -166,6 +176,7 @@ export default {
 ```
 
 **Testing content detection:**
+
 ```svelte
 <!-- Test component: src/lib/test/TailwindTest.svelte -->
 <script>
@@ -190,6 +201,7 @@ npm run build
 Core utilities remain the same, but some patterns change:
 
 **Arbitrary values - enhanced syntax:**
+
 ```svelte
 <!-- ❌ v3 syntax (still works but verbose) -->
 <div class="bg-[#3B82F6] text-[14px]">Old syntax</div>
@@ -201,6 +213,7 @@ Core utilities remain the same, but some patterns change:
 ```
 
 **Color opacity changes:**
+
 ```svelte
 <!-- ❌ v3 slash notation -->
 <div class="bg-blue-500/50 text-white/75">v3 syntax</div>
@@ -210,6 +223,7 @@ Core utilities remain the same, but some patterns change:
 ```
 
 **Container queries (new in v4):**
+
 ```svelte
 <!-- ✅ New feature in v4 -->
 <div class="@container">
@@ -220,6 +234,7 @@ Core utilities remain the same, but some patterns change:
 ```
 
 **Important modifier:**
+
 ```svelte
 <!-- ❌ v3 prefix notation -->
 <div class="!bg-red-500">Force important</div>
@@ -233,25 +248,27 @@ Core utilities remain the same, but some patterns change:
 Custom plugins require API updates:
 
 **v3 plugin example:**
+
 ```js
 // tailwind.config.js
-const plugin = require('tailwindcss/plugin');
+const plugin = require("tailwindcss/plugin");
 
 export default {
   plugins: [
-    plugin(function({ addUtilities, theme }) {
+    plugin(function ({ addUtilities, theme }) {
       const newUtilities = {
-        '.text-glow': {
-          textShadow: `0 0 10px ${theme('colors.blue.500')}`
-        }
+        ".text-glow": {
+          textShadow: `0 0 10px ${theme("colors.blue.500")}`,
+        },
       };
       addUtilities(newUtilities);
-    })
-  ]
+    }),
+  ],
 };
 ```
 
 **v4 CSS-based alternative:**
+
 ```css
 /* app.css - preferred approach */
 @utility text-glow {
@@ -260,24 +277,26 @@ export default {
 ```
 
 **v4 plugin API (if JS needed):**
+
 ```js
 // tailwind.config.js
 export default {
   plugins: [
-    function({ addUtilities, theme }) {
+    function ({ addUtilities, theme }) {
       addUtilities({
-        '.text-glow': {
-          'text-shadow': `0 0 10px ${theme('colors.blue.500')}`
-        }
+        ".text-glow": {
+          "text-shadow": `0 0 10px ${theme("colors.blue.500")}`,
+        },
       });
-    }
-  ]
+    },
+  ],
 };
 ```
 
 **Decision rule:** Use CSS `@utility` for simple utilities. Use JS plugins only for complex logic or third-party integrations.
 
 **Popular plugin migrations:**
+
 ```bash
 # v3 plugins
 npm remove @tailwindcss/forms @tailwindcss/typography @tailwindcss/aspect-ratio
@@ -291,6 +310,7 @@ npm install -D @tailwindcss/forms@next @tailwindcss/typography@next
 Update your build configuration:
 
 **Install v4 packages:**
+
 ```bash
 # Remove v3
 npm remove tailwindcss postcss autoprefixer
@@ -300,6 +320,7 @@ npm install -D tailwindcss@next @tailwindcss/vite@next
 ```
 
 **Update vite.config.js:**
+
 ```js
 // ❌ v3 configuration (PostCSS-based)
 import { sveltekit } from '@sveltejs/kit/vite';
@@ -330,12 +351,14 @@ export default {
 ```
 
 **Remove postcss.config.js:**
+
 ```bash
 # v4 doesn't need PostCSS configuration
 rm postcss.config.js
 ```
 
 **Update package.json scripts (no changes needed):**
+
 ```json
 {
   "scripts": {
@@ -347,6 +370,7 @@ rm postcss.config.js
 ```
 
 **Verify build output:**
+
 ```bash
 npm run build
 
@@ -360,6 +384,7 @@ ls -lh .svelte-kit/output/client/_app/immutable/assets/
 Follow this sequence to migrate safely:
 
 **Phase 1: Backup and prepare (5 minutes)**
+
 ```bash
 # Create migration branch
 git checkout -b tailwind-v4-migration
@@ -373,6 +398,7 @@ npm list tailwindcss postcss autoprefixer > pre-migration-deps.txt
 ```
 
 **Phase 2: Update dependencies (2 minutes)**
+
 ```bash
 # Remove v3 dependencies
 npm remove tailwindcss postcss autoprefixer
@@ -387,19 +413,18 @@ npm install -D @tailwindcss/forms@next @tailwindcss/typography@next
 **Phase 3: Update build configuration (10 minutes)**
 
 1. Update `vite.config.js`:
+
 ```js
-import { sveltekit } from '@sveltejs/kit/vite';
-import tailwindcss from '@tailwindcss/vite';
+import { sveltekit } from "@sveltejs/kit/vite";
+import tailwindcss from "@tailwindcss/vite";
 
 export default {
-  plugins: [
-    tailwindcss(),
-    sveltekit()
-  ]
+  plugins: [tailwindcss(), sveltekit()],
 };
 ```
 
 2. Update `src/app.css`:
+
 ```css
 /* Replace or keep existing directives */
 @import "tailwindcss";
@@ -411,6 +436,7 @@ export default {
 ```
 
 3. Delete `postcss.config.js` if it exists:
+
 ```bash
 rm postcss.config.js
 ```
@@ -418,43 +444,47 @@ rm postcss.config.js
 **Phase 4: Migrate configuration (15 minutes)**
 
 Convert `tailwind.config.js` theme extensions to CSS:
+
 ```css
 /* app.css */
 @theme {
   /* Colors from JS config */
-  --color-brand-blue: #3B82F6;
+  --color-brand-blue: #3b82f6;
 
   /* Spacing from JS config */
   --spacing-18: 4.5rem;
 
   /* Fonts from JS config */
-  --font-display: 'Playfair Display', serif;
+  --font-display: "Playfair Display", serif;
 }
 ```
 
 Keep JS config only for complex plugins:
+
 ```js
 // tailwind.config.js (minimal)
 export default {
   plugins: [
     // Only keep plugins that require JS
-  ]
+  ],
 };
 ```
 
 **Phase 5: Update custom utilities (10 minutes)**
 
 Migrate custom utilities to CSS:
+
 ```css
 /* app.css */
 @utility text-gradient {
-  background: linear-gradient(to right, #3B82F6, #10B981);
+  background: linear-gradient(to right, #3b82f6, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 ```
 
 **Phase 6: Test development build (5 minutes)**
+
 ```bash
 # Start dev server
 npm run dev
@@ -467,6 +497,7 @@ npm run dev
 ```
 
 **Phase 7: Test production build (5 minutes)**
+
 ```bash
 # Build for production
 npm run build
@@ -488,6 +519,7 @@ npm run preview
 Verify everything works correctly:
 
 **Visual regression testing:**
+
 ```svelte
 <!-- Create test page: src/routes/tailwind-test/+page.svelte -->
 <script>
@@ -534,6 +566,7 @@ Verify everything works correctly:
 ```
 
 **Build size comparison:**
+
 ```bash
 # Before migration (save output)
 npm run build > v3-build.txt
@@ -548,6 +581,7 @@ grep "CSS" v4-build.txt
 ```
 
 **Performance testing:**
+
 ```bash
 # Build production bundle
 npm run build
@@ -565,6 +599,7 @@ npx lighthouse http://localhost:4173 --view
 ```
 
 **Cross-browser testing checklist:**
+
 - [ ] Chrome/Edge - Test modern features
 - [ ] Firefox - Verify CSS compatibility
 - [ ] Safari - Check iOS-specific rendering
@@ -577,6 +612,7 @@ npx lighthouse http://localhost:4173 --view
 If migration fails, revert safely:
 
 **Immediate rollback (5 minutes):**
+
 ```bash
 # Revert to pre-migration state
 git checkout main
@@ -591,6 +627,7 @@ npm install
 ```
 
 **Partial rollback - keep v4 but fix issues:**
+
 ```bash
 # Keep migration branch active
 git checkout tailwind-v4-migration
@@ -603,15 +640,16 @@ diff -u v3-build.txt v4-build.txt
 ```
 
 **Gradual migration approach (if full migration fails):**
+
 ```js
 // vite.config.js - run both v3 and v4 side-by-side
-import { sveltekit } from '@sveltejs/kit/vite';
-import tailwindcss from '@tailwindcss/vite';
+import { sveltekit } from "@sveltejs/kit/vite";
+import tailwindcss from "@tailwindcss/vite";
 
 export default {
   plugins: [
     tailwindcss(), // v4 for new components
-    sveltekit()
+    sveltekit(),
   ],
   // Note: Can't actually run both versions simultaneously
   // This is pseudocode for conceptual gradual migration
@@ -621,18 +659,21 @@ export default {
 **Common rollback scenarios:**
 
 **Scenario 1: Custom plugin doesn't work in v4**
+
 - Keep v3 temporarily
 - File issue with plugin maintainer
 - Migrate plugin to v4 CSS utilities
 - Resume migration when plugin is compatible
 
 **Scenario 2: Production build fails**
+
 - Check adapter compatibility (all official adapters support v4)
 - Verify Vite plugin order
 - Test with minimal configuration
 - Add custom config incrementally
 
 **Scenario 3: Styles look different**
+
 - Check for `@apply` usage (deprecated)
 - Verify color values in theme
 - Test purging configuration
@@ -641,15 +682,17 @@ export default {
 ## Common Migration Pitfalls
 
 **Pitfall 1: Wrong Vite plugin order**
+
 ```js
 // ❌ WRONG: SvelteKit before Tailwind
-plugins: [sveltekit(), tailwindcss()]
+plugins: [sveltekit(), tailwindcss()];
 
 // ✅ CORRECT: Tailwind before SvelteKit
-plugins: [tailwindcss(), sveltekit()]
+plugins: [tailwindcss(), sveltekit()];
 ```
 
 **Pitfall 2: Forgetting to remove PostCSS**
+
 ```bash
 # Check for leftover PostCSS config
 ls postcss.config.js
@@ -658,6 +701,7 @@ rm postcss.config.js
 ```
 
 **Pitfall 3: Using deprecated @apply heavily**
+
 ```css
 /* ❌ v3 pattern (deprecated in v4) */
 .btn {
@@ -671,6 +715,7 @@ rm postcss.config.js
 ```
 
 **Pitfall 4: Missing content paths**
+
 ```css
 /* ❌ Missing component paths */
 @source "src/routes/**/*.svelte";
@@ -682,6 +727,7 @@ rm postcss.config.js
 ```
 
 **Pitfall 5: Adapter incompatibility assumptions**
+
 ```js
 // All official SvelteKit adapters support Tailwind v4:
 // ✅ adapter-vercel
@@ -698,15 +744,16 @@ npm update @sveltejs/adapter-*
 
 **Should you migrate to v4 now?**
 
-| Factor | Migrate Now | Wait |
-|--------|-------------|------|
-| **Project stage** | Greenfield / Development | Production with tight deadlines |
-| **Custom plugins** | None or simple utilities | Heavy reliance on complex plugins |
-| **Team experience** | Comfortable with CSS | Prefers JS configuration |
-| **Build time** | Want faster builds | Current build is acceptable |
-| **Tailwind usage** | Utility-first approach | Heavy `@apply` usage |
+| Factor              | Migrate Now              | Wait                              |
+| ------------------- | ------------------------ | --------------------------------- |
+| **Project stage**   | Greenfield / Development | Production with tight deadlines   |
+| **Custom plugins**  | None or simple utilities | Heavy reliance on complex plugins |
+| **Team experience** | Comfortable with CSS     | Prefers JS configuration          |
+| **Build time**      | Want faster builds       | Current build is acceptable       |
+| **Tailwind usage**  | Utility-first approach   | Heavy `@apply` usage              |
 
 **Decision rule:**
+
 - **Migrate if:** Starting new project or in active development phase
 - **Wait if:** Critical production deadline within 2 weeks or heavy custom plugin dependencies
 - **Test first:** Always test in staging environment before production migration
@@ -714,6 +761,7 @@ npm update @sveltejs/adapter-*
 ## Performance Improvements in v4
 
 **Build speed improvements:**
+
 ```bash
 # Measure v3 build time
 time npm run build
@@ -726,16 +774,19 @@ time npm run build
 ```
 
 **Bundle size optimization:**
+
 - Automatic dead code elimination
 - Better tree-shaking
 - More efficient CSS generation
 
 **Development experience:**
+
 - Faster HMR (Hot Module Replacement)
 - Better error messages
 - Improved Vite integration
 
 **Production benefits:**
+
 - Smaller CSS bundles
 - Better caching with content-based hashing
 - Improved browser compatibility

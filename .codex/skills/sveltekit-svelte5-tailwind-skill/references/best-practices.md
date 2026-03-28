@@ -19,6 +19,7 @@ This guide provides battle-tested patterns for building maintainable, performant
 Structure your codebase for scalability and maintainability:
 
 **Recommended directory structure:**
+
 ```
 my-app/
 ├── src/
@@ -69,6 +70,7 @@ my-app/
 ```
 
 **Route groups for shared layouts:**
+
 ```
 // ❌ WRONG: Flat structure, no clear grouping
 routes/
@@ -102,6 +104,7 @@ routes/
 Build maintainable components with clear responsibilities:
 
 **Component size guidelines:**
+
 ```svelte
 <!-- ❌ WRONG: Monolithic component (>300 lines) -->
 <script>
@@ -129,6 +132,7 @@ Build maintainable components with clear responsibilities:
 ```
 
 **Prop patterns with $props():**
+
 ```svelte
 <!-- ❌ WRONG: Unclear prop types, no defaults -->
 <script>
@@ -164,6 +168,7 @@ Build maintainable components with clear responsibilities:
 ```
 
 **Composition over inheritance:**
+
 ```svelte
 <!-- ❌ WRONG: Trying to extend components -->
 <!-- Base.svelte -->
@@ -214,6 +219,7 @@ Build maintainable components with clear responsibilities:
 Choose the right state management pattern:
 
 **State ownership hierarchy:**
+
 ```svelte
 <!-- ❌ WRONG: Prop drilling through 5 levels -->
 <App>
@@ -244,6 +250,7 @@ Choose the right state management pattern:
 ```
 
 **Server vs client state separation:**
+
 ```svelte
 <!-- +page.svelte -->
 <script>
@@ -270,6 +277,7 @@ Choose the right state management pattern:
 ```
 
 **Form state patterns:**
+
 ```svelte
 <!-- ✅ Form with optimistic UI and error handling -->
 <script>
@@ -311,6 +319,7 @@ Choose the right state management pattern:
 ```
 
 **Decision rules:**
+
 - **Use load() for:** Initial page data, SEO-critical content, data that must be server-rendered
 - **Use $state() for:** UI interactions, form inputs, toggles, client-only features
 - **Use context for:** User session, theme, feature flags shared across many components
@@ -321,6 +330,7 @@ Choose the right state management pattern:
 Maintain consistent styling across your codebase:
 
 **Utility-first approach:**
+
 ```svelte
 <!-- ❌ WRONG: Creating unnecessary abstractions -->
 <style>
@@ -343,6 +353,7 @@ Maintain consistent styling across your codebase:
 ```
 
 **Component variants pattern:**
+
 ```svelte
 <!-- Button.svelte -->
 <script lang="ts">
@@ -384,6 +395,7 @@ Maintain consistent styling across your codebase:
 ```
 
 **Conditional styling with runes:**
+
 ```svelte
 <script>
   let isActive = $state(false);
@@ -411,6 +423,7 @@ Maintain consistent styling across your codebase:
 ```
 
 **Responsive design patterns:**
+
 ```svelte
 <!-- ✅ Mobile-first responsive layout -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -435,6 +448,7 @@ Maintain consistent styling across your codebase:
 Optimize for production performance:
 
 **Code splitting strategies:**
+
 ```svelte
 <!-- ❌ WRONG: Import heavy component eagerly -->
 <script>
@@ -474,6 +488,7 @@ Optimize for production performance:
 ```
 
 **Image optimization:**
+
 ```svelte
 <!-- ❌ WRONG: No optimization -->
 <img src="/images/hero.jpg" alt="Hero" />
@@ -495,6 +510,7 @@ Optimize for production performance:
 ```
 
 **Preloading critical resources:**
+
 ```svelte
 <!-- src/routes/+layout.svelte -->
 <svelte:head>
@@ -513,6 +529,7 @@ Optimize for production performance:
 ```
 
 **Efficient data loading:**
+
 ```ts
 // ❌ WRONG: Load all data upfront
 // +page.server.ts
@@ -525,12 +542,12 @@ export async function load() {
 // ✅ CORRECT: Paginate and defer non-critical data
 // +page.server.ts
 export async function load({ url }) {
-  const page = parseInt(url.searchParams.get('page') ?? '1');
+  const page = parseInt(url.searchParams.get("page") ?? "1");
   const limit = 20;
 
   const posts = await db.posts.findMany({
     skip: (page - 1) * limit,
-    take: limit
+    take: limit,
   });
 
   return {
@@ -539,22 +556,23 @@ export async function load({ url }) {
     recentComments: defer(async () => {
       return db.comments.findMany({
         take: 5,
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: "desc" },
       });
-    })
+    }),
   };
 }
 ```
 
 **CSS performance:**
+
 ```css
 /* app.css */
 @import "tailwindcss";
 
 /* ✅ Use CSS custom properties for theme values */
 @theme {
-  --color-primary: #3B82F6;
-  --color-secondary: #10B981;
+  --color-primary: #3b82f6;
+  --color-secondary: #10b981;
 }
 
 /* ✅ Minimize custom CSS */
@@ -562,7 +580,9 @@ export async function load({ url }) {
 
 /* Only add custom CSS for complex patterns */
 @utility card-hover {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 @utility card-hover:hover {
   transform: translateY(-4px);
@@ -575,6 +595,7 @@ export async function load({ url }) {
 Protect your application and users:
 
 **Environment variables:**
+
 ```bash
 # .env
 PUBLIC_API_URL=https://api.example.com
@@ -585,12 +606,12 @@ SESSION_SECRET=generate-random-32-char-string
 ```ts
 // ❌ WRONG: Exposing secrets to client
 // +page.svelte
-import { DATABASE_URL } from '$env/static/private'; // ERROR!
+import { DATABASE_URL } from "$env/static/private"; // ERROR!
 
 // ✅ CORRECT: Use private vars only on server
 // +page.server.ts
-import { DATABASE_URL } from '$env/static/private';
-import { PUBLIC_API_URL } from '$env/static/public';
+import { DATABASE_URL } from "$env/static/private";
+import { PUBLIC_API_URL } from "$env/static/public";
 
 export async function load() {
   // DATABASE_URL only accessible here
@@ -600,6 +621,7 @@ export async function load() {
 ```
 
 **Form validation:**
+
 ```ts
 // ❌ WRONG: Trust client data
 // +page.server.ts
@@ -608,18 +630,18 @@ export const actions = {
     const data = await request.formData();
     // Directly use data without validation
     await db.users.create(Object.fromEntries(data));
-  }
+  },
 };
 
 // ✅ CORRECT: Validate all inputs
 // +page.server.ts
-import { z } from 'zod';
-import { fail } from '@sveltejs/kit';
+import { z } from "zod";
+import { fail } from "@sveltejs/kit";
 
 const schema = z.object({
-  email: z.string().email('Invalid email'),
-  password: z.string().min(8, 'Password must be 8+ characters'),
-  username: z.string().regex(/^[a-zA-Z0-9_]+$/, 'Invalid username')
+  email: z.string().email("Invalid email"),
+  password: z.string().min(8, "Password must be 8+ characters"),
+  username: z.string().regex(/^[a-zA-Z0-9_]+$/, "Invalid username"),
 });
 
 export const actions = {
@@ -629,17 +651,18 @@ export const actions = {
 
     if (!result.success) {
       return fail(400, {
-        errors: result.error.flatten().fieldErrors
+        errors: result.error.flatten().fieldErrors,
       });
     }
 
     // Now safe to use result.data
     await db.users.create(result.data);
-  }
+  },
 };
 ```
 
 **CSRF protection:**
+
 ```svelte
 <!-- ✅ SvelteKit provides CSRF protection automatically for forms -->
 <form method="POST">
@@ -650,6 +673,7 @@ export const actions = {
 ```
 
 **XSS prevention:**
+
 ```svelte
 <!-- ✅ Svelte escapes by default -->
 <script>
@@ -677,93 +701,96 @@ export const actions = {
 Build confidence with comprehensive testing:
 
 **Unit testing components:**
+
 ```typescript
 // Button.test.ts
-import { render, fireEvent } from '@testing-library/svelte';
-import { describe, it, expect, vi } from 'vitest';
-import Button from '$lib/components/ui/Button.svelte';
+import { render, fireEvent } from "@testing-library/svelte";
+import { describe, it, expect, vi } from "vitest";
+import Button from "$lib/components/ui/Button.svelte";
 
-describe('Button', () => {
-  it('renders with correct variant classes', () => {
+describe("Button", () => {
+  it("renders with correct variant classes", () => {
     const { container } = render(Button, {
-      props: { variant: 'primary' }
+      props: { variant: "primary" },
     });
 
-    const button = container.querySelector('button');
-    expect(button?.className).toContain('bg-blue-600');
+    const button = container.querySelector("button");
+    expect(button?.className).toContain("bg-blue-600");
   });
 
-  it('calls onClick when clicked', async () => {
+  it("calls onClick when clicked", async () => {
     const onClick = vi.fn();
     const { getByRole } = render(Button, {
-      props: { onClick, title: 'Click me' }
+      props: { onClick, title: "Click me" },
     });
 
-    const button = getByRole('button');
+    const button = getByRole("button");
     await fireEvent.click(button);
 
     expect(onClick).toHaveBeenCalledOnce();
   });
 
-  it('is disabled when disabled prop is true', () => {
+  it("is disabled when disabled prop is true", () => {
     const { getByRole } = render(Button, {
-      props: { disabled: true, title: 'Disabled' }
+      props: { disabled: true, title: "Disabled" },
     });
 
-    const button = getByRole('button') as HTMLButtonElement;
+    const button = getByRole("button") as HTMLButtonElement;
     expect(button.disabled).toBe(true);
   });
 });
 ```
 
 **Integration testing forms:**
+
 ```typescript
 // LoginForm.test.ts
-import { render, fireEvent, waitFor } from '@testing-library/svelte';
-import { describe, it, expect } from 'vitest';
-import LoginForm from '$lib/components/features/auth/LoginForm.svelte';
+import { render, fireEvent, waitFor } from "@testing-library/svelte";
+import { describe, it, expect } from "vitest";
+import LoginForm from "$lib/components/features/auth/LoginForm.svelte";
 
-describe('LoginForm', () => {
-  it('shows validation errors for invalid inputs', async () => {
+describe("LoginForm", () => {
+  it("shows validation errors for invalid inputs", async () => {
     const { getByLabelText, getByRole, getByText } = render(LoginForm);
 
-    const emailInput = getByLabelText('Email');
-    const submitButton = getByRole('button', { name: /log in/i });
+    const emailInput = getByLabelText("Email");
+    const submitButton = getByRole("button", { name: /log in/i });
 
-    await fireEvent.input(emailInput, { target: { value: 'invalid' } });
+    await fireEvent.input(emailInput, { target: { value: "invalid" } });
     await fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(getByText('Invalid email')).toBeInTheDocument();
+      expect(getByText("Invalid email")).toBeInTheDocument();
     });
   });
 });
 ```
 
 **E2E testing with Playwright:**
+
 ```typescript
 // tests/e2e/auth.spec.ts
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('Authentication flow', () => {
-  test('user can sign up and log in', async ({ page }) => {
+test.describe("Authentication flow", () => {
+  test("user can sign up and log in", async ({ page }) => {
     // Navigate to signup
-    await page.goto('/signup');
+    await page.goto("/signup");
 
     // Fill form
-    await page.fill('input[name="email"]', 'test@example.com');
-    await page.fill('input[name="password"]', 'SecurePass123');
-    await page.fill('input[name="confirmPassword"]', 'SecurePass123');
+    await page.fill('input[name="email"]', "test@example.com");
+    await page.fill('input[name="password"]', "SecurePass123");
+    await page.fill('input[name="confirmPassword"]', "SecurePass123");
 
     // Submit
     await page.click('button[type="submit"]');
 
     // Should redirect to dashboard
-    await expect(page).toHaveURL('/dashboard');
-    await expect(page.locator('h1')).toContainText('Dashboard');
+    await expect(page).toHaveURL("/dashboard");
+    await expect(page.locator("h1")).toContainText("Dashboard");
 
     // Check Tailwind styles are applied
-    const header = page.locator('header');
+    const header = page.locator("header");
     await expect(header).toHaveClass(/bg-white/);
   });
 });
@@ -774,6 +801,7 @@ test.describe('Authentication flow', () => {
 Optimize bundle sizes:
 
 **Route-based splitting (automatic):**
+
 ```
 // ✅ SvelteKit automatically splits by route
 routes/
@@ -783,6 +811,7 @@ routes/
 ```
 
 **Component-based splitting:**
+
 ```svelte
 <!-- Dashboard.svelte -->
 <script>
@@ -813,6 +842,7 @@ routes/
 ```
 
 **Vendor splitting:**
+
 ```js
 // vite.config.js
 export default {
@@ -820,12 +850,12 @@ export default {
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor': ['svelte', '@sveltejs/kit'],
-          'ui': ['$lib/components/ui']
-        }
-      }
-    }
-  }
+          vendor: ["svelte", "@sveltejs/kit"],
+          ui: ["$lib/components/ui"],
+        },
+      },
+    },
+  },
 };
 ```
 
@@ -834,6 +864,7 @@ export default {
 Build inclusive applications:
 
 **Semantic HTML:**
+
 ```svelte
 <!-- ❌ WRONG: Divs for everything -->
 <div onclick={handleClick} class="btn">
@@ -847,6 +878,7 @@ Build inclusive applications:
 ```
 
 **ARIA attributes:**
+
 ```svelte
 <script>
   let isOpen = $state(false);
@@ -871,6 +903,7 @@ Build inclusive applications:
 ```
 
 **Keyboard navigation:**
+
 ```svelte
 <script>
   let selectedIndex = $state(0);
@@ -905,6 +938,7 @@ Build inclusive applications:
 Verify before deploying:
 
 **Performance:**
+
 - [ ] Run Lighthouse audit (score >90)
 - [ ] Check bundle sizes (`npm run build`)
 - [ ] Test on slow 3G network
@@ -912,6 +946,7 @@ Verify before deploying:
 - [ ] Check Core Web Vitals (LCP <2.5s, FID <100ms, CLS <0.1)
 
 **Security:**
+
 - [ ] All environment variables properly scoped (public vs private)
 - [ ] Form validation on server and client
 - [ ] HTTPS enforced in production
@@ -919,6 +954,7 @@ Verify before deploying:
 - [ ] Dependencies audited (`npm audit`)
 
 **Accessibility:**
+
 - [ ] Keyboard navigation works throughout app
 - [ ] Screen reader tested (VoiceOver/NVDA)
 - [ ] Color contrast meets WCAG AA standards
@@ -926,6 +962,7 @@ Verify before deploying:
 - [ ] All images have alt text
 
 **Testing:**
+
 - [ ] Unit tests pass (`npm test`)
 - [ ] E2E tests pass (`npm run test:e2e`)
 - [ ] Manual smoke test on staging
@@ -933,6 +970,7 @@ Verify before deploying:
 - [ ] Mobile testing on real devices
 
 **SEO:**
+
 - [ ] Meta tags present on all pages
 - [ ] Open Graph images configured
 - [ ] Sitemap generated
@@ -940,6 +978,7 @@ Verify before deploying:
 - [ ] Structured data added where appropriate
 
 **Monitoring:**
+
 - [ ] Error tracking configured (Sentry, etc.)
 - [ ] Analytics setup (privacy-respecting)
 - [ ] Uptime monitoring active

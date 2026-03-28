@@ -25,15 +25,12 @@ npm install tailwindcss@next @tailwindcss/vite@next
 
 ```js
 // vite.config.js
-import { sveltekit } from '@sveltejs/kit/vite';
-import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
+import { sveltekit } from "@sveltejs/kit/vite";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "vite";
 
 export default defineConfig({
-	plugins: [
-		sveltekit(),
-		tailwindcss()
-	]
+  plugins: [sveltekit(), tailwindcss()],
 });
 ```
 
@@ -68,15 +65,15 @@ Configure directly in CSS using `@theme` and `@plugin`.
 @import "tailwindcss";
 
 @theme {
-	--color-primary: #3b82f6;
-	--color-secondary: #8b5cf6;
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
 
-	--font-sans: Inter, system-ui, sans-serif;
-	--font-mono: 'Fira Code', monospace;
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-mono: "Fira Code", monospace;
 
-	--breakpoint-3xl: 1920px;
+  --breakpoint-3xl: 1920px;
 
-	--spacing-18: 4.5rem;
+  --spacing-18: 4.5rem;
 }
 ```
 
@@ -88,17 +85,17 @@ Use `tailwind.config.js` for backwards compatibility.
 // tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 export default {
-	content: ['./src/**/*.{html,js,svelte,ts}'],
-	theme: {
-		extend: {
-			colors: {
-				primary: '#3b82f6',
-				secondary: '#8b5cf6'
-			}
-		}
-	},
-	plugins: []
-}
+  content: ["./src/**/*.{html,js,svelte,ts}"],
+  theme: {
+    extend: {
+      colors: {
+        primary: "#3b82f6",
+        secondary: "#8b5cf6",
+      },
+    },
+  },
+  plugins: [],
+};
 ```
 
 ## Content Configuration
@@ -108,32 +105,30 @@ export default {
 Specify where Tailwind should look for class names.
 
 **CSS-first approach:**
+
 ```css
 @source "../../lib/**/*.{html,js,svelte,ts}";
 ```
 
 **JavaScript approach:**
+
 ```js
 // tailwind.config.js
 export default {
-	content: [
-		'./src/**/*.{html,js,svelte,ts}',
-		'./src/**/*.svelte',
-		'../shared-ui/src/**/*.svelte'
-	]
-}
+  content: ["./src/**/*.{html,js,svelte,ts}", "./src/**/*.svelte", "../shared-ui/src/**/*.svelte"],
+};
 ```
 
 ### Content Patterns for SvelteKit
 
 ```js
 export default {
-	content: [
-		'./src/routes/**/*.{svelte,js,ts}',    // All route files
-		'./src/lib/**/*.{svelte,js,ts}',       // Library components
-		'./src/app.html'                       // App template
-	]
-}
+  content: [
+    "./src/routes/**/*.{svelte,js,ts}", // All route files
+    "./src/lib/**/*.{svelte,js,ts}", // Library components
+    "./src/app.html", // App template
+  ],
+};
 ```
 
 ### Safelist Classes
@@ -142,15 +137,15 @@ Prevent specific classes from being purged.
 
 ```js
 export default {
-	safelist: [
-		'bg-blue-500',
-		'text-red-600',
-		{
-			pattern: /bg-(red|green|blue)-(100|200|300)/,
-			variants: ['hover', 'focus']
-		}
-	]
-}
+  safelist: [
+    "bg-blue-500",
+    "text-red-600",
+    {
+      pattern: /bg-(red|green|blue)-(100|200|300)/,
+      variants: ["hover", "focus"],
+    },
+  ],
+};
 ```
 
 ## Theme Customization
@@ -159,32 +154,32 @@ export default {
 
 ```css
 @theme {
-	/* Colors */
-	--color-brand: #0ea5e9;
-	--color-accent: #f59e0b;
+  /* Colors */
+  --color-brand: #0ea5e9;
+  --color-accent: #f59e0b;
 
-	/* Fonts */
-	--font-display: 'Playfair Display', serif;
-	--font-body: Inter, sans-serif;
+  /* Fonts */
+  --font-display: "Playfair Display", serif;
+  --font-body: Inter, sans-serif;
 
-	/* Spacing */
-	--spacing-small: 0.5rem;
-	--spacing-medium: 1rem;
-	--spacing-large: 2rem;
+  /* Spacing */
+  --spacing-small: 0.5rem;
+  --spacing-medium: 1rem;
+  --spacing-large: 2rem;
 
-	/* Breakpoints */
-	--breakpoint-tablet: 640px;
-	--breakpoint-laptop: 1024px;
-	--breakpoint-desktop: 1280px;
+  /* Breakpoints */
+  --breakpoint-tablet: 640px;
+  --breakpoint-laptop: 1024px;
+  --breakpoint-desktop: 1280px;
 
-	/* Border radius */
-	--radius-sm: 0.25rem;
-	--radius-md: 0.5rem;
-	--radius-lg: 1rem;
+  /* Border radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
 
-	/* Shadows */
-	--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-	--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 ```
 
@@ -192,33 +187,33 @@ export default {
 
 ```js
 export default {
-	theme: {
-		extend: {
-			colors: {
-				brand: {
-					50: '#eff6ff',
-					100: '#dbeafe',
-					500: '#3b82f6',
-					900: '#1e3a8a'
-				}
-			},
-			fontFamily: {
-				display: ['Playfair Display', 'serif'],
-				body: ['Inter', 'sans-serif']
-			},
-			spacing: {
-				'18': '4.5rem',
-				'88': '22rem'
-			},
-			borderRadius: {
-				'4xl': '2rem'
-			},
-			boxShadow: {
-				'inner-lg': 'inset 0 2px 4px 0 rgb(0 0 0 / 0.1)'
-			}
-		}
-	}
-}
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          50: "#eff6ff",
+          100: "#dbeafe",
+          500: "#3b82f6",
+          900: "#1e3a8a",
+        },
+      },
+      fontFamily: {
+        display: ["Playfair Display", "serif"],
+        body: ["Inter", "sans-serif"],
+      },
+      spacing: {
+        18: "4.5rem",
+        88: "22rem",
+      },
+      borderRadius: {
+        "4xl": "2rem",
+      },
+      boxShadow: {
+        "inner-lg": "inset 0 2px 4px 0 rgb(0 0 0 / 0.1)",
+      },
+    },
+  },
+};
 ```
 
 ## Dark Mode Configuration
@@ -228,11 +223,12 @@ export default {
 ```js
 // tailwind.config.js
 export default {
-	darkMode: 'class'
-}
+  darkMode: "class",
+};
 ```
 
 **SvelteKit implementation:**
+
 ```svelte
 <!-- src/routes/+layout.svelte -->
 <script>
@@ -277,16 +273,16 @@ export default {
 
 ```js
 export default {
-	darkMode: 'media'  // Uses prefers-color-scheme
-}
+  darkMode: "media", // Uses prefers-color-scheme
+};
 ```
 
 ### Selector-Based Dark Mode
 
 ```js
 export default {
-	darkMode: ['selector', '[data-mode="dark"]']
-}
+  darkMode: ["selector", '[data-mode="dark"]'],
+};
 ```
 
 ## Vite Plugin Options
@@ -295,31 +291,33 @@ export default {
 
 ```js
 // vite.config.js
-import tailwindcss from '@tailwindcss/vite';
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-	plugins: [
-		sveltekit(),
-		tailwindcss({
-			// Disable optimization (dev mode)
-			optimize: false
-		})
-	]
+  plugins: [
+    sveltekit(),
+    tailwindcss({
+      // Disable optimization (dev mode)
+      optimize: false,
+    }),
+  ],
 });
 ```
 
 **Disable minification only:**
+
 ```js
 tailwindcss({
-	optimize: { minify: false }
-})
+  optimize: { minify: false },
+});
 ```
 
 **Production optimization:**
+
 ```js
 tailwindcss({
-	optimize: process.env.NODE_ENV === 'production'
-})
+  optimize: process.env.NODE_ENV === "production",
+});
 ```
 
 ## Plugins
@@ -332,26 +330,22 @@ npm install @tailwindcss/forms @tailwindcss/typography @tailwindcss/aspect-ratio
 
 ```js
 // tailwind.config.js
-import forms from '@tailwindcss/forms';
-import typography from '@tailwindcss/typography';
-import aspectRatio from '@tailwindcss/aspect-ratio';
+import forms from "@tailwindcss/forms";
+import typography from "@tailwindcss/typography";
+import aspectRatio from "@tailwindcss/aspect-ratio";
 
 export default {
-	plugins: [
-		forms,
-		typography,
-		aspectRatio
-	]
-}
+  plugins: [forms, typography, aspectRatio],
+};
 ```
 
 ### CSS Plugin Definition (v4)
 
 ```css
 @plugin "my-plugin" {
-	.custom-utility {
-		@apply flex items-center justify-center;
-	}
+  .custom-utility {
+    @apply flex items-center justify-center;
+  }
 }
 ```
 
@@ -359,27 +353,27 @@ export default {
 
 ```js
 // tailwind.config.js
-import plugin from 'tailwindcss/plugin';
+import plugin from "tailwindcss/plugin";
 
 export default {
-	plugins: [
-		plugin(function({ addUtilities, addComponents, theme }) {
-			addUtilities({
-				'.content-auto': {
-					'content-visibility': 'auto'
-				}
-			});
+  plugins: [
+    plugin(function ({ addUtilities, addComponents, theme }) {
+      addUtilities({
+        ".content-auto": {
+          "content-visibility": "auto",
+        },
+      });
 
-			addComponents({
-				'.btn': {
-					padding: theme('spacing.4'),
-					borderRadius: theme('borderRadius.md'),
-					fontWeight: theme('fontWeight.semibold')
-				}
-			});
-		})
-	]
-}
+      addComponents({
+        ".btn": {
+          padding: theme("spacing.4"),
+          borderRadius: theme("borderRadius.md"),
+          fontWeight: theme("fontWeight.semibold"),
+        },
+      });
+    }),
+  ],
+};
 ```
 
 ## Custom Utilities
@@ -412,20 +406,20 @@ export default {
 
 ```js
 // vite.config.js
-import { sveltekit } from '@sveltejs/kit/vite';
-import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
+import { sveltekit } from "@sveltejs/kit/vite";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "vite";
 
 export default defineConfig({
-	plugins: [
-		sveltekit(),
-		tailwindcss({
-			optimize: process.env.NODE_ENV === 'production'
-		})
-	],
-	css: {
-		devSourcemap: true
-	}
+  plugins: [
+    sveltekit(),
+    tailwindcss({
+      optimize: process.env.NODE_ENV === "production",
+    }),
+  ],
+  css: {
+    devSourcemap: true,
+  },
 });
 ```
 
@@ -434,22 +428,22 @@ export default defineConfig({
 @import "tailwindcss";
 
 @theme {
-	--color-primary: #0ea5e9;
-	--font-sans: Inter, system-ui, sans-serif;
+  --color-primary: #0ea5e9;
+  --font-sans: Inter, system-ui, sans-serif;
 }
 
 /* Custom components */
 @layer components {
-	.btn {
-		@apply px-4 py-2 rounded bg-primary text-white hover:bg-primary/90;
-	}
+  .btn {
+    @apply px-4 py-2 rounded bg-primary text-white hover:bg-primary/90;
+  }
 }
 
 /* Custom utilities */
 @layer utilities {
-	.text-balance {
-		text-wrap: balance;
-	}
+  .text-balance {
+    text-wrap: balance;
+  }
 }
 ```
 
@@ -467,12 +461,14 @@ export default defineConfig({
 ### Dynamic Class Names in Svelte
 
 **Safe (always works):**
+
 ```svelte
 <div class="bg-blue-500" />
 <div class="text-{color}-600" />  <!-- If color is known at build time -->
 ```
 
 **Unsafe (might not work):**
+
 ```svelte
 <script>
 	let color = $state('blue');
@@ -483,6 +479,7 @@ export default defineConfig({
 ```
 
 **Solution - Use safelist or complete classes:**
+
 ```svelte
 <script>
 	let color = $state('blue');
@@ -505,11 +502,12 @@ Add prefix to all Tailwind classes.
 
 ```js
 export default {
-	prefix: 'tw-'
-}
+  prefix: "tw-",
+};
 ```
 
 **Usage:**
+
 ```svelte
 <div class="tw-flex tw-items-center tw-justify-center" />
 ```
@@ -520,15 +518,16 @@ Make all utilities `!important`.
 
 ```js
 export default {
-	important: true
-}
+  important: true,
+};
 ```
 
 **Or with selector:**
+
 ```js
 export default {
-	important: '#app'
-}
+  important: "#app",
+};
 ```
 
 ### Separator
@@ -537,11 +536,12 @@ Change the separator for variants.
 
 ```js
 export default {
-	separator: '_'
-}
+  separator: "_",
+};
 ```
 
 **Usage:**
+
 ```svelte
 <div class="hover_bg-blue-500" />
 ```
@@ -552,12 +552,12 @@ Disable specific core plugins.
 
 ```js
 export default {
-	corePlugins: {
-		preflight: false,  // Disable base styles
-		container: false,
-		float: false
-	}
-}
+  corePlugins: {
+    preflight: false, // Disable base styles
+    container: false,
+    float: false,
+  },
+};
 ```
 
 ## PostCSS Configuration
@@ -567,28 +567,24 @@ export default {
 ```js
 // postcss.config.js
 export default {
-	plugins: {
-		tailwindcss: {},
-		autoprefixer: {}
-	}
-}
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
 ```
 
 ### With Additional Plugins
 
 ```js
 // postcss.config.js
-import tailwindcss from 'tailwindcss';
-import autoprefixer from 'autoprefixer';
-import cssnano from 'cssnano';
+import tailwindcss from "tailwindcss";
+import autoprefixer from "autoprefixer";
+import cssnano from "cssnano";
 
 export default {
-	plugins: [
-		tailwindcss,
-		autoprefixer,
-		...(process.env.NODE_ENV === 'production' ? [cssnano] : [])
-	]
-}
+  plugins: [tailwindcss, autoprefixer, ...(process.env.NODE_ENV === "production" ? [cssnano] : [])],
+};
 ```
 
 ## Performance Optimization
@@ -598,18 +594,18 @@ export default {
 ```js
 // vite.config.js
 export default defineConfig({
-	plugins: [
-		sveltekit(),
-		tailwindcss({
-			optimize: {
-				minify: true
-			}
-		})
-	],
-	build: {
-		cssCodeSplit: true,
-		cssMinify: 'lightningcss'
-	}
+  plugins: [
+    sveltekit(),
+    tailwindcss({
+      optimize: {
+        minify: true,
+      },
+    }),
+  ],
+  build: {
+    cssCodeSplit: true,
+    cssMinify: "lightningcss",
+  },
 });
 ```
 
@@ -617,18 +613,16 @@ export default defineConfig({
 
 ```js
 export default {
-	content: {
-		files: [
-			'./src/**/*.{html,js,svelte,ts}'
-		],
-		extract: {
-			// Custom extractor for Svelte
-			svelte: (content) => {
-				return content.match(/[^<>"'`\s]*[^<>"'`\s:]/g) || [];
-			}
-		}
-	}
-}
+  content: {
+    files: ["./src/**/*.{html,js,svelte,ts}"],
+    extract: {
+      // Custom extractor for Svelte
+      svelte: (content) => {
+        return content.match(/[^<>"'`\s]*[^<>"'`\s:]/g) || [];
+      },
+    },
+  },
+};
 ```
 
 ## Migration from v3 to v4
@@ -651,6 +645,7 @@ npm uninstall @tailwindcss/postcss7-compat
 ```
 
 **Update Vite config:**
+
 ```js
 // Before (v3)
 export default defineConfig({
@@ -673,6 +668,7 @@ export default defineConfig({
 ```
 
 **Update CSS file:**
+
 ```css
 /* Before (v3) */
 @tailwind base;
@@ -689,16 +685,16 @@ export default defineConfig({
 
 ```js
 // vite.config.js
-const isDev = process.env.NODE_ENV === 'development';
+const isDev = process.env.NODE_ENV === "development";
 
 export default defineConfig({
-	plugins: [
-		sveltekit(),
-		tailwindcss({
-			optimize: !isDev,
-			minify: !isDev
-		})
-	]
+  plugins: [
+    sveltekit(),
+    tailwindcss({
+      optimize: !isDev,
+      minify: !isDev,
+    }),
+  ],
 });
 ```
 
@@ -706,22 +702,22 @@ export default defineConfig({
 
 ```js
 // tailwind.config.js
-const production = process.env.NODE_ENV === 'production';
+const production = process.env.NODE_ENV === "production";
 
 export default {
-	content: [
-		'./src/**/*.{html,js,svelte,ts}'
-	],
-	theme: {
-		extend: {
-			colors: production ? {
-				primary: '#0ea5e9'
-			} : {
-				primary: '#ef4444'  // Different color in dev
-			}
-		}
-	}
-}
+  content: ["./src/**/*.{html,js,svelte,ts}"],
+  theme: {
+    extend: {
+      colors: production
+        ? {
+            primary: "#0ea5e9",
+          }
+        : {
+            primary: "#ef4444", // Different color in dev
+          },
+    },
+  },
+};
 ```
 
 ## Troubleshooting

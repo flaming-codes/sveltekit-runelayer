@@ -432,9 +432,9 @@ Per official Svelte best practices: use `createContext` rather than
 
 ```ts
 // context.ts
-import { createContext } from 'svelte';
+import { createContext } from "svelte";
 
-const [get_theme, set_theme] = createContext<{ current: string }>('theme');
+const [get_theme, set_theme] = createContext<{ current: string }>("theme");
 
 export { get_theme, set_theme };
 ```
@@ -468,11 +468,11 @@ export { get_theme, set_theme };
 
 ### Why createContext over set/getContext
 
-| Feature | `setContext`/`getContext` | `createContext` |
-|---------|------------------------|-----------------|
-| Type safety | Manual casting | **Automatic** |
-| Key management | String keys (typo-prone) | **Module-scoped** |
-| Default values | Manual check | **Built-in support** |
+| Feature        | `setContext`/`getContext` | `createContext`      |
+| -------------- | ------------------------- | -------------------- |
+| Type safety    | Manual casting            | **Automatic**        |
+| Key management | String keys (typo-prone)  | **Module-scoped**    |
+| Default values | Manual check              | **Built-in support** |
 
 ### Context vs Shared Module State
 
@@ -482,8 +482,8 @@ between users during SSR.
 
 ```ts
 // BAD - shared module state leaks between SSR requests
-export let theme = $state('dark');
+export let theme = $state("dark");
 
 // GOOD - context is scoped per component tree
-const [get_theme, set_theme] = createContext<string>('theme');
+const [get_theme, set_theme] = createContext<string>("theme");
 ```

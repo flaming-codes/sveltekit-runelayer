@@ -22,6 +22,7 @@ Runes are Svelte 5's new reactive primitives, prefixed with `$`.
 Creates reactive state that triggers UI updates when changed.
 
 **Basic usage:**
+
 ```svelte
 <script>
 	let count = $state(0);
@@ -33,49 +34,51 @@ Creates reactive state that triggers UI updates when changed.
 ```
 
 **Deep reactivity:**
+
 ```js
 let user = $state({
-	name: 'Alice',
-	settings: {
-		theme: 'dark'
-	}
+  name: "Alice",
+  settings: {
+    theme: "dark",
+  },
 });
 
 // Mutations trigger updates
-user.settings.theme = 'light';
-user.name = 'Bob';
+user.settings.theme = "light";
+user.name = "Bob";
 ```
 
 **Arrays:**
+
 ```js
-let todos = $state([
-	{ done: false, text: 'learn Svelte 5' }
-]);
+let todos = $state([{ done: false, text: "learn Svelte 5" }]);
 
 // Array methods work reactively
-todos.push({ done: false, text: 'build an app' });
+todos.push({ done: false, text: "build an app" });
 todos[0].done = true;
 ```
 
 **Class fields:**
+
 ```js
 class Counter {
-	count = $state(0);
-	doubled = $derived(this.count * 2);
+  count = $state(0);
+  doubled = $derived(this.count * 2);
 
-	increment = () => {
-		this.count++;
-	}
+  increment = () => {
+    this.count++;
+  };
 }
 ```
 
 **Important:** Destructuring breaks reactivity:
+
 ```js
-let user = $state({ name: 'Alice' });
-let { name } = user;  // ❌ Not reactive!
+let user = $state({ name: "Alice" });
+let { name } = user; // ❌ Not reactive!
 
 // Use object access instead
-user.name;  // ✅ Reactive
+user.name; // ✅ Reactive
 ```
 
 ### $state.raw
@@ -84,8 +87,8 @@ For non-reactive objects. Can only be reassigned, not mutated.
 
 ```js
 let person = $state.raw({
-	name: 'Heraclitus',
-	age: 49
+  name: "Heraclitus",
+  age: 49,
 });
 
 // ❌ Has no effect
@@ -93,12 +96,13 @@ person.age += 1;
 
 // ✅ Works - full reassignment
 person = {
-	name: 'Heraclitus',
-	age: 50
+  name: "Heraclitus",
+  age: 50,
 };
 ```
 
 **When to use:**
+
 - Large arrays/objects that won't be mutated
 - Performance optimization (avoids proxy overhead)
 - Objects from external libraries
@@ -111,11 +115,11 @@ Takes a static snapshot of reactive state.
 let counter = $state({ count: 0 });
 
 function save() {
-	// Logs plain object, not Proxy
-	console.log($state.snapshot(counter));
+  // Logs plain object, not Proxy
+  console.log($state.snapshot(counter));
 
-	// Useful for structuredClone
-	const copy = structuredClone($state.snapshot(counter));
+  // Useful for structuredClone
+  const copy = structuredClone($state.snapshot(counter));
 }
 ```
 
@@ -143,30 +147,34 @@ Updates UI immediately, even during async operations.
 Computes reactive values from other reactive sources.
 
 **Basic usage:**
+
 ```js
 let count = $state(0);
 let doubled = $derived(count * 2);
 ```
 
 **Important rules:**
+
 - No side effects allowed in $derived
 - Cannot use $state mutations
 - Automatically updates when dependencies change
 
 **Complex derivations with $derived.by:**
+
 ```js
 let numbers = $state([1, 2, 3]);
 
 let total = $derived.by(() => {
-	let sum = 0;
-	for (const n of numbers) {
-		sum += n;
-	}
-	return sum;
+  let sum = 0;
+  for (const n of numbers) {
+    sum += n;
+  }
+  return sum;
 });
 ```
 
 **Dependency tracking:**
+
 ```js
 let count = $state(0);
 let large = $derived(count > 10);
@@ -175,26 +183,30 @@ let large = $derived(count > 10);
 ```
 
 **Overriding derived values (optimistic UI):**
+
 ```js
 let { post, like } = $props();
 let likes = $derived(post.likes);
 
 async function onclick() {
-	// Temporarily override
-	likes += 1;
+  // Temporarily override
+  likes += 1;
 
-	try {
-		await like();
-	} catch {
-		// Roll back on error
-		likes -= 1;
-	}
+  try {
+    await like();
+  } catch {
+    // Roll back on error
+    likes -= 1;
+  }
 }
 ```
 
 **With objects and arrays:**
+
 ```js
-let items = $state([/* ... */]);
+let items = $state([
+  /* ... */
+]);
 let index = $state(0);
 
 // Mutations to `selected` affect `items`
@@ -202,8 +214,11 @@ let selected = $derived(items[index]);
 ```
 
 **Destructuring:**
+
 ```js
-function stuff() { return { a: 1, b: 2, c: 3 } }
+function stuff() {
+  return { a: 1, b: 2, c: 3 };
+}
 
 // All variables become reactive
 let { a, b, c } = $derived(stuff());
@@ -214,6 +229,7 @@ let { a, b, c } = $derived(stuff());
 Runs side effects when reactive dependencies change. Runs only in the browser.
 
 **Basic usage:**
+
 ```svelte
 <script>
 	let size = $state(50);
@@ -234,72 +250,77 @@ Runs side effects when reactive dependencies change. Runs only in the browser.
 ```
 
 **Lifecycle:**
+
 - Runs after component mounts (after DOM is ready)
 - Runs in microtask after state changes
 - Batched (multiple changes = one effect run)
 
 **Cleanup with teardown functions:**
+
 ```js
 let count = $state(0);
 let milliseconds = $state(1000);
 
 $effect(() => {
-	const interval = setInterval(() => {
-		count += 1;
-	}, milliseconds);
+  const interval = setInterval(() => {
+    count += 1;
+  }, milliseconds);
 
-	// Cleanup runs:
-	// - Before effect re-runs
-	// - When component is destroyed
-	return () => {
-		clearInterval(interval);
-	};
+  // Cleanup runs:
+  // - Before effect re-runs
+  // - When component is destroyed
+  return () => {
+    clearInterval(interval);
+  };
 });
 ```
 
 **Dependency tracking:**
+
 ```js
-let color = $state('#ff3e00');
+let color = $state("#ff3e00");
 let size = $state(50);
 
 $effect(() => {
-	// Depends on `color` only
-	context.fillStyle = color;
+  // Depends on `color` only
+  context.fillStyle = color;
 
-	// ❌ Not tracked - inside setTimeout
-	setTimeout(() => {
-		context.fillRect(0, 0, size, size);
-	}, 0);
+  // ❌ Not tracked - inside setTimeout
+  setTimeout(() => {
+    context.fillRect(0, 0, size, size);
+  }, 0);
 });
 ```
 
 **Object vs property dependencies:**
+
 ```js
 let state = $state({ value: 0 });
 
 // ❌ Runs once only (state object never reassigned)
 $effect(() => {
-	state;
+  state;
 });
 
 // ✅ Runs when state.value changes
 $effect(() => {
-	state.value;
+  state.value;
 });
 ```
 
 **Conditional dependencies:**
+
 ```js
 let condition = $state(true);
-let color = $state('#ff3e00');
+let color = $state("#ff3e00");
 
 $effect(() => {
-	if (condition) {
-		// Only depends on `color` when condition is true
-		confetti({ colors: [color] });
-	} else {
-		confetti();
-	}
+  if (condition) {
+    // Only depends on `color` when condition is true
+    confetti({ colors: [color] });
+  } else {
+    confetti();
+  }
 });
 ```
 
@@ -312,16 +333,16 @@ let div = $state();
 let messages = $state([]);
 
 $effect.pre(() => {
-	if (!div) return;
+  if (!div) return;
 
-	messages.length;  // Track array length
+  messages.length; // Track array length
 
-	// Check if should autoscroll before DOM updates
-	if (div.offsetHeight + div.scrollTop > div.scrollHeight - 20) {
-		tick().then(() => {
-			div.scrollTo(0, div.scrollHeight);
-		});
-	}
+  // Check if should autoscroll before DOM updates
+  if (div.offsetHeight + div.scrollTop > div.scrollHeight - 20) {
+    tick().then(() => {
+      div.scrollTo(0, div.scrollHeight);
+    });
+  }
 });
 ```
 
@@ -330,10 +351,10 @@ $effect.pre(() => {
 Tells you if code is running in a tracking context.
 
 ```js
-console.log('in setup:', $effect.tracking());  // false
+console.log("in setup:", $effect.tracking()); // false
 
 $effect(() => {
-	console.log('in effect:', $effect.tracking());  // true
+  console.log("in effect:", $effect.tracking()); // true
 });
 ```
 
@@ -345,13 +366,13 @@ Advanced: Creates non-tracked scope with manual cleanup.
 
 ```js
 const destroy = $effect.root(() => {
-	$effect(() => {
-		// This effect won't auto-cleanup
-	});
+  $effect(() => {
+    // This effect won't auto-cleanup
+  });
 
-	return () => {
-		// Manual cleanup
-	};
+  return () => {
+    // Manual cleanup
+  };
 });
 
 // Later...
@@ -359,6 +380,7 @@ destroy();
 ```
 
 **When to use:**
+
 - Creating effects outside component initialization
 - Manual effect lifecycle control
 - Library abstractions
@@ -366,17 +388,19 @@ destroy();
 ### When NOT to use $effect
 
 ❌ **Don't synchronize state:**
+
 ```js
 // BAD
 let count = $state(0);
 let doubled = $state();
 
 $effect(() => {
-	doubled = count * 2;
+  doubled = count * 2;
 });
 ```
 
 ✅ **Use $derived instead:**
+
 ```js
 // GOOD
 let count = $state(0);
@@ -384,28 +408,30 @@ let doubled = $derived(count * 2);
 ```
 
 ❌ **Don't link two-way state:**
+
 ```js
 // BAD
 let spent = $state(0);
 let left = $state(100);
 
 $effect(() => {
-	left = 100 - spent;
+  left = 100 - spent;
 });
 
 $effect(() => {
-	spent = 100 - left;
+  spent = 100 - left;
 });
 ```
 
 ✅ **Use callbacks or bindings:**
+
 ```js
 // GOOD
 let spent = $state(0);
 let left = $derived(100 - spent);
 
 function updateLeft(newLeft) {
-	spent = 100 - newLeft;
+  spent = 100 - newLeft;
 }
 ```
 
@@ -416,6 +442,7 @@ function updateLeft(newLeft) {
 Receives component props.
 
 **Basic usage:**
+
 ```svelte
 <script>
 	let { adjective } = $props();
@@ -425,21 +452,25 @@ Receives component props.
 ```
 
 **Fallback values:**
+
 ```js
-let { adjective = 'happy' } = $props();
+let { adjective = "happy" } = $props();
 ```
 
 **Renaming props:**
+
 ```js
-let { super: trouper = 'lights' } = $props();
+let { super: trouper = "lights" } = $props();
 ```
 
 **Rest props:**
+
 ```js
 let { a, b, c, ...others } = $props();
 ```
 
 **Type safety (TypeScript):**
+
 ```svelte
 <script lang="ts">
 	interface Props {
@@ -452,6 +483,7 @@ let { a, b, c, ...others } = $props();
 ```
 
 **Type safety (JSDoc):**
+
 ```svelte
 <script>
 	/** @type {{ adjective: string, count?: number }} */
@@ -460,6 +492,7 @@ let { a, b, c, ...others } = $props();
 ```
 
 **Updating props:**
+
 - Can temporarily reassign props
 - Cannot mutate props (unless `$bindable`)
 - Mutations on plain objects have no effect
@@ -587,6 +620,7 @@ Reusable template fragments.
 ```
 
 **With parameters:**
+
 ```svelte
 {#snippet row(item, index)}
 	<tr>
@@ -652,22 +686,23 @@ let data = $state(loadData());
 ### After mount
 
 ```js
-import { onMount } from 'svelte';
+import { onMount } from "svelte";
 
 onMount(() => {
-	// Runs after component is in the DOM
-	return () => {
-		// Cleanup
-	};
+  // Runs after component is in the DOM
+  return () => {
+    // Cleanup
+  };
 });
 ```
 
 **Or with $effect:**
+
 ```js
 let mounted = $state(false);
 
 $effect(() => {
-	mounted = true;
+  mounted = true;
 });
 ```
 
@@ -677,11 +712,11 @@ Use `$effect.pre` and `$effect`:
 
 ```js
 $effect.pre(() => {
-	// Before DOM updates
+  // Before DOM updates
 });
 
 $effect(() => {
-	// After DOM updates
+  // After DOM updates
 });
 ```
 
@@ -689,9 +724,9 @@ $effect(() => {
 
 ```js
 $effect(() => {
-	return () => {
-		// Cleanup when component is destroyed
-	};
+  return () => {
+    // Cleanup when component is destroyed
+  };
 });
 ```
 
@@ -701,17 +736,17 @@ $effect(() => {
 
 ```js
 // Parent.svelte
-import { setContext } from 'svelte';
+import { setContext } from "svelte";
 
-let user = $state({ name: 'Alice' });
-setContext('user', user);
+let user = $state({ name: "Alice" });
+setContext("user", user);
 ```
 
 ```js
 // Child.svelte
-import { getContext } from 'svelte';
+import { getContext } from "svelte";
 
-let user = getContext('user');
+let user = getContext("user");
 ```
 
 ### Reactive context
@@ -719,10 +754,10 @@ let user = getContext('user');
 ```js
 // Parent
 let count = $state(0);
-setContext('count', () => count);
+setContext("count", () => count);
 
 // Child
-let getCount = getContext('count');
+let getCount = getContext("count");
 let count = $derived(getCount());
 ```
 
@@ -731,13 +766,14 @@ let count = $derived(getCount());
 Svelte 5 runes replace stores, but stores still work.
 
 ```js
-import { writable, derived, readable } from 'svelte/store';
+import { writable, derived, readable } from "svelte/store";
 
 const count = writable(0);
-const doubled = derived(count, $count => $count * 2);
+const doubled = derived(count, ($count) => $count * 2);
 ```
 
 **Auto-subscription in components:**
+
 ```svelte
 <script>
 	import { count } from './stores.js';

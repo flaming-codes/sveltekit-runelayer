@@ -19,6 +19,7 @@ This guide covers advanced patterns for building maintainable, scalable styling 
 Build reusable components with consistent styling:
 
 **Variant-based component pattern:**
+
 ```svelte
 <!-- Button.svelte -->
 <script lang="ts">
@@ -82,6 +83,7 @@ Build reusable components with consistent styling:
 ```
 
 **Usage example:**
+
 ```svelte
 <script>
   import Button from '$lib/components/ui/Button.svelte';
@@ -106,6 +108,7 @@ Build reusable components with consistent styling:
 ```
 
 **Compound component pattern:**
+
 ```svelte
 <!-- Card.svelte -->
 <script>
@@ -171,6 +174,7 @@ Build reusable components with consistent styling:
 Leverage Svelte 5 runes for reactive styling:
 
 **Boolean conditions with class: directive:**
+
 ```svelte
 <script>
   let isActive = $state(false);
@@ -194,6 +198,7 @@ Leverage Svelte 5 runes for reactive styling:
 ```
 
 **Multiple state conditions:**
+
 ```svelte
 <script>
   type Status = 'idle' | 'loading' | 'success' | 'error';
@@ -213,6 +218,7 @@ Leverage Svelte 5 runes for reactive styling:
 ```
 
 **Complex conditional styling:**
+
 ```svelte
 <script>
   let priority = $state<'low' | 'medium' | 'high'>('medium');
@@ -246,6 +252,7 @@ Leverage Svelte 5 runes for reactive styling:
 ```
 
 **Transition classes with effects:**
+
 ```svelte
 <script>
   let show = $state(false);
@@ -287,6 +294,7 @@ Leverage Svelte 5 runes for reactive styling:
 Handle dynamic values safely:
 
 **CSS custom properties for dynamic values:**
+
 ```svelte
 <!-- ❌ WRONG: Dynamic class generation (won't work) -->
 <script>
@@ -314,6 +322,7 @@ Handle dynamic values safely:
 ```
 
 **Safe dynamic styling with inline styles:**
+
 ```svelte
 <script>
   let width = $state(200);
@@ -360,6 +369,7 @@ Handle dynamic values safely:
 ```
 
 **Safelist approach for limited dynamic classes:**
+
 ```css
 /* app.css */
 @import "tailwindcss";
@@ -408,28 +418,29 @@ Handle dynamic values safely:
 Build themeable components:
 
 **CSS custom properties for themes:**
+
 ```css
 /* app.css */
 @import "tailwindcss";
 
 @theme {
   /* Light theme (default) */
-  --color-primary: #3B82F6;
-  --color-secondary: #10B981;
-  --color-background: #FFFFFF;
-  --color-surface: #F9FAFB;
+  --color-primary: #3b82f6;
+  --color-secondary: #10b981;
+  --color-background: #ffffff;
+  --color-surface: #f9fafb;
   --color-text: #111827;
-  --color-text-secondary: #6B7280;
+  --color-text-secondary: #6b7280;
 }
 
 /* Dark theme */
 .dark {
-  --color-primary: #60A5FA;
-  --color-secondary: #34D399;
+  --color-primary: #60a5fa;
+  --color-secondary: #34d399;
   --color-background: #111827;
-  --color-surface: #1F2937;
-  --color-text: #F9FAFB;
-  --color-text-secondary: #D1D5DB;
+  --color-surface: #1f2937;
+  --color-text: #f9fafb;
+  --color-text-secondary: #d1d5db;
 }
 
 /* Custom utilities using theme variables */
@@ -451,6 +462,7 @@ Build themeable components:
 ```
 
 **Theme toggle component:**
+
 ```svelte
 <!-- ThemeToggle.svelte -->
 <script>
@@ -500,6 +512,7 @@ Build themeable components:
 ```
 
 **Themeable component example:**
+
 ```svelte
 <!-- Card.svelte -->
 <script>
@@ -518,6 +531,7 @@ Build themeable components:
 Create maintainable utility classes:
 
 **Custom utility definitions:**
+
 ```css
 /* app.css */
 @import "tailwindcss";
@@ -528,8 +542,14 @@ Create maintainable utility classes:
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @utility animate-slide-in {
@@ -537,8 +557,12 @@ Create maintainable utility classes:
 }
 
 @keyframes slideIn {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 /* Gradient utilities */
@@ -568,7 +592,9 @@ Create maintainable utility classes:
 
 /* Card hover effect */
 @utility card-hover {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 @utility card-hover:hover {
@@ -578,6 +604,7 @@ Create maintainable utility classes:
 ```
 
 **Usage in components:**
+
 ```svelte
 <script>
   let items = $state([
@@ -604,6 +631,7 @@ Create maintainable utility classes:
 Integrate with design tokens:
 
 **Design tokens setup:**
+
 ```css
 /* app.css */
 @import "tailwindcss";
@@ -651,6 +679,7 @@ Integrate with design tokens:
 ```
 
 **Component with design tokens:**
+
 ```svelte
 <!-- Button.svelte using design system tokens -->
 <script lang="ts">
@@ -686,19 +715,21 @@ Integrate with design tokens:
 Build scalable component libraries:
 
 **Component index pattern:**
+
 ```typescript
 // src/lib/components/ui/index.ts
-export { default as Button } from './Button.svelte';
-export { default as Card } from './Card.svelte';
-export { default as Input } from './Input.svelte';
-export { default as Badge } from './Badge.svelte';
-export { default as Modal } from './Modal.svelte';
+export { default as Button } from "./Button.svelte";
+export { default as Card } from "./Card.svelte";
+export { default as Input } from "./Input.svelte";
+export { default as Badge } from "./Badge.svelte";
+export { default as Modal } from "./Modal.svelte";
 
 // Usage
-import { Button, Card, Input } from '$lib/components/ui';
+import { Button, Card, Input } from "$lib/components/ui";
 ```
 
 **Composable form components:**
+
 ```svelte
 <!-- FormField.svelte -->
 <script>
@@ -750,6 +781,7 @@ import { Button, Card, Input } from '$lib/components/ui';
 Create smooth animations:
 
 **Transition utilities:**
+
 ```css
 /* app.css */
 @import "tailwindcss";
@@ -760,8 +792,12 @@ Create smooth animations:
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Scale transitions */
@@ -770,8 +806,14 @@ Create smooth animations:
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Slide transitions */
@@ -780,12 +822,19 @@ Create smooth animations:
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 ```
 
 **Modal with transitions:**
+
 ```svelte
 <!-- Modal.svelte -->
 <script>
@@ -833,6 +882,7 @@ Create smooth animations:
 ```
 
 **List animations:**
+
 ```svelte
 <script>
   let items = $state([
@@ -872,6 +922,7 @@ Create smooth animations:
 Avoid these pitfalls:
 
 **Anti-pattern 1: Overusing @apply**
+
 ```css
 /* ❌ WRONG: Recreating utility classes */
 .btn {
@@ -885,6 +936,7 @@ Avoid these pitfalls:
 ```
 
 **Anti-pattern 2: Dynamic class generation**
+
 ```svelte
 <!-- ❌ WRONG: Won't work with Tailwind -->
 <script>
@@ -902,6 +954,7 @@ Avoid these pitfalls:
 ```
 
 **Anti-pattern 3: Inline styles instead of utilities**
+
 ```svelte
 <!-- ❌ WRONG: Losing Tailwind benefits -->
 <div style="padding: 1rem; background: blue;">Bad</div>
@@ -911,6 +964,7 @@ Avoid these pitfalls:
 ```
 
 **Anti-pattern 4: Not using responsive utilities**
+
 ```svelte
 <!-- ❌ WRONG: JavaScript for responsive behavior -->
 <script>
@@ -932,6 +986,7 @@ Avoid these pitfalls:
 ```
 
 **Anti-pattern 5: Inconsistent spacing**
+
 ```svelte
 <!-- ❌ WRONG: Arbitrary spacing values -->
 <div class="mb-3 mt-5 ml-2 mr-4">Inconsistent</div>

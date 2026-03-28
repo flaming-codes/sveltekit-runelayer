@@ -119,11 +119,7 @@
     }
   ],
   "providers": {
-    "enabled": [
-      "claude",
-      "codex",
-      "copilot"
-    ]
+    "enabled": ["claude", "codex", "copilot"]
   },
   "registries": {
     "default": "local",

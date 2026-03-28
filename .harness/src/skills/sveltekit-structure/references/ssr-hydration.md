@@ -8,12 +8,12 @@ browser APIs (`window`, `document`, `localStorage`) fails on server.
 ## Solution: Check for Browser
 
 ```typescript
-import { browser } from '$app/environment';
+import { browser } from "$app/environment";
 
 // In load function
 export const load = async () => {
-	const theme = browser ? localStorage.getItem('theme') : 'light';
-	return { theme };
+  const theme = browser ? localStorage.getItem("theme") : "light";
+  return { theme };
 };
 ```
 
@@ -51,16 +51,16 @@ export const load = async () => {
 ```typescript
 // WRONG - fails on server
 export const load = async () => {
-	const width = window.innerWidth; // ERROR on server
-	return { width };
+  const width = window.innerWidth; // ERROR on server
+  return { width };
 };
 
 // RIGHT
-import { browser } from '$app/environment';
+import { browser } from "$app/environment";
 
 export const load = async () => {
-	const width = browser ? window.innerWidth : 1024;
-	return { width };
+  const width = browser ? window.innerWidth : 1024;
+  return { width };
 };
 ```
 
@@ -69,16 +69,16 @@ export const load = async () => {
 ```typescript
 // WRONG
 export const load = async () => {
-	const el = document.getElementById('root'); // ERROR on server
+  const el = document.getElementById("root"); // ERROR on server
 };
 
 // RIGHT - Do DOM stuff in onMount
 export const load = async () => {
-	return {};
+  return {};
 };
 // Then in component:
 onMount(() => {
-	const el = document.getElementById('root');
+  const el = document.getElementById("root");
 });
 ```
 

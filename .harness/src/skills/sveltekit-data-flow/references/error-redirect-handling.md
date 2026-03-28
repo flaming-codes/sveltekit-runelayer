@@ -13,26 +13,26 @@
 **Return** (don't throw) from form actions to show validation errors:
 
 ```typescript
-import { fail } from '@sveltejs/kit';
+import { fail } from "@sveltejs/kit";
 
 export const actions = {
-	default: async ({ request }) => {
-		const data = await request.formData();
-		const email = data.get('email');
+  default: async ({ request }) => {
+    const data = await request.formData();
+    const email = data.get("email");
 
-		// Validation failed - return fail()
-		if (!email || !email.includes('@')) {
-			return fail(400, {
-				email,
-				error: 'Invalid email',
-				missing: !email,
-			});
-		}
+    // Validation failed - return fail()
+    if (!email || !email.includes("@")) {
+      return fail(400, {
+        email,
+        error: "Invalid email",
+        missing: !email,
+      });
+    }
 
-		// Success - process and maybe redirect
-		await processEmail(email);
-		throw redirect(303, '/success');
-	},
+    // Success - process and maybe redirect
+    await processEmail(email);
+    throw redirect(303, "/success");
+  },
 };
 ```
 
@@ -70,23 +70,23 @@ export const actions = {
 **Throw** redirect() to navigate user to another page:
 
 ```typescript
-import { redirect } from '@sveltejs/kit';
+import { redirect } from "@sveltejs/kit";
 
 export const actions = {
-	login: async ({ request, cookies }) => {
-		const data = await request.formData();
+  login: async ({ request, cookies }) => {
+    const data = await request.formData();
 
-		const user = await authenticate(data);
+    const user = await authenticate(data);
 
-		if (!user) {
-			return fail(401, { error: 'Invalid credentials' });
-		}
+    if (!user) {
+      return fail(401, { error: "Invalid credentials" });
+    }
 
-		cookies.set('session', user.sessionToken, { path: '/' });
+    cookies.set("session", user.sessionToken, { path: "/" });
 
-		// Success - redirect to dashboard
-		throw redirect(303, '/dashboard'); // MUST throw
-	},
+    // Success - redirect to dashboard
+    throw redirect(303, "/dashboard"); // MUST throw
+  },
 };
 ```
 
@@ -113,22 +113,22 @@ export const actions = {
 error):
 
 ```typescript
-import { error } from '@sveltejs/kit';
+import { error } from "@sveltejs/kit";
 
 export const load = async ({ params, locals }) => {
-	const post = await db.query.posts.findFirst({
-		where: eq(posts.id, params.id),
-	});
+  const post = await db.query.posts.findFirst({
+    where: eq(posts.id, params.id),
+  });
 
-	if (!post) {
-		throw error(404, 'Post not found'); // MUST throw
-	}
+  if (!post) {
+    throw error(404, "Post not found"); // MUST throw
+  }
 
-	if (post.authorId !== locals.userId) {
-		throw error(403, 'Forbidden'); // MUST throw
-	}
+  if (post.authorId !== locals.userId) {
+    throw error(403, "Forbidden"); // MUST throw
+  }
 
-	return { post };
+  return { post };
 };
 ```
 
@@ -144,19 +144,19 @@ export const load = async ({ params, locals }) => {
 
 ```typescript
 // src/routes/posts/[id]/+page.server.ts
-import { error } from '@sveltejs/kit';
+import { error } from "@sveltejs/kit";
 
 export const load = async ({ params }) => {
-	const post = await getPost(params.id);
+  const post = await getPost(params.id);
 
-	if (!post) {
-		throw error(404, {
-			message: 'Post not found',
-			postId: params.id,
-		});
-	}
+  if (!post) {
+    throw error(404, {
+      message: "Post not found",
+      postId: params.id,
+    });
+  }
 
-	return { post };
+  return { post };
 };
 ```
 
@@ -188,16 +188,16 @@ export const load = async ({ params }) => {
 ```typescript
 // WRONG
 export const actions = {
-	default: async () => {
-		redirect(303, '/home'); // DOESN'T WORK
-	},
+  default: async () => {
+    redirect(303, "/home"); // DOESN'T WORK
+  },
 };
 
 // RIGHT
 export const actions = {
-	default: async () => {
-		throw redirect(303, '/home'); // MUST throw
-	},
+  default: async () => {
+    throw redirect(303, "/home"); // MUST throw
+  },
 };
 ```
 
@@ -206,12 +206,12 @@ export const actions = {
 ```typescript
 // WRONG
 export const load = async () => {
-	error(404, 'Not found'); // DOESN'T WORK
+  error(404, "Not found"); // DOESN'T WORK
 };
 
 // RIGHT
 export const load = async () => {
-	throw error(404, 'Not found'); // MUST throw
+  throw error(404, "Not found"); // MUST throw
 };
 ```
 
@@ -220,16 +220,16 @@ export const load = async () => {
 ```typescript
 // WRONG
 export const actions = {
-	default: async () => {
-		throw fail(400, { error: 'Bad' }); // Don't throw
-	},
+  default: async () => {
+    throw fail(400, { error: "Bad" }); // Don't throw
+  },
 };
 
 // RIGHT
 export const actions = {
-	default: async () => {
-		return fail(400, { error: 'Bad' }); // Return
-	},
+  default: async () => {
+    return fail(400, { error: "Bad" }); // Return
+  },
 };
 ```
 
@@ -238,31 +238,31 @@ export const actions = {
 ```typescript
 // WRONG
 export const actions = {
-	default: async () => {
-		try {
-			await doSomething();
-			throw redirect(303, '/success');
-		} catch (e) {
-			console.error(e); // Catches redirect - it won't work!
-			return fail(500, { error: 'Failed' });
-		}
-	},
+  default: async () => {
+    try {
+      await doSomething();
+      throw redirect(303, "/success");
+    } catch (e) {
+      console.error(e); // Catches redirect - it won't work!
+      return fail(500, { error: "Failed" });
+    }
+  },
 };
 
 // RIGHT
-import { isRedirect } from '@sveltejs/kit';
+import { isRedirect } from "@sveltejs/kit";
 
 export const actions = {
-	default: async () => {
-		try {
-			await doSomething();
-			throw redirect(303, '/success');
-		} catch (e) {
-			if (isRedirect(e)) throw e; // Rethrow redirect
-			console.error(e);
-			return fail(500, { error: 'Failed' });
-		}
-	},
+  default: async () => {
+    try {
+      await doSomething();
+      throw redirect(303, "/success");
+    } catch (e) {
+      if (isRedirect(e)) throw e; // Rethrow redirect
+      console.error(e);
+      return fail(500, { error: "Failed" });
+    }
+  },
 };
 ```
 
@@ -287,20 +287,20 @@ Problem in load function?
 
 ```typescript
 export const actions = {
-	create: async ({ request }) => {
-		const data = await request.formData();
+  create: async ({ request }) => {
+    const data = await request.formData();
 
-		// 1. Validate
-		if (!isValid(data)) {
-			return fail(400, { errors: getErrors(data) });
-		}
+    // 1. Validate
+    if (!isValid(data)) {
+      return fail(400, { errors: getErrors(data) });
+    }
 
-		// 2. Process
-		const post = await createPost(data);
+    // 2. Process
+    const post = await createPost(data);
 
-		// 3. Redirect
-		throw redirect(303, `/posts/${post.id}`);
-	},
+    // 3. Redirect
+    throw redirect(303, `/posts/${post.id}`);
+  },
 };
 ```
 
@@ -308,24 +308,24 @@ export const actions = {
 
 ```typescript
 export const load = async ({ locals, params }) => {
-	// 1. Check auth
-	if (!locals.user) {
-		throw error(401, 'Please log in');
-	}
+  // 1. Check auth
+  if (!locals.user) {
+    throw error(401, "Please log in");
+  }
 
-	// 2. Load data
-	const post = await getPost(params.id);
+  // 2. Load data
+  const post = await getPost(params.id);
 
-	if (!post) {
-		throw error(404, 'Post not found');
-	}
+  if (!post) {
+    throw error(404, "Post not found");
+  }
 
-	// 3. Check permission
-	if (post.authorId !== locals.user.id) {
-		throw error(403, 'Not your post');
-	}
+  // 3. Check permission
+  if (post.authorId !== locals.user.id) {
+    throw error(403, "Not your post");
+  }
 
-	return { post };
+  return { post };
 };
 ```
 
@@ -333,12 +333,12 @@ export const load = async ({ locals, params }) => {
 
 ```typescript
 export const load = async ({ locals }) => {
-	// Redirect if already logged in
-	if (locals.user) {
-		throw redirect(303, '/dashboard');
-	}
+  // Redirect if already logged in
+  if (locals.user) {
+    throw redirect(303, "/dashboard");
+  }
 
-	return {}; // Show login page
+  return {}; // Show login page
 };
 ```
 
@@ -379,18 +379,18 @@ When using client-side auth (e.g., Better Auth client), **always use `goto()` wi
 ```typescript
 // WRONG: Data might not refresh before navigation
 await invalidateAll();
-goto('/dashboard');
+goto("/dashboard");
 
 // ALSO WRONG: goto doesn't wait for invalidation
 await invalidateAll();
-await goto('/dashboard');
+await goto("/dashboard");
 ```
 
 ### ✅ Correct Pattern
 
 ```typescript
 // RIGHT: Single call with invalidateAll option
-await goto('/dashboard', { invalidateAll: true });
+await goto("/dashboard", { invalidateAll: true });
 ```
 
 **Why this matters:** After client-side auth, cookies are set but the root layout's `load` function (which typically checks `auth.api.getSession()`) has cached data. Using `invalidateAll: true` forces all load functions to re-run with the new session cookie.

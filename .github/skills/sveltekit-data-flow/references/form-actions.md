@@ -6,22 +6,22 @@ Form actions live in `+page.server.ts` and handle form submissions:
 
 ```typescript
 // +page.server.ts
-import { fail, redirect } from '@sveltejs/kit';
-import type { Actions } from './$types';
+import { fail, redirect } from "@sveltejs/kit";
+import type { Actions } from "./$types";
 
 export const actions: Actions = {
-	default: async ({ request }) => {
-		const data = await request.formData();
-		const email = data.get('email');
-		const password = data.get('password');
+  default: async ({ request }) => {
+    const data = await request.formData();
+    const email = data.get("email");
+    const password = data.get("password");
 
-		if (!email) {
-			return fail(400, { email, missing: true });
-		}
+    if (!email) {
+      return fail(400, { email, missing: true });
+    }
 
-		await login(email, password);
-		throw redirect(303, '/dashboard');
-	},
+    await login(email, password);
+    throw redirect(303, "/dashboard");
+  },
 };
 ```
 
@@ -45,13 +45,13 @@ export const actions: Actions = {
 
 ```typescript
 export const actions: Actions = {
-	login: async ({ request }) => {
-		// Handle login
-	},
+  login: async ({ request }) => {
+    // Handle login
+  },
 
-	register: async ({ request }) => {
-		// Handle registration
-	},
+  register: async ({ request }) => {
+    // Handle registration
+  },
 };
 ```
 
@@ -65,52 +65,52 @@ export const actions: Actions = {
 ### Option 1: fail() - Show Error to User
 
 ```typescript
-import { fail } from '@sveltejs/kit';
+import { fail } from "@sveltejs/kit";
 
 export const actions = {
-	default: async ({ request }) => {
-		const data = await request.formData();
+  default: async ({ request }) => {
+    const data = await request.formData();
 
-		if (!isValid(data)) {
-			return fail(400, {
-				error: 'Invalid data',
-				fields: Object.fromEntries(data), // Preserve input
-			});
-		}
+    if (!isValid(data)) {
+      return fail(400, {
+        error: "Invalid data",
+        fields: Object.fromEntries(data), // Preserve input
+      });
+    }
 
-		// Success - no return needed
-	},
+    // Success - no return needed
+  },
 };
 ```
 
 ### Option 2: redirect() - Navigate After Success
 
 ```typescript
-import { redirect } from '@sveltejs/kit';
+import { redirect } from "@sveltejs/kit";
 
 export const actions = {
-	default: async ({ request }) => {
-		await processForm(request);
-		throw redirect(303, '/success'); // MUST throw
-	},
+  default: async ({ request }) => {
+    await processForm(request);
+    throw redirect(303, "/success"); // MUST throw
+  },
 };
 ```
 
 ### Option 3: error() - Fatal Error
 
 ```typescript
-import { error } from '@sveltejs/kit';
+import { error } from "@sveltejs/kit";
 
 export const actions = {
-	default: async ({ request }) => {
-		const user = await getCurrentUser();
+  default: async ({ request }) => {
+    const user = await getCurrentUser();
 
-		if (!user) {
-			throw error(401, 'Unauthorized'); // MUST throw
-		}
+    if (!user) {
+      throw error(401, "Unauthorized"); // MUST throw
+    }
 
-		// Process...
-	},
+    // Process...
+  },
 };
 ```
 
@@ -152,35 +152,35 @@ With custom handling:
 ## Validation Pattern
 
 ```typescript
-import { fail } from '@sveltejs/kit';
-import { z } from 'zod';
+import { fail } from "@sveltejs/kit";
+import { z } from "zod";
 
 const schema = z.object({
-	email: z.string().email(),
-	password: z.string().min(8),
+  email: z.string().email(),
+  password: z.string().min(8),
 });
 
 export const actions = {
-	default: async ({ request }) => {
-		const data = await request.formData();
-		const rawData = {
-			email: data.get('email'),
-			password: data.get('password'),
-		};
+  default: async ({ request }) => {
+    const data = await request.formData();
+    const rawData = {
+      email: data.get("email"),
+      password: data.get("password"),
+    };
 
-		const result = schema.safeParse(rawData);
+    const result = schema.safeParse(rawData);
 
-		if (!result.success) {
-			return fail(400, {
-				errors: result.error.flatten().fieldErrors,
-				data: rawData,
-			});
-		}
+    if (!result.success) {
+      return fail(400, {
+        errors: result.error.flatten().fieldErrors,
+        data: rawData,
+      });
+    }
 
-		// result.data is validated
-		await createUser(result.data);
-		throw redirect(303, '/welcome');
-	},
+    // result.data is validated
+    await createUser(result.data);
+    throw redirect(303, "/welcome");
+  },
 };
 ```
 
@@ -191,16 +191,16 @@ export const actions = {
 ```typescript
 // WRONG
 export const actions = {
-	default: async () => {
-		redirect(303, '/home'); // DOESN'T WORK - must throw
-	},
+  default: async () => {
+    redirect(303, "/home"); // DOESN'T WORK - must throw
+  },
 };
 
 // RIGHT
 export const actions = {
-	default: async () => {
-		throw redirect(303, '/home');
-	},
+  default: async () => {
+    throw redirect(303, "/home");
+  },
 };
 ```
 
@@ -209,27 +209,27 @@ export const actions = {
 ```typescript
 // WRONG
 export const actions = {
-	default: async () => {
-		try {
-			await doSomething();
-			throw redirect(303, '/success');
-		} catch (e) {
-			console.error(e); // Catches redirect!
-		}
-	},
+  default: async () => {
+    try {
+      await doSomething();
+      throw redirect(303, "/success");
+    } catch (e) {
+      console.error(e); // Catches redirect!
+    }
+  },
 };
 
 // RIGHT
 export const actions = {
-	default: async () => {
-		try {
-			await doSomething();
-			throw redirect(303, '/success');
-		} catch (e) {
-			if (e instanceof Redirect) throw e; // Rethrow
-			console.error(e);
-		}
-	},
+  default: async () => {
+    try {
+      await doSomething();
+      throw redirect(303, "/success");
+    } catch (e) {
+      if (e instanceof Redirect) throw e; // Rethrow
+      console.error(e);
+    }
+  },
 };
 ```
 
@@ -238,16 +238,16 @@ export const actions = {
 ```typescript
 // WRONG
 export const actions = {
-	default: async () => {
-		return { date: new Date() }; // Date is not serializable
-	},
+  default: async () => {
+    return { date: new Date() }; // Date is not serializable
+  },
 };
 
 // RIGHT
 export const actions = {
-	default: async () => {
-		return { date: new Date().toISOString() };
-	},
+  default: async () => {
+    return { date: new Date().toISOString() };
+  },
 };
 ```
 
@@ -255,20 +255,20 @@ export const actions = {
 
 ```typescript
 export const actions = {
-	default: async ({ request }) => {
-		const data = await request.formData();
-		const file = data.get('file') as File;
+  default: async ({ request }) => {
+    const data = await request.formData();
+    const file = data.get("file") as File;
 
-		if (!file || file.size === 0) {
-			return fail(400, { error: 'No file uploaded' });
-		}
+    if (!file || file.size === 0) {
+      return fail(400, { error: "No file uploaded" });
+    }
 
-		const bytes = await file.arrayBuffer();
-		const buffer = Buffer.from(bytes);
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
-		await saveFile(buffer, file.name);
-		throw redirect(303, '/uploads');
-	},
+    await saveFile(buffer, file.name);
+    throw redirect(303, "/uploads");
+  },
 };
 ```
 

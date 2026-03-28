@@ -19,6 +19,7 @@ This guide provides actionable strategies to optimize your SvelteKit application
 Reduce JavaScript bundle sizes for faster load times:
 
 **Analyze your bundle:**
+
 ```bash
 # Build with analysis
 npm run build
@@ -32,34 +33,35 @@ npm install -D rollup-plugin-visualizer
 
 ```js
 // vite.config.js
-import { sveltekit } from '@sveltejs/kit/vite';
-import { visualizer } from 'rollup-plugin-visualizer';
+import { sveltekit } from "@sveltejs/kit/vite";
+import { visualizer } from "rollup-plugin-visualizer";
 
 export default {
   plugins: [
     sveltekit(),
     visualizer({
       emitFile: true,
-      filename: 'stats.html'
-    })
-  ]
+      filename: "stats.html",
+    }),
+  ],
 };
 ```
 
 **Tree-shaking optimization:**
+
 ```ts
 // ❌ WRONG: Import entire library
-import _ from 'lodash';
+import _ from "lodash";
 
 export function formatData(items) {
-  return _.sortBy(items, 'name');
+  return _.sortBy(items, "name");
 }
 
 // ✅ CORRECT: Import only needed functions
-import { sortBy } from 'lodash-es';
+import { sortBy } from "lodash-es";
 
 export function formatData(items) {
-  return sortBy(items, 'name');
+  return sortBy(items, "name");
 }
 
 // ✅ BETTER: Use native methods when possible
@@ -69,6 +71,7 @@ export function formatData(items) {
 ```
 
 **Lazy loading heavy dependencies:**
+
 ```svelte
 <!-- ❌ WRONG: Load chart library eagerly -->
 <script>
@@ -112,6 +115,7 @@ export function formatData(items) {
 ```
 
 **Manual chunk splitting:**
+
 ```js
 // vite.config.js
 export default {
@@ -120,29 +124,28 @@ export default {
       output: {
         manualChunks: {
           // Separate vendor code
-          'vendor-svelte': ['svelte', '@sveltejs/kit'],
+          "vendor-svelte": ["svelte", "@sveltejs/kit"],
 
           // Separate UI components
-          'ui-components': [
-            './src/lib/components/ui/Button.svelte',
-            './src/lib/components/ui/Card.svelte',
-            './src/lib/components/ui/Input.svelte'
+          "ui-components": [
+            "./src/lib/components/ui/Button.svelte",
+            "./src/lib/components/ui/Card.svelte",
+            "./src/lib/components/ui/Input.svelte",
           ],
 
           // Separate heavy features
-          'feature-analytics': [
-            './src/lib/components/features/analytics'
-          ]
-        }
-      }
+          "feature-analytics": ["./src/lib/components/features/analytics"],
+        },
+      },
     },
     // Increase chunk size warning limit if needed
-    chunkSizeWarningLimit: 600
-  }
+    chunkSizeWarningLimit: 600,
+  },
 };
 ```
 
 **Remove unused code:**
+
 ```bash
 # Analyze dependencies
 npm install -D depcheck
@@ -157,6 +160,7 @@ npm uninstall unused-package-1 unused-package-2
 Tailwind v4 automatically purges unused CSS, but you can optimize further:
 
 **Content paths configuration:**
+
 ```css
 /* app.css */
 @import "tailwindcss";
@@ -168,6 +172,7 @@ Tailwind v4 automatically purges unused CSS, but you can optimize further:
 ```
 
 **Safelist dynamic classes:**
+
 ```css
 /* app.css */
 @import "tailwindcss";
@@ -199,6 +204,7 @@ Tailwind v4 automatically purges unused CSS, but you can optimize further:
 ```
 
 **Avoid dynamic class generation:**
+
 ```svelte
 <!-- ❌ WRONG: Dynamic class generation -->
 <script>
@@ -220,10 +226,11 @@ Tailwind v4 automatically purges unused CSS, but you can optimize further:
 ```
 
 **Production CSS optimization:**
+
 ```js
 // vite.config.js
-import { sveltekit } from '@sveltejs/kit/vite';
-import tailwindcss from '@tailwindcss/vite';
+import { sveltekit } from "@sveltejs/kit/vite";
+import tailwindcss from "@tailwindcss/vite";
 
 export default {
   plugins: [tailwindcss(), sveltekit()],
@@ -231,13 +238,14 @@ export default {
     devSourcemap: true, // Dev only
   },
   build: {
-    cssMinify: 'lightningcss', // Faster than default
-    cssCodeSplit: true // Split CSS per route
-  }
+    cssMinify: "lightningcss", // Faster than default
+    cssCodeSplit: true, // Split CSS per route
+  },
 };
 ```
 
 **Check CSS bundle size:**
+
 ```bash
 npm run build
 
@@ -256,6 +264,7 @@ find .svelte-kit/output -name "*.css" -exec ls -lh {} \;
 Split code effectively across routes and components:
 
 **Route-based splitting (automatic):**
+
 ```
 routes/
 ├── +page.svelte              → index.[hash].js
@@ -265,6 +274,7 @@ routes/
 ```
 
 **Component lazy loading:**
+
 ```svelte
 <!-- Dashboard.svelte -->
 <script>
@@ -312,6 +322,7 @@ routes/
 ```
 
 **Preload critical routes:**
+
 ```svelte
 <!-- +layout.svelte -->
 <script>
@@ -333,6 +344,7 @@ routes/
 ```
 
 **Conditional loading for authenticated routes:**
+
 ```svelte
 <!-- +layout.svelte -->
 <script>
@@ -355,6 +367,7 @@ routes/
 Optimize images for web delivery:
 
 **Responsive images:**
+
 ```svelte
 <!-- ❌ WRONG: Single large image -->
 <img src="/images/hero-4k.jpg" alt="Hero" class="w-full" />
@@ -396,6 +409,7 @@ Optimize images for web delivery:
 ```
 
 **Image component for consistent handling:**
+
 ```svelte
 <!-- OptimizedImage.svelte -->
 <script lang="ts">
@@ -446,6 +460,7 @@ Optimize images for web delivery:
 ```
 
 **Blur placeholder for better UX:**
+
 ```svelte
 <script>
   let loaded = $state(false);
@@ -482,6 +497,7 @@ Optimize images for web delivery:
 Optimize web font loading:
 
 **Preload critical fonts:**
+
 ```svelte
 <!-- +layout.svelte -->
 <svelte:head>
@@ -506,19 +522,20 @@ Optimize web font loading:
 ```
 
 **Font display strategy:**
+
 ```css
 /* app.css */
 @font-face {
-  font-family: 'Inter';
-  src: url('/fonts/inter-var.woff2') format('woff2-variations');
+  font-family: "Inter";
+  src: url("/fonts/inter-var.woff2") format("woff2-variations");
   font-weight: 100 900;
   font-display: swap; /* Show fallback immediately */
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'Playfair Display';
-  src: url('/fonts/playfair-display.woff2') format('woff2');
+  font-family: "Playfair Display";
+  src: url("/fonts/playfair-display.woff2") format("woff2");
   font-weight: 400 700;
   font-display: optional; /* Skip if not cached */
   font-style: normal;
@@ -526,21 +543,22 @@ Optimize web font loading:
 ```
 
 **System font fallback:**
+
 ```css
 /* tailwind.config.js or app.css @theme block */
 @theme {
-  --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Playfair Display', Georgia, serif;
+  --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Playfair Display", Georgia, serif;
 }
 ```
 
 **Variable fonts for better performance:**
+
 ```css
 /* ✅ Use variable fonts to reduce requests */
 @font-face {
-  font-family: 'Inter';
-  src: url('/fonts/inter-var.woff2') format('woff2-variations');
+  font-family: "Inter";
+  src: url("/fonts/inter-var.woff2") format("woff2-variations");
   font-weight: 100 900; /* All weights in one file */
   font-display: swap;
 }
@@ -551,6 +569,7 @@ Optimize web font loading:
 Load content progressively:
 
 **Intersection Observer for lazy loading:**
+
 ```svelte
 <!-- LazySection.svelte -->
 <script>
@@ -586,6 +605,7 @@ Load content progressively:
 ```
 
 **Usage example:**
+
 ```svelte
 <script>
   import LazySection from '$lib/components/LazySection.svelte';
@@ -605,6 +625,7 @@ Load content progressively:
 ```
 
 **Lazy load images in lists:**
+
 ```svelte
 <script>
   let products = $props().products;
@@ -632,6 +653,7 @@ Load content progressively:
 Optimize navigation performance:
 
 **Preload data for likely routes:**
+
 ```svelte
 <!-- Navigation.svelte -->
 <script>
@@ -662,6 +684,7 @@ Optimize navigation performance:
 ```
 
 **Prefetch on idle:**
+
 ```svelte
 <script>
   import { onMount } from 'svelte';
@@ -686,6 +709,7 @@ Optimize navigation performance:
 ```
 
 **Instant navigation with prefetch:**
+
 ```svelte
 <!-- Use data-sveltekit-preload-data for automatic prefetch -->
 <a
@@ -711,6 +735,7 @@ Optimize navigation performance:
 Target 90+ scores across all categories:
 
 **Performance optimizations:**
+
 ```svelte
 <!-- +layout.svelte -->
 <svelte:head>
@@ -727,6 +752,7 @@ Target 90+ scores across all categories:
 ```
 
 **Avoid layout shifts:**
+
 ```svelte
 <!-- ❌ WRONG: No dimensions, causes CLS -->
 <img src="/banner.jpg" alt="Banner" />
@@ -742,6 +768,7 @@ Target 90+ scores across all categories:
 ```
 
 **Optimize third-party scripts:**
+
 ```svelte
 <svelte:head>
   <!-- ❌ WRONG: Blocking third-party script -->
@@ -760,6 +787,7 @@ Target 90+ scores across all categories:
 Optimize for Google's performance metrics:
 
 **Largest Contentful Paint (LCP < 2.5s):**
+
 - [ ] Preload hero images
 - [ ] Use CDN for static assets
 - [ ] Optimize server response time
@@ -767,6 +795,7 @@ Optimize for Google's performance metrics:
 - [ ] Use SSR for critical content
 
 **First Input Delay (FID < 100ms):**
+
 - [ ] Minimize main-thread JavaScript
 - [ ] Code split large bundles
 - [ ] Defer non-critical JS
@@ -774,6 +803,7 @@ Optimize for Google's performance metrics:
 - [ ] Lazy load below-the-fold content
 
 **Cumulative Layout Shift (CLS < 0.1):**
+
 - [ ] Set width/height on images
 - [ ] Reserve space for dynamic content
 - [ ] Avoid inserting content above existing content
@@ -781,6 +811,7 @@ Optimize for Google's performance metrics:
 - [ ] Preload fonts with font-display: swap
 
 **Testing Core Web Vitals:**
+
 ```bash
 # Install Lighthouse CI
 npm install -g @lhci/cli
@@ -795,6 +826,7 @@ lhci autorun --collect.url=http://localhost:4173
 ```
 
 **Monitor in production:**
+
 ```ts
 // src/routes/+layout.svelte
 <script>
@@ -818,25 +850,27 @@ lhci autorun --collect.url=http://localhost:4173
 Track performance in production:
 
 **Basic performance tracking:**
+
 ```ts
 // src/lib/performance.ts
 export function measurePerformance() {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
   // Navigation timing
-  const perfData = performance.getEntriesByType('navigation')[0];
-  console.log('Page load time:', perfData.loadEventEnd - perfData.fetchStart);
+  const perfData = performance.getEntriesByType("navigation")[0];
+  console.log("Page load time:", perfData.loadEventEnd - perfData.fetchStart);
 
   // Resource timing
-  const resources = performance.getEntriesByType('resource');
-  console.log('Total resources:', resources.length);
+  const resources = performance.getEntriesByType("resource");
+  console.log("Total resources:", resources.length);
 
   // Mark custom events
-  performance.mark('app-interactive');
+  performance.mark("app-interactive");
 }
 ```
 
 **Integration with analytics:**
+
 ```svelte
 <!-- +layout.svelte -->
 <script>

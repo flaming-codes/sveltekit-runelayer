@@ -570,16 +570,13 @@ export const demo_login = command(async () => {
 Thrown errors are serialized and re-thrown on the client:
 
 ```typescript
-export const risky_action = command(
-  v.object({ id: v.string() }),
-  async ({ id }) => {
-    const item = await db.items.find(id);
-    if (!item) {
-      throw new Error("Item not found");
-    }
-    return item;
-  },
-);
+export const risky_action = command(v.object({ id: v.string() }), async ({ id }) => {
+  const item = await db.items.find(id);
+  if (!item) {
+    throw new Error("Item not found");
+  }
+  return item;
+});
 
 // Client side:
 try {
@@ -777,14 +774,11 @@ import { command } from "$app/server";
 import * as v from "valibot";
 import { create_agent, delete_agent } from "./agents.helpers";
 
-export const create = command(
-  v.object({ name: v.string(), model: v.string() }),
-  async (input) => {
-    const event = getRequestEvent();
-    const user = await getUserFromEvent(event);
-    return create_agent(user.id, input);
-  },
-);
+export const create = command(v.object({ name: v.string(), model: v.string() }), async (input) => {
+  const event = getRequestEvent();
+  const user = await getUserFromEvent(event);
+  return create_agent(user.id, input);
+});
 
 export const remove = command(v.object({ id: v.string() }), async ({ id }) => {
   const event = getRequestEvent();
@@ -797,10 +791,7 @@ export const remove = command(v.object({ id: v.string() }), async ({ id }) => {
 
 ```typescript
 // agents.helpers.ts
-export async function create_agent(
-  user_id: string,
-  input: { name: string; model: string },
-) {
+export async function create_agent(user_id: string, input: { name: string; model: string }) {
   const agent = await db.agents.create({ ...input, owner_id: user_id });
   return { id: agent.id, name: agent.name };
 }
@@ -833,9 +824,7 @@ describe("create_agent", () => {
 
 describe("delete_agent", () => {
   it("throws if not owner", async () => {
-    await expect(delete_agent("wrong-user", "agent-1")).rejects.toThrow(
-      "Unauthorized",
-    );
+    await expect(delete_agent("wrong-user", "agent-1")).rejects.toThrow("Unauthorized");
   });
 });
 ```

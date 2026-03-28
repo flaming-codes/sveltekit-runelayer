@@ -75,13 +75,13 @@ Root +layout.svelte
 
 ```html
 <div class="app">
-	<nav>Global Nav</nav>
-	<div class="dashboard">
-		<aside>Dashboard Sidebar</aside>
-		<main>
-			<h1>Dashboard Home</h1>
-		</main>
-	</div>
+  <nav>Global Nav</nav>
+  <div class="dashboard">
+    <aside>Dashboard Sidebar</aside>
+    <main>
+      <h1>Dashboard Home</h1>
+    </main>
+  </div>
 </div>
 ```
 
@@ -219,16 +219,16 @@ export const load = async ({ locals }) => {
 
 ```typescript
 // src/routes/(app)/+layout.server.ts
-import { redirect } from '@sveltejs/kit';
+import { redirect } from "@sveltejs/kit";
 
 export const load = async ({ locals }) => {
-	if (!locals.user) {
-		throw redirect(303, '/login');
-	}
+  if (!locals.user) {
+    throw redirect(303, "/login");
+  }
 
-	return {
-		user: locals.user,
-	};
+  return {
+    user: locals.user,
+  };
 };
 ```
 

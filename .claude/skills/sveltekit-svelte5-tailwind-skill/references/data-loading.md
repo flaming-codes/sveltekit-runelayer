@@ -18,28 +18,30 @@ SvelteKit's load functions fetch data before pages render. Understanding how to 
 Load functions run before pages render, providing data as props.
 
 **Server load function:**
+
 ```ts
 // src/routes/products/[id]/+page.server.ts
-import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import { error } from "@sveltejs/kit";
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const product = await db.product.findUnique({
-    where: { id: params.id }
+    where: { id: params.id },
   });
 
   if (!product) {
-    throw error(404, 'Product not found');
+    throw error(404, "Product not found");
   }
 
   return {
     product,
-    user: locals.user // From hooks
+    user: locals.user, // From hooks
   };
 };
 ```
 
 **Accessing data in component:**
+
 ```svelte
 <!-- src/routes/products/[id]/+page.svelte -->
 <script>
@@ -55,6 +57,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 ```
 
 ❌ **Wrong: Fetching in component**
+
 ```svelte
 <script>
   let product = $state(null);
@@ -69,6 +72,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 ```
 
 ✅ **Right: Loading in load function**
+
 ```ts
 // +page.server.ts
 export async function load({ params }) {
@@ -78,18 +82,21 @@ export async function load({ params }) {
 ```
 
 **Load function parameters:**
+
 ```ts
 export async function load({
-  params,      // Route parameters
-  url,         // URL object
-  route,       // Route info
-  fetch,       // SvelteKit's fetch
-  setHeaders,  // Set response headers
-  parent,      // Parent layout data
-  depends,     // Dependency tracking
-  locals       // Server-only (from hooks)
+  params, // Route parameters
+  url, // URL object
+  route, // Route info
+  fetch, // SvelteKit's fetch
+  setHeaders, // Set response headers
+  parent, // Parent layout data
+  depends, // Dependency tracking
+  locals, // Server-only (from hooks)
 }) {
-  return { /* data */ };
+  return {
+    /* data */
+  };
 }
 ```
 
@@ -98,6 +105,7 @@ export async function load({
 Choose between server-only and universal load functions based on needs.
 
 **Server load (`+page.server.ts`):**
+
 - Runs only on server
 - Has access to database, env vars, secrets
 - Can use `locals` from hooks
@@ -105,11 +113,11 @@ Choose between server-only and universal load functions based on needs.
 
 ```ts
 // +page.server.ts
-import { PRIVATE_API_KEY } from '$env/static/private';
+import { PRIVATE_API_KEY } from "$env/static/private";
 
 export async function load() {
-  const data = await fetch('https://api.example.com/data', {
-    headers: { 'Authorization': `Bearer ${PRIVATE_API_KEY}` }
+  const data = await fetch("https://api.example.com/data", {
+    headers: { Authorization: `Bearer ${PRIVATE_API_KEY}` },
   });
 
   return { data: await data.json() };
@@ -117,6 +125,7 @@ export async function load() {
 ```
 
 **Universal load (`+page.ts`):**
+
 - Runs on server during SSR
 - Runs on client during navigation
 - No access to server-only data
@@ -124,7 +133,7 @@ export async function load() {
 
 ```ts
 // +page.ts
-import type { PageLoad } from './$types';
+import type { PageLoad } from "./$types";
 
 export const load: PageLoad = async ({ fetch, params }) => {
   // Works on server AND client
@@ -134,9 +143,10 @@ export const load: PageLoad = async ({ fetch, params }) => {
 ```
 
 ❌ **Wrong: Using server-only code in universal load**
+
 ```ts
 // +page.ts (NOT .server.ts)
-import { db } from '$lib/server/db';
+import { db } from "$lib/server/db";
 
 export async function load() {
   return { data: await db.query() }; // ERROR: db not available on client
@@ -144,9 +154,10 @@ export async function load() {
 ```
 
 ✅ **Right: Use API endpoint or server load**
+
 ```ts
 // +page.server.ts
-import { db } from '$lib/server/db';
+import { db } from "$lib/server/db";
 
 export async function load() {
   return { data: await db.query() }; // Works - server-only
@@ -155,26 +166,27 @@ export async function load() {
 
 **When to use each:**
 
-| Use Case | Function Type |
-|----------|--------------|
-| Database queries | `+page.server.ts` |
-| Private API keys | `+page.server.ts` |
-| Session/auth data | `+page.server.ts` |
-| Public API calls | `+page.ts` |
-| Client-side navigation | `+page.ts` |
-| Shared logic | `+page.ts` |
+| Use Case               | Function Type     |
+| ---------------------- | ----------------- |
+| Database queries       | `+page.server.ts` |
+| Private API keys       | `+page.server.ts` |
+| Session/auth data      | `+page.server.ts` |
+| Public API calls       | `+page.ts`        |
+| Client-side navigation | `+page.ts`        |
+| Shared logic           | `+page.ts`        |
 
 ## Passing Data to Rune State
 
 Transform load function data into reactive Svelte 5 state.
 
 **Basic pattern:**
+
 ```ts
 // +page.server.ts
 export async function load() {
   return {
     items: await db.items.findMany(),
-    count: 10
+    count: 10,
   };
 }
 ```
@@ -199,6 +211,7 @@ export async function load() {
 ```
 
 **Deep reactivity with objects:**
+
 ```svelte
 <script>
   let { data } = $props();
@@ -214,6 +227,7 @@ export async function load() {
 ```
 
 **Derived values from load data:**
+
 ```svelte
 <script>
   let { data } = $props();
@@ -246,6 +260,7 @@ export async function load() {
 ```
 
 ❌ **Wrong: Mutating data prop directly**
+
 ```svelte
 <script>
   let { data } = $props();
@@ -257,6 +272,7 @@ export async function load() {
 ```
 
 ✅ **Right: Create local state from props**
+
 ```svelte
 <script>
   let { data } = $props();
@@ -273,6 +289,7 @@ export async function load() {
 Combine load data with runes for reactive, real-time experiences.
 
 **Optimistic updates:**
+
 ```svelte
 <script>
   import { invalidate } from '$app/navigation';
@@ -313,6 +330,7 @@ Combine load data with runes for reactive, real-time experiences.
 ```
 
 **Real-time synchronization:**
+
 ```svelte
 <script>
   import { invalidate } from '$app/navigation';
@@ -339,13 +357,14 @@ Combine load data with runes for reactive, real-time experiences.
 ```
 
 **Dependency tracking:**
+
 ```ts
 // +page.server.ts
 export async function load({ depends }) {
-  depends('api:items'); // Track dependency
+  depends("api:items"); // Track dependency
 
   return {
-    items: await db.items.findMany()
+    items: await db.items.findMany(),
   };
 }
 ```
@@ -364,6 +383,7 @@ export async function load({ depends }) {
 ```
 
 **Pagination with runes:**
+
 ```svelte
 <script>
   import { goto } from '$app/navigation';
@@ -406,6 +426,7 @@ export async function load({ depends }) {
 Load slow data without blocking page render.
 
 **Streaming pattern:**
+
 ```ts
 // +page.server.ts
 export async function load() {
@@ -415,7 +436,7 @@ export async function load() {
 
     // Slow data (streamed)
     analytics: fetchAnalytics(), // Promise, not awaited
-    recommendations: fetchRecommendations()
+    recommendations: fetchRecommendations(),
   };
 }
 ```
@@ -442,6 +463,7 @@ export async function load() {
 ```
 
 **Multiple streaming sources:**
+
 ```svelte
 <script>
   let { data } = $props();
@@ -467,6 +489,7 @@ export async function load() {
 ```
 
 **Combining blocking and streaming:**
+
 ```ts
 export async function load() {
   // Critical data - blocks render
@@ -479,7 +502,7 @@ export async function load() {
   return {
     user,
     stats,
-    feed
+    feed,
   };
 }
 ```
@@ -489,19 +512,20 @@ export async function load() {
 Handle errors in load functions gracefully.
 
 **Throwing errors:**
+
 ```ts
 // +page.server.ts
-import { error } from '@sveltejs/kit';
+import { error } from "@sveltejs/kit";
 
 export async function load({ params }) {
   const product = await db.product.findUnique({
-    where: { id: params.id }
+    where: { id: params.id },
   });
 
   if (!product) {
     throw error(404, {
-      message: 'Product not found',
-      details: `No product with ID ${params.id}`
+      message: "Product not found",
+      details: `No product with ID ${params.id}`,
     });
   }
 
@@ -510,6 +534,7 @@ export async function load({ params }) {
 ```
 
 **Error page:**
+
 ```svelte
 <!-- +error.svelte -->
 <script>
@@ -533,6 +558,7 @@ export async function load({ params }) {
 ```
 
 **Handling errors in streaming:**
+
 ```svelte
 <script>
   let { data } = $props();
@@ -553,13 +579,14 @@ export async function load({ params }) {
 ```
 
 **Redirects:**
+
 ```ts
 // +page.server.ts
-import { redirect } from '@sveltejs/kit';
+import { redirect } from "@sveltejs/kit";
 
 export async function load({ locals }) {
   if (!locals.user) {
-    throw redirect(302, '/login');
+    throw redirect(302, "/login");
   }
 
   return { user: locals.user };
@@ -571,9 +598,10 @@ export async function load({ locals }) {
 Type load function data properly.
 
 **Defining types:**
+
 ```ts
 // +page.server.ts
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad } from "./$types";
 
 type Product = {
   id: string;
@@ -584,7 +612,7 @@ type Product = {
 
 export const load: PageServerLoad = async ({ params }) => {
   const product: Product = await db.product.findUnique({
-    where: { id: params.id }
+    where: { id: params.id },
   });
 
   return { product };
@@ -592,6 +620,7 @@ export const load: PageServerLoad = async ({ params }) => {
 ```
 
 **Using types in component:**
+
 ```svelte
 <script lang="ts">
   import type { PageData } from './$types';
@@ -604,6 +633,7 @@ export const load: PageServerLoad = async ({ params }) => {
 ```
 
 **Shared types:**
+
 ```ts
 // src/lib/types/models.ts
 export type User = {
@@ -621,8 +651,8 @@ export type Product = {
 
 ```ts
 // +page.server.ts
-import type { PageServerLoad } from './$types';
-import type { User, Product } from '$lib/types/models';
+import type { PageServerLoad } from "./$types";
+import type { User, Product } from "$lib/types/models";
 
 export const load: PageServerLoad = async () => {
   const user: User = await fetchUser();
@@ -637,13 +667,14 @@ export const load: PageServerLoad = async () => {
 Cache data and invalidate when stale.
 
 **Cache control headers:**
+
 ```ts
 // +page.server.ts
 export async function load({ setHeaders }) {
   const data = await fetchData();
 
   setHeaders({
-    'cache-control': 'public, max-age=60' // Cache for 1 minute
+    "cache-control": "public, max-age=60", // Cache for 1 minute
   });
 
   return { data };
@@ -651,6 +682,7 @@ export async function load({ setHeaders }) {
 ```
 
 **Manual invalidation:**
+
 ```svelte
 <script>
   import { invalidate, invalidateAll } from '$app/navigation';
@@ -668,6 +700,7 @@ export async function load({ setHeaders }) {
 ```
 
 **Invalidation after mutations:**
+
 ```svelte
 <script>
   import { enhance } from '$app/forms';
@@ -691,12 +724,13 @@ export async function load({ setHeaders }) {
 ```
 
 **Conditional revalidation:**
+
 ```ts
 // +page.server.ts
 export async function load({ depends, url }) {
-  depends('api:products');
+  depends("api:products");
 
-  const fresh = url.searchParams.get('fresh') === 'true';
+  const fresh = url.searchParams.get("fresh") === "true";
 
   if (fresh) {
     // Bypass cache
@@ -713,6 +747,7 @@ export async function load({ depends, url }) {
 **Mistake 1: Fetching in component instead of load**
 
 ❌ **Wrong:**
+
 ```svelte
 <script>
   let items = $state([]);
@@ -727,6 +762,7 @@ export async function load({ depends, url }) {
 ```
 
 ✅ **Right:**
+
 ```ts
 // +page.server.ts
 export async function load() {
@@ -737,19 +773,21 @@ export async function load() {
 **Mistake 2: Not using SvelteKit's fetch**
 
 ❌ **Wrong:**
+
 ```ts
 // +page.ts
 export async function load() {
-  const res = await fetch('/api/data'); // Wrong fetch
+  const res = await fetch("/api/data"); // Wrong fetch
   return { data: await res.json() };
 }
 ```
 
 ✅ **Right:**
+
 ```ts
 // +page.ts
 export async function load({ fetch }) {
-  const res = await fetch('/api/data'); // SvelteKit's fetch
+  const res = await fetch("/api/data"); // SvelteKit's fetch
   return { data: await res.json() };
 }
 ```
@@ -757,6 +795,7 @@ export async function load({ fetch }) {
 **Mistake 3: Waterfalls**
 
 ❌ **Wrong:**
+
 ```ts
 export async function load() {
   const user = await fetchUser();
@@ -766,17 +805,19 @@ export async function load() {
 ```
 
 ✅ **Right:**
+
 ```ts
 export async function load({ params }) {
   const [user, posts] = await Promise.all([
     fetchUser(),
-    fetchPosts(params.userId) // Parallel
+    fetchPosts(params.userId), // Parallel
   ]);
   return { user, posts };
 }
 ```
 
 **Checklist:**
+
 - [ ] Use load functions for data fetching
 - [ ] Choose server vs universal load appropriately
 - [ ] Create local state from load data
@@ -788,6 +829,7 @@ export async function load({ params }) {
 - [ ] Avoid waterfalls with Promise.all
 
 **Next steps:**
+
 - Learn runes in `svelte5-runes.md`
 - Handle forms in `forms-and-actions.md`
 - Optimize caching in `performance-optimization.md`

@@ -24,19 +24,21 @@ Runs on both server and client.
 ```js
 // src/routes/blog/[slug]/+page.js
 export async function load({ params, fetch }) {
-	const response = await fetch(`/api/posts/${params.slug}`);
-	const post = await response.json();
+  const response = await fetch(`/api/posts/${params.slug}`);
+  const post = await response.json();
 
-	return { post };
+  return { post };
 }
 ```
 
 **When universal load runs:**
+
 - Server-side during SSR
 - Client-side during hydration (reusing SSR data)
 - Client-side on navigation
 
 **Use cases:**
+
 - Fetching from external APIs
 - No private credentials needed
 - Need to return non-serializable data (classes, functions)
@@ -47,21 +49,23 @@ Runs only on server.
 
 ```js
 // src/routes/blog/[slug]/+page.server.js
-import * as db from '$lib/server/database';
+import * as db from "$lib/server/database";
 
 export async function load({ params }) {
-	const post = await db.getPost(params.slug);
+  const post = await db.getPost(params.slug);
 
-	return { post };
+  return { post };
 }
 ```
 
 **Use cases:**
+
 - Direct database access
 - Using private environment variables
 - Server-only operations
 
 **Advantages:**
+
 - Can use any Node.js libraries
 - Access to server-side context (cookies, locals)
 - Doesn't expose sensitive code to client
@@ -70,21 +74,21 @@ export async function load({ params }) {
 
 ```js
 // src/routes/blog/[slug]/+page.server.js
-import * as db from '$lib/server/database';
+import * as db from "$lib/server/database";
 
 export async function load({ params, url, request, locals, platform }) {
-	// Available in server load only:
-	const user = locals.user;
-	const ip = request.headers.get('x-forwarded-for');
+  // Available in server load only:
+  const user = locals.user;
+  const ip = request.headers.get("x-forwarded-for");
 
-	// Common to both:
-	const slug = params.slug;
-	const query = url.searchParams.get('q');
+  // Common to both:
+  const slug = params.slug;
+  const query = url.searchParams.get("q");
 
-	return {
-		post: await db.getPost(slug),
-		user
-	};
+  return {
+    post: await db.getPost(slug),
+    user,
+  };
 }
 ```
 
@@ -127,24 +131,25 @@ Extends universal load event with:
 ```js
 // Server load
 export async function load({ fetch }) {
-	// ✅ Can make same-origin requests without full URL
-	const res1 = await fetch('/api/posts');
+  // ✅ Can make same-origin requests without full URL
+  const res1 = await fetch("/api/posts");
 
-	// ✅ External API
-	const res2 = await fetch('https://api.example.com/posts');
+  // ✅ External API
+  const res2 = await fetch("https://api.example.com/posts");
 
-	// ✅ Inherits cookies and auth headers
-	const res3 = await fetch('/api/user');
+  // ✅ Inherits cookies and auth headers
+  const res3 = await fetch("/api/user");
 
-	return {
-		posts: await res1.json(),
-		external: await res2.json(),
-		user: await res3.json()
-	};
+  return {
+    posts: await res1.json(),
+    external: await res2.json(),
+    user: await res3.json(),
+  };
 }
 ```
 
 **Benefits of SvelteKit's fetch:**
+
 - Same-origin requests avoid HTTP overhead on server
 - Cookies automatically forwarded
 - Responses captured and inlined in HTML
@@ -157,29 +162,29 @@ Access data from parent layouts:
 ```js
 // src/routes/+layout.js
 export function load() {
-	return { user: { name: 'Alice' } };
+  return { user: { name: "Alice" } };
 }
 ```
 
 ```js
 // src/routes/profile/+layout.js
 export async function load({ parent }) {
-	const { user } = await parent();
+  const { user } = await parent();
 
-	return {
-		user,
-		posts: await fetchPosts(user.id)
-	};
+  return {
+    user,
+    posts: await fetchPosts(user.id),
+  };
 }
 ```
 
 ```js
 // src/routes/profile/settings/+page.js
 export async function load({ parent }) {
-	// Gets data from both parent layouts
-	const { user, posts } = await parent();
+  // Gets data from both parent layouts
+  const { user, posts } = await parent();
 
-	return { user, posts };
+  return { user, posts };
 }
 ```
 
@@ -188,16 +193,16 @@ export async function load({ parent }) {
 ```js
 // ❌ Bad - creates waterfall
 export async function load({ parent, params }) {
-	const parentData = await parent();  // Wait for parent
-	const data = await getData(params);  // Then fetch data
-	return { ...parentData, ...data };
+  const parentData = await parent(); // Wait for parent
+  const data = await getData(params); // Then fetch data
+  return { ...parentData, ...data };
 }
 
 // ✅ Good - parallel execution
 export async function load({ parent, params }) {
-	const data = await getData(params);  // Start fetch
-	const parentData = await parent();   // Then get parent
-	return { ...parentData, ...data };
+  const data = await getData(params); // Start fetch
+  const parentData = await parent(); // Then get parent
+  return { ...parentData, ...data };
 }
 ```
 
@@ -210,16 +215,16 @@ Stream promises to the browser for faster perceived performance.
 ```js
 // src/routes/blog/[slug]/+page.server.js
 export async function load({ params }) {
-	return {
-		// Awaited - blocks initial render
-		post: await db.getPost(params.slug),
+  return {
+    // Awaited - blocks initial render
+    post: await db.getPost(params.slug),
 
-		// Not awaited - streams to browser
-		comments: db.getComments(params.slug),
+    // Not awaited - streams to browser
+    comments: db.getComments(params.slug),
 
-		// Also streams
-		relatedPosts: db.getRelatedPosts(params.slug)
-	};
+    // Also streams
+    relatedPosts: db.getRelatedPosts(params.slug),
+  };
 }
 ```
 
@@ -261,41 +266,44 @@ export async function load({ params }) {
 ### Streaming Considerations
 
 **Promise rejection handling:**
+
 ```js
 export function load({ fetch }) {
-	// ❌ Unhandled rejection can crash server
-	const dangerous = Promise.reject();
+  // ❌ Unhandled rejection can crash server
+  const dangerous = Promise.reject();
 
-	// ✅ Mark as handled
-	const safe = Promise.reject();
-	safe.catch(() => {});
+  // ✅ Mark as handled
+  const safe = Promise.reject();
+  safe.catch(() => {});
 
-	// ✅ SvelteKit fetch handles automatically
-	const safeFetch = fetch('/api/data');
+  // ✅ SvelteKit fetch handles automatically
+  const safeFetch = fetch("/api/data");
 
-	return { dangerous, safe, safeFetch };
+  return { dangerous, safe, safeFetch };
 }
 ```
 
 **Platform limitations:**
+
 - AWS Lambda: No streaming support (responses buffered)
 - Vercel: Streaming supported
 - Cloudflare: Streaming supported
 - Nginx: May need `proxy_buffering off;`
 
 **Headers and redirects:**
+
 ```js
 export function load({ setHeaders }) {
-	const slow = slowOperation().then(result => {
-		// ❌ Too late - headers already sent
-		setHeaders({ 'x-custom': 'value' });
-		return result;
-	});
+  const slow = slowOperation().then((result) => {
+    // ❌ Too late - headers already sent
+    setHeaders({ "x-custom": "value" });
+    return result;
+  });
 
-	// ✅ Set headers before streaming
-	setHeaders({ 'x-custom': 'value' });
+  // ✅ Set headers before streaming
+  setHeaders({ "x-custom": "value" });
 
-	return { slow };
+  return { slow };
 }
 ```
 
@@ -310,93 +318,101 @@ Intercept every request.
 ```js
 // src/hooks.server.js
 export async function handle({ event, resolve }) {
-	// Before request handling
-	console.log('Request:', event.url.pathname);
+  // Before request handling
+  console.log("Request:", event.url.pathname);
 
-	// Modify event
-	event.locals.startTime = Date.now();
+  // Modify event
+  event.locals.startTime = Date.now();
 
-	// Resolve request
-	const response = await resolve(event);
+  // Resolve request
+  const response = await resolve(event);
 
-	// After request handling
-	const duration = Date.now() - event.locals.startTime;
-	response.headers.set('x-response-time', `${duration}ms`);
+  // After request handling
+  const duration = Date.now() - event.locals.startTime;
+  response.headers.set("x-response-time", `${duration}ms`);
 
-	return response;
+  return response;
 }
 ```
 
 **Multiple handle functions:**
+
 ```js
 // src/hooks.server.js
-import { sequence } from '@sveltejs/kit/hooks';
+import { sequence } from "@sveltejs/kit/hooks";
 
 async function authHandle({ event, resolve }) {
-	// Auth logic
-	return resolve(event);
+  // Auth logic
+  return resolve(event);
 }
 
 async function loggingHandle({ event, resolve }) {
-	// Logging logic
-	return resolve(event);
+  // Logging logic
+  return resolve(event);
 }
 
 export const handle = sequence(authHandle, loggingHandle);
 ```
 
 **Custom route handling:**
+
 ```js
 export async function handle({ event, resolve }) {
-	if (event.url.pathname.startsWith('/custom')) {
-		return new Response('Custom response');
-	}
+  if (event.url.pathname.startsWith("/custom")) {
+    return new Response("Custom response");
+  }
 
-	return resolve(event);
+  return resolve(event);
 }
 ```
 
 **Transform HTML:**
+
 ```js
 export async function handle({ event, resolve }) {
-	const response = await resolve(event, {
-		transformPageChunk: ({ html, done }) => {
-			// Inject analytics
-			if (done) {
-				return html.replace('</body>', `
+  const response = await resolve(event, {
+    transformPageChunk: ({ html, done }) => {
+      // Inject analytics
+      if (done) {
+        return html.replace(
+          "</body>",
+          `
 					<script>/* analytics */</script>
 					</body>
-				`);
-			}
-			return html;
-		}
-	});
+				`,
+        );
+      }
+      return html;
+    },
+  });
 
-	return response;
+  return response;
 }
 ```
 
 **Filter serialized headers:**
+
 ```js
 export async function handle({ event, resolve }) {
-	return resolve(event, {
-		filterSerializedResponseHeaders: (name, value) => {
-			// Include x- prefixed headers in serialized response
-			return name.startsWith('x-');
-		}
-	});
+  return resolve(event, {
+    filterSerializedResponseHeaders: (name, value) => {
+      // Include x- prefixed headers in serialized response
+      return name.startsWith("x-");
+    },
+  });
 }
 ```
 
 **Preload control:**
+
 ```js
 export async function handle({ event, resolve }) {
-	return resolve(event, {
-		preload: ({ type, path }) => {
-			// Preload JS and CSS, but not fonts
-			return type === 'js' || type === 'css';
-		}
-	});
+  return resolve(event, {
+    preload: ({ type, path }) => {
+      // Preload JS and CSS, but not fonts
+      return type === "js" || type === "css";
+    },
+  });
 }
 ```
 
@@ -407,30 +423,31 @@ Modify server-side fetch requests.
 ```js
 // src/hooks.server.js
 export async function handleFetch({ request, fetch }) {
-	// Rewrite API requests to internal endpoint
-	if (request.url.startsWith('https://api.example.com/')) {
-		request = new Request(
-			request.url.replace('https://api.example.com/', 'http://localhost:9999/'),
-			request
-		);
-	}
+  // Rewrite API requests to internal endpoint
+  if (request.url.startsWith("https://api.example.com/")) {
+    request = new Request(
+      request.url.replace("https://api.example.com/", "http://localhost:9999/"),
+      request,
+    );
+  }
 
-	return fetch(request);
+  return fetch(request);
 }
 ```
 
 **Forward cookies to subdomain:**
+
 ```js
 export async function handleFetch({ event, request, fetch }) {
-	if (request.url.startsWith('https://api.mydomain.com/')) {
-		// Forward parent domain cookie
-		const cookie = event.request.headers.get('cookie');
-		if (cookie) {
-			request.headers.set('cookie', cookie);
-		}
-	}
+  if (request.url.startsWith("https://api.mydomain.com/")) {
+    // Forward parent domain cookie
+    const cookie = event.request.headers.get("cookie");
+    if (cookie) {
+      request.headers.set("cookie", cookie);
+    }
+  }
 
-	return fetch(request);
+  return fetch(request);
 }
 ```
 
@@ -441,50 +458,51 @@ Handle unexpected errors.
 ```js
 // src/hooks.server.js
 export async function handleError({ error, event, status, message }) {
-	// Log error
-	console.error('Error:', {
-		message: error.message,
-		stack: error.stack,
-		url: event.url.pathname,
-		status
-	});
+  // Log error
+  console.error("Error:", {
+    message: error.message,
+    stack: error.stack,
+    url: event.url.pathname,
+    status,
+  });
 
-	// Send to error tracking
-	await errorTracker.capture(error, {
-		user: event.locals.user,
-		url: event.url.href
-	});
+  // Send to error tracking
+  await errorTracker.capture(error, {
+    user: event.locals.user,
+    url: event.url.href,
+  });
 
-	// Return safe error info
-	return {
-		message: 'An error occurred',
-		code: generateErrorCode()
-	};
+  // Return safe error info
+  return {
+    message: "An error occurred",
+    code: generateErrorCode(),
+  };
 }
 ```
 
 **Type-safe errors:**
+
 ```ts
 // src/app.d.ts
 declare global {
-	namespace App {
-		interface Error {
-			message: string;
-			code: string;
-			timestamp: number;
-		}
-	}
+  namespace App {
+    interface Error {
+      message: string;
+      code: string;
+      timestamp: number;
+    }
+  }
 }
 ```
 
 ```js
 // src/hooks.server.js
 export async function handleError({ error, event }) {
-	return {
-		message: 'Internal Error',
-		code: generateErrorCode(),
-		timestamp: Date.now()
-	};
+  return {
+    message: "Internal Error",
+    code: generateErrorCode(),
+    timestamp: Date.now(),
+  };
 }
 ```
 
@@ -495,13 +513,13 @@ export async function handleError({ error, event }) {
 ```js
 // src/hooks.client.js
 export async function handleError({ error, event, status, message }) {
-	// Log to client-side error service
-	console.error('Client error:', error);
+  // Log to client-side error service
+  console.error("Client error:", error);
 
-	return {
-		message: 'Something went wrong',
-		code: error.code || 'unknown'
-	};
+  return {
+    message: "Something went wrong",
+    code: error.code || "unknown",
+  };
 }
 ```
 
@@ -514,27 +532,28 @@ Translate URLs to different routes.
 ```js
 // src/hooks.js
 const translated = {
-	'/en/about': '/en/about',
-	'/de/ueber-uns': '/de/about',
-	'/fr/a-propos': '/fr/about'
+  "/en/about": "/en/about",
+  "/de/ueber-uns": "/de/about",
+  "/fr/a-propos": "/fr/about",
 };
 
 export function reroute({ url }) {
-	if (url.pathname in translated) {
-		return translated[url.pathname];
-	}
+  if (url.pathname in translated) {
+    return translated[url.pathname];
+  }
 }
 ```
 
 **Async reroute (SvelteKit 2.18+):**
+
 ```js
 export async function reroute({ url, fetch }) {
-	// Fetch routing data
-	const api = new URL('/api/reroute', url);
-	api.searchParams.set('pathname', url.pathname);
+  // Fetch routing data
+  const api = new URL("/api/reroute", url);
+  api.searchParams.set("pathname", url.pathname);
 
-	const result = await fetch(api).then(r => r.json());
-	return result.pathname;
+  const result = await fetch(api).then((r) => r.json());
+  return result.pathname;
 }
 ```
 
@@ -544,28 +563,28 @@ Serialize custom types across server/client boundary.
 
 ```js
 // src/hooks.js
-import { Vector } from '$lib/math';
+import { Vector } from "$lib/math";
 
 export const transport = {
-	Vector: {
-		encode: (value) => {
-			if (value instanceof Vector) {
-				return [value.x, value.y];
-			}
-		},
-		decode: ([x, y]) => new Vector(x, y)
-	}
+  Vector: {
+    encode: (value) => {
+      if (value instanceof Vector) {
+        return [value.x, value.y];
+      }
+    },
+    decode: ([x, y]) => new Vector(x, y),
+  },
 };
 ```
 
 ```js
 // src/routes/+page.server.js
-import { Vector } from '$lib/math';
+import { Vector } from "$lib/math";
 
 export function load() {
-	return {
-		position: new Vector(10, 20)  // Automatically serialized
-	};
+  return {
+    position: new Vector(10, 20), // Automatically serialized
+  };
 }
 ```
 
@@ -575,29 +594,29 @@ export function load() {
 
 ```js
 // src/hooks.server.js
-import * as db from '$lib/server/database';
+import * as db from "$lib/server/database";
 
 export async function handle({ event, resolve }) {
-	const sessionId = event.cookies.get('sessionid');
+  const sessionId = event.cookies.get("sessionid");
 
-	if (sessionId) {
-		event.locals.user = await db.getUserFromSession(sessionId);
-	}
+  if (sessionId) {
+    event.locals.user = await db.getUserFromSession(sessionId);
+  }
 
-	return resolve(event);
+  return resolve(event);
 }
 ```
 
 ```js
 // src/routes/profile/+page.server.js
-import { redirect } from '@sveltejs/kit';
+import { redirect } from "@sveltejs/kit";
 
 export async function load({ locals }) {
-	if (!locals.user) {
-		redirect(307, '/login');
-	}
+  if (!locals.user) {
+    redirect(307, "/login");
+  }
 
-	return { user: locals.user };
+  return { user: locals.user };
 }
 ```
 
@@ -605,29 +624,29 @@ export async function load({ locals }) {
 
 ```js
 // src/lib/server/auth.js
-import { redirect } from '@sveltejs/kit';
-import { getRequestEvent } from '$app/server';
+import { redirect } from "@sveltejs/kit";
+import { getRequestEvent } from "$app/server";
 
 export function requireAuth() {
-	const { locals, url } = getRequestEvent();
+  const { locals, url } = getRequestEvent();
 
-	if (!locals.user) {
-		const redirectTo = url.pathname + url.search;
-		redirect(307, `/login?redirect=${redirectTo}`);
-	}
+  if (!locals.user) {
+    const redirectTo = url.pathname + url.search;
+    redirect(307, `/login?redirect=${redirectTo}`);
+  }
 
-	return locals.user;
+  return locals.user;
 }
 ```
 
 ```js
 // src/routes/protected/+page.server.js
-import { requireAuth } from '$lib/server/auth';
+import { requireAuth } from "$lib/server/auth";
 
 export function load() {
-	const user = requireAuth();
+  const user = requireAuth();
 
-	return { user };
+  return { user };
 }
 ```
 
@@ -635,21 +654,21 @@ export function load() {
 
 ```js
 // src/hooks.server.js
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
 export async function handle({ event, resolve }) {
-	const token = event.cookies.get('token');
+  const token = event.cookies.get("token");
 
-	if (token) {
-		try {
-			event.locals.user = jwt.verify(token, process.env.JWT_SECRET);
-		} catch (err) {
-			// Invalid token
-			event.cookies.delete('token', { path: '/' });
-		}
-	}
+  if (token) {
+    try {
+      event.locals.user = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      // Invalid token
+      event.cookies.delete("token", { path: "/" });
+    }
+  }
 
-	return resolve(event);
+  return resolve(event);
 }
 ```
 
@@ -660,15 +679,15 @@ export async function handle({ event, resolve }) {
 ```js
 // src/routes/blog/[slug]/+page.js
 export async function load({ fetch, setHeaders, params }) {
-	const response = await fetch(`/api/posts/${params.slug}`);
-	const post = await response.json();
+  const response = await fetch(`/api/posts/${params.slug}`);
+  const post = await response.json();
 
-	// Cache for 1 hour, stale-while-revalidate for 1 day
-	setHeaders({
-		'cache-control': 'max-age=3600, stale-while-revalidate=86400'
-	});
+  // Cache for 1 hour, stale-while-revalidate for 1 day
+  setHeaders({
+    "cache-control": "max-age=3600, stale-while-revalidate=86400",
+  });
 
-	return { post };
+  return { post };
 }
 ```
 
@@ -676,17 +695,17 @@ export async function load({ fetch, setHeaders, params }) {
 
 ```js
 export async function load({ fetch, setHeaders, url }) {
-	const response = await fetch('/api/data');
-	const data = await response.json();
+  const response = await fetch("/api/data");
+  const data = await response.json();
 
-	// Only cache successful responses
-	if (response.ok) {
-		setHeaders({
-			'cache-control': 'public, max-age=600'
-		});
-	}
+  // Only cache successful responses
+  if (response.ok) {
+    setHeaders({
+      "cache-control": "public, max-age=600",
+    });
+  }
 
-	return { data };
+  return { data };
 }
 ```
 
@@ -694,25 +713,23 @@ export async function load({ fetch, setHeaders, url }) {
 
 ```js
 // src/routes/api/data/+server.js
-import { createHash } from 'crypto';
+import { createHash } from "crypto";
 
 export async function GET({ request }) {
-	const data = await fetchData();
-	const etag = createHash('md5')
-		.update(JSON.stringify(data))
-		.digest('hex');
+  const data = await fetchData();
+  const etag = createHash("md5").update(JSON.stringify(data)).digest("hex");
 
-	// Check if client has current version
-	if (request.headers.get('if-none-match') === etag) {
-		return new Response(null, { status: 304 });
-	}
+  // Check if client has current version
+  if (request.headers.get("if-none-match") === etag) {
+    return new Response(null, { status: 304 });
+  }
 
-	return new Response(JSON.stringify(data), {
-		headers: {
-			'etag': etag,
-			'cache-control': 'max-age=60'
-		}
-	});
+  return new Response(JSON.stringify(data), {
+    headers: {
+      etag: etag,
+      "cache-control": "max-age=60",
+    },
+  });
 }
 ```
 
@@ -722,38 +739,39 @@ export async function GET({ request }) {
 
 ```js
 // src/routes/admin/+layout.server.js
-import { error } from '@sveltejs/kit';
+import { error } from "@sveltejs/kit";
 
 export function load({ locals }) {
-	if (!locals.user) {
-		error(401, 'Not logged in');
-	}
+  if (!locals.user) {
+    error(401, "Not logged in");
+  }
 
-	if (!locals.user.isAdmin) {
-		error(403, 'Not authorized');
-	}
+  if (!locals.user.isAdmin) {
+    error(403, "Not authorized");
+  }
 
-	return { user: locals.user };
+  return { user: locals.user };
 }
 ```
 
 **Custom error data:**
+
 ```ts
 // src/app.d.ts
 declare global {
-	namespace App {
-		interface Error {
-			message: string;
-			details?: string;
-		}
-	}
+  namespace App {
+    interface Error {
+      message: string;
+      details?: string;
+    }
+  }
 }
 ```
 
 ```js
 error(404, {
-	message: 'Post not found',
-	details: 'The blog post you requested does not exist'
+  message: "Post not found",
+  details: "The blog post you requested does not exist",
 });
 ```
 
@@ -764,8 +782,8 @@ Automatically handled by `handleError` hook.
 ```js
 // src/routes/+page.server.js
 export async function load() {
-	// This will be caught by handleError
-	throw new Error('Database connection failed');
+  // This will be caught by handleError
+  throw new Error("Database connection failed");
 }
 ```
 
@@ -794,15 +812,15 @@ export async function load() {
 ```js
 // src/routes/+page.js
 export async function load({ fetch, depends }) {
-	// Explicit dependency
-	depends('app:posts');
+  // Explicit dependency
+  depends("app:posts");
 
-	// Implicit dependency from fetch
-	const response = await fetch('/api/posts');
+  // Implicit dependency from fetch
+  const response = await fetch("/api/posts");
 
-	return {
-		posts: await response.json()
-	};
+  return {
+    posts: await response.json(),
+  };
 }
 ```
 
@@ -820,10 +838,10 @@ export async function load({ fetch, depends }) {
 ### Conditional Invalidation
 
 ```js
-import { invalidate } from '$app/navigation';
+import { invalidate } from "$app/navigation";
 
 // Invalidate based on condition
-invalidate((url) => url.href.includes('/api/'));
+invalidate((url) => url.href.includes("/api/"));
 ```
 
 ## Performance Optimization
@@ -834,12 +852,12 @@ invalidate((url) => url.href.includes('/api/'));
 // ✅ Load functions run in parallel automatically
 // src/routes/+layout.server.js
 export async function load() {
-	return { user: await fetchUser() };
+  return { user: await fetchUser() };
 }
 
 // src/routes/blog/+page.server.js
 export async function load() {
-	return { posts: await fetchPosts() };
+  return { posts: await fetchPosts() };
 }
 ```
 
@@ -860,20 +878,16 @@ export async function load() {
 ```js
 // ❌ Bad - sequential
 export async function load({ parent }) {
-	const data1 = await fetchData1();
-	const data2 = await fetchData2();
-	const parentData = await parent();
-	return { data1, data2, ...parentData };
+  const data1 = await fetchData1();
+  const data2 = await fetchData2();
+  const parentData = await parent();
+  return { data1, data2, ...parentData };
 }
 
 // ✅ Good - parallel
 export async function load({ parent }) {
-	const [data1, data2, parentData] = await Promise.all([
-		fetchData1(),
-		fetchData2(),
-		parent()
-	]);
-	return { data1, data2, ...parentData };
+  const [data1, data2, parentData] = await Promise.all([fetchData1(), fetchData2(), parent()]);
+  return { data1, data2, ...parentData };
 }
 ```
 
@@ -886,12 +900,12 @@ SvelteKit automatically deduplicates fetch requests:
 ```js
 // Both fetch to same URL - only one network request
 export async function load({ fetch }) {
-	const [posts, featured] = await Promise.all([
-		fetch('/api/posts').then(r => r.json()),
-		fetch('/api/posts').then(r => r.json())
-	]);
+  const [posts, featured] = await Promise.all([
+    fetch("/api/posts").then((r) => r.json()),
+    fetch("/api/posts").then((r) => r.json()),
+  ]);
 
-	return { posts, featured };
+  return { posts, featured };
 }
 ```
 
@@ -899,7 +913,7 @@ export async function load({ fetch }) {
 
 ```js
 // src/routes/dashboard/+page.js
-export const ssr = false;  // Client-side only
+export const ssr = false; // Client-side only
 export const prerender = false;
 ```
 
@@ -907,8 +921,8 @@ export const prerender = false;
 
 ```js
 // src/routes/+layout.js
-export const prerender = true;  // Prerender by default
+export const prerender = true; // Prerender by default
 
 // src/routes/api/+server.js
-export const prerender = false;  // But not API routes
+export const prerender = false; // But not API routes
 ```

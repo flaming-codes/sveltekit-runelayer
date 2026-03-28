@@ -18,22 +18,23 @@ SvelteKit form actions provide server-side form processing with progressive enha
 Form actions run on the server and process form submissions without JavaScript.
 
 **Basic form action:**
+
 ```ts
 // src/routes/contact/+page.server.ts
-import { fail } from '@sveltejs/kit';
-import type { Actions } from './$types';
+import { fail } from "@sveltejs/kit";
+import type { Actions } from "./$types";
 
 export const actions = {
   default: async ({ request }) => {
     const data = await request.formData();
-    const email = data.get('email');
-    const message = data.get('message');
+    const email = data.get("email");
+    const message = data.get("message");
 
     if (!email || !message) {
       return fail(400, {
-        error: 'Email and message are required',
+        error: "Email and message are required",
         email,
-        message
+        message,
       });
     }
 
@@ -41,11 +42,12 @@ export const actions = {
     await sendEmail(email, message);
 
     return { success: true };
-  }
+  },
 } satisfies Actions;
 ```
 
 **Basic form without JavaScript:**
+
 ```svelte
 <!-- src/routes/contact/+page.svelte -->
 <script>
@@ -69,6 +71,7 @@ export const actions = {
 ```
 
 ❌ **Wrong: Client-only form handling**
+
 ```svelte
 <script>
   let email = $state('');
@@ -84,6 +87,7 @@ export const actions = {
 ```
 
 ✅ **Right: Progressive enhancement with form actions**
+
 ```svelte
 <script>
   let { form } = $props();
@@ -100,6 +104,7 @@ export const actions = {
 Use `use:enhance` to add client-side behavior while maintaining server-side functionality.
 
 **Basic enhancement:**
+
 ```svelte
 <script>
   import { enhance } from '$app/forms';
@@ -117,12 +122,14 @@ Use `use:enhance` to add client-side behavior while maintaining server-side func
 ```
 
 **This provides:**
+
 - No page reload on submit
 - Loading state during submission
 - Automatic form reset on success
 - Error handling
 
 ❌ **Wrong: Lost rune state after submission**
+
 ```svelte
 <script>
   let submitting = $state(false);
@@ -135,6 +142,7 @@ Use `use:enhance` to add client-side behavior while maintaining server-side func
 ```
 
 ✅ **Right: Custom enhance to preserve state**
+
 ```svelte
 <script>
   import { enhance } from '$app/forms';
@@ -162,6 +170,7 @@ Use `use:enhance` to add client-side behavior while maintaining server-side func
 Custom enhance callbacks give full control over form behavior.
 
 **Complete enhance pattern:**
+
 ```svelte
 <script>
   import { enhance } from '$app/forms';
@@ -214,24 +223,26 @@ Custom enhance callbacks give full control over form behavior.
 ```
 
 **Enhance callback parameters:**
+
 ```ts
 enhance((params) => {
   // Before submit
   params.formElement; // HTMLFormElement
-  params.formData;    // FormData object
-  params.action;      // Form action URL
-  params.cancel();    // Abort submission
+  params.formData; // FormData object
+  params.action; // Form action URL
+  params.cancel(); // Abort submission
 
   return async (result) => {
     // After submit
-    result.result.type;  // 'success' | 'failure' | 'redirect' | 'error'
-    result.result.data;  // Data from action
-    result.update();     // Update form prop
+    result.result.type; // 'success' | 'failure' | 'redirect' | 'error'
+    result.result.data; // Data from action
+    result.update(); // Update form prop
   };
 });
 ```
 
 **Conditional submission:**
+
 ```svelte
 <script>
   import { enhance } from '$app/forms';
@@ -262,6 +273,7 @@ enhance((params) => {
 Update UI immediately while request processes in background.
 
 **Optimistic updates:**
+
 ```svelte
 <script>
   import { enhance } from '$app/forms';
@@ -306,6 +318,7 @@ Update UI immediately while request processes in background.
 ```
 
 **Optimistic deletion:**
+
 ```svelte
 <script>
   import { enhance } from '$app/forms';
@@ -340,6 +353,7 @@ Update UI immediately while request processes in background.
 ```
 
 ❌ **Wrong: Not handling failures**
+
 ```svelte
 <script>
   const handleAdd = enhance(({ formData }) => {
@@ -351,6 +365,7 @@ Update UI immediately while request processes in background.
 ```
 
 ✅ **Right: Revert on failure**
+
 ```svelte
 <script>
   const handleAdd = enhance(({ formData }) => {
@@ -371,19 +386,22 @@ Update UI immediately while request processes in background.
 Combine client and server validation for best user experience.
 
 **Server-side validation:**
+
 ```ts
 // +page.server.ts
-import { fail } from '@sveltejs/kit';
-import { z } from 'zod';
+import { fail } from "@sveltejs/kit";
+import { z } from "zod";
 
-const schema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string()
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword']
-});
+const schema = z
+  .object({
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 export const actions = {
   default: async ({ request }) => {
@@ -396,17 +414,18 @@ export const actions = {
       const errors = result.error.flatten().fieldErrors;
       return fail(400, {
         errors,
-        data // Return submitted data
+        data, // Return submitted data
       });
     }
 
     // Process valid data
     return { success: true };
-  }
+  },
 };
 ```
 
 **Client-side validation with runes:**
+
 ```svelte
 <script>
   import { enhance } from '$app/forms';
@@ -478,6 +497,7 @@ export const actions = {
 ```
 
 **Real-time validation with derived:**
+
 ```svelte
 <script>
   let email = $state('');
@@ -520,47 +540,49 @@ export const actions = {
 Handle file uploads with progress indicators and preview.
 
 **Server-side file handling:**
+
 ```ts
 // +page.server.ts
-import { fail } from '@sveltejs/kit';
-import { writeFile } from 'fs/promises';
-import path from 'path';
+import { fail } from "@sveltejs/kit";
+import { writeFile } from "fs/promises";
+import path from "path";
 
 export const actions = {
   upload: async ({ request }) => {
     const data = await request.formData();
-    const file = data.get('file') as File;
+    const file = data.get("file") as File;
 
     if (!file || file.size === 0) {
-      return fail(400, { error: 'No file uploaded' });
+      return fail(400, { error: "No file uploaded" });
     }
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      return fail(400, { error: 'Only images allowed' });
+    if (!file.type.startsWith("image/")) {
+      return fail(400, { error: "Only images allowed" });
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      return fail(400, { error: 'File too large (max 5MB)' });
+      return fail(400, { error: "File too large (max 5MB)" });
     }
 
     // Save file
     const filename = `${Date.now()}-${file.name}`;
-    const filepath = path.join('static/uploads', filename);
+    const filepath = path.join("static/uploads", filename);
     const buffer = Buffer.from(await file.arrayBuffer());
     await writeFile(filepath, buffer);
 
     return {
       success: true,
       filename,
-      url: `/uploads/${filename}`
+      url: `/uploads/${filename}`,
     };
-  }
+  },
 };
 ```
 
 **Client-side file upload with preview:**
+
 ```svelte
 <script>
   import { enhance } from '$app/forms';
@@ -668,6 +690,7 @@ export const actions = {
 Provide clear feedback for all form states.
 
 **Comprehensive error handling:**
+
 ```svelte
 <script>
   import { enhance } from '$app/forms';
@@ -736,9 +759,10 @@ Provide clear feedback for all form states.
 Type form data and actions properly.
 
 **Action types:**
+
 ```ts
 // +page.server.ts
-import type { Actions } from './$types';
+import type { Actions } from "./$types";
 
 type ContactFormData = {
   name: string;
@@ -750,18 +774,19 @@ export const actions = {
   default: async ({ request }) => {
     const data = await request.formData();
     const formData: ContactFormData = {
-      name: data.get('name') as string,
-      email: data.get('email') as string,
-      message: data.get('message') as string
+      name: data.get("name") as string,
+      email: data.get("email") as string,
+      message: data.get("message") as string,
     };
 
     // Type-safe processing
     return { success: true };
-  }
+  },
 } satisfies Actions;
 ```
 
 **Form prop types:**
+
 ```svelte
 <script lang="ts">
   import type { ActionData } from './$types';
@@ -780,19 +805,21 @@ export const actions = {
 **Pitfall 1: Lost form data on error**
 
 ❌ **Wrong:**
+
 ```ts
 export const actions = {
   default: async ({ request }) => {
     const data = await request.formData();
     if (invalid) {
-      return fail(400, { error: 'Invalid' });
+      return fail(400, { error: "Invalid" });
       // User data lost!
     }
-  }
+  },
 };
 ```
 
 ✅ **Right:**
+
 ```ts
 export const actions = {
   default: async ({ request }) => {
@@ -801,29 +828,32 @@ export const actions = {
 
     if (invalid) {
       return fail(400, {
-        error: 'Invalid',
-        data: formData // Return submitted data
+        error: "Invalid",
+        data: formData, // Return submitted data
       });
     }
-  }
+  },
 };
 ```
 
 **Pitfall 2: Multiple forms on same page**
 
 ❌ **Wrong: Unnamed actions**
+
 ```svelte
 <form method="POST" use:enhance>...</form>
 <form method="POST" use:enhance>...</form>
 ```
 
 ✅ **Right: Named actions**
+
 ```svelte
 <form method="POST" action="?/create" use:enhance>...</form>
 <form method="POST" action="?/delete" use:enhance>...</form>
 ```
 
 **Checklist for forms:**
+
 - [ ] Form works without JavaScript
 - [ ] Loading state visible during submission
 - [ ] Errors displayed clearly
@@ -834,6 +864,7 @@ export const actions = {
 - [ ] TypeScript types for actions and data
 
 **Next steps:**
+
 - Style forms in `styling-with-tailwind.md`
 - Handle validation patterns in `best-practices.md`
 - Deploy forms in `deployment-guide.md`
