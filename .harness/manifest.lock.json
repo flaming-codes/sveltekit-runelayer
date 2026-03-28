@@ -15,7 +15,7 @@
       "id": "claude",
       "overrideSha256ByProvider": {},
       "registry": "local",
-      "sourceSha256": "8681d43c99ae7c2ca0604d6ef3acf1051a579816a9fd55999505d05a575030ab",
+      "sourceSha256": "340391e8211c228a8593aacb9bf137de3e977072c36adff1d66acdce187ab557",
       "type": "settings"
     },
     {
@@ -110,11 +110,11 @@
       "type": "skill"
     }
   ],
-  "generatedAt": "2026-03-28T21:27:10.810Z",
+  "generatedAt": "2026-03-28T21:28:32.493Z",
   "manifestFingerprint": "271ba2a4182b5b61188fba6eae470599d884934515128ef827c5cfe84eb77d71",
   "outputs": [
     {
-      "contentSha256": "8681d43c99ae7c2ca0604d6ef3acf1051a579816a9fd55999505d05a575030ab",
+      "contentSha256": "ad1e01a8644304d236d4af8094b9d29cdcb803be660e6bf3e448a308a86945af",
       "ownerEntityIds": [
         "claude"
       ],
