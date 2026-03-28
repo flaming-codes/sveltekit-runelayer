@@ -98,6 +98,102 @@
     },
     {
       "enabled": true,
+      "id": "optimizer-performance",
+      "overrides": {
+        "claude": ".harness/src/subagents/optimizer-performance.overrides.claude.yaml",
+        "codex": ".harness/src/subagents/optimizer-performance.overrides.codex.yaml",
+        "copilot": ".harness/src/subagents/optimizer-performance.overrides.copilot.yaml"
+      },
+      "registry": "local",
+      "sourcePath": ".harness/src/subagents/optimizer-performance.md",
+      "type": "subagent"
+    },
+    {
+      "enabled": true,
+      "id": "optimizer-simplicity",
+      "overrides": {
+        "claude": ".harness/src/subagents/optimizer-simplicity.overrides.claude.yaml",
+        "codex": ".harness/src/subagents/optimizer-simplicity.overrides.codex.yaml",
+        "copilot": ".harness/src/subagents/optimizer-simplicity.overrides.copilot.yaml"
+      },
+      "registry": "local",
+      "sourcePath": ".harness/src/subagents/optimizer-simplicity.md",
+      "type": "subagent"
+    },
+    {
+      "enabled": true,
+      "id": "research-integration",
+      "overrides": {
+        "claude": ".harness/src/subagents/research-integration.overrides.claude.yaml",
+        "codex": ".harness/src/subagents/research-integration.overrides.codex.yaml",
+        "copilot": ".harness/src/subagents/research-integration.overrides.copilot.yaml"
+      },
+      "registry": "local",
+      "sourcePath": ".harness/src/subagents/research-integration.md",
+      "type": "subagent"
+    },
+    {
+      "enabled": true,
+      "id": "research-parity",
+      "overrides": {
+        "claude": ".harness/src/subagents/research-parity.overrides.claude.yaml",
+        "codex": ".harness/src/subagents/research-parity.overrides.codex.yaml",
+        "copilot": ".harness/src/subagents/research-parity.overrides.copilot.yaml"
+      },
+      "registry": "local",
+      "sourcePath": ".harness/src/subagents/research-parity.md",
+      "type": "subagent"
+    },
+    {
+      "enabled": true,
+      "id": "review-code-critical",
+      "overrides": {
+        "claude": ".harness/src/subagents/review-code-critical.overrides.claude.yaml",
+        "codex": ".harness/src/subagents/review-code-critical.overrides.codex.yaml",
+        "copilot": ".harness/src/subagents/review-code-critical.overrides.copilot.yaml"
+      },
+      "registry": "local",
+      "sourcePath": ".harness/src/subagents/review-code-critical.md",
+      "type": "subagent"
+    },
+    {
+      "enabled": true,
+      "id": "review-plan-critical",
+      "overrides": {
+        "claude": ".harness/src/subagents/review-plan-critical.overrides.claude.yaml",
+        "codex": ".harness/src/subagents/review-plan-critical.overrides.codex.yaml",
+        "copilot": ".harness/src/subagents/review-plan-critical.overrides.copilot.yaml"
+      },
+      "registry": "local",
+      "sourcePath": ".harness/src/subagents/review-plan-critical.md",
+      "type": "subagent"
+    },
+    {
+      "enabled": true,
+      "id": "test-e2e-blackbox",
+      "overrides": {
+        "claude": ".harness/src/subagents/test-e2e-blackbox.overrides.claude.yaml",
+        "codex": ".harness/src/subagents/test-e2e-blackbox.overrides.codex.yaml",
+        "copilot": ".harness/src/subagents/test-e2e-blackbox.overrides.copilot.yaml"
+      },
+      "registry": "local",
+      "sourcePath": ".harness/src/subagents/test-e2e-blackbox.md",
+      "type": "subagent"
+    },
+    {
+      "enabled": true,
+      "id": "test-unit-writer",
+      "overrides": {
+        "claude": ".harness/src/subagents/test-unit-writer.overrides.claude.yaml",
+        "codex": ".harness/src/subagents/test-unit-writer.overrides.codex.yaml",
+        "copilot": ".harness/src/subagents/test-unit-writer.overrides.copilot.yaml"
+      },
+      "registry": "local",
+      "sourcePath": ".harness/src/subagents/test-unit-writer.md",
+      "type": "subagent"
+    },
+    {
+      "enabled": true,
       "id": "claude",
       "registry": "local",
       "sourcePath": ".harness/src/settings/claude.json",
@@ -119,7 +215,11 @@
     }
   ],
   "providers": {
-    "enabled": ["claude", "codex", "copilot"]
+    "enabled": [
+      "claude",
+      "codex",
+      "copilot"
+    ]
   },
   "registries": {
     "default": "local",
