@@ -1,0 +1,51 @@
+{
+  "audit": {
+    "allowed": true,
+    "allowUnaudited": true,
+    "allowUnsafe": true,
+    "audited": true,
+    "detailsUrl": "https://skills.sh/spences10/svelte-skills-kit",
+    "providers": [
+      {
+        "outcome": "pass",
+        "provider": "gen",
+        "raw": "Safe"
+      },
+      {
+        "outcome": "pass",
+        "provider": "socket",
+        "raw": "0 alerts"
+      },
+      {
+        "outcome": "fail",
+        "provider": "snyk",
+        "raw": "Critical Risk"
+      }
+    ],
+    "reason": "fail"
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "fdaa883b13ec0080a4ec8358a09eb3cebc44b8ab2b8df84dbebaa845ef8821c6",
+      "sizeBytes": 443
+    },
+    {
+      "path": "references/remote-functions.md",
+      "sha256": "c182d0d25b8bb799991b71b105def689d877a112afab07e579b0dbdf9505ed74",
+      "sizeBytes": 20946
+    },
+    {
+      "path": "SKILL.md",
+      "sha256": "613e96ebc385c418727ac37d40714bc834cdb9f29be9720828bcd2a463f6f7ee",
+      "sizeBytes": 2312
+    }
+  ],
+  "id": "sveltekit-remote-functions",
+  "importedAt": "2026-03-28T21:27:00.889Z",
+  "resolvedSource": "https://github.com/spences10/svelte-skills-kit.git",
+  "skillsCliVersion": "1.4.6",
+  "source": "spences10/svelte-skills-kit",
+  "upstreamSkill": "sveltekit-remote-functions",
+  "version": 1
+}

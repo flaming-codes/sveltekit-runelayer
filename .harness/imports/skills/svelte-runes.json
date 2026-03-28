@@ -1,0 +1,81 @@
+{
+  "audit": {
+    "allowed": true,
+    "allowUnaudited": true,
+    "allowUnsafe": true,
+    "audited": true,
+    "detailsUrl": "https://skills.sh/spences10/svelte-skills-kit",
+    "providers": [
+      {
+        "outcome": "pass",
+        "provider": "gen",
+        "raw": "Safe"
+      },
+      {
+        "outcome": "pass",
+        "provider": "socket",
+        "raw": "0 alerts"
+      },
+      {
+        "outcome": "warn",
+        "provider": "snyk",
+        "raw": "Low Risk"
+      }
+    ],
+    "reason": "warn"
+  },
+  "files": [
+    {
+      "path": "examples/bindable-props.svelte",
+      "sha256": "b233485c1f3d6cd96a5e22bfae318f4bd7fceb024069a0833a6001ffdd534fdd",
+      "sizeBytes": 4136
+    },
+    {
+      "path": "examples/effect-vs-derived.svelte",
+      "sha256": "8deb7b522440c34ead69ded84b39dfe58e3684e967cfb64378fee0b794058834",
+      "sizeBytes": 3090
+    },
+    {
+      "path": "README.md",
+      "sha256": "ec2b241bf1ae6feb10afb5b8056bcc6a4add6cfb994c3cf9371b8498ad882782",
+      "sizeBytes": 664
+    },
+    {
+      "path": "references/common-mistakes.md",
+      "sha256": "8d37dc702290d02e28fd973855dcd3a79beeed3385b10c801f24066712fc87b1",
+      "sizeBytes": 15733
+    },
+    {
+      "path": "references/component-api.md",
+      "sha256": "a8ff6d7b1141ec177f01900a071051543e066d2ac0e6601e578a83677fa57813",
+      "sizeBytes": 8824
+    },
+    {
+      "path": "references/migration-gotchas.md",
+      "sha256": "64eafd4933300b6a5448cc8f663e70b87b6a4c83618d9eba6b93aad91b11ed85",
+      "sizeBytes": 7623
+    },
+    {
+      "path": "references/reactivity-patterns.md",
+      "sha256": "98ab57fa1dda80002aeede6c48d135b0c00eec15a507dc4beeedb7f6a18e11d9",
+      "sizeBytes": 8818
+    },
+    {
+      "path": "references/snippets-vs-slots.md",
+      "sha256": "f080b3ea97d07cbe895a120cb9b9da4ecdccd95e3234e6477efdc2a909e4313d",
+      "sizeBytes": 8260
+    },
+    {
+      "path": "SKILL.md",
+      "sha256": "671d6bdc3f0e436a6638829536e891cedaf7a3f3632303894ed9138105a67849",
+      "sizeBytes": 2309
+    }
+  ],
+  "id": "svelte-runes",
+  "importedAt": "2026-03-28T21:25:51.303Z",
+  "resolvedSource": "https://github.com/spences10/svelte-skills-kit.git",
+  "skillsCliVersion": "1.4.6",
+  "source": "spences10/svelte-skills-kit",
+  "upstreamSkill": "svelte-runes",
+  "version": 1
+}

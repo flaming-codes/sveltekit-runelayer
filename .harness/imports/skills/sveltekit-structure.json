@@ -1,0 +1,71 @@
+{
+  "audit": {
+    "allowed": true,
+    "allowUnaudited": true,
+    "allowUnsafe": true,
+    "audited": true,
+    "detailsUrl": "https://skills.sh/spences10/svelte-skills-kit",
+    "providers": [
+      {
+        "outcome": "pass",
+        "provider": "gen",
+        "raw": "Safe"
+      },
+      {
+        "outcome": "pass",
+        "provider": "socket",
+        "raw": "0 alerts"
+      },
+      {
+        "outcome": "fail",
+        "provider": "snyk",
+        "raw": "Critical Risk"
+      }
+    ],
+    "reason": "fail"
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "73c981b223b7cd2159b5a7208adeeccc9180d570d1490a39087845e03bc83099",
+      "sizeBytes": 514
+    },
+    {
+      "path": "references/error-handling.md",
+      "sha256": "c7f4afb64acfa9707c93844ae2c58eaf1d03b8347ce8ca28e3b6c74d5925fcab",
+      "sizeBytes": 6429
+    },
+    {
+      "path": "references/file-naming.md",
+      "sha256": "fc7cced792e000a9c6627c0b5f01d073843570715d37f74866a978f8009c007a",
+      "sizeBytes": 3600
+    },
+    {
+      "path": "references/layout-patterns.md",
+      "sha256": "578110947088618aeebcea259d84f7b209402a65acb5a58f3991905ec5b6bca2",
+      "sizeBytes": 7871
+    },
+    {
+      "path": "references/ssr-hydration.md",
+      "sha256": "80271eb27550c94fe72d41d867aeb4e2a385ed2f54572fc8109ad014c730d048",
+      "sizeBytes": 1794
+    },
+    {
+      "path": "references/svelte-boundary.md",
+      "sha256": "6826561e2d771faaa7e698520235bc4ff136aae9f1f20c1702ce8a7ce7209309",
+      "sizeBytes": 3530
+    },
+    {
+      "path": "SKILL.md",
+      "sha256": "0f0722573284413c2490295dd2cdccbba60de52076badc8225e98f103521e635",
+      "sizeBytes": 2444
+    }
+  ],
+  "id": "sveltekit-structure",
+  "importedAt": "2026-03-28T21:26:58.416Z",
+  "resolvedSource": "https://github.com/spences10/svelte-skills-kit.git",
+  "skillsCliVersion": "1.4.6",
+  "source": "spences10/svelte-skills-kit",
+  "upstreamSkill": "sveltekit-structure",
+  "version": 1
+}

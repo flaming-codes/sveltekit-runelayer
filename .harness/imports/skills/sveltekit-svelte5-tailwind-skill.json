@@ -1,0 +1,206 @@
+{
+  "audit": {
+    "allowed": true,
+    "allowUnaudited": true,
+    "allowUnsafe": true,
+    "audited": true,
+    "detailsUrl": "https://skills.sh/claude-skills/sveltekit-svelte5-tailwind-skill",
+    "providers": [
+      {
+        "outcome": "pass",
+        "provider": "gen",
+        "raw": "Safe"
+      },
+      {
+        "outcome": "pass",
+        "provider": "socket",
+        "raw": "0 alerts"
+      },
+      {
+        "outcome": "warn",
+        "provider": "snyk",
+        "raw": "Low Risk"
+      }
+    ],
+    "reason": "warn"
+  },
+  "files": [
+    {
+      "path": "docs/adapters-reference.md",
+      "sha256": "306c6a17d9ce84ff028449072ccb25f92a784c7aaa59f964bbd0907bc6df1f0d",
+      "sizeBytes": 15575
+    },
+    {
+      "path": "docs/advanced-routing.md",
+      "sha256": "eb6f4561bfa713217e88c054f8e05dc7af9d489ab8a2c9c456f49ff0fdccf5f1",
+      "sizeBytes": 14682
+    },
+    {
+      "path": "docs/advanced-ssr.md",
+      "sha256": "986e77074ecf084e174b76f062035b0fd164c4f2734b398f4476d1518a36f9e8",
+      "sizeBytes": 17970
+    },
+    {
+      "path": "docs/index.jsonl",
+      "sha256": "38900b2bec429ba2a47d25f8ad05e4609ac5a02039adb84063ece17cf9910082",
+      "sizeBytes": 1898
+    },
+    {
+      "path": "docs/index.meta.json",
+      "sha256": "057786baf952c1e4eb3a54087b722b927c20ca7a2922841a5ff6c9d4d05d4804",
+      "sizeBytes": 121
+    },
+    {
+      "path": "docs/integration-patterns.md",
+      "sha256": "4fdade9b1634828e6c42d8f4056a844df320ee918369ec7e4732de88cbed9d46",
+      "sizeBytes": 18096
+    },
+    {
+      "path": "docs/sections.jsonl",
+      "sha256": "8f37da0952ccf4b5ddbdfce62ccc3763e756f8b80fe70fe62cead868d6fc8e39",
+      "sizeBytes": 31072
+    },
+    {
+      "path": "docs/svelte5-api-reference.md",
+      "sha256": "804bdef134ab8d6948ae733a039330d22f2735a23c451c46b9ec9b7574904d4b",
+      "sizeBytes": 14509
+    },
+    {
+      "path": "docs/sveltekit-configuration.md",
+      "sha256": "6ea641dd6b2380ba9adee6ead807a588107ea3a13728aa7c27d66ef912f01287",
+      "sizeBytes": 12791
+    },
+    {
+      "path": "docs/tailwind-configuration.md",
+      "sha256": "205cb9b2e2197ee3daca520c1a0fa1d084232b3a808f7965bfb3dd1fee399a54",
+      "sizeBytes": 12552
+    },
+    {
+      "path": "provenance.jsonl",
+      "sha256": "28d1085f86f7e5912b3bc16e6fba5df71ecf4320d4e7a816fa533ab0d6f9b4a0",
+      "sizeBytes": 356
+    },
+    {
+      "path": "README.md",
+      "sha256": "d7302044b966efbb89f5379a18b736e689632e87614f3a7c8a924dee2df7cf4f",
+      "sizeBytes": 10562
+    },
+    {
+      "path": "references/best-practices.md",
+      "sha256": "3501cf88c5daa07f5b6c378e7ea914670d1678b208a990e5e83ac6f5e41ddba9",
+      "sizeBytes": 23892
+    },
+    {
+      "path": "references/common-issues.md",
+      "sha256": "8adce57f67cb843a8f0ba6163a2fd011a8e38e965356a117db4e3fb7a45baeb6",
+      "sizeBytes": 14688
+    },
+    {
+      "path": "references/data-loading.md",
+      "sha256": "359a6a9cd09ae26474ac4707987e85a833f98dd125085a50394afb2970150435",
+      "sizeBytes": 16128
+    },
+    {
+      "path": "references/deployment-guide.md",
+      "sha256": "10c8d7c5dbd2d094a158d9a876e516dc656f2baeaf250b58d00fc3ceaba1e95f",
+      "sizeBytes": 15322
+    },
+    {
+      "path": "references/documentation-search-system.md",
+      "sha256": "4cbdffc1672dd67ea2809fc2052f339de85799efd1e6aa4d38a9db83d7a4361c",
+      "sizeBytes": 18060
+    },
+    {
+      "path": "references/forms-and-actions.md",
+      "sha256": "77904ce70f34da394934d58fa6b4558b05751501bc801862399f60d99f16f1fe",
+      "sizeBytes": 18942
+    },
+    {
+      "path": "references/getting-started.md",
+      "sha256": "a8fa6a2ef2b25f76ec4909303357e448b02c590187fcdb54c93307cd58e09cd3",
+      "sizeBytes": 9271
+    },
+    {
+      "path": "references/index.jsonl",
+      "sha256": "f6b29b659978308fcdd220ee87bebca8d36c92818d8b8e9159869a44fbd48d5a",
+      "sizeBytes": 4486
+    },
+    {
+      "path": "references/index.meta.json",
+      "sha256": "49f80b2908e7f9c3778d00cc4e717c351fcfbea2baae89097c0e2ddcf57cbb02",
+      "sizeBytes": 122
+    },
+    {
+      "path": "references/migration-svelte4-to-5.md",
+      "sha256": "43bfb08e7e8198d08e6dfb61aaef638f2bc66aaf30fce628683310c2ffba6de0",
+      "sizeBytes": 20966
+    },
+    {
+      "path": "references/performance-optimization.md",
+      "sha256": "d6f441173f5dc2cd58e601eca10a19c86e00c3976cf52880a0d7e45240c18964",
+      "sizeBytes": 19731
+    },
+    {
+      "path": "references/project-setup.md",
+      "sha256": "0efeadf7d1313a5c25f2313370b2df251a3e586a6ca6146b5a9f41a3ce3ad4e1",
+      "sizeBytes": 16857
+    },
+    {
+      "path": "references/routing-patterns.md",
+      "sha256": "31428732783594485b8fe8ab5df671fcccde52c18a3e5f09cc31dd7ed5221a46",
+      "sizeBytes": 13167
+    },
+    {
+      "path": "references/sections.jsonl",
+      "sha256": "cec391c30872929ee51ce1e925e4334556147b566a4eb252a1b68be0fade4602",
+      "sizeBytes": 68107
+    },
+    {
+      "path": "references/server-rendering.md",
+      "sha256": "5acbf5069ac8700da704fbac5b9d8a474d4eba7dd2fddb1ad6b162a213e230ac",
+      "sizeBytes": 16493
+    },
+    {
+      "path": "references/styling-patterns.md",
+      "sha256": "ace979ff18804ee59543688d3fdd85b425ac1942532e381d5b972aef34f052ba",
+      "sizeBytes": 21451
+    },
+    {
+      "path": "references/styling-with-tailwind.md",
+      "sha256": "450d89184a56f835a604a5168f967d4e3d52559435e06e67ead399c3e7548a83",
+      "sizeBytes": 15866
+    },
+    {
+      "path": "references/svelte5-runes.md",
+      "sha256": "d58cf353f8ecc1a3c970fbd63e32493f704cb2df7bf0d9ca6e18d67582c7ae18",
+      "sizeBytes": 15526
+    },
+    {
+      "path": "references/tailwind-v4-migration.md",
+      "sha256": "88f65905cc06da893e5fbdad08aa65d5d01151e74e79a862d92ee59aaf630d3f",
+      "sizeBytes": 17164
+    },
+    {
+      "path": "references/troubleshooting.md",
+      "sha256": "2b05a12b04a5b82321c76a32a0e4086c6b6ebfa682b1235040a698ee27032d63",
+      "sizeBytes": 15218
+    },
+    {
+      "path": "skill.manifest.json",
+      "sha256": "6c4762a3fbf3bfd1bb08b791bf127b2efabf3e96d6698c27faec1af7263697a1",
+      "sizeBytes": 951
+    },
+    {
+      "path": "SKILL.md",
+      "sha256": "585edd282d41699a185905630c039875fec905c5eca126429df7d4958999c3ea",
+      "sizeBytes": 14208
+    }
+  ],
+  "id": "sveltekit-svelte5-tailwind-skill",
+  "importedAt": "2026-03-28T21:27:06.282Z",
+  "resolvedSource": "https://github.com/claude-skills/sveltekit-svelte5-tailwind-skill.git",
+  "skillsCliVersion": "1.4.6",
+  "source": "claude-skills/sveltekit-svelte5-tailwind-skill",
+  "upstreamSkill": "sveltekit-svelte5-tailwind-skill",
+  "version": 1
+}

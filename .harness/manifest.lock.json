@@ -1,0 +1,1822 @@
+{
+  "entities": [
+    {
+      "id": "system",
+      "overrideSha256ByProvider": {
+        "claude": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "codex": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "copilot": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847"
+      },
+      "registry": "local",
+      "sourceSha256": "2692aeb0504c89555f420bf2d4587fcbad698945bd83eb92c2fcfad6ea17cf82",
+      "type": "prompt"
+    },
+    {
+      "id": "claude",
+      "overrideSha256ByProvider": {},
+      "registry": "local",
+      "sourceSha256": "8681d43c99ae7c2ca0604d6ef3acf1051a579816a9fd55999505d05a575030ab",
+      "type": "settings"
+    },
+    {
+      "id": "codex",
+      "overrideSha256ByProvider": {},
+      "registry": "local",
+      "sourceSha256": "10789e70ce1d19ec38d93fbfd5d4a07715fdb952dea6e0f6400904a4b0a87d56",
+      "type": "settings"
+    },
+    {
+      "id": "copilot",
+      "overrideSha256ByProvider": {},
+      "registry": "local",
+      "sourceSha256": "e45b9bda4cdf4802417fd065ac9e72e966d204fc8bf6f4b09a652984fb6b6911",
+      "type": "settings"
+    },
+    {
+      "id": "svelte-runes",
+      "overrideSha256ByProvider": {
+        "claude": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "codex": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "copilot": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847"
+      },
+      "registry": "local",
+      "sourceSha256": "a7e056b21e44f686fa13c40b818df019aef6355638e3c21de818c1633d017e4a",
+      "type": "skill"
+    },
+    {
+      "id": "svelte5-best-practices",
+      "overrideSha256ByProvider": {
+        "claude": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "codex": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "copilot": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847"
+      },
+      "registry": "local",
+      "sourceSha256": "48fe361b3fc9d8f4adfc52ffeae6ac9d1fe5a26bb7fd5af36bb98b3e735b7820",
+      "type": "skill"
+    },
+    {
+      "id": "sveltekit-data-flow",
+      "overrideSha256ByProvider": {
+        "claude": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "codex": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "copilot": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847"
+      },
+      "registry": "local",
+      "sourceSha256": "5444f3eb8740f4bf290a89cb22bfd297ee1add869ab964afb1f76df23835aac5",
+      "type": "skill"
+    },
+    {
+      "id": "sveltekit-remote-functions",
+      "overrideSha256ByProvider": {
+        "claude": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "codex": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "copilot": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847"
+      },
+      "registry": "local",
+      "sourceSha256": "0355c7d4c09986d50cb24623d9b9b4e75e7833b4fd7a391a047e79b06f588182",
+      "type": "skill"
+    },
+    {
+      "id": "sveltekit-structure",
+      "overrideSha256ByProvider": {
+        "claude": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "codex": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "copilot": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847"
+      },
+      "registry": "local",
+      "sourceSha256": "191f00fe073b2213606c7eae9eeb4c72ad63bc2e0876c85ce4efd7c6dd14e7d3",
+      "type": "skill"
+    },
+    {
+      "id": "sveltekit-svelte5-tailwind-skill",
+      "overrideSha256ByProvider": {
+        "claude": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "codex": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "copilot": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847"
+      },
+      "registry": "local",
+      "sourceSha256": "c13e2247f762b9bcc36dcd037648a7d0cee9c19fd1581b3362d8b9de995951e8",
+      "type": "skill"
+    },
+    {
+      "id": "vite-plus",
+      "overrideSha256ByProvider": {
+        "claude": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "codex": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "copilot": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847"
+      },
+      "registry": "local",
+      "sourceSha256": "05d5a0509790b8d14cf6e96ad7324f6865cebb62f6a4240833ef5f9cbfe37773",
+      "type": "skill"
+    }
+  ],
+  "generatedAt": "2026-03-28T21:27:10.810Z",
+  "manifestFingerprint": "271ba2a4182b5b61188fba6eae470599d884934515128ef827c5cfe84eb77d71",
+  "outputs": [
+    {
+      "contentSha256": "8681d43c99ae7c2ca0604d6ef3acf1051a579816a9fd55999505d05a575030ab",
+      "ownerEntityIds": [
+        "claude"
+      ],
+      "path": ".claude/settings.json",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "b233485c1f3d6cd96a5e22bfae318f4bd7fceb024069a0833a6001ffdd534fdd",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".claude/skills/svelte-runes/examples/bindable-props.svelte",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "8deb7b522440c34ead69ded84b39dfe58e3684e967cfb64378fee0b794058834",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".claude/skills/svelte-runes/examples/effect-vs-derived.svelte",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "ec2b241bf1ae6feb10afb5b8056bcc6a4add6cfb994c3cf9371b8498ad882782",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".claude/skills/svelte-runes/README.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "8d37dc702290d02e28fd973855dcd3a79beeed3385b10c801f24066712fc87b1",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".claude/skills/svelte-runes/references/common-mistakes.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "a8ff6d7b1141ec177f01900a071051543e066d2ac0e6601e578a83677fa57813",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".claude/skills/svelte-runes/references/component-api.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "64eafd4933300b6a5448cc8f663e70b87b6a4c83618d9eba6b93aad91b11ed85",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".claude/skills/svelte-runes/references/migration-gotchas.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "98ab57fa1dda80002aeede6c48d135b0c00eec15a507dc4beeedb7f6a18e11d9",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".claude/skills/svelte-runes/references/reactivity-patterns.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "f080b3ea97d07cbe895a120cb9b9da4ecdccd95e3234e6477efdc2a909e4313d",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".claude/skills/svelte-runes/references/snippets-vs-slots.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "671d6bdc3f0e436a6638829536e891cedaf7a3f3632303894ed9138105a67849",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".claude/skills/svelte-runes/SKILL.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "c311631df6f8707d94a6c116da211b25b274669cb17c9ecae6a75bb46309895d",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".claude/skills/svelte5-best-practices/references/events.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "c2c574ce8290ef56fa8f7619c2897c8ca009ea72464d4077c7ba5ea23efb3570",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".claude/skills/svelte5-best-practices/references/migration.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "ee1ddf521fd3d8276e11348ea323146e30d9d5ddecd41556c08a774800b83463",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".claude/skills/svelte5-best-practices/references/performance.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "9c7b6330607aa14d90e8b686a205391067c4ca17b6a90d71ba99cc2333e32086",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".claude/skills/svelte5-best-practices/references/runes.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "db5aaac052b2050760c1ea709ea64c272a29ff7c8ffaa3a32081bb25d0cea1ac",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".claude/skills/svelte5-best-practices/references/snippets.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "d1c519d8d37232d58fc52cc453ba45cdd1152603288ed475d614845a5d820f34",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".claude/skills/svelte5-best-practices/references/sveltekit.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "e9c9914be0bcdad898df0701e6c694762d66ed4bb469d9f4d06555adc78d355f",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".claude/skills/svelte5-best-practices/references/typescript.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "eeb2be3e32085d47ad5938afd6e96b2a4f9fd9e073ca27ec3f6df32371689b7c",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".claude/skills/svelte5-best-practices/SKILL.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "5ca8d1378241c4abeb6f4bb68e323152aecde104687e728fd33bd0514f33edc2",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".claude/skills/sveltekit-data-flow/README.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "c28b5b0320d2f2ab44d57db3f6d11ca4c52f2b603aadbfee7fc16ed04c162ce5",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".claude/skills/sveltekit-data-flow/references/client-auth-invalidation.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "d5876f213e2c0e3e8c99cc72a8bacb1007e6c2e88dbd52429b348a19d759640c",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".claude/skills/sveltekit-data-flow/references/error-redirect-handling.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "74545e168f4d692c344361080599f11da972e6d4b61328e05638bbbcf6876652",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".claude/skills/sveltekit-data-flow/references/form-actions.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "8590a5c6ffb7dbac0ea3884b6ed78aa6a2936c5a684f8ee93e4083d7aeb85eeb",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".claude/skills/sveltekit-data-flow/references/load-functions.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "5d4ff32b9b91ab598203b171e6621eca1dbf8092e2e6944dd9b23a323032a45b",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".claude/skills/sveltekit-data-flow/references/serialization.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "4390e7f91a7981cc1e7c75feab3329d2d901e894b01e2c464fa1f0d6000ead26",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".claude/skills/sveltekit-data-flow/SKILL.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "fdaa883b13ec0080a4ec8358a09eb3cebc44b8ab2b8df84dbebaa845ef8821c6",
+      "ownerEntityIds": [
+        "sveltekit-remote-functions"
+      ],
+      "path": ".claude/skills/sveltekit-remote-functions/README.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "c182d0d25b8bb799991b71b105def689d877a112afab07e579b0dbdf9505ed74",
+      "ownerEntityIds": [
+        "sveltekit-remote-functions"
+      ],
+      "path": ".claude/skills/sveltekit-remote-functions/references/remote-functions.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "613e96ebc385c418727ac37d40714bc834cdb9f29be9720828bcd2a463f6f7ee",
+      "ownerEntityIds": [
+        "sveltekit-remote-functions"
+      ],
+      "path": ".claude/skills/sveltekit-remote-functions/SKILL.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "73c981b223b7cd2159b5a7208adeeccc9180d570d1490a39087845e03bc83099",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".claude/skills/sveltekit-structure/README.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "c7f4afb64acfa9707c93844ae2c58eaf1d03b8347ce8ca28e3b6c74d5925fcab",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".claude/skills/sveltekit-structure/references/error-handling.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "fc7cced792e000a9c6627c0b5f01d073843570715d37f74866a978f8009c007a",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".claude/skills/sveltekit-structure/references/file-naming.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "578110947088618aeebcea259d84f7b209402a65acb5a58f3991905ec5b6bca2",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".claude/skills/sveltekit-structure/references/layout-patterns.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "80271eb27550c94fe72d41d867aeb4e2a385ed2f54572fc8109ad014c730d048",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".claude/skills/sveltekit-structure/references/ssr-hydration.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "6826561e2d771faaa7e698520235bc4ff136aae9f1f20c1702ce8a7ce7209309",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".claude/skills/sveltekit-structure/references/svelte-boundary.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "0f0722573284413c2490295dd2cdccbba60de52076badc8225e98f103521e635",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".claude/skills/sveltekit-structure/SKILL.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "306c6a17d9ce84ff028449072ccb25f92a784c7aaa59f964bbd0907bc6df1f0d",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/docs/adapters-reference.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "eb6f4561bfa713217e88c054f8e05dc7af9d489ab8a2c9c456f49ff0fdccf5f1",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/docs/advanced-routing.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "986e77074ecf084e174b76f062035b0fd164c4f2734b398f4476d1518a36f9e8",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/docs/advanced-ssr.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "38900b2bec429ba2a47d25f8ad05e4609ac5a02039adb84063ece17cf9910082",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/docs/index.jsonl",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "057786baf952c1e4eb3a54087b722b927c20ca7a2922841a5ff6c9d4d05d4804",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/docs/index.meta.json",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "4fdade9b1634828e6c42d8f4056a844df320ee918369ec7e4732de88cbed9d46",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/docs/integration-patterns.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "8f37da0952ccf4b5ddbdfce62ccc3763e756f8b80fe70fe62cead868d6fc8e39",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/docs/sections.jsonl",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "804bdef134ab8d6948ae733a039330d22f2735a23c451c46b9ec9b7574904d4b",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/docs/svelte5-api-reference.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "6ea641dd6b2380ba9adee6ead807a588107ea3a13728aa7c27d66ef912f01287",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/docs/sveltekit-configuration.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "205cb9b2e2197ee3daca520c1a0fa1d084232b3a808f7965bfb3dd1fee399a54",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/docs/tailwind-configuration.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "28d1085f86f7e5912b3bc16e6fba5df71ecf4320d4e7a816fa533ab0d6f9b4a0",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/provenance.jsonl",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "d7302044b966efbb89f5379a18b736e689632e87614f3a7c8a924dee2df7cf4f",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/README.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "3501cf88c5daa07f5b6c378e7ea914670d1678b208a990e5e83ac6f5e41ddba9",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/best-practices.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "8adce57f67cb843a8f0ba6163a2fd011a8e38e965356a117db4e3fb7a45baeb6",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/common-issues.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "359a6a9cd09ae26474ac4707987e85a833f98dd125085a50394afb2970150435",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/data-loading.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "10c8d7c5dbd2d094a158d9a876e516dc656f2baeaf250b58d00fc3ceaba1e95f",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/deployment-guide.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "4cbdffc1672dd67ea2809fc2052f339de85799efd1e6aa4d38a9db83d7a4361c",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/documentation-search-system.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "77904ce70f34da394934d58fa6b4558b05751501bc801862399f60d99f16f1fe",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/forms-and-actions.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "a8fa6a2ef2b25f76ec4909303357e448b02c590187fcdb54c93307cd58e09cd3",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/getting-started.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "f6b29b659978308fcdd220ee87bebca8d36c92818d8b8e9159869a44fbd48d5a",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/index.jsonl",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "49f80b2908e7f9c3778d00cc4e717c351fcfbea2baae89097c0e2ddcf57cbb02",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/index.meta.json",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "43bfb08e7e8198d08e6dfb61aaef638f2bc66aaf30fce628683310c2ffba6de0",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/migration-svelte4-to-5.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "d6f441173f5dc2cd58e601eca10a19c86e00c3976cf52880a0d7e45240c18964",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/performance-optimization.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "0efeadf7d1313a5c25f2313370b2df251a3e586a6ca6146b5a9f41a3ce3ad4e1",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/project-setup.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "31428732783594485b8fe8ab5df671fcccde52c18a3e5f09cc31dd7ed5221a46",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/routing-patterns.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "cec391c30872929ee51ce1e925e4334556147b566a4eb252a1b68be0fade4602",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/sections.jsonl",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "5acbf5069ac8700da704fbac5b9d8a474d4eba7dd2fddb1ad6b162a213e230ac",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/server-rendering.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "ace979ff18804ee59543688d3fdd85b425ac1942532e381d5b972aef34f052ba",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/styling-patterns.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "450d89184a56f835a604a5168f967d4e3d52559435e06e67ead399c3e7548a83",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/styling-with-tailwind.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "d58cf353f8ecc1a3c970fbd63e32493f704cb2df7bf0d9ca6e18d67582c7ae18",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/svelte5-runes.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "88f65905cc06da893e5fbdad08aa65d5d01151e74e79a862d92ee59aaf630d3f",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/tailwind-v4-migration.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "2b05a12b04a5b82321c76a32a0e4086c6b6ebfa682b1235040a698ee27032d63",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/references/troubleshooting.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "6c4762a3fbf3bfd1bb08b791bf127b2efabf3e96d6698c27faec1af7263697a1",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/skill.manifest.json",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "585edd282d41699a185905630c039875fec905c5eca126429df7d4958999c3ea",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".claude/skills/sveltekit-svelte5-tailwind-skill/SKILL.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "20009fbdc6712f57dd8a3f55a989fd50aeaa18d15ecdaecf98700282c791eceb",
+      "ownerEntityIds": [
+        "vite-plus"
+      ],
+      "path": ".claude/skills/vite-plus/SKILL.md",
+      "provider": "claude"
+    },
+    {
+      "contentSha256": "10789e70ce1d19ec38d93fbfd5d4a07715fdb952dea6e0f6400904a4b0a87d56",
+      "ownerEntityIds": [
+        "codex"
+      ],
+      "path": ".codex/config.toml",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "b233485c1f3d6cd96a5e22bfae318f4bd7fceb024069a0833a6001ffdd534fdd",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".codex/skills/svelte-runes/examples/bindable-props.svelte",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "8deb7b522440c34ead69ded84b39dfe58e3684e967cfb64378fee0b794058834",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".codex/skills/svelte-runes/examples/effect-vs-derived.svelte",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "ec2b241bf1ae6feb10afb5b8056bcc6a4add6cfb994c3cf9371b8498ad882782",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".codex/skills/svelte-runes/README.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "8d37dc702290d02e28fd973855dcd3a79beeed3385b10c801f24066712fc87b1",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".codex/skills/svelte-runes/references/common-mistakes.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "a8ff6d7b1141ec177f01900a071051543e066d2ac0e6601e578a83677fa57813",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".codex/skills/svelte-runes/references/component-api.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "64eafd4933300b6a5448cc8f663e70b87b6a4c83618d9eba6b93aad91b11ed85",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".codex/skills/svelte-runes/references/migration-gotchas.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "98ab57fa1dda80002aeede6c48d135b0c00eec15a507dc4beeedb7f6a18e11d9",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".codex/skills/svelte-runes/references/reactivity-patterns.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "f080b3ea97d07cbe895a120cb9b9da4ecdccd95e3234e6477efdc2a909e4313d",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".codex/skills/svelte-runes/references/snippets-vs-slots.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "671d6bdc3f0e436a6638829536e891cedaf7a3f3632303894ed9138105a67849",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".codex/skills/svelte-runes/SKILL.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "c311631df6f8707d94a6c116da211b25b274669cb17c9ecae6a75bb46309895d",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".codex/skills/svelte5-best-practices/references/events.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "c2c574ce8290ef56fa8f7619c2897c8ca009ea72464d4077c7ba5ea23efb3570",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".codex/skills/svelte5-best-practices/references/migration.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "ee1ddf521fd3d8276e11348ea323146e30d9d5ddecd41556c08a774800b83463",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".codex/skills/svelte5-best-practices/references/performance.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "9c7b6330607aa14d90e8b686a205391067c4ca17b6a90d71ba99cc2333e32086",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".codex/skills/svelte5-best-practices/references/runes.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "db5aaac052b2050760c1ea709ea64c272a29ff7c8ffaa3a32081bb25d0cea1ac",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".codex/skills/svelte5-best-practices/references/snippets.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "d1c519d8d37232d58fc52cc453ba45cdd1152603288ed475d614845a5d820f34",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".codex/skills/svelte5-best-practices/references/sveltekit.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "e9c9914be0bcdad898df0701e6c694762d66ed4bb469d9f4d06555adc78d355f",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".codex/skills/svelte5-best-practices/references/typescript.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "eeb2be3e32085d47ad5938afd6e96b2a4f9fd9e073ca27ec3f6df32371689b7c",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".codex/skills/svelte5-best-practices/SKILL.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "5ca8d1378241c4abeb6f4bb68e323152aecde104687e728fd33bd0514f33edc2",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".codex/skills/sveltekit-data-flow/README.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "c28b5b0320d2f2ab44d57db3f6d11ca4c52f2b603aadbfee7fc16ed04c162ce5",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".codex/skills/sveltekit-data-flow/references/client-auth-invalidation.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "d5876f213e2c0e3e8c99cc72a8bacb1007e6c2e88dbd52429b348a19d759640c",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".codex/skills/sveltekit-data-flow/references/error-redirect-handling.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "74545e168f4d692c344361080599f11da972e6d4b61328e05638bbbcf6876652",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".codex/skills/sveltekit-data-flow/references/form-actions.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "8590a5c6ffb7dbac0ea3884b6ed78aa6a2936c5a684f8ee93e4083d7aeb85eeb",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".codex/skills/sveltekit-data-flow/references/load-functions.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "5d4ff32b9b91ab598203b171e6621eca1dbf8092e2e6944dd9b23a323032a45b",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".codex/skills/sveltekit-data-flow/references/serialization.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "4390e7f91a7981cc1e7c75feab3329d2d901e894b01e2c464fa1f0d6000ead26",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".codex/skills/sveltekit-data-flow/SKILL.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "fdaa883b13ec0080a4ec8358a09eb3cebc44b8ab2b8df84dbebaa845ef8821c6",
+      "ownerEntityIds": [
+        "sveltekit-remote-functions"
+      ],
+      "path": ".codex/skills/sveltekit-remote-functions/README.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "c182d0d25b8bb799991b71b105def689d877a112afab07e579b0dbdf9505ed74",
+      "ownerEntityIds": [
+        "sveltekit-remote-functions"
+      ],
+      "path": ".codex/skills/sveltekit-remote-functions/references/remote-functions.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "613e96ebc385c418727ac37d40714bc834cdb9f29be9720828bcd2a463f6f7ee",
+      "ownerEntityIds": [
+        "sveltekit-remote-functions"
+      ],
+      "path": ".codex/skills/sveltekit-remote-functions/SKILL.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "73c981b223b7cd2159b5a7208adeeccc9180d570d1490a39087845e03bc83099",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".codex/skills/sveltekit-structure/README.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "c7f4afb64acfa9707c93844ae2c58eaf1d03b8347ce8ca28e3b6c74d5925fcab",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".codex/skills/sveltekit-structure/references/error-handling.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "fc7cced792e000a9c6627c0b5f01d073843570715d37f74866a978f8009c007a",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".codex/skills/sveltekit-structure/references/file-naming.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "578110947088618aeebcea259d84f7b209402a65acb5a58f3991905ec5b6bca2",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".codex/skills/sveltekit-structure/references/layout-patterns.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "80271eb27550c94fe72d41d867aeb4e2a385ed2f54572fc8109ad014c730d048",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".codex/skills/sveltekit-structure/references/ssr-hydration.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "6826561e2d771faaa7e698520235bc4ff136aae9f1f20c1702ce8a7ce7209309",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".codex/skills/sveltekit-structure/references/svelte-boundary.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "0f0722573284413c2490295dd2cdccbba60de52076badc8225e98f103521e635",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".codex/skills/sveltekit-structure/SKILL.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "306c6a17d9ce84ff028449072ccb25f92a784c7aaa59f964bbd0907bc6df1f0d",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/docs/adapters-reference.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "eb6f4561bfa713217e88c054f8e05dc7af9d489ab8a2c9c456f49ff0fdccf5f1",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/docs/advanced-routing.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "986e77074ecf084e174b76f062035b0fd164c4f2734b398f4476d1518a36f9e8",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/docs/advanced-ssr.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "38900b2bec429ba2a47d25f8ad05e4609ac5a02039adb84063ece17cf9910082",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/docs/index.jsonl",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "057786baf952c1e4eb3a54087b722b927c20ca7a2922841a5ff6c9d4d05d4804",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/docs/index.meta.json",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "4fdade9b1634828e6c42d8f4056a844df320ee918369ec7e4732de88cbed9d46",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/docs/integration-patterns.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "8f37da0952ccf4b5ddbdfce62ccc3763e756f8b80fe70fe62cead868d6fc8e39",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/docs/sections.jsonl",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "804bdef134ab8d6948ae733a039330d22f2735a23c451c46b9ec9b7574904d4b",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/docs/svelte5-api-reference.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "6ea641dd6b2380ba9adee6ead807a588107ea3a13728aa7c27d66ef912f01287",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/docs/sveltekit-configuration.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "205cb9b2e2197ee3daca520c1a0fa1d084232b3a808f7965bfb3dd1fee399a54",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/docs/tailwind-configuration.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "28d1085f86f7e5912b3bc16e6fba5df71ecf4320d4e7a816fa533ab0d6f9b4a0",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/provenance.jsonl",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "d7302044b966efbb89f5379a18b736e689632e87614f3a7c8a924dee2df7cf4f",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/README.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "3501cf88c5daa07f5b6c378e7ea914670d1678b208a990e5e83ac6f5e41ddba9",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/best-practices.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "8adce57f67cb843a8f0ba6163a2fd011a8e38e965356a117db4e3fb7a45baeb6",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/common-issues.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "359a6a9cd09ae26474ac4707987e85a833f98dd125085a50394afb2970150435",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/data-loading.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "10c8d7c5dbd2d094a158d9a876e516dc656f2baeaf250b58d00fc3ceaba1e95f",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/deployment-guide.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "4cbdffc1672dd67ea2809fc2052f339de85799efd1e6aa4d38a9db83d7a4361c",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/documentation-search-system.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "77904ce70f34da394934d58fa6b4558b05751501bc801862399f60d99f16f1fe",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/forms-and-actions.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "a8fa6a2ef2b25f76ec4909303357e448b02c590187fcdb54c93307cd58e09cd3",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/getting-started.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "f6b29b659978308fcdd220ee87bebca8d36c92818d8b8e9159869a44fbd48d5a",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/index.jsonl",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "49f80b2908e7f9c3778d00cc4e717c351fcfbea2baae89097c0e2ddcf57cbb02",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/index.meta.json",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "43bfb08e7e8198d08e6dfb61aaef638f2bc66aaf30fce628683310c2ffba6de0",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/migration-svelte4-to-5.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "d6f441173f5dc2cd58e601eca10a19c86e00c3976cf52880a0d7e45240c18964",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/performance-optimization.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "0efeadf7d1313a5c25f2313370b2df251a3e586a6ca6146b5a9f41a3ce3ad4e1",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/project-setup.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "31428732783594485b8fe8ab5df671fcccde52c18a3e5f09cc31dd7ed5221a46",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/routing-patterns.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "cec391c30872929ee51ce1e925e4334556147b566a4eb252a1b68be0fade4602",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/sections.jsonl",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "5acbf5069ac8700da704fbac5b9d8a474d4eba7dd2fddb1ad6b162a213e230ac",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/server-rendering.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "ace979ff18804ee59543688d3fdd85b425ac1942532e381d5b972aef34f052ba",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/styling-patterns.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "450d89184a56f835a604a5168f967d4e3d52559435e06e67ead399c3e7548a83",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/styling-with-tailwind.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "d58cf353f8ecc1a3c970fbd63e32493f704cb2df7bf0d9ca6e18d67582c7ae18",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/svelte5-runes.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "88f65905cc06da893e5fbdad08aa65d5d01151e74e79a862d92ee59aaf630d3f",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/tailwind-v4-migration.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "2b05a12b04a5b82321c76a32a0e4086c6b6ebfa682b1235040a698ee27032d63",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/references/troubleshooting.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "6c4762a3fbf3bfd1bb08b791bf127b2efabf3e96d6698c27faec1af7263697a1",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/skill.manifest.json",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "585edd282d41699a185905630c039875fec905c5eca126429df7d4958999c3ea",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".codex/skills/sveltekit-svelte5-tailwind-skill/SKILL.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "20009fbdc6712f57dd8a3f55a989fd50aeaa18d15ecdaecf98700282c791eceb",
+      "ownerEntityIds": [
+        "vite-plus"
+      ],
+      "path": ".codex/skills/vite-plus/SKILL.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "2692aeb0504c89555f420bf2d4587fcbad698945bd83eb92c2fcfad6ea17cf82",
+      "ownerEntityIds": [
+        "system"
+      ],
+      "path": ".github/copilot-instructions.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "b233485c1f3d6cd96a5e22bfae318f4bd7fceb024069a0833a6001ffdd534fdd",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".github/skills/svelte-runes/examples/bindable-props.svelte",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "8deb7b522440c34ead69ded84b39dfe58e3684e967cfb64378fee0b794058834",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".github/skills/svelte-runes/examples/effect-vs-derived.svelte",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "ec2b241bf1ae6feb10afb5b8056bcc6a4add6cfb994c3cf9371b8498ad882782",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".github/skills/svelte-runes/README.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "8d37dc702290d02e28fd973855dcd3a79beeed3385b10c801f24066712fc87b1",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".github/skills/svelte-runes/references/common-mistakes.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "a8ff6d7b1141ec177f01900a071051543e066d2ac0e6601e578a83677fa57813",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".github/skills/svelte-runes/references/component-api.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "64eafd4933300b6a5448cc8f663e70b87b6a4c83618d9eba6b93aad91b11ed85",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".github/skills/svelte-runes/references/migration-gotchas.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "98ab57fa1dda80002aeede6c48d135b0c00eec15a507dc4beeedb7f6a18e11d9",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".github/skills/svelte-runes/references/reactivity-patterns.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "f080b3ea97d07cbe895a120cb9b9da4ecdccd95e3234e6477efdc2a909e4313d",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".github/skills/svelte-runes/references/snippets-vs-slots.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "671d6bdc3f0e436a6638829536e891cedaf7a3f3632303894ed9138105a67849",
+      "ownerEntityIds": [
+        "svelte-runes"
+      ],
+      "path": ".github/skills/svelte-runes/SKILL.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "c311631df6f8707d94a6c116da211b25b274669cb17c9ecae6a75bb46309895d",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".github/skills/svelte5-best-practices/references/events.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "c2c574ce8290ef56fa8f7619c2897c8ca009ea72464d4077c7ba5ea23efb3570",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".github/skills/svelte5-best-practices/references/migration.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "ee1ddf521fd3d8276e11348ea323146e30d9d5ddecd41556c08a774800b83463",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".github/skills/svelte5-best-practices/references/performance.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "9c7b6330607aa14d90e8b686a205391067c4ca17b6a90d71ba99cc2333e32086",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".github/skills/svelte5-best-practices/references/runes.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "db5aaac052b2050760c1ea709ea64c272a29ff7c8ffaa3a32081bb25d0cea1ac",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".github/skills/svelte5-best-practices/references/snippets.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "d1c519d8d37232d58fc52cc453ba45cdd1152603288ed475d614845a5d820f34",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".github/skills/svelte5-best-practices/references/sveltekit.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "e9c9914be0bcdad898df0701e6c694762d66ed4bb469d9f4d06555adc78d355f",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".github/skills/svelte5-best-practices/references/typescript.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "eeb2be3e32085d47ad5938afd6e96b2a4f9fd9e073ca27ec3f6df32371689b7c",
+      "ownerEntityIds": [
+        "svelte5-best-practices"
+      ],
+      "path": ".github/skills/svelte5-best-practices/SKILL.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "5ca8d1378241c4abeb6f4bb68e323152aecde104687e728fd33bd0514f33edc2",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".github/skills/sveltekit-data-flow/README.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "c28b5b0320d2f2ab44d57db3f6d11ca4c52f2b603aadbfee7fc16ed04c162ce5",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".github/skills/sveltekit-data-flow/references/client-auth-invalidation.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "d5876f213e2c0e3e8c99cc72a8bacb1007e6c2e88dbd52429b348a19d759640c",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".github/skills/sveltekit-data-flow/references/error-redirect-handling.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "74545e168f4d692c344361080599f11da972e6d4b61328e05638bbbcf6876652",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".github/skills/sveltekit-data-flow/references/form-actions.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "8590a5c6ffb7dbac0ea3884b6ed78aa6a2936c5a684f8ee93e4083d7aeb85eeb",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".github/skills/sveltekit-data-flow/references/load-functions.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "5d4ff32b9b91ab598203b171e6621eca1dbf8092e2e6944dd9b23a323032a45b",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".github/skills/sveltekit-data-flow/references/serialization.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "4390e7f91a7981cc1e7c75feab3329d2d901e894b01e2c464fa1f0d6000ead26",
+      "ownerEntityIds": [
+        "sveltekit-data-flow"
+      ],
+      "path": ".github/skills/sveltekit-data-flow/SKILL.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "fdaa883b13ec0080a4ec8358a09eb3cebc44b8ab2b8df84dbebaa845ef8821c6",
+      "ownerEntityIds": [
+        "sveltekit-remote-functions"
+      ],
+      "path": ".github/skills/sveltekit-remote-functions/README.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "c182d0d25b8bb799991b71b105def689d877a112afab07e579b0dbdf9505ed74",
+      "ownerEntityIds": [
+        "sveltekit-remote-functions"
+      ],
+      "path": ".github/skills/sveltekit-remote-functions/references/remote-functions.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "613e96ebc385c418727ac37d40714bc834cdb9f29be9720828bcd2a463f6f7ee",
+      "ownerEntityIds": [
+        "sveltekit-remote-functions"
+      ],
+      "path": ".github/skills/sveltekit-remote-functions/SKILL.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "73c981b223b7cd2159b5a7208adeeccc9180d570d1490a39087845e03bc83099",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".github/skills/sveltekit-structure/README.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "c7f4afb64acfa9707c93844ae2c58eaf1d03b8347ce8ca28e3b6c74d5925fcab",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".github/skills/sveltekit-structure/references/error-handling.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "fc7cced792e000a9c6627c0b5f01d073843570715d37f74866a978f8009c007a",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".github/skills/sveltekit-structure/references/file-naming.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "578110947088618aeebcea259d84f7b209402a65acb5a58f3991905ec5b6bca2",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".github/skills/sveltekit-structure/references/layout-patterns.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "80271eb27550c94fe72d41d867aeb4e2a385ed2f54572fc8109ad014c730d048",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".github/skills/sveltekit-structure/references/ssr-hydration.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "6826561e2d771faaa7e698520235bc4ff136aae9f1f20c1702ce8a7ce7209309",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".github/skills/sveltekit-structure/references/svelte-boundary.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "0f0722573284413c2490295dd2cdccbba60de52076badc8225e98f103521e635",
+      "ownerEntityIds": [
+        "sveltekit-structure"
+      ],
+      "path": ".github/skills/sveltekit-structure/SKILL.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "306c6a17d9ce84ff028449072ccb25f92a784c7aaa59f964bbd0907bc6df1f0d",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/docs/adapters-reference.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "eb6f4561bfa713217e88c054f8e05dc7af9d489ab8a2c9c456f49ff0fdccf5f1",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/docs/advanced-routing.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "986e77074ecf084e174b76f062035b0fd164c4f2734b398f4476d1518a36f9e8",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/docs/advanced-ssr.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "38900b2bec429ba2a47d25f8ad05e4609ac5a02039adb84063ece17cf9910082",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/docs/index.jsonl",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "057786baf952c1e4eb3a54087b722b927c20ca7a2922841a5ff6c9d4d05d4804",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/docs/index.meta.json",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "4fdade9b1634828e6c42d8f4056a844df320ee918369ec7e4732de88cbed9d46",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/docs/integration-patterns.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "8f37da0952ccf4b5ddbdfce62ccc3763e756f8b80fe70fe62cead868d6fc8e39",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/docs/sections.jsonl",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "804bdef134ab8d6948ae733a039330d22f2735a23c451c46b9ec9b7574904d4b",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/docs/svelte5-api-reference.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "6ea641dd6b2380ba9adee6ead807a588107ea3a13728aa7c27d66ef912f01287",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/docs/sveltekit-configuration.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "205cb9b2e2197ee3daca520c1a0fa1d084232b3a808f7965bfb3dd1fee399a54",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/docs/tailwind-configuration.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "28d1085f86f7e5912b3bc16e6fba5df71ecf4320d4e7a816fa533ab0d6f9b4a0",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/provenance.jsonl",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "d7302044b966efbb89f5379a18b736e689632e87614f3a7c8a924dee2df7cf4f",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/README.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "3501cf88c5daa07f5b6c378e7ea914670d1678b208a990e5e83ac6f5e41ddba9",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/best-practices.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "8adce57f67cb843a8f0ba6163a2fd011a8e38e965356a117db4e3fb7a45baeb6",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/common-issues.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "359a6a9cd09ae26474ac4707987e85a833f98dd125085a50394afb2970150435",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/data-loading.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "10c8d7c5dbd2d094a158d9a876e516dc656f2baeaf250b58d00fc3ceaba1e95f",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/deployment-guide.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "4cbdffc1672dd67ea2809fc2052f339de85799efd1e6aa4d38a9db83d7a4361c",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/documentation-search-system.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "77904ce70f34da394934d58fa6b4558b05751501bc801862399f60d99f16f1fe",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/forms-and-actions.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "a8fa6a2ef2b25f76ec4909303357e448b02c590187fcdb54c93307cd58e09cd3",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/getting-started.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "f6b29b659978308fcdd220ee87bebca8d36c92818d8b8e9159869a44fbd48d5a",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/index.jsonl",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "49f80b2908e7f9c3778d00cc4e717c351fcfbea2baae89097c0e2ddcf57cbb02",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/index.meta.json",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "43bfb08e7e8198d08e6dfb61aaef638f2bc66aaf30fce628683310c2ffba6de0",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/migration-svelte4-to-5.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "d6f441173f5dc2cd58e601eca10a19c86e00c3976cf52880a0d7e45240c18964",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/performance-optimization.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "0efeadf7d1313a5c25f2313370b2df251a3e586a6ca6146b5a9f41a3ce3ad4e1",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/project-setup.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "31428732783594485b8fe8ab5df671fcccde52c18a3e5f09cc31dd7ed5221a46",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/routing-patterns.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "cec391c30872929ee51ce1e925e4334556147b566a4eb252a1b68be0fade4602",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/sections.jsonl",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "5acbf5069ac8700da704fbac5b9d8a474d4eba7dd2fddb1ad6b162a213e230ac",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/server-rendering.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "ace979ff18804ee59543688d3fdd85b425ac1942532e381d5b972aef34f052ba",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/styling-patterns.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "450d89184a56f835a604a5168f967d4e3d52559435e06e67ead399c3e7548a83",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/styling-with-tailwind.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "d58cf353f8ecc1a3c970fbd63e32493f704cb2df7bf0d9ca6e18d67582c7ae18",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/svelte5-runes.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "88f65905cc06da893e5fbdad08aa65d5d01151e74e79a862d92ee59aaf630d3f",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/tailwind-v4-migration.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "2b05a12b04a5b82321c76a32a0e4086c6b6ebfa682b1235040a698ee27032d63",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/references/troubleshooting.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "6c4762a3fbf3bfd1bb08b791bf127b2efabf3e96d6698c27faec1af7263697a1",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/skill.manifest.json",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "585edd282d41699a185905630c039875fec905c5eca126429df7d4958999c3ea",
+      "ownerEntityIds": [
+        "sveltekit-svelte5-tailwind-skill"
+      ],
+      "path": ".github/skills/sveltekit-svelte5-tailwind-skill/SKILL.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "20009fbdc6712f57dd8a3f55a989fd50aeaa18d15ecdaecf98700282c791eceb",
+      "ownerEntityIds": [
+        "vite-plus"
+      ],
+      "path": ".github/skills/vite-plus/SKILL.md",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "e45b9bda4cdf4802417fd065ac9e72e966d204fc8bf6f4b09a652984fb6b6911",
+      "ownerEntityIds": [
+        "copilot"
+      ],
+      "path": ".vscode/settings.json",
+      "provider": "copilot"
+    },
+    {
+      "contentSha256": "2692aeb0504c89555f420bf2d4587fcbad698945bd83eb92c2fcfad6ea17cf82",
+      "ownerEntityIds": [
+        "system"
+      ],
+      "path": "AGENTS.md",
+      "provider": "codex"
+    },
+    {
+      "contentSha256": "2692aeb0504c89555f420bf2d4587fcbad698945bd83eb92c2fcfad6ea17cf82",
+      "ownerEntityIds": [
+        "system"
+      ],
+      "path": "CLAUDE.md",
+      "provider": "claude"
+    }
+  ],
+  "version": 1
+}

@@ -1,0 +1,76 @@
+{
+  "audit": {
+    "allowed": true,
+    "allowUnaudited": true,
+    "allowUnsafe": true,
+    "audited": true,
+    "detailsUrl": "https://skills.sh/ejirocodes/agent-skills",
+    "providers": [
+      {
+        "outcome": "pass",
+        "provider": "gen",
+        "raw": "Safe"
+      },
+      {
+        "outcome": "pass",
+        "provider": "socket",
+        "raw": "0 alerts"
+      },
+      {
+        "outcome": "warn",
+        "provider": "snyk",
+        "raw": "Low Risk"
+      }
+    ],
+    "reason": "warn"
+  },
+  "files": [
+    {
+      "path": "references/events.md",
+      "sha256": "c311631df6f8707d94a6c116da211b25b274669cb17c9ecae6a75bb46309895d",
+      "sizeBytes": 7137
+    },
+    {
+      "path": "references/migration.md",
+      "sha256": "c2c574ce8290ef56fa8f7619c2897c8ca009ea72464d4077c7ba5ea23efb3570",
+      "sizeBytes": 6795
+    },
+    {
+      "path": "references/performance.md",
+      "sha256": "ee1ddf521fd3d8276e11348ea323146e30d9d5ddecd41556c08a774800b83463",
+      "sizeBytes": 9954
+    },
+    {
+      "path": "references/runes.md",
+      "sha256": "9c7b6330607aa14d90e8b686a205391067c4ca17b6a90d71ba99cc2333e32086",
+      "sizeBytes": 7117
+    },
+    {
+      "path": "references/snippets.md",
+      "sha256": "db5aaac052b2050760c1ea709ea64c272a29ff7c8ffaa3a32081bb25d0cea1ac",
+      "sizeBytes": 4834
+    },
+    {
+      "path": "references/sveltekit.md",
+      "sha256": "d1c519d8d37232d58fc52cc453ba45cdd1152603288ed475d614845a5d820f34",
+      "sizeBytes": 8684
+    },
+    {
+      "path": "references/typescript.md",
+      "sha256": "e9c9914be0bcdad898df0701e6c694762d66ed4bb469d9f4d06555adc78d355f",
+      "sizeBytes": 6514
+    },
+    {
+      "path": "SKILL.md",
+      "sha256": "eeb2be3e32085d47ad5938afd6e96b2a4f9fd9e073ca27ec3f6df32371689b7c",
+      "sizeBytes": 2914
+    }
+  ],
+  "id": "svelte5-best-practices",
+  "importedAt": "2026-03-28T21:25:48.036Z",
+  "resolvedSource": "https://github.com/ejirocodes/agent-skills.git",
+  "skillsCliVersion": "1.4.6",
+  "source": "ejirocodes/agent-skills",
+  "upstreamSkill": "svelte5-best-practices",
+  "version": 1
+}

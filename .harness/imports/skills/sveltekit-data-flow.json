@@ -1,0 +1,71 @@
+{
+  "audit": {
+    "allowed": true,
+    "allowUnaudited": true,
+    "allowUnsafe": true,
+    "audited": true,
+    "detailsUrl": "https://skills.sh/spences10/svelte-skills-kit",
+    "providers": [
+      {
+        "outcome": "pass",
+        "provider": "gen",
+        "raw": "Safe"
+      },
+      {
+        "outcome": "pass",
+        "provider": "socket",
+        "raw": "0 alerts"
+      },
+      {
+        "outcome": "fail",
+        "provider": "snyk",
+        "raw": "Critical Risk"
+      }
+    ],
+    "reason": "fail"
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "5ca8d1378241c4abeb6f4bb68e323152aecde104687e728fd33bd0514f33edc2",
+      "sizeBytes": 506
+    },
+    {
+      "path": "references/client-auth-invalidation.md",
+      "sha256": "c28b5b0320d2f2ab44d57db3f6d11ca4c52f2b603aadbfee7fc16ed04c162ce5",
+      "sizeBytes": 3055
+    },
+    {
+      "path": "references/error-redirect-handling.md",
+      "sha256": "d5876f213e2c0e3e8c99cc72a8bacb1007e6c2e88dbd52429b348a19d759640c",
+      "sizeBytes": 9617
+    },
+    {
+      "path": "references/form-actions.md",
+      "sha256": "74545e168f4d692c344361080599f11da972e6d4b61328e05638bbbcf6876652",
+      "sizeBytes": 5792
+    },
+    {
+      "path": "references/load-functions.md",
+      "sha256": "8590a5c6ffb7dbac0ea3884b6ed78aa6a2936c5a684f8ee93e4083d7aeb85eeb",
+      "sizeBytes": 6700
+    },
+    {
+      "path": "references/serialization.md",
+      "sha256": "5d4ff32b9b91ab598203b171e6621eca1dbf8092e2e6944dd9b23a323032a45b",
+      "sizeBytes": 7569
+    },
+    {
+      "path": "SKILL.md",
+      "sha256": "4390e7f91a7981cc1e7c75feab3329d2d901e894b01e2c464fa1f0d6000ead26",
+      "sizeBytes": 2439
+    }
+  ],
+  "id": "sveltekit-data-flow",
+  "importedAt": "2026-03-28T21:27:03.418Z",
+  "resolvedSource": "https://github.com/spences10/svelte-skills-kit.git",
+  "skillsCliVersion": "1.4.6",
+  "source": "spences10/svelte-skills-kit",
+  "upstreamSkill": "sveltekit-data-flow",
+  "version": 1
+}
