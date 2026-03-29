@@ -745,7 +745,6 @@ export function createRunelayerRuntime(
           name,
           email,
           password,
-          role: "admin",
           callbackURL: adminPath,
         }),
       });

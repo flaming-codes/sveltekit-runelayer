@@ -405,7 +405,7 @@ describe("createRunelayerApp", () => {
     expect(payload.name).toBe("First Admin");
     expect(payload.email).toBe("admin@example.com");
     expect(payload.password).toBe("super-secret-password");
-    expect(payload.role).toBe("admin");
+    expect(payload.role).toBeUndefined();
     expect(payload.callbackURL).toBe("/admin");
   });
 
