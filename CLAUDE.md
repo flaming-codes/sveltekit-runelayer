@@ -15,7 +15,7 @@ Runekit is a CMS-as-a-package for SvelteKit apps. It runs inside the host applic
 ### Development
 
 ```bash
-pnpm dev                          # Start web app dev server
+pnpm dev                          # Start demo app dev server
 pnpm build                        # Build all packages recursively
 pnpm check                        # Lint + type check (vp check)
 pnpm ready                        # Full quality gate: fmt → lint → test → build
@@ -58,7 +58,7 @@ npx vp check --fix                # Combined format + lint + typecheck
 ### Monorepo Structure
 
 ```
-apps/web/           → SvelteKit demo app (depends on @flaming-codes/sveltekit-runelayer workspace:*)
+apps/demo/           → SvelteKit demo app (depends on @flaming-codes/sveltekit-runelayer workspace:*)
 packages/sveltekit-runelayer/   → Core CMS library
 docs/               → Internal design documentation (14 files)
 ```
@@ -102,6 +102,7 @@ admin/              → Svelte 5 components (layout, dashboard, login, collectio
 - **Do NOT set `runes: true` globally** in svelte.config.js. Carbon Svelte and Superforms use `export let` internally. Svelte 5 auto-detects runes per-file.
 - **vitest is aliased** to `@voidzero-dev/vite-plus-test` via pnpm overrides. It must also be a direct devDependency for TypeScript type resolution.
 - **better-sqlite3 native module** must be rebuilt when switching Node versions: `pnpm rebuild`
+- **zod v4 + better-auth build fix**: better-auth@1.5.6 uses zod v4 native API (`.meta()`) but imports from `"zod"` which resolves to the v3-compat layer. Any app using better-auth must add `resolve: { alias: { zod: "zod/v4" } }` to `vite.config.ts` to fix production builds.
 - All `.ts` imports in source code use `.js` extensions (ESM convention).
 - `pnpm-workspace.yaml` catalog manages shared dependency versions. Use `"catalog:"` in package.json.
 

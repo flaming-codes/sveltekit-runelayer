@@ -8,7 +8,7 @@
         "copilot": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847"
       },
       "registry": "local",
-      "sourceSha256": "bb46bff81f67b766de876fd08b7e64808d10b8f687783ef512ee43c3981a414d",
+      "sourceSha256": "2cc6567d997718c2b127ecf2c9657b9984b9a10573620d766534f2804e6a55fc",
       "type": "prompt"
     },
     {
@@ -198,7 +198,7 @@
       "type": "subagent"
     }
   ],
-  "generatedAt": "2026-03-29T07:51:10.424Z",
+  "generatedAt": "2026-03-29T09:42:59.327Z",
   "manifestFingerprint": "1884e73367ab8796a72d3af903e13c0ec5a66deb15c7f0058465436b490c9e87",
   "outputs": [
     {
@@ -1148,7 +1148,7 @@
       "provider": "copilot"
     },
     {
-      "contentSha256": "bb46bff81f67b766de876fd08b7e64808d10b8f687783ef512ee43c3981a414d",
+      "contentSha256": "2cc6567d997718c2b127ecf2c9657b9984b9a10573620d766534f2804e6a55fc",
       "ownerEntityIds": ["system"],
       "path": ".github/copilot-instructions.md",
       "provider": "copilot"
@@ -1574,13 +1574,13 @@
       "provider": "copilot"
     },
     {
-      "contentSha256": "bb46bff81f67b766de876fd08b7e64808d10b8f687783ef512ee43c3981a414d",
+      "contentSha256": "2cc6567d997718c2b127ecf2c9657b9984b9a10573620d766534f2804e6a55fc",
       "ownerEntityIds": ["system"],
       "path": "AGENTS.md",
       "provider": "codex"
     },
     {
-      "contentSha256": "bb46bff81f67b766de876fd08b7e64808d10b8f687783ef512ee43c3981a414d",
+      "contentSha256": "2cc6567d997718c2b127ecf2c9657b9984b9a10573620d766534f2804e6a55fc",
       "ownerEntityIds": ["system"],
       "path": "CLAUDE.md",
       "provider": "claude"

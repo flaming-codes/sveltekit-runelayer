@@ -49,7 +49,7 @@
 - [x] **Plugin wiring** (`src/plugin.ts`) — createRunekit() initializes DB, auth, storage, push schema, returns handle hook
 - [x] **Config system** — defineConfig() with collections, globals, auth, storage, dbPath
 - [x] **Main exports** (`src/index.ts`) — Unified public API surface
-- [ ] **Web app demo** (`apps/web`) — working example with collections
+- [ ] **Demo app** (`apps/demo`) — working example with collections
 
 ### Phase 5: Testing & Quality
 

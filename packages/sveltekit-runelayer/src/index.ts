@@ -41,7 +41,7 @@ export type {
 } from "./schema/index.js";
 
 // Auth
-export { createAuth, isAdmin, isLoggedIn, hasRole } from "./auth/index.js";
+export { createAuth, createAuthHandler, isAdmin, isLoggedIn, hasRole } from "./auth/index.js";
 export type { AuthConfig, User, Session, Role } from "./auth/index.js";
 
 // Storage

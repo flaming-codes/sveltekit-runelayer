@@ -7,7 +7,7 @@ It runs in your app process with SQLite, Drizzle ORM, Better Auth, and local fil
 ## Packages
 
 - `@flaming-codes/sveltekit-runelayer` - core library and admin exports
-- `apps/web` - demo SvelteKit host application
+- `apps/demo` - demo SvelteKit host application
 
 ## Install
 

@@ -7,7 +7,7 @@ Runekit is structured as a pnpm workspace monorepo with vite-plus as the unified
 ```
 sveltekit-runelayer/
 ├── apps/
-│   └── web/                    # SvelteKit demo application
+│   └── demo/                   # SvelteKit demo app (Carbon Design + full CMS showcase)
 ├── packages/
 │   └── sveltekit-runelayer/    # Core CMS library
 ├── docs/                       # Internal documentation
@@ -57,7 +57,7 @@ vite-plus (`vp`) is a unified CLI that wraps Vite, Vitest, Oxlint, and Oxfmt.
 
 ```json
 {
-  "dev": "vp run web#dev", // Run web app dev server
+  "dev": "vp run demo#dev", // Run demo app dev server
   "build": "vp run build -r", // Build all packages recursively
   "check": "vp check", // Lint + type check
   "ready": "vp fmt && vp lint && vp run test -r && vp run build -r", // Full quality gate
@@ -78,7 +78,7 @@ vite-plus (`vp`) is a unified CLI that wraps Vite, Vitest, Oxlint, and Oxfmt.
 ```
 
 ```json
-// apps/web
+// apps/demo
 {
   "dev": "vp dev", // SvelteKit dev server
   "build": "vp build", // SvelteKit build
@@ -170,7 +170,7 @@ For publishing, `vp pack` builds the dist output with declarations.
 # Install dependencies
 pnpm install
 
-# Start dev server (runs web app with hot-reloading @flaming-codes/sveltekit-runelayer)
+# Start dev server (runs demo app with hot-reloading @flaming-codes/sveltekit-runelayer)
 pnpm dev
 
 # Run tests

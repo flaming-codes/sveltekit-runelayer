@@ -15,15 +15,23 @@ Research-validated library choices for Runekit CMS v1, with compatibility status
 
 - **Status**: First-class SvelteKit support, official Drizzle adapter with SQLite provider
 - **Version**: `better-auth@^1.5.6`
-- **Gotcha**: `BETTER_AUTH_SECRET` must be available at build time in SvelteKit (not just runtime). Set it in `.env` and CI/CD build environment.
+- **Gotcha 1**: `BETTER_AUTH_SECRET` must be available at build time in SvelteKit (not just runtime). Set it in `.env` and CI/CD build environment.
+- **Gotcha 2 (zod v4)**: better-auth@1.5.6 declares `"zod": "^4.3.6"` and uses the zod v4 native API (e.g., `z.coerce.boolean().meta()`). However, zod v4's default ESM export (`import * as z from "zod"`) provides a v3-compat layer that lacks `.meta()`. The native v4 API lives at `zod/v4`. This causes `TypeError: z.coerce.boolean(...).meta is not a function` during SvelteKit production builds (postbuild analysis phase). The dev server is unaffected because modules are not bundled. **Fix**: Add a Vite resolve alias in `vite.config.ts`:
+  ```ts
+  resolve: {
+    alias: {
+      zod: "zod/v4";
+    }
+  }
+  ```
 - **Risk**: Low. Well-maintained (600+ commits, frequent releases).
 
 ## Admin UI Libraries
 
 ### Carbon Components Svelte
 
-- **Status**: Works with Svelte 5 in backwards-compat mode (v0.103.x)
-- **Version**: `carbon-components-svelte@^0.103.0`, `carbon-icons-svelte`
+- **Status**: Works with Svelte 5 in backwards-compat mode (v0.105.x)
+- **Version**: `carbon-components-svelte@^0.105.0`, `carbon-icons-svelte@^13.10.0`
 - **Critical**: Do NOT set `runes: true` globally in `svelte.config.js`. Carbon components use `export let` props internally. Svelte 5 auto-detects runes mode per-file, so your own rune-based components work fine alongside Carbon.
 - **Risk**: Medium. Not rewritten for Svelte 5 runes internally; relies on compat mode.
 - **Alternatives**: Skeleton UI (Svelte 5 native), shadcn-svelte (Svelte 5 native via Bits UI). Both require more design work but have better Svelte 5 alignment.
@@ -71,7 +79,7 @@ Research-validated library choices for Runekit CMS v1, with compatibility status
 
 Multiple libraries (Carbon, Superforms) break under global runes mode because they use `export let` props internally. Svelte 5 auto-detects runes usage per-file, so your own components can freely use `$state`, `$derived`, `$effect` without any configuration. This is the approach recommended by the Svelte team for mixed codebases.
 
-The current `svelte.config.js` in `apps/web` correctly uses auto-detection based on file location (runes for non-node_modules files).
+The current `svelte.config.js` in `apps/demo` correctly uses auto-detection based on file location (runes for non-node_modules files).
 
 ## Dependency Install Summary
 
@@ -96,7 +104,7 @@ pnpm add @uppy/core @uppy/dashboard @uppy/svelte @uppy/tus
 | ------------------- | ------------------ | ----------------- | ---------- | ---------- |
 | Drizzle ORM         | N/A (server)       | Yes               | N/A        | Stable     |
 | better-sqlite3      | N/A (server)       | Yes               | N/A        | Stable     |
-| Better Auth         | Yes                | Yes (first-class) | N/A        | Stable     |
+| Better Auth         | Yes                | Yes (first-class) | N/A        | Stable\*   |
 | Carbon Svelte       | Compat mode        | Yes               | No global  | Works      |
 | TanStack Table v8   | **No**             | N/A               | N/A        | **Broken** |
 | TanStack table-core | Yes (with wrapper) | Yes               | Yes        | Works      |
