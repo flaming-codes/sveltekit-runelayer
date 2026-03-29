@@ -40,7 +40,7 @@
         "copilot": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847"
       },
       "registry": "local",
-      "sourceSha256": "88d420e8e6d1525bc3b54f388241cab16d7c1a98106a1b99b79f221e43c1c066",
+      "sourceSha256": "0a255305a81d4601ac4f4973562c897a4cb65d5760c9a8557cdf6075411854c4",
       "type": "skill"
     },
     {
@@ -209,7 +209,7 @@
       "type": "subagent"
     }
   ],
-  "generatedAt": "2026-03-29T14:33:12.043Z",
+  "generatedAt": "2026-03-29T14:52:25.632Z",
   "manifestFingerprint": "d8829ba40c6682572a7f0fb10d3f5a14b8866ba28465f22df1f73e20663ab919",
   "outputs": [
     {
@@ -267,49 +267,49 @@
       "provider": "claude"
     },
     {
-      "contentSha256": "59f0246e3e5178e29592f50cc32eaf8154a9e8012b872c16d8574781839c1c4c",
+      "contentSha256": "20aa4cfad7437e89dd8ea139a44206632feadd54e0f594671df1b6599ee73151",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".claude/skills/carbon-svelte/references/actions.md",
       "provider": "claude"
     },
     {
-      "contentSha256": "9f924c77afdc4a801a3dde6ad1f8906723e64931a3069fb583d0ab19573a46e7",
+      "contentSha256": "868781bb6e956455eb5399ee40819d2cb88cffa18128642c237fc2af6651542a",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".claude/skills/carbon-svelte/references/data-display.md",
       "provider": "claude"
     },
     {
-      "contentSha256": "6866cfb1492f061fd8334b0e347817fe51a219b061ad2e1b36d838eeb5356723",
+      "contentSha256": "61bd88ab560e7ccccf18419bcdd1025b2f4b23570674040efa01808fc4fe41ff",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".claude/skills/carbon-svelte/references/feedback.md",
       "provider": "claude"
     },
     {
-      "contentSha256": "2c19e4f6f27d11917d62d4811b5dde9e85cad1a6d487a02beb54e5d365943856",
+      "contentSha256": "f700ae7a17f8a3f8ff9d5cc31234b3b0506f8f093f2ebc6f38eb896c655b844f",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".claude/skills/carbon-svelte/references/forms.md",
       "provider": "claude"
     },
     {
-      "contentSha256": "12bdf2dcc36357eabe142f81e9dc650f1d47b24ef46a755ae272a77e8d4be93b",
+      "contentSha256": "aef23cf392f41dd2e756db6398ee6d0867fad6f57adc361542ba36d417980ade",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".claude/skills/carbon-svelte/references/icons.md",
       "provider": "claude"
     },
     {
-      "contentSha256": "3a124cb3b3cf426b22fb8fe97df60cb237ac4e02ae84e50275272833cf51681a",
+      "contentSha256": "8e41e05d078727b12b300cc0f50f28b4ebbd37936b7c18394817090a076fe250",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".claude/skills/carbon-svelte/references/layout.md",
       "provider": "claude"
     },
     {
-      "contentSha256": "46906378fdb5f464cf6c442516ad0d4693089683abea9b3fb3ce8c20f1c80198",
+      "contentSha256": "5266575c561b9f958422bf1c95b9bc86b7a19d29d32118aa6644ecaf9250ca30",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".claude/skills/carbon-svelte/references/navigation.md",
       "provider": "claude"
     },
     {
-      "contentSha256": "55653074a4b366edd7b115206a5f20de4682694c6cb8b47cffff24e05f629ec6",
+      "contentSha256": "6dfae5d9870abf8e6f8e2d16f22bde4babbb38746adeb86a581d2dbd4b959be5",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".claude/skills/carbon-svelte/references/setup.md",
       "provider": "claude"
@@ -751,49 +751,49 @@
       "provider": "codex"
     },
     {
-      "contentSha256": "59f0246e3e5178e29592f50cc32eaf8154a9e8012b872c16d8574781839c1c4c",
+      "contentSha256": "20aa4cfad7437e89dd8ea139a44206632feadd54e0f594671df1b6599ee73151",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".codex/skills/carbon-svelte/references/actions.md",
       "provider": "codex"
     },
     {
-      "contentSha256": "9f924c77afdc4a801a3dde6ad1f8906723e64931a3069fb583d0ab19573a46e7",
+      "contentSha256": "868781bb6e956455eb5399ee40819d2cb88cffa18128642c237fc2af6651542a",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".codex/skills/carbon-svelte/references/data-display.md",
       "provider": "codex"
     },
     {
-      "contentSha256": "6866cfb1492f061fd8334b0e347817fe51a219b061ad2e1b36d838eeb5356723",
+      "contentSha256": "61bd88ab560e7ccccf18419bcdd1025b2f4b23570674040efa01808fc4fe41ff",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".codex/skills/carbon-svelte/references/feedback.md",
       "provider": "codex"
     },
     {
-      "contentSha256": "2c19e4f6f27d11917d62d4811b5dde9e85cad1a6d487a02beb54e5d365943856",
+      "contentSha256": "f700ae7a17f8a3f8ff9d5cc31234b3b0506f8f093f2ebc6f38eb896c655b844f",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".codex/skills/carbon-svelte/references/forms.md",
       "provider": "codex"
     },
     {
-      "contentSha256": "12bdf2dcc36357eabe142f81e9dc650f1d47b24ef46a755ae272a77e8d4be93b",
+      "contentSha256": "aef23cf392f41dd2e756db6398ee6d0867fad6f57adc361542ba36d417980ade",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".codex/skills/carbon-svelte/references/icons.md",
       "provider": "codex"
     },
     {
-      "contentSha256": "3a124cb3b3cf426b22fb8fe97df60cb237ac4e02ae84e50275272833cf51681a",
+      "contentSha256": "8e41e05d078727b12b300cc0f50f28b4ebbd37936b7c18394817090a076fe250",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".codex/skills/carbon-svelte/references/layout.md",
       "provider": "codex"
     },
     {
-      "contentSha256": "46906378fdb5f464cf6c442516ad0d4693089683abea9b3fb3ce8c20f1c80198",
+      "contentSha256": "5266575c561b9f958422bf1c95b9bc86b7a19d29d32118aa6644ecaf9250ca30",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".codex/skills/carbon-svelte/references/navigation.md",
       "provider": "codex"
     },
     {
-      "contentSha256": "55653074a4b366edd7b115206a5f20de4682694c6cb8b47cffff24e05f629ec6",
+      "contentSha256": "6dfae5d9870abf8e6f8e2d16f22bde4babbb38746adeb86a581d2dbd4b959be5",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".codex/skills/carbon-svelte/references/setup.md",
       "provider": "codex"
@@ -1273,49 +1273,49 @@
       "provider": "copilot"
     },
     {
-      "contentSha256": "59f0246e3e5178e29592f50cc32eaf8154a9e8012b872c16d8574781839c1c4c",
+      "contentSha256": "20aa4cfad7437e89dd8ea139a44206632feadd54e0f594671df1b6599ee73151",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".github/skills/carbon-svelte/references/actions.md",
       "provider": "copilot"
     },
     {
-      "contentSha256": "9f924c77afdc4a801a3dde6ad1f8906723e64931a3069fb583d0ab19573a46e7",
+      "contentSha256": "868781bb6e956455eb5399ee40819d2cb88cffa18128642c237fc2af6651542a",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".github/skills/carbon-svelte/references/data-display.md",
       "provider": "copilot"
     },
     {
-      "contentSha256": "6866cfb1492f061fd8334b0e347817fe51a219b061ad2e1b36d838eeb5356723",
+      "contentSha256": "61bd88ab560e7ccccf18419bcdd1025b2f4b23570674040efa01808fc4fe41ff",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".github/skills/carbon-svelte/references/feedback.md",
       "provider": "copilot"
     },
     {
-      "contentSha256": "2c19e4f6f27d11917d62d4811b5dde9e85cad1a6d487a02beb54e5d365943856",
+      "contentSha256": "f700ae7a17f8a3f8ff9d5cc31234b3b0506f8f093f2ebc6f38eb896c655b844f",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".github/skills/carbon-svelte/references/forms.md",
       "provider": "copilot"
     },
     {
-      "contentSha256": "12bdf2dcc36357eabe142f81e9dc650f1d47b24ef46a755ae272a77e8d4be93b",
+      "contentSha256": "aef23cf392f41dd2e756db6398ee6d0867fad6f57adc361542ba36d417980ade",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".github/skills/carbon-svelte/references/icons.md",
       "provider": "copilot"
     },
     {
-      "contentSha256": "3a124cb3b3cf426b22fb8fe97df60cb237ac4e02ae84e50275272833cf51681a",
+      "contentSha256": "8e41e05d078727b12b300cc0f50f28b4ebbd37936b7c18394817090a076fe250",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".github/skills/carbon-svelte/references/layout.md",
       "provider": "copilot"
     },
     {
-      "contentSha256": "46906378fdb5f464cf6c442516ad0d4693089683abea9b3fb3ce8c20f1c80198",
+      "contentSha256": "5266575c561b9f958422bf1c95b9bc86b7a19d29d32118aa6644ecaf9250ca30",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".github/skills/carbon-svelte/references/navigation.md",
       "provider": "copilot"
     },
     {
-      "contentSha256": "55653074a4b366edd7b115206a5f20de4682694c6cb8b47cffff24e05f629ec6",
+      "contentSha256": "6dfae5d9870abf8e6f8e2d16f22bde4babbb38746adeb86a581d2dbd4b959be5",
       "ownerEntityIds": ["carbon-svelte"],
       "path": ".github/skills/carbon-svelte/references/setup.md",
       "provider": "copilot"

@@ -197,8 +197,8 @@
 		display: grid;
 		grid-template-columns: repeat(16, minmax(0, 1fr));
 		gap: 1rem;
-		padding: 1.5rem 1rem 0;
-		max-width: 99rem;
+		padding: 2rem 1.5rem 0;
+		max-width: 90rem;
 		margin: 0 auto;
 	}
 
@@ -245,9 +245,9 @@
 	}
 
 	.rk-shell-footer {
-		max-width: 99rem;
+		max-width: 90rem;
 		margin: 2rem auto 0;
-		padding: 1rem;
+		padding: 1rem 1.5rem;
 		border-top: 1px solid var(--cds-border-subtle);
 		font-size: 0.875rem;
 		color: var(--cds-text-secondary);
@@ -271,11 +271,11 @@
 
 	@media (max-width: 1024px) {
 		.rk-grid {
-			padding-inline: 0;
+			padding: 1.5rem 1rem 0;
 		}
 
 		.rk-shell-footer {
-			padding-inline: 0;
+			padding-inline: 1rem;
 		}
 	}
 </style>

@@ -1,7 +1,5 @@
 <script lang="ts">
 	import {
-		Breadcrumb,
-		BreadcrumbItem,
 		Button,
 		ClickableTile,
 		Column,
@@ -38,24 +36,39 @@
 </script>
 
 <section class="rk-page">
-	<Grid fullWidth condensed>
-		<Row condensed class="rk-row-spacing rk-row-spacing-sm">
+	<Grid fullWidth>
+		<Row class="rk-row-spacing rk-row-spacing-hero">
 			<Column sm={4} md={8} lg={16}>
-				<Breadcrumb noTrailingSlash>
-					<BreadcrumbItem href={basePath} isCurrentPage>Dashboard</BreadcrumbItem>
-				</Breadcrumb>
-			</Column>
-		</Row>
+				<section class="rk-hero-band" aria-labelledby="rk-dashboard-title">
+					<div class="rk-hero-layout">
+						<div class="rk-hero-copy">
+							<p class="rk-eyebrow rk-eyebrow-inverse">Admin overview</p>
+							<h1 id="rk-dashboard-title">Dashboard</h1>
+							<p class="rk-subtitle rk-subtitle-inverse">
+								Manage collections, globals, and content volume from one Carbon-aligned workspace.
+							</p>
+						</div>
 
-		<Row condensed class="rk-row-spacing rk-row-spacing-lg">
-			<Column sm={4} md={8} lg={11} xlg={11} max={11}>
-				<div class="rk-hero-copy">
-					<p class="rk-eyebrow">Admin overview</p>
-					<h1>Dashboard</h1>
-					<p class="rk-subtitle">
-						Manage collections, globals, and content volume from one Carbon-aligned workspace.
-					</p>
-					<div class="rk-tag-row" aria-label="Dashboard summary">
+						<div class="rk-hero-panel">
+							<p class="rk-tile-label rk-eyebrow-inverse">Next action</p>
+							<h2>Start where editors spend time.</h2>
+							<p>
+								Jump into the busiest collection or update shared settings without leaving the overview.
+							</p>
+							<div class="rk-action-stack">
+								{#if primaryCollection}
+									<Button href={`${basePath}/collections/${primaryCollection.slug}`}>Open collections</Button>
+								{/if}
+								{#if primaryGlobal}
+									<Button kind="tertiary" href={`${basePath}/globals/${primaryGlobal.slug}`}>
+										Edit globals
+									</Button>
+								{/if}
+							</div>
+						</div>
+					</div>
+
+					<div class="rk-hero-meta" aria-label="Dashboard summary">
 						<Tag type="cool-gray">{collectionTotal} collections</Tag>
 						<Tag type="cool-gray">{globalTotal} globals</Tag>
 						<Tag type="blue">{totalDocuments} total documents</Tag>
@@ -63,31 +76,11 @@
 							<Tag type="teal">Top volume: {busiestCollection.label}</Tag>
 						{/if}
 					</div>
-				</div>
-			</Column>
-
-			<Column sm={4} md={8} lg={5} xlg={5} max={5}>
-				<Tile class="rk-hero-tile">
-					<p class="rk-tile-label">Next action</p>
-					<h2>Start where editors spend time.</h2>
-					<p>
-						Jump into the busiest collection or update global settings without leaving the dashboard.
-					</p>
-					<div class="rk-action-stack">
-						{#if primaryCollection}
-							<Button href={`${basePath}/collections/${primaryCollection.slug}`}>Open collections</Button>
-						{/if}
-						{#if primaryGlobal}
-							<Button kind="tertiary" href={`${basePath}/globals/${primaryGlobal.slug}`}>
-								Edit globals
-							</Button>
-						{/if}
-					</div>
-				</Tile>
+				</section>
 			</Column>
 		</Row>
 
-		<Row condensed class="rk-row-spacing">
+		<Row class="rk-row-spacing rk-row-spacing-section">
 			<Column sm={4} md={4} lg={4}>
 				<Tile class="rk-stat-tile">
 					<p class="rk-tile-label">Collections</p>
@@ -124,7 +117,7 @@
 			</Column>
 		</Row>
 
-		<Row condensed class="rk-row-spacing rk-row-spacing-lg">
+		<Row class="rk-row-spacing rk-row-spacing-section">
 			<Column sm={4} md={8} lg={16}>
 				<div class="rk-section-heading">
 					<div>
@@ -163,7 +156,7 @@
 		</Row>
 
 		{#if globals.length > 0}
-			<Row condensed class="rk-row-spacing rk-row-spacing-lg">
+			<Row class="rk-row-spacing rk-row-spacing-section">
 				<Column sm={4} md={8} lg={16}>
 					<div class="rk-section-heading">
 						<div>
@@ -205,6 +198,10 @@
 		margin-inline: 0;
 	}
 
+	:global(.rk-page .bx--col) {
+		padding-inline: 1rem;
+	}
+
 	:global(.rk-page .bx--tile) {
 		min-height: 100%;
 	}
@@ -230,6 +227,45 @@
 		margin-bottom: 2rem;
 	}
 
+	:global(.rk-row-spacing-xl) {
+		margin-bottom: 3rem;
+	}
+
+	:global(.rk-row-spacing-hero) {
+		margin-bottom: 4rem;
+	}
+
+	:global(.rk-row-spacing-section) {
+		margin-bottom: 3.5rem;
+	}
+
+	.rk-hero-band {
+		background: var(--cds-background-inverse);
+		color: var(--cds-text-inverse);
+		padding: 3.5rem 3rem 2.5rem;
+	}
+
+	.rk-hero-layout {
+		display: grid;
+		grid-template-columns: minmax(0, 1.85fr) minmax(18rem, 1fr);
+		gap: 3rem;
+		align-items: end;
+	}
+
+	.rk-hero-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-top: 2.5rem;
+		padding-top: 1.25rem;
+		border-top: 1px solid var(--cds-border-inverse);
+	}
+
+	.rk-eyebrow-inverse {
+		color: var(--cds-text-inverse);
+		opacity: 0.72;
+	}
+
 	.rk-eyebrow,
 	.rk-tile-label {
 		margin: 0 0 0.5rem;
@@ -245,19 +281,25 @@
 		margin: 0;
 	}
 
+	.rk-hero-copy h1 {
+		font-size: clamp(3.5rem, 7vw, 5rem);
+		line-height: 0.95;
+		letter-spacing: -0.04em;
+		max-width: 11ch;
+	}
+
 	.rk-subtitle {
 		max-width: 48rem;
-		margin: 1rem 0 0;
+		margin: 1.25rem 0 0;
 		font-size: 1.25rem;
 		line-height: 1.4;
 		color: var(--cds-text-secondary);
 	}
 
-	.rk-tag-row {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-		margin-top: 1.5rem;
+	.rk-subtitle-inverse {
+		max-width: 36rem;
+		color: var(--cds-text-inverse);
+		opacity: 0.8;
 	}
 
 	:global(.rk-hero-tile),
@@ -266,21 +308,28 @@
 	:global(.rk-resource-tile) {
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
+		gap: 1rem;
 	}
 
-	:global(.rk-hero-tile) {
-		justify-content: space-between;
+	.rk-hero-panel {
+		display: grid;
+		gap: 1rem;
+		padding-left: 2.5rem;
+		border-left: 1px solid var(--cds-border-inverse);
 		min-height: 100%;
 	}
 
-	:global(.rk-hero-tile h2) {
+	.rk-hero-panel h2 {
 		margin: 0;
 		font-size: 1.75rem;
 		line-height: 1.2;
 	}
 
-	:global(.rk-hero-tile p),
+	.rk-hero-panel p {
+		color: var(--cds-text-inverse);
+		opacity: 0.8;
+	}
+
 	.rk-stat-copy,
 	.rk-section-heading p,
 	.rk-resource-copy,
@@ -295,7 +344,13 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.75rem;
-		margin-top: 1rem;
+		margin-top: 1.75rem;
+	}
+
+	:global(.rk-stat-tile),
+	:global(.rk-resource-tile),
+	:global(.rk-empty-tile) {
+		min-height: 15rem;
 	}
 
 	.rk-stat-value {
@@ -314,8 +369,8 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: end;
-		gap: 1rem;
-		padding-bottom: 0.75rem;
+		gap: 1.5rem;
+		padding-bottom: 1rem;
 		border-bottom: 1px solid var(--cds-border-subtle);
 	}
 
@@ -335,7 +390,7 @@
 
 	.rk-resource-metric {
 		margin: auto 0 0;
-		font-size: clamp(2rem, 4vw, 3rem);
+		font-size: clamp(2.5rem, 4.5vw, 3.5rem);
 		line-height: 1;
 		letter-spacing: -0.02em;
 	}
@@ -358,6 +413,22 @@
 	}
 
 	@media (max-width: 1056px) {
+		.rk-hero-band {
+			padding: 3rem 2rem 2rem;
+		}
+
+		.rk-hero-layout {
+			grid-template-columns: 1fr;
+			gap: 2rem;
+		}
+
+		.rk-hero-panel {
+			padding-left: 0;
+			padding-top: 1.5rem;
+			border-left: 0;
+			border-top: 1px solid var(--cds-border-inverse);
+		}
+
 		.rk-section-heading {
 			align-items: start;
 			flex-direction: column;
@@ -365,7 +436,19 @@
 	}
 
 	@media (max-width: 672px) {
-		:global(.rk-hero-tile h2) {
+		:global(.rk-page .bx--col) {
+			padding-inline: 0.5rem;
+		}
+
+		.rk-hero-band {
+			padding: 2.25rem 1.25rem 1.5rem;
+		}
+
+		.rk-hero-copy h1 {
+			font-size: clamp(2.5rem, 13vw, 3.5rem);
+		}
+
+		.rk-hero-panel h2 {
 			font-size: 1.375rem;
 		}
 
