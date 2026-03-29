@@ -346,6 +346,24 @@ describe("createRunelayerApp", () => {
     });
   });
 
+  it("repairs legacy single-user bootstrap and redirects unauthenticated admins to login", async () => {
+    const app = await createTestApp({
+      authUsers: [
+        {
+          id: "legacy-user-1",
+          email: "legacy@example.com",
+          name: "Legacy User",
+          role: "user",
+        },
+      ],
+    });
+
+    await expect(app.admin.load(makeEvent())).rejects.toMatchObject({
+      status: 303,
+      location: "/admin/login",
+    });
+  });
+
   it("creates the first admin user through the setup action", async () => {
     const app = await createTestApp({ authUsers: [] });
     const requests: Array<{ url: string; body: string }> = [];

@@ -93,12 +93,46 @@ async function countDocuments(runelayer: RunelayerInstance, collection: string):
   return getCountValue(result.rows[0]);
 }
 
+async function countUsers(runelayer: RunelayerInstance): Promise<number> {
+  const result = await runelayer.database.client.execute(`SELECT COUNT(*) AS count FROM "user"`);
+  return getCountValue(result.rows[0]);
+}
+
+async function promoteSingleUserToAdmin(runelayer: RunelayerInstance): Promise<number> {
+  const totalUsers = await countUsers(runelayer);
+  if (totalUsers !== 1) {
+    return 0;
+  }
+
+  await runelayer.database.client.execute(`
+    UPDATE "user"
+    SET role = 'admin'
+    WHERE id IN (
+      SELECT id
+      FROM "user"
+      ORDER BY createdAt ASC
+      LIMIT 1
+    )
+  `);
+
+  const result = await runelayer.database.client.execute(
+    `SELECT COUNT(*) AS count FROM "user" WHERE LOWER(COALESCE(role, '')) = 'admin'`,
+  );
+  return getCountValue(result.rows[0]);
+}
+
 async function countAdminUsers(runelayer: RunelayerInstance): Promise<number> {
   try {
     const result = await runelayer.database.client.execute(
       `SELECT COUNT(*) AS count FROM "user" WHERE LOWER(COALESCE(role, '')) = 'admin'`,
     );
-    return getCountValue(result.rows[0]);
+    const adminCount = getCountValue(result.rows[0]);
+    if (adminCount > 0) {
+      return adminCount;
+    }
+
+    // Compatibility path: early first-user bootstrap could create exactly one non-admin user.
+    return await promoteSingleUserToAdmin(runelayer);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     // If Better Auth tables are not migrated yet, treat this as "no admins".
@@ -526,6 +560,13 @@ export function createRunelayerRuntime(
 
         return fail(400, { error: message });
       }
+
+      // Ensure the bootstrap account is elevated to admin, even if the auth sign-up endpoint
+      // ignores custom role input.
+      await runelayer.database.client.execute({
+        sql: `UPDATE "user" SET role = 'admin' WHERE LOWER(email) = LOWER(?)`,
+        args: [email],
+      });
 
       throw redirect(303, adminPath);
     },
