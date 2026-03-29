@@ -23,6 +23,7 @@ type AdminRoute =
   | { kind: "login" }
   | { kind: "logout" }
   | { kind: "profile" }
+  | { kind: "health" }
   | { kind: "collection-list"; slug: string }
   | { kind: "collection-create"; slug: string }
   | { kind: "collection-edit"; slug: string; id: string }
@@ -44,6 +45,7 @@ function parseAdminRoute(path: string | undefined): AdminRoute | null {
   if (segments.length === 1 && segments[0] === "login") return { kind: "login" };
   if (segments.length === 1 && segments[0] === "logout") return { kind: "logout" };
   if (segments.length === 1 && segments[0] === "profile") return { kind: "profile" };
+  if (segments.length === 1 && segments[0] === "health") return { kind: "health" };
 
   if (segments[0] === "collections") {
     if (segments.length === 2) {
@@ -267,6 +269,34 @@ export function createRunelayerRuntime(
     const route = parseAdminRoute(event.params.path);
     if (!route) {
       throw error(404, "Admin route not found");
+    }
+
+    // Health endpoint is public — no auth guard.
+    if (route.kind === "health") {
+      let dbOk = false;
+      try {
+        await runelayer.database.client.execute("SELECT 1");
+        dbOk = true;
+      } catch {
+        // database unreachable
+      }
+      const status = dbOk ? "ok" : "degraded";
+      return {
+        basePath: adminPath,
+        currentPath: event.url.pathname,
+        ui,
+        collections: [],
+        globals: [],
+        user: null,
+        view: "health",
+        health: {
+          status,
+          database: dbOk,
+          collections: runelayer.collections.length,
+          globals: runelayer.globals.length,
+          timestamp: new Date().toISOString(),
+        },
+      };
     }
 
     guardAdminRoute(event, route, strictAccess, adminPath);
@@ -515,8 +545,43 @@ export function createRunelayerRuntime(
     },
   };
 
+  const healthPath = `${adminPath}/health`;
+
+  const handle: Handle = async ({ event, resolve }) => {
+    // Intercept /admin/health for JSON API consumers (CI/CD, monitoring).
+    if (
+      event.url.pathname === healthPath &&
+      event.request.method === "GET" &&
+      event.request.headers.get("accept")?.includes("application/json")
+    ) {
+      let dbOk = false;
+      try {
+        await runelayer.database.client.execute("SELECT 1");
+        dbOk = true;
+      } catch {
+        // database unreachable
+      }
+      const status = dbOk ? "ok" : "degraded";
+      return new Response(
+        JSON.stringify({
+          status,
+          database: dbOk,
+          collections: runelayer.collections.length,
+          globals: runelayer.globals.length,
+          timestamp: new Date().toISOString(),
+        }),
+        {
+          status: dbOk ? 200 : 503,
+          headers: { "content-type": "application/json" },
+        },
+      );
+    }
+
+    return (runelayer.handle as Handle)({ event, resolve });
+  };
+
   return {
-    handle: runelayer.handle as Handle,
+    handle,
     admin: {
       load,
       actions,

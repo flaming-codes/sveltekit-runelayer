@@ -5,6 +5,7 @@
     AdminDashboardPage,
     AdminErrorPage,
     AdminGlobalEditorPage,
+    AdminHealthPage,
     AdminLoginPage,
     AdminProfilePage,
     AdminShell,
@@ -43,6 +44,17 @@
     ui={data.ui}
   >
     <AdminProfilePage user={data.user} basePath={data.basePath} />
+  </AdminShell>
+{:else if data.view === "health"}
+  <AdminShell
+    collections={data.collections}
+    globals={data.globals}
+    user={data.user}
+    basePath={data.basePath}
+    currentPath={data.currentPath}
+    ui={data.ui}
+  >
+    <AdminHealthPage health={data.health} />
   </AdminShell>
 {:else if data.view === "collection-list"}
   <AdminShell

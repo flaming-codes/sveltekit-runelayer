@@ -47,7 +47,6 @@
 
 	let appName = $derived(ui.appName ?? "Runelayer");
 	let productName = $derived(ui.productName ?? "CMS");
-	let footerText = $derived(ui.footerText ?? "Powered by Runelayer");
 	let normalizedBasePath = $derived(basePath.endsWith("/") ? basePath.slice(0, -1) : basePath);
 	let normalizedCurrentPath = $derived(
 		currentPath.endsWith("/") && currentPath.length > 1
@@ -81,18 +80,19 @@
 
 	<Theme theme="g10">
 	<div class="rk-shell" data-admin-theme="g10">
-		<Header
-			href={basePath}
-			companyName={appName}
-			platformName={productName}
-			bind:isSideNavOpen
-			uiShellAriaLabel={`${appName} ${productName}`}
-		>
-			<svelte:fragment slot="skipToContent">
-				<SkipToContent />
-			</svelte:fragment>
+		<Theme theme="g100">
+			<Header
+				href={basePath}
+				companyName={appName}
+				platformName={productName}
+				bind:isSideNavOpen
+				uiShellAriaLabel={`${appName} ${productName}`}
+			>
+				<svelte:fragment slot="skipToContent">
+					<SkipToContent />
+				</svelte:fragment>
 
-			<HeaderUtilities>
+				<HeaderUtilities>
 				<HeaderAction
 					icon={UserAvatar}
 					text={user ? (user.name || user.email) : "Account"}
@@ -138,7 +138,8 @@
 					</div>
 				</HeaderAction>
 			</HeaderUtilities>
-		</Header>
+			</Header>
+		</Theme>
 
 		<SideNav bind:isOpen={isSideNavOpen} aria-label="Admin navigation" fixed={false}>
 			<SideNavItems>
@@ -178,7 +179,6 @@
 			<div class="rk-grid">
 				{@render children()}
 			</div>
-			<footer class="rk-shell-footer">{footerText}</footer>
 		</Content>
 	</div>
 </Theme>
@@ -285,15 +285,6 @@
 		color: var(--cds-text-on-color);
 	}
 
-	.rk-shell-footer {
-		max-width: 90rem;
-		margin: 2rem auto 0;
-		padding: 1rem 1.5rem;
-		border-top: 1px solid var(--cds-border-subtle);
-		font-size: 0.875rem;
-		color: var(--cds-text-secondary);
-	}
-
 	:global(.rk-shell .bx--side-nav) {
 		border-right: 1px solid var(--cds-border-subtle);
 	}
@@ -309,10 +300,6 @@
 	@media (max-width: 1024px) {
 		.rk-grid {
 			padding: 1.5rem 1rem 0;
-		}
-
-		.rk-shell-footer {
-			padding-inline: 1rem;
 		}
 	}
 </style>

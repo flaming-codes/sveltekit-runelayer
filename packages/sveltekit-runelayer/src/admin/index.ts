@@ -7,5 +7,6 @@ export { default as AdminCollectionListPage } from "./components/CollectionList.
 export { default as AdminCollectionEditorPage } from "./components/CollectionEdit.svelte";
 export { default as AdminGlobalEditorPage } from "./components/GlobalEdit.svelte";
 export { default as AdminProfilePage } from "./components/Profile.svelte";
+export { default as AdminHealthPage } from "./components/Health.svelte";
 export { default as AdminErrorPage } from "./components/ErrorPage.svelte";
 export { default as AdminFieldRenderer } from "./components/fields/FieldRenderer.svelte";
