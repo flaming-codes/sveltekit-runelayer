@@ -100,7 +100,7 @@
 		margin: -2rem -1.5rem 0;
 	}
 
-	/* ── Page header (g100 scoped) ── */
+	/* ── Page header (full-bleed, g100 scoped) ── */
 
 	.rk-dashboard-header {
 		--rk-header-bg: var(--cds-background-inverse);
@@ -108,13 +108,12 @@
 		--rk-header-text-secondary: var(--cds-text-placeholder);
 		background: var(--rk-header-bg);
 		color: var(--rk-header-text);
-		padding: 3rem 0 2.5rem;
+		padding: 3rem 1.5rem 2.5rem;
 	}
 
 	.rk-dashboard-header-inner {
-		max-width: 90rem;
+		max-width: calc(90rem - 3rem);
 		margin: 0 auto;
-		padding: 0 1.5rem;
 	}
 
 	.rk-dashboard-title {
@@ -217,7 +216,10 @@
 			margin: -1.5rem -1rem 0;
 		}
 
-		.rk-dashboard-header-inner,
+		.rk-dashboard-header {
+			padding-inline: 1rem;
+		}
+
 		.rk-dashboard-section {
 			padding-inline: 1rem;
 		}
@@ -229,7 +231,7 @@
 		}
 
 		.rk-dashboard-header {
-			padding: 2rem 0 1.5rem;
+			padding-block: 2rem 1.5rem;
 		}
 	}
 </style>
