@@ -40,7 +40,7 @@ describe("better-auth drizzle adapter schema wiring", () => {
       db,
     );
 
-    const result = await (runelayerAuth.auth as any).api.signUpEmail({
+    const result = await (runelayerAuth.auth as any).api.createUser({
       body: {
         name: "First Admin",
         email: "admin@example.com",

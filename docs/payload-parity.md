@@ -182,15 +182,14 @@ Dashboard, Collection List/Edit, Version History, Account, Login, Forgot Passwor
 - Collection edit with field rendering — Implemented
 - Login form — Implemented
 - Create first user flow — Implemented (`/admin/create-first-user` + `?/createFirstUser`)
+- User management (list/create/edit/delete/reset-password) — Implemented (`/admin/users*`)
+- Profile view — Implemented (`/admin/profile`)
 - Admin layout with sidebar — Implemented
 - 10 field renderers — Implemented
-- Route helper for host app — Implemented
-- Server handler factories — Implemented
 
 ### Deferred to v2
 
 - Version history view
-- Account/profile management
 - Forgot password view
 - Custom admin components API
 - Custom views/routes API

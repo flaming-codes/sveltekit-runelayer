@@ -8,6 +8,9 @@ export const authUserTable = sqliteTable("user", {
   emailVerified: integer("emailVerified", { mode: "boolean" }).notNull().default(false),
   image: text("image"),
   role: text("role").notNull().default("user"),
+  banned: integer("banned", { mode: "boolean" }).notNull().default(false),
+  banReason: text("banReason"),
+  banExpires: integer("banExpires", { mode: "timestamp_ms" }),
   createdAt: integer("createdAt", { mode: "timestamp_ms" }).notNull(),
   updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).notNull(),
 });
@@ -20,6 +23,7 @@ export const authSessionTable = sqliteTable("session", {
   updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).notNull(),
   ipAddress: text("ipAddress"),
   userAgent: text("userAgent"),
+  impersonatedBy: text("impersonatedBy"),
   userId: text("userId")
     .notNull()
     .references(() => authUserTable.id, { onDelete: "cascade" }),

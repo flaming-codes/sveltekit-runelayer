@@ -76,6 +76,7 @@ const DEFAULT_ADMIN_USER: TestAuthUser = {
 
 const ADMIN_LOCALS = {
   user: {
+    id: "admin-1",
     email: "admin@example.com",
     role: "admin",
     name: "Admin",
@@ -99,6 +100,9 @@ async function applyAuthSchemaForTests(url: string, users: TestAuthUser[] = []) 
         "email" TEXT NOT NULL,
         "name" TEXT NOT NULL,
         "role" TEXT,
+        "banned" INTEGER NOT NULL DEFAULT 0,
+        "banReason" TEXT,
+        "banExpires" TEXT,
         "image" TEXT,
         "emailVerified" INTEGER NOT NULL,
         "createdAt" TEXT NOT NULL,
@@ -109,8 +113,8 @@ async function applyAuthSchemaForTests(url: string, users: TestAuthUser[] = []) 
     for (const user of users) {
       await client.execute({
         sql: `
-          INSERT INTO "user" ("id", "email", "name", "role", "image", "emailVerified", "createdAt", "updatedAt")
-          VALUES (?, ?, ?, ?, NULL, 1, ?, ?)
+          INSERT INTO "user" ("id", "email", "name", "role", "banned", "banReason", "banExpires", "image", "emailVerified", "createdAt", "updatedAt")
+          VALUES (?, ?, ?, ?, 0, NULL, NULL, NULL, 1, ?, ?)
         `,
         args: [user.id, user.email, user.name, user.role, now, now],
       });
@@ -430,6 +434,205 @@ describe("createRunelayerApp", () => {
     });
 
     expect(called).toBe(false);
+  });
+
+  it("loads user management views from Better Auth admin endpoints", async () => {
+    const app = await createTestApp();
+
+    const usersView = await app.admin.load(
+      adminEvent("users", {
+        fetch: async (input: RequestInfo | URL) => {
+          const url = requestUrl(input);
+          expect(url).toContain("/api/auth/admin/list-users");
+          return new Response(
+            JSON.stringify({
+              users: [
+                {
+                  id: "u-1",
+                  name: "Ada Admin",
+                  email: "ada@example.com",
+                  role: "admin",
+                  emailVerified: true,
+                  banned: false,
+                },
+              ],
+              total: 1,
+              limit: 20,
+              offset: 0,
+            }),
+            {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            },
+          );
+        },
+      }),
+    );
+
+    expect(usersView.view).toBe("users-list");
+    expect((usersView.users as Array<Record<string, unknown>>)[0]?.email).toBe("ada@example.com");
+
+    const userEditView = await app.admin.load(
+      adminEvent("users/u-1", {
+        fetch: async (input: RequestInfo | URL) => {
+          const url = requestUrl(input);
+          expect(url).toContain("/api/auth/admin/get-user");
+          return new Response(
+            JSON.stringify({
+              id: "u-1",
+              name: "Ada Admin",
+              email: "ada@example.com",
+              role: "admin",
+              emailVerified: true,
+              banned: false,
+            }),
+            {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            },
+          );
+        },
+      }),
+    );
+
+    expect(userEditView.view).toBe("users-edit");
+    expect((userEditView.managedUser as Record<string, unknown>).id).toBe("u-1");
+  });
+
+  it("creates users through the admin create-user endpoint", async () => {
+    const app = await createTestApp();
+    const calls: Array<{ url: string; body: string }> = [];
+
+    await expect(
+      (app.admin.actions.createUser as any)(
+        adminEvent("users/create", {
+          form: {
+            name: "Editor User",
+            email: "editor@example.com",
+            role: "editor",
+            password: "test-password-123",
+          },
+          fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+            const body = init?.body;
+            if (typeof body !== "string") {
+              throw new Error("Expected JSON body");
+            }
+            calls.push({ url: requestUrl(input), body });
+            return new Response(
+              JSON.stringify({
+                user: {
+                  id: "u-2",
+                  name: "Editor User",
+                  email: "editor@example.com",
+                  role: "editor",
+                  emailVerified: true,
+                  banned: false,
+                },
+              }),
+              {
+                status: 200,
+                headers: { "content-type": "application/json" },
+              },
+            );
+          },
+        }),
+      ),
+    ).rejects.toMatchObject({
+      status: 303,
+      location: "/admin/users/u-2",
+    });
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toBe("/api/auth/admin/create-user");
+    const payload = JSON.parse(calls[0].body) as Record<string, unknown>;
+    expect(payload.email).toBe("editor@example.com");
+    expect(payload.role).toBe("editor");
+  });
+
+  it("updates users and optionally rotates password via admin endpoints", async () => {
+    const app = await createTestApp();
+    const calls: Array<{ url: string; body: string }> = [];
+
+    const result = await (app.admin.actions.updateUser as any)(
+      adminEvent("users/u-2", {
+        form: {
+          name: "Editor Updated",
+          email: "editor.updated@example.com",
+          role: "editor",
+          password: "new-password-123",
+        },
+        fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+          const body = init?.body;
+          if (typeof body !== "string") {
+            throw new Error("Expected JSON body");
+          }
+          const url = requestUrl(input);
+          calls.push({ url, body });
+          if (url.endsWith("/admin/update-user")) {
+            return new Response(
+              JSON.stringify({
+                id: "u-2",
+                name: "Editor Updated",
+                email: "editor.updated@example.com",
+                role: "editor",
+                emailVerified: true,
+                banned: false,
+              }),
+              { status: 200, headers: { "content-type": "application/json" } },
+            );
+          }
+          return new Response(JSON.stringify({ status: true }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        },
+      }),
+    );
+
+    expect(result.success).toBe(true);
+    expect(calls.map((call) => call.url)).toEqual([
+      "/api/auth/admin/update-user",
+      "/api/auth/admin/set-user-password",
+    ]);
+  });
+
+  it("prevents deleting yourself or the last admin account", async () => {
+    const app = await createTestApp();
+
+    const selfDelete = await (app.admin.actions.deleteUser as any)(
+      adminEvent("users/admin-1", {
+        form: {},
+      }),
+    );
+    expect(selfDelete.status).toBe(400);
+
+    const lastAdminDelete = await (app.admin.actions.deleteUser as any)(
+      adminEvent("users/another-admin", {
+        form: {},
+        fetch: async (input: RequestInfo | URL) => {
+          const url = requestUrl(input);
+          if (url.includes("/api/auth/admin/get-user")) {
+            return new Response(
+              JSON.stringify({
+                id: "another-admin",
+                name: "Another Admin",
+                email: "another@example.com",
+                role: "admin",
+                emailVerified: true,
+                banned: false,
+              }),
+              { status: 200, headers: { "content-type": "application/json" } },
+            );
+          }
+          return new Response(JSON.stringify({ success: true }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        },
+      }),
+    );
+
+    expect(lastAdminDelete.status).toBe(400);
   });
 
   it("supports withRequest and system query APIs", async () => {

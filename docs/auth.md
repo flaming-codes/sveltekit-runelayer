@@ -48,6 +48,16 @@ Runelayer passes an explicit Drizzle schema map (`user`, `session`, `account`, `
 the Better Auth Drizzle adapter, so auth works even when Drizzle is initialized without
 `fullSchema` metadata.
 
+Runelayer also enables Better Auth's `admin` plugin. This provides built-in server endpoints used by
+the CMS user-management UI:
+
+- `GET /api/auth/admin/list-users`
+- `GET /api/auth/admin/get-user`
+- `POST /api/auth/admin/create-user`
+- `POST /api/auth/admin/update-user`
+- `POST /api/auth/admin/remove-user`
+- `POST /api/auth/admin/set-user-password`
+
 ### SvelteKit Integration
 
 In your `src/hooks.server.ts`:
@@ -75,7 +85,11 @@ interface User {
 }
 ```
 
-Better Auth manages user storage. The `role` field is added as an additional user field with default value `'user'`.
+Better Auth manages user storage. The admin plugin schema includes:
+
+- `user.role` (default `"user"`)
+- `user.banned`, `user.banReason`, `user.banExpires`
+- `session.impersonatedBy`
 
 ## First Admin Bootstrap
 
@@ -83,7 +97,7 @@ Runelayer checks whether any admin user exists in Better Auth's `user` table.
 
 - if at least one admin exists, `/admin/login` is shown and admin access requires admin auth
 - if no admin exists, admin routes redirect to `/admin/create-first-user`
-- the setup form posts `?/createFirstUser`, which creates the first user via Better Auth sign-up with `role: "admin"`
+- the setup form posts `?/createFirstUser`, which creates the first user via Better Auth sign-up and then promotes that email to `role = "admin"`
 
 ## Roles
 

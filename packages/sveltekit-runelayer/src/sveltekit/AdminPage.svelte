@@ -9,6 +9,8 @@
     AdminLoginPage,
     AdminProfilePage,
     AdminShell,
+    AdminUserEditorPage,
+    AdminUsersListPage,
   } from "../admin/index.js";
 
   let { data, form }: {
@@ -50,6 +52,48 @@
     ui={data.ui}
   >
     <AdminProfilePage user={data.user} basePath={data.basePath} />
+  </AdminShell>
+{:else if data.view === "users-list"}
+  <AdminShell
+    collections={data.collections}
+    globals={data.globals}
+    user={data.user}
+    basePath={data.basePath}
+    currentPath={data.currentPath}
+    ui={data.ui}
+  >
+    <AdminUsersListPage
+      users={data.users ?? []}
+      totalUsers={data.totalUsers ?? 0}
+      page={data.page ?? 1}
+      limit={data.limit ?? 20}
+      totalPages={data.totalPages ?? 1}
+      searchTerm={data.searchTerm ?? ""}
+      roleFilter={data.roleFilter ?? ""}
+      basePath={data.basePath}
+    />
+  </AdminShell>
+{:else if data.view === "users-create"}
+  <AdminShell
+    collections={data.collections}
+    globals={data.globals}
+    user={data.user}
+    basePath={data.basePath}
+    currentPath={data.currentPath}
+    ui={data.ui}
+  >
+    <AdminUserEditorPage managedUser={null} roles={data.roles ?? []} basePath={data.basePath} />
+  </AdminShell>
+{:else if data.view === "users-edit"}
+  <AdminShell
+    collections={data.collections}
+    globals={data.globals}
+    user={data.user}
+    basePath={data.basePath}
+    currentPath={data.currentPath}
+    ui={data.ui}
+  >
+    <AdminUserEditorPage managedUser={data.managedUser} roles={data.roles ?? []} basePath={data.basePath} />
   </AdminShell>
 {:else if data.view === "health"}
   <AdminShell

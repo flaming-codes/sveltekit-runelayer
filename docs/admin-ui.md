@@ -58,6 +58,9 @@ Supported views under the admin mount:
 - `/admin` → dashboard
 - `/admin/login` → login form
 - `/admin/create-first-user` → first admin setup form (only when no admin user exists)
+- `/admin/users` → auth user list
+- `/admin/users/create` → auth user create form
+- `/admin/users/:id` → auth user edit form
 - `/admin/collections/:slug` → collection list
 - `/admin/collections/:slug/create` → collection create form
 - `/admin/collections/:slug/:id` → collection edit form
@@ -70,6 +73,9 @@ Supported actions:
 - `?/create` (collection create)
 - `?/update` (collection update and global update)
 - `?/delete` (collection delete)
+- `?/createUser` (auth user create)
+- `?/updateUser` (auth user update + optional password reset)
+- `?/deleteUser` (auth user delete)
 - `POST /admin/logout` (default action)
 
 ## Access and globals behavior
@@ -85,6 +91,14 @@ Global editing is runtime-managed in admin scope:
 - `read` and `update` access are enforced
 - `beforeChange` and `afterChange` hooks run on update
 - unknown global slugs return `404`
+
+User management is runtime-managed via Better Auth admin endpoints:
+
+- list and filter users in `/admin/users`
+- create users with role + password in `/admin/users/create`
+- edit identity and role in `/admin/users/:id`
+- rotate password from the user editor
+- prevent deleting your own account and prevent removing the final admin account
 
 ## UI configuration
 
@@ -118,6 +132,8 @@ The admin subpath now exposes Carbon-structured primitives:
 - `AdminCollectionListPage`
 - `AdminCollectionEditorPage`
 - `AdminGlobalEditorPage`
+- `AdminUsersListPage`
+- `AdminUserEditorPage`
 - `AdminErrorPage`
 - `AdminFieldRenderer`
 

@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { admin } from "better-auth/plugins";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import type { AuthConfig, RunelayerAuth } from "./types.js";
 import { betterAuthSchema } from "./schema.js";
@@ -31,15 +32,7 @@ export function createAuth(
     session: {
       expiresIn: config.sessionMaxAge ?? 60 * 60 * 24 * 7, // 7 days
     },
-    user: {
-      additionalFields: {
-        role: {
-          type: "string",
-          defaultValue: "user",
-          required: false,
-        },
-      },
-    },
+    plugins: [admin({ adminRoles: ["admin"], defaultRole: "user" })],
   });
 
   const handle = async ({

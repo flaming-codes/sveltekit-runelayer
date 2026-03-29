@@ -76,6 +76,10 @@
 		return normalizedCurrentPath === `${normalizedBasePath}/globals/${slug}`;
 	}
 
+	function isUsersActive() {
+		return normalizedCurrentPath.startsWith(`${normalizedBasePath}/users`);
+	}
+
 </script>
 
 	<Theme theme="g10">
@@ -169,6 +173,12 @@
 						{/each}
 					</SideNavMenu>
 				{/if}
+				<SideNavLink
+					href={`${basePath}/users`}
+					text="Users"
+					icon={UserAvatar}
+					isSelected={isUsersActive()}
+				/>
 				<SideNavDivider />
 			</SideNavItems>
 		</SideNav>
