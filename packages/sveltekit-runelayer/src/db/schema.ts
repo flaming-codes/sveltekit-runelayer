@@ -1,10 +1,11 @@
 import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 import type { SQLiteTableWithColumns } from "drizzle-orm/sqlite-core";
+import type { SQLiteColumnBuilderBase } from "drizzle-orm/sqlite-core/columns/common";
 import type { CollectionConfig } from "../schema/collections.js";
 import type { NamedField } from "../schema/fields.js";
 
 type AnyTable = SQLiteTableWithColumns<any>;
-type ColumnDef = ReturnType<typeof text> | ReturnType<typeof integer> | ReturnType<typeof real>;
+type ColumnDef = SQLiteColumnBuilderBase;
 
 /** Map a single field to Drizzle column definitions, with optional prefix for groups. */
 function mapField(field: NamedField, prefix = ""): Record<string, ColumnDef> {

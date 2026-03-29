@@ -18,8 +18,8 @@ It triggers on pushes of tags matching `v*`.
 
 Example:
 
-- package version: `0.1.0`
-- tag: `v0.1.0`
+- package version: `0.1.1`
+- tag: `v0.1.1`
 
 ## What the Workflow Does
 
@@ -37,8 +37,8 @@ Example:
 # Ensure working tree is clean and changes are pushed
 
 # Create and push tag for the package version
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
 Pushing the tag triggers npm publication and GitHub Release creation.
