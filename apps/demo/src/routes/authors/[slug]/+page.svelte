@@ -10,28 +10,9 @@
     BreadcrumbItem,
   } from "carbon-components-svelte";
 
+  import { statusColor, roleColor, formatDate } from "$lib/format.js";
+
   let { data } = $props();
-
-  function statusColor(status: string) {
-    if (status === "published") return "blue";
-    if (status === "archived") return "warm-gray";
-    return "gray";
-  }
-
-  function roleColor(role: string): "blue" | "teal" | "gray" {
-    if (role === "staff") return "blue";
-    if (role === "contributor") return "teal";
-    return "gray";
-  }
-
-  function formatDate(dateStr: string | null | undefined): string {
-    if (!dateStr) return "---";
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
 </script>
 
 <svelte:head>

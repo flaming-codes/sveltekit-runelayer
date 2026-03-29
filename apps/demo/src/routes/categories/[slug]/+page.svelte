@@ -9,13 +9,9 @@
     BreadcrumbItem,
   } from "carbon-components-svelte";
 
-  let { data } = $props();
+  import { statusColor } from "$lib/format.js";
 
-  function statusColor(status: string) {
-    if (status === "published") return "blue";
-    if (status === "archived") return "warm-gray";
-    return "gray";
-  }
+  let { data } = $props();
 </script>
 
 <svelte:head>

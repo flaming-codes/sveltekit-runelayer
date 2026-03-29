@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Grid, Row, Column, Tile, ClickableTile, Tag, Button } from "carbon-components-svelte";
+  import { statusColor } from "$lib/format.js";
 
   let { data } = $props();
 </script>
@@ -78,11 +79,7 @@
                 </div>
                 <div class="post-tags">
                   <Tag
-                    type={post.status === "published"
-                      ? "blue"
-                      : post.status === "archived"
-                        ? "warm-gray"
-                        : "gray"}
+                    type={statusColor(post.status)}
                   >
                     {post.status}
                   </Tag>
@@ -114,11 +111,7 @@
                   {/if}
                 </div>
                 <Tag
-                  type={post.status === "published"
-                    ? "blue"
-                    : post.status === "archived"
-                      ? "warm-gray"
-                      : "gray"}
+                  type={statusColor(post.status)}
                   size="sm"
                 >
                   {post.status}

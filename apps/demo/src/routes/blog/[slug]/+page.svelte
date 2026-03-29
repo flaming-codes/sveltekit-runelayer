@@ -9,69 +9,12 @@
     Column,
   } from "carbon-components-svelte";
 
+  import { statusColor, formatDate } from "$lib/format.js";
+  import { renderRichText } from "$lib/rich-text.js";
+
   let { data } = $props();
 
-  function renderContent(content: any): string {
-    if (!content) return "";
-    if (typeof content === "string") {
-      try {
-        content = JSON.parse(content);
-      } catch {
-        return `<p>${content}</p>`;
-      }
-    }
-
-    if (content.type === "doc" && Array.isArray(content.content)) {
-      return content.content
-        .map((node: any) => {
-          const text = extractText(node);
-          switch (node.type) {
-            case "heading":
-              const level = node.attrs?.level ?? 2;
-              return `<h${level}>${text}</h${level}>`;
-            case "paragraph":
-              return `<p>${text}</p>`;
-            case "blockquote":
-              return `<blockquote>${text}</blockquote>`;
-            case "codeBlock":
-              return `<pre><code>${text}</code></pre>`;
-            case "bulletList":
-            case "orderedList":
-              const tag = node.type === "bulletList" ? "ul" : "ol";
-              const items = (node.content ?? [])
-                .map((li: any) => `<li>${extractText(li)}</li>`)
-                .join("");
-              return `<${tag}>${items}</${tag}>`;
-            default:
-              return text ? `<p>${text}</p>` : "";
-          }
-        })
-        .join("");
-    }
-
-    return typeof content === "string" ? `<p>${content}</p>` : "";
-  }
-
-  function extractText(node: any): string {
-    if (!node) return "";
-    if (typeof node === "string") return node;
-    if (typeof node.text === "string") return node.text;
-    if (Array.isArray(node.content)) {
-      return node.content.map(extractText).join("");
-    }
-    return "";
-  }
-
-  let htmlContent = $derived(renderContent(data.post.content));
-
-  function formatDate(dateStr: string | null | undefined): string {
-    if (!dateStr) return "---";
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  }
+  let htmlContent = $derived(renderRichText(data.post.content));
 </script>
 
 <svelte:head>
@@ -107,18 +50,14 @@
           </a>
         {/if}
 
-        <span class="meta-date">{formatDate(data.post.publishedAt)}</span>
+        <span class="meta-date">{formatDate(data.post.publishedAt, "long")}</span>
 
         {#if data.post.readTime}
           <span class="meta-read-time">{data.post.readTime} min read</span>
         {/if}
 
         <Tag
-          type={data.post.status === "published"
-            ? "blue"
-            : data.post.status === "archived"
-              ? "warm-gray"
-              : "gray"}
+          type={statusColor(data.post.status)}
           size="sm"
         >
           {data.post.status ?? "draft"}

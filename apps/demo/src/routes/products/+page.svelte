@@ -10,11 +10,9 @@
     Button,
   } from "carbon-components-svelte";
 
-  let { data } = $props();
+  import { formatPrice } from "$lib/format.js";
 
-  function formatPrice(price: number): string {
-    return price === 0 ? "Free" : `$${price}`;
-  }
+  let { data } = $props();
 </script>
 
 <Grid>

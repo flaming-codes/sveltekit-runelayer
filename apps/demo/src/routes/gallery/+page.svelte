@@ -10,12 +10,14 @@
     BreadcrumbItem,
   } from "carbon-components-svelte";
 
+  import type { EnrichedMedia } from "$lib/types.js";
+
   let { data } = $props();
 
-  let selectedMedia: any = $state(null);
+  let selectedMedia: EnrichedMedia | null = $state(null);
   let modalOpen = $state(false);
 
-  function openModal(item: any) {
+  function openModal(item: EnrichedMedia) {
     selectedMedia = item;
     modalOpen = true;
   }

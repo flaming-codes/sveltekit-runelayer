@@ -15,6 +15,10 @@
   } from "carbon-components-svelte";
   import { Grid, Row, Column } from "carbon-components-svelte";
 
+  import { formatPrice } from "$lib/format.js";
+  import { parseJson } from "$lib/parse-json.js";
+  import { extractParagraphs } from "$lib/rich-text.js";
+
   let { data } = $props();
 
   let product = $derived(data.product);
@@ -24,34 +28,6 @@
   let specs = $derived(parseJson(product.specs, {}));
   let features = $derived(parseJson(product.features, []));
   let specEntries = $derived(Object.entries(specs) as [string, unknown][]);
-
-  function parseJson(val: unknown, fallback: any) {
-    if (typeof val === "string") {
-      try {
-        return JSON.parse(val);
-      } catch {
-        return fallback;
-      }
-    }
-    return val ?? fallback;
-  }
-
-  function formatPrice(price: number): string {
-    return price === 0 ? "Free" : `$${price}`;
-  }
-
-  function renderRichText(doc: any): string[] {
-    if (!doc || !doc.content) return [];
-    return doc.content
-      .filter((node: any) => node.type === "paragraph")
-      .map((node: any) => {
-        if (typeof node.content === "string") return node.content;
-        if (Array.isArray(node.content)) {
-          return node.content.map((c: any) => c.text ?? "").join("");
-        }
-        return "";
-      });
-  }
 </script>
 
 <Grid>
@@ -97,7 +73,7 @@
         <TabContent>
           <Tile>
             {#if description}
-              {#each renderRichText(description) as paragraph}
+              {#each extractParagraphs(description) as paragraph}
                 <p style="margin-bottom: 0.5rem;">{paragraph}</p>
               {/each}
             {:else}

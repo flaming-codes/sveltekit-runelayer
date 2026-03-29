@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node ./scripts/ensure-better-sqlite3.mjs",
     "dev": "vp run demo#dev",
     "build": "vp run build -r",
     "check": "vp check",

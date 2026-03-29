@@ -1,6 +1,7 @@
 import { find } from "@flaming-codes/sveltekit-runelayer";
-import { ctx } from "$lib/server/query-helpers.js";
+import { ctx, buildLookupMap, enrichWithName } from "$lib/server/query-helpers.js";
 import { Posts, Authors } from "$lib/server/schema.js";
+import type { PostRow, EnrichedPost, AuthorRow } from "$lib/types.js";
 
 export async function load({ url, request }: { url: URL; request: Request }) {
   const page = Number(url.searchParams.get("page") ?? "1");
@@ -11,15 +12,11 @@ export async function load({ url, request }: { url: URL; request: Request }) {
     find(ctx(Authors, request)),
   ]);
 
-  const posts = allPosts as any[];
-  const authors = allAuthors as any[];
-  const authorMap = new Map(authors.map((a) => [a.id, a]));
+  const posts = allPosts as PostRow[];
+  const authorMap = buildLookupMap(allAuthors as AuthorRow[]);
 
   // Enrich posts with author names
-  const enriched = posts.map((p) => ({
-    ...p,
-    authorName: authorMap.get(p.author)?.name ?? "Unknown",
-  }));
+  const enriched = enrichWithName(posts, "author", authorMap) as EnrichedPost[];
 
   const totalPages = Math.ceil(enriched.length / limit);
   const paginated = enriched.slice((page - 1) * limit, page * limit);

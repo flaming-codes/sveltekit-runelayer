@@ -9,19 +9,9 @@
     BreadcrumbItem,
   } from "carbon-components-svelte";
 
+  import { roleColor, truncate } from "$lib/format.js";
+
   let { data } = $props();
-
-  function roleColor(role: string): "blue" | "teal" | "gray" {
-    if (role === "staff") return "blue";
-    if (role === "contributor") return "teal";
-    return "gray";
-  }
-
-  function truncate(text: string | null | undefined, maxLength: number): string {
-    if (!text) return "";
-    if (text.length <= maxLength) return text;
-    return text.slice(0, maxLength).trimEnd() + "...";
-  }
 </script>
 
 <svelte:head>

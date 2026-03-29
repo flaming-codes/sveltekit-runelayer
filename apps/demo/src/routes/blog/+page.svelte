@@ -11,31 +11,27 @@
     Button,
   } from "carbon-components-svelte";
 
+  import { statusColor, formatDate } from "$lib/format.js";
+
   let { data } = $props();
 
   let searchTerm = $state("");
 
   let filteredPosts = $derived(
     searchTerm
-      ? data.posts.filter((p: any) =>
+      ? data.posts.filter((p) =>
           p.title.toLowerCase().includes(searchTerm.toLowerCase()),
         )
       : data.posts,
   );
 
   let rows = $derived(
-    filteredPosts.map((p: any) => ({
+    filteredPosts.map((p) => ({
       id: p.id,
       title: p.title,
       authorName: p.authorName,
       status: p.status ?? "draft",
-      publishedAt: p.publishedAt
-        ? new Date(p.publishedAt).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })
-        : "---",
+      publishedAt: formatDate(p.publishedAt),
       readTime: p.readTime ? `${p.readTime} min` : "---",
       slug: p.slug,
     })),
@@ -48,12 +44,6 @@
     { key: "publishedAt", value: "Published" },
     { key: "readTime", value: "Read Time" },
   ];
-
-  function statusColor(status: string) {
-    if (status === "published") return "blue";
-    if (status === "archived") return "warm-gray";
-    return "gray";
-  }
 </script>
 
 <svelte:head>

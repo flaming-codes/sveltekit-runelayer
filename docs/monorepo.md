@@ -57,6 +57,7 @@ vite-plus (`vp`) is a unified CLI that wraps Vite, Vitest, Oxlint, and Oxfmt.
 
 ```json
 {
+  "predev": "node ./scripts/ensure-better-sqlite3.mjs", // Ensures native SQLite addon matches current Node ABI
   "dev": "vp run demo#dev", // Run demo app dev server
   "build": "vp run build -r", // Build all packages recursively
   "check": "vp check", // Lint + type check
@@ -181,6 +182,16 @@ pnpm ready
 
 # Type check only
 pnpm check
+```
+
+## Native Module Rebuilds
+
+`better-sqlite3` is a native addon and must match the active Node ABI. The root `predev` script checks this automatically and rebuilds when needed.
+
+If a manual rebuild is needed, use:
+
+```bash
+pnpm --filter @flaming-codes/sveltekit-runelayer rebuild better-sqlite3
 ```
 
 ## Adding Dependencies
