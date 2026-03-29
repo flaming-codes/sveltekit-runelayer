@@ -27,6 +27,15 @@ packages/sveltekit-runelayer/src/
 
 Container journeys are guarded by `describe.skipIf(!isDockerRunning())`.
 
+## Auth journey E2E coverage
+
+`src/__e2e__/auth-journeys.e2e.test.ts` validates full admin auth lifecycles with a
+container-backed test suite and real runtime handlers:
+
+- first-time setup bootstraps exactly one admin and starts an authenticated session
+- repeated login rotates session state while keeping the same admin identity
+- login/logout transitions enforce redirect and role gating rules, including non-admin denial
+
 ## Database test pattern
 
 Runtime does not auto-migrate schema. Tests explicitly pre-apply schema before CRUD assertions.
