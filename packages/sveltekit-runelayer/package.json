@@ -30,13 +30,12 @@
     "check": "vp check"
   },
   "dependencies": {
+    "@libsql/client": "catalog:",
     "better-auth": "catalog:",
-    "better-sqlite3": "catalog:",
     "drizzle-orm": "catalog:"
   },
   "devDependencies": {
     "@sveltejs/kit": "catalog:",
-    "@types/better-sqlite3": "catalog:",
     "drizzle-kit": "catalog:",
     "svelte": "catalog:",
     "testcontainers": "catalog:",

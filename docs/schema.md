@@ -1,6 +1,6 @@
 # Schema System
 
-The schema system is the single source of truth in Runekit. Every collection, global, and field is defined once and drives the database layer, validation, query API, and admin UI rendering.
+The schema system is the single source of truth in sveltekit-runelayer. Every collection, global, and field is defined once and drives the database layer, validation, query API, and admin UI rendering.
 
 ## Defining Collections
 

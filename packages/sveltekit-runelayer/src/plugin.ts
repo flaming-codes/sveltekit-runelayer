@@ -1,5 +1,5 @@
 import type { RunekitConfig } from "./config.js";
-import { createDatabase, pushSchema, type RunekitDatabase } from "./db/index.js";
+import { createDatabase, type RunekitDatabase } from "./db/index.js";
 import { createAuth, type RunekitAuth } from "./auth/index.js";
 import { createLocalStorage, type StorageAdapter } from "./storage/index.js";
 import type { CollectionConfig } from "./schema/collections.js";
@@ -36,12 +36,10 @@ export function createRunekit(config: RunekitConfig): RunekitInstance {
 
   // Initialize database
   const database = createDatabase({
-    filename: config.dbPath ?? "./data/runekit.db",
+    url: config.database?.url ?? "file:./data/sveltekit-runelayer.db",
+    authToken: config.database?.authToken,
     collections,
   });
-
-  // Push schema (create/alter tables)
-  pushSchema(database);
 
   // Initialize auth
   const auth = createAuth(config.auth, database.db);

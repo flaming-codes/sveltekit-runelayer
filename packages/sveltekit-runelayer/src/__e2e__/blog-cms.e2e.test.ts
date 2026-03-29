@@ -39,6 +39,7 @@ import {
   type QueryContext,
   type CollectionConfig,
 } from "../index.js";
+import { migrateDatabaseForTests } from "../__testutils__/migrations.js";
 
 // --- Schema Definition (as a real user would define it) ---
 
@@ -116,17 +117,20 @@ const Posts: CollectionConfig = defineCollection({
 describe("Blog CMS Platform — Full User Journey", () => {
   let kit: RunekitInstance;
   let tmpDir: string;
+  let dbUrl: string;
   let authorCtx: QueryContext;
   let categoryCtx: QueryContext;
   let postCtx: QueryContext;
 
   beforeAll(async () => {
     tmpDir = await mkdtemp(join(tmpdir(), "runekit-blog-e2e-"));
+    dbUrl = `file:${join(tmpDir, "blog.db")}`;
+    await migrateDatabaseForTests(dbUrl, [Authors, Categories, Posts]);
 
     kit = createRunekit(
       defineConfig({
         collections: [Authors, Categories, Posts],
-        dbPath: join(tmpDir, "blog.db"),
+        database: { url: dbUrl },
         auth: { secret: "e2e-test-secret-minimum-32-chars!", baseURL: "http://localhost:3000" },
         storage: { directory: join(tmpDir, "uploads") },
       }),
@@ -138,7 +142,7 @@ describe("Blog CMS Platform — Full User Journey", () => {
   });
 
   afterAll(async () => {
-    kit.database.sqlite.close();
+    kit.database.client.close();
     await rm(tmpDir, { recursive: true, force: true });
   });
 
@@ -149,21 +153,19 @@ describe("Blog CMS Platform — Full User Journey", () => {
     expect(kit.collections.map((c) => c.slug)).toEqual(["authors", "categories", "posts"]);
   });
 
-  it("created database tables for all collections", () => {
-    const tables = kit.database.sqlite
-      .prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
-      .all() as { name: string }[];
-    const names = tables.map((t) => t.name);
+  it("created database tables for all collections", async () => {
+    const tables = await kit.database.client.execute(
+      "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
+    );
+    const names = tables.rows.map((row) => String((row as Record<string, unknown>).name));
     expect(names).toContain("authors");
     expect(names).toContain("categories");
     expect(names).toContain("posts");
   });
 
-  it("posts table has version columns due to versions config", () => {
-    const cols = kit.database.sqlite.prepare("PRAGMA table_info('posts')").all() as {
-      name: string;
-    }[];
-    const colNames = cols.map((c) => c.name);
+  it("posts table has version columns due to versions config", async () => {
+    const cols = await kit.database.client.execute("PRAGMA table_info('posts')");
+    const colNames = cols.rows.map((row) => String((row as Record<string, unknown>).name));
     expect(colNames).toContain("_status");
     expect(colNames).toContain("_version");
   });

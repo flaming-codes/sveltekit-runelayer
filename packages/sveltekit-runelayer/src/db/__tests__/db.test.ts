@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { generateTables } from "../schema.js";
 import { createDatabase, type RunekitDatabase } from "../init.js";
-import { pushSchema } from "../migrate.js";
 import { insertOne, findById, findMany, updateOne, deleteOne } from "../operations.js";
 import { text, number, checkbox, json, array, relationship } from "../../schema/fields.js";
 import type { CollectionConfig } from "../../schema/collections.js";
+import { applySchemaForTests } from "../../__testutils__/migrations.js";
 
 const postsCollection: CollectionConfig = {
   slug: "posts",
@@ -65,19 +65,19 @@ describe("generateTables", () => {
   });
 });
 
-describe("createDatabase + pushSchema", () => {
+describe("createDatabase + migrated schema", () => {
   let rdb: RunekitDatabase;
 
-  beforeEach(() => {
-    rdb = createDatabase({ filename: ":memory:", collections: [postsCollection] });
-    pushSchema(rdb);
+  beforeEach(async () => {
+    rdb = createDatabase({ url: ":memory:", collections: [postsCollection] });
+    await applySchemaForTests(rdb);
   });
 
-  it("creates tables in the SQLite database", () => {
-    const rows = rdb.sqlite
-      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='posts'")
-      .all();
-    expect(rows).toHaveLength(1);
+  it("creates tables in the SQLite database", async () => {
+    const rows = await rdb.client.execute(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='posts'",
+    );
+    expect(rows.rows).toHaveLength(1);
   });
 });
 
@@ -85,13 +85,13 @@ describe("CRUD operations", () => {
   let rdb: RunekitDatabase;
   const tbl = () => rdb.tables.posts;
 
-  beforeEach(() => {
-    rdb = createDatabase({ filename: ":memory:", collections: [postsCollection] });
-    pushSchema(rdb);
+  beforeEach(async () => {
+    rdb = createDatabase({ url: ":memory:", collections: [postsCollection] });
+    await applySchemaForTests(rdb);
   });
 
-  it("insertOne auto-generates id and timestamps", () => {
-    const doc = insertOne(rdb.db, tbl(), { title: "Hello" });
+  it("insertOne auto-generates id and timestamps", async () => {
+    const doc = await insertOne(rdb.db, tbl(), { title: "Hello" });
     expect(doc.id).toBeTypeOf("string");
     expect(doc.id.length).toBeGreaterThan(0);
     expect(doc.createdAt).toBeTypeOf("string");
@@ -99,36 +99,36 @@ describe("CRUD operations", () => {
     expect(doc.title).toBe("Hello");
   });
 
-  it("findById retrieves an inserted document", () => {
-    const created = insertOne(rdb.db, tbl(), { title: "Find me" });
-    const found = findById(rdb.db, tbl(), created.id as string);
+  it("findById retrieves an inserted document", async () => {
+    const created = await insertOne(rdb.db, tbl(), { title: "Find me" });
+    const found = await findById(rdb.db, tbl(), created.id as string);
     expect(found).toBeDefined();
     expect(found!.title).toBe("Find me");
   });
 
-  it("findById returns undefined for missing id", () => {
-    const found = findById(rdb.db, tbl(), "nonexistent");
+  it("findById returns undefined for missing id", async () => {
+    const found = await findById(rdb.db, tbl(), "nonexistent");
     expect(found).toBeUndefined();
   });
 
-  it("findMany returns all rows", () => {
-    insertOne(rdb.db, tbl(), { title: "A" });
-    insertOne(rdb.db, tbl(), { title: "B" });
-    const rows = findMany(rdb.db, tbl());
+  it("findMany returns all rows", async () => {
+    await insertOne(rdb.db, tbl(), { title: "A" });
+    await insertOne(rdb.db, tbl(), { title: "B" });
+    const rows = await findMany(rdb.db, tbl());
     expect(rows).toHaveLength(2);
   });
 
-  it("findMany respects limit", () => {
-    insertOne(rdb.db, tbl(), { title: "A" });
-    insertOne(rdb.db, tbl(), { title: "B" });
-    insertOne(rdb.db, tbl(), { title: "C" });
-    const rows = findMany(rdb.db, tbl(), { limit: 2 });
+  it("findMany respects limit", async () => {
+    await insertOne(rdb.db, tbl(), { title: "A" });
+    await insertOne(rdb.db, tbl(), { title: "B" });
+    await insertOne(rdb.db, tbl(), { title: "C" });
+    const rows = await findMany(rdb.db, tbl(), { limit: 2 });
     expect(rows).toHaveLength(2);
   });
 
-  it("updateOne modifies data and sets updatedAt", () => {
-    const created = insertOne(rdb.db, tbl(), { title: "Original" });
-    const updated = updateOne(rdb.db, tbl(), created.id as string, { title: "Modified" });
+  it("updateOne modifies data and sets updatedAt", async () => {
+    const created = await insertOne(rdb.db, tbl(), { title: "Original" });
+    const updated = await updateOne(rdb.db, tbl(), created.id as string, { title: "Modified" });
     expect(updated.title).toBe("Modified");
     expect(updated.updatedAt).toBeTypeOf("string");
     expect(new Date(updated.updatedAt as string).getTime()).toBeGreaterThanOrEqual(
@@ -136,11 +136,11 @@ describe("CRUD operations", () => {
     );
   });
 
-  it("deleteOne removes the document", () => {
-    const created = insertOne(rdb.db, tbl(), { title: "Delete me" });
-    const deleted = deleteOne(rdb.db, tbl(), created.id as string);
+  it("deleteOne removes the document", async () => {
+    const created = await insertOne(rdb.db, tbl(), { title: "Delete me" });
+    const deleted = await deleteOne(rdb.db, tbl(), created.id as string);
     expect(deleted!.id).toBe(created.id);
-    const after = findById(rdb.db, tbl(), created.id as string);
+    const after = await findById(rdb.db, tbl(), created.id as string);
     expect(after).toBeUndefined();
   });
 });

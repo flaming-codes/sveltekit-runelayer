@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDatabase, type RunekitDatabase } from "../../db/init.js";
-import { pushSchema } from "../../db/migrate.js";
 import { text } from "../../schema/fields.js";
 import type { CollectionConfig } from "../../schema/collections.js";
 import { checkAccess } from "../access.js";
 import { create, findOne, find, update, remove } from "../operations.js";
 import type { QueryContext } from "../types.js";
+import { applySchemaForTests } from "../../__testutils__/migrations.js";
 
 const collection: CollectionConfig = {
   slug: "posts",
@@ -15,9 +15,9 @@ const collection: CollectionConfig = {
 let rdb: RunekitDatabase;
 let ctx: QueryContext;
 
-beforeEach(() => {
-  rdb = createDatabase({ filename: ":memory:", collections: [collection] });
-  pushSchema(rdb);
+beforeEach(async () => {
+  rdb = createDatabase({ url: ":memory:", collections: [collection] });
+  await applySchemaForTests(rdb);
   ctx = { db: rdb, collection };
 });
 

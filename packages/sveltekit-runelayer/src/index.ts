@@ -49,8 +49,8 @@ export { createLocalStorage } from "./storage/index.js";
 export type { StorageAdapter, StoredFile, UploadOptions } from "./storage/index.js";
 
 // Database
-export { createDatabase, pushSchema } from "./db/index.js";
-export type { RunekitDatabase, DatabaseConfig } from "./db/index.js";
+export { createDatabase, createDrizzleKitSchema } from "./db/index.js";
+export type { RunekitDatabase, DatabaseConfig, DatabaseConnectionConfig } from "./db/index.js";
 
 // Hooks
 export { runBeforeHooks, runAfterHooks } from "./hooks/index.js";

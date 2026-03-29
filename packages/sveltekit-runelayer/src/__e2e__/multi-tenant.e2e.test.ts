@@ -28,6 +28,7 @@ import {
   type CollectionConfig,
   type AccessFn,
 } from "../index.js";
+import { migrateDatabaseForTests } from "../__testutils__/migrations.js";
 
 // --- Tenant-aware access control ---
 
@@ -142,6 +143,7 @@ const globexUser1Req = tenantReq("globex", "globex-user-1");
 describe("Multi-Tenant CMS — Full Journey", () => {
   let kit: RunekitInstance;
   let tmpDir: string;
+  let dbUrl: string;
 
   function ctx(collection: CollectionConfig, req: Request): QueryContext {
     return { db: kit.database, collection, req };
@@ -149,17 +151,19 @@ describe("Multi-Tenant CMS — Full Journey", () => {
 
   beforeAll(async () => {
     tmpDir = await mkdtemp(join(tmpdir(), "runekit-tenant-e2e-"));
+    dbUrl = `file:${join(tmpDir, "tenant.db")}`;
+    await migrateDatabaseForTests(dbUrl, [Projects, Tasks]);
     kit = createRunekit(
       defineConfig({
         collections: [Projects, Tasks],
-        dbPath: join(tmpDir, "tenant.db"),
+        database: { url: dbUrl },
         auth: { secret: "e2e-test-secret-minimum-32-chars!", baseURL: "http://localhost:3000" },
       }),
     );
   });
 
   afterAll(async () => {
-    kit.database.sqlite.close();
+    kit.database.client.close();
     await rm(tmpDir, { recursive: true, force: true });
   });
 

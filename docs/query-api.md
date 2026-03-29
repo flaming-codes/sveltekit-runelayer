@@ -178,6 +178,6 @@ import {
 } from "@flaming-codes/sveltekit-runelayer";
 
 // Direct DB access — no access checks, no hooks
-const docs = findMany(db, table);
-const doc = insertOne(db, table, { title: "Seeded" });
+const docs = await findMany(db, table);
+const doc = await insertOne(db, table, { title: "Seeded" });
 ```

@@ -1,6 +1,6 @@
 # Authentication & Access Control
 
-Runekit uses Better Auth for authentication and provides a role-based access control system that integrates with the schema and query layers.
+sveltekit-runelayer uses Better Auth for authentication and provides a role-based access control system that integrates with the schema and query layers.
 
 ## Setup
 

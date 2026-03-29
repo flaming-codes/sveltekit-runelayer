@@ -226,7 +226,7 @@ export async function seed(runekit: RunekitInstance) {
           {
             type: "paragraph",
             content:
-              "Type safety from schema to UI. No migration files to manage. Push-based schema evolution that never drops data.",
+              "Type safety from schema to UI. drizzle-kit migration files keep schema evolution explicit and host-managed.",
           },
         ],
       }),

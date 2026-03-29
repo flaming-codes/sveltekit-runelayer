@@ -90,7 +90,7 @@
           <ListItem>Carbon Design System UI components</ListItem>
           <ListItem>Local filesystem media storage with path traversal protection</ListItem>
           <ListItem>Better Auth session management</ListItem>
-          <ListItem>Push-based schema migrations with Drizzle ORM and SQLite</ListItem>
+          <ListItem>Host-managed drizzle-kit migrations with libsql/Turso support</ListItem>
           <ListItem>Single-package CMS-as-a-library architecture</ListItem>
         </UnorderedList>
       </Tile>

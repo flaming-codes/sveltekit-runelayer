@@ -15,7 +15,10 @@ export function getRunekit(): RunekitInstance {
         secret: process.env.AUTH_SECRET || "demo-secret-do-not-use-in-production-minimum-32-chars",
         baseURL: process.env.ORIGIN || "http://localhost:5173",
       },
-      dbPath: "./data/demo.db",
+      database: {
+        url: "file:./data/demo.db",
+        authToken: process.env.DATABASE_AUTH_TOKEN,
+      },
     });
     _instance = createRunekit(config);
   }

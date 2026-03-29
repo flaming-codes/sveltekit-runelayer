@@ -29,6 +29,7 @@ import {
   type QueryContext,
   type CollectionConfig,
 } from "../index.js";
+import { migrateDatabaseForTests } from "../__testutils__/migrations.js";
 
 // --- Audit log (simulates external system) ---
 
@@ -154,6 +155,7 @@ const Announcements: CollectionConfig = defineCollection({
 describe("Content Lifecycle with Hooks — Full Journey", () => {
   let kit: RunekitInstance;
   let tmpDir: string;
+  let dbUrl: string;
   let articleCtx: QueryContext;
   let announceCtx: QueryContext;
 
@@ -161,11 +163,13 @@ describe("Content Lifecycle with Hooks — Full Journey", () => {
     tmpDir = await mkdtemp(join(tmpdir(), "runekit-hooks-e2e-"));
     auditLog.length = 0;
     notifications.length = 0;
+    dbUrl = `file:${join(tmpDir, "hooks.db")}`;
+    await migrateDatabaseForTests(dbUrl, [Articles, Announcements]);
 
     kit = createRunekit(
       defineConfig({
         collections: [Articles, Announcements],
-        dbPath: join(tmpDir, "hooks.db"),
+        database: { url: dbUrl },
         auth: { secret: "e2e-test-secret-minimum-32-chars!", baseURL: "http://localhost:3000" },
       }),
     );
@@ -175,7 +179,7 @@ describe("Content Lifecycle with Hooks — Full Journey", () => {
   });
 
   afterAll(async () => {
-    kit.database.sqlite.close();
+    kit.database.client.close();
     await rm(tmpDir, { recursive: true, force: true });
   });
 

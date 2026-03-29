@@ -31,6 +31,7 @@ import {
   type QueryContext,
   type CollectionConfig,
 } from "../index.js";
+import { migrateDatabaseForTests } from "../__testutils__/migrations.js";
 
 // --- Schema for container-based tests ---
 
@@ -84,6 +85,7 @@ describe.skipIf(!isDockerRunning())("Testcontainers — Mailpit Email Integratio
   let mailpitApiUrl: string;
   let kit: RunekitInstance;
   let tmpDir: string;
+  let dbUrl: string;
 
   beforeAll(async () => {
     // Start Mailpit container
@@ -98,10 +100,12 @@ describe.skipIf(!isDockerRunning())("Testcontainers — Mailpit Email Integratio
 
     // Create CMS instance
     tmpDir = await mkdtemp(join(tmpdir(), "runekit-containers-e2e-"));
+    dbUrl = `file:${join(tmpDir, "containers.db")}`;
+    await migrateDatabaseForTests(dbUrl, [Users, Notifications]);
     kit = createRunekit(
       defineConfig({
         collections: [Users, Notifications],
-        dbPath: join(tmpDir, "containers.db"),
+        database: { url: dbUrl },
         auth: {
           secret: "e2e-test-secret-minimum-32-chars!",
           baseURL: "http://localhost:3000",
@@ -114,7 +118,7 @@ describe.skipIf(!isDockerRunning())("Testcontainers — Mailpit Email Integratio
   }, 60_000); // 60s timeout for container startup
 
   afterAll(async () => {
-    kit?.database.sqlite.close();
+    kit?.database.client.close();
     await mailpitContainer?.stop();
     await rm(tmpDir, { recursive: true, force: true });
   });
