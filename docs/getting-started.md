@@ -1,8 +1,11 @@
 # Getting Started
 
-`sveltekit-runelayer` now ships a high-level SvelteKit integration surface at `@flaming-codes/sveltekit-runelayer/sveltekit`.
+`sveltekit-runelayer` ships a high-level SvelteKit integration surface split into server and client entry points:
 
-Use this path when integrating the CMS into an app.
+- `@flaming-codes/sveltekit-runelayer/sveltekit/server` — server-only runtime (`createRunelayerApp`, `defineRunelayerDrizzleConfig`)
+- `@flaming-codes/sveltekit-runelayer/sveltekit/components` — client-safe Svelte components (`AdminPage`, `AdminErrorPage`)
+
+Use these paths when integrating the CMS into an app.
 
 ## Prerequisites
 
@@ -58,7 +61,7 @@ export const runelayerSchema = createDrizzleKitSchema([Posts]);
 ```ts
 // drizzle.config.ts
 import { defineConfig } from "drizzle-kit";
-import { defineRunelayerDrizzleConfig } from "@flaming-codes/sveltekit-runelayer/sveltekit";
+import { defineRunelayerDrizzleConfig } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
 
 export default defineConfig(
   defineRunelayerDrizzleConfig({
@@ -78,7 +81,7 @@ Generate and apply migrations before startup.
 
 ```ts
 // src/lib/server/runelayer.ts
-import { createRunelayerApp } from "@flaming-codes/sveltekit-runelayer/sveltekit";
+import { createRunelayerApp } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
 import { Posts } from "./schema.js";
 
 export const runelayer = createRunelayerApp({
@@ -124,7 +127,7 @@ export const actions = runelayer.admin.actions;
 ```svelte
 <!-- src/routes/(admin)/admin/[...path]/+page.svelte -->
 <script lang="ts">
-  import { AdminPage } from "@flaming-codes/sveltekit-runelayer/sveltekit";
+  import { AdminPage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
   let { data, form } = $props();
 </script>
 
@@ -148,7 +151,7 @@ Also add thin admin-only layout and error wiring:
 ```svelte
 <!-- src/routes/(admin)/admin/[...path]/+error.svelte -->
 <script lang="ts">
-  import { AdminErrorPage } from "@flaming-codes/sveltekit-runelayer/sveltekit";
+  import { AdminErrorPage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
   let { status, error } = $props();
 </script>
 

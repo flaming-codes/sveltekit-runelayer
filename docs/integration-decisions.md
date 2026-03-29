@@ -4,7 +4,7 @@ Validated library decisions for `sveltekit-runelayer`.
 
 ## App consumption model
 
-- primary host integration path: `@flaming-codes/sveltekit-runelayer/sveltekit`
+- primary host integration paths: `@flaming-codes/sveltekit-runelayer/sveltekit/server` (server-only) and `@flaming-codes/sveltekit-runelayer/sveltekit/components` (client-safe)
 - single admin catch-all mount (`/admin/[...path]`) with package-owned `load/actions/Page`
 - default admin access policy: strict admin-only (`admin.strictAccess: true`)
 - host query consumption: `withRequest(request)` for route-bound operations, `system` for jobs/seeding

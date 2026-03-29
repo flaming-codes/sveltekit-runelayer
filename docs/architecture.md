@@ -90,13 +90,13 @@ Each query operation (`find`, `findOne`, `create`, `update`, `remove`) executes:
 
 ### Single package + high-level subpath
 
-The project ships as `@flaming-codes/sveltekit-runelayer` with internal boundaries (`db`, `auth`, `query`, etc.) and a high-level SvelteKit integration subpath: `@flaming-codes/sveltekit-runelayer/sveltekit`.
+The project ships as `@flaming-codes/sveltekit-runelayer` with internal boundaries (`db`, `auth`, `query`, etc.) and high-level SvelteKit integration subpaths.
 
-The `sveltekit` subpath provides:
+The `sveltekit` subpath is split into server and client entry points to prevent server-only Node.js modules (e.g., `node:fs`) from leaking into browser bundles:
 
-- `createRunelayerApp()` for package-owned integration wiring
-- `defineRunelayerDrizzleConfig()` for host drizzle-kit setup
-- single admin catch-all runtime (`load`, `actions`, `Page`)
+- `@flaming-codes/sveltekit-runelayer/sveltekit/server` — server-only: `createRunelayerApp()`, `defineRunelayerDrizzleConfig()`, and all runtime types. Includes a `typeof window` poison pill that throws if accidentally imported in client code.
+- `@flaming-codes/sveltekit-runelayer/sveltekit/components` — client-safe: `AdminPage` and `AdminErrorPage` Svelte components.
+- `@flaming-codes/sveltekit-runelayer/sveltekit` — deprecated combined entry point (will be removed in a future major version).
 
 ### libsql-first SQLite compatibility
 
@@ -126,8 +126,9 @@ Access control receives only `Request` data with verified auth headers, avoiding
 
 ## Entry Points
 
-- `@flaming-codes/sveltekit-runelayer`
-- `@flaming-codes/sveltekit-runelayer/admin`
-- `@flaming-codes/sveltekit-runelayer/sveltekit`
+- `@flaming-codes/sveltekit-runelayer` — low-level APIs (schema, db, auth, storage, query, hooks)
+- `@flaming-codes/sveltekit-runelayer/admin` — admin Svelte components (layout, dashboard, field renderers)
+- `@flaming-codes/sveltekit-runelayer/sveltekit/server` — high-level host integration (server-only)
+- `@flaming-codes/sveltekit-runelayer/sveltekit/components` — admin page components (client-safe)
 
-This split keeps low-level APIs, admin components, and high-level host integration independently consumable.
+This split keeps low-level APIs, admin components, and high-level host integration independently consumable while ensuring server-only code never enters the browser bundle.

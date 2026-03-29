@@ -1,7 +1,7 @@
 import {
   createRunelayerApp,
   type RunelayerApp,
-} from "@flaming-codes/sveltekit-runelayer/sveltekit";
+} from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
 import { allCollections, allGlobals } from "./schema.js";
 
 let _app: RunelayerApp | undefined;

@@ -29,6 +29,13 @@
       "svelte": "./src/sveltekit/index.ts",
       "default": "./src/sveltekit/index.ts"
     },
+    "./sveltekit/server": {
+      "default": "./src/sveltekit/server.ts"
+    },
+    "./sveltekit/components": {
+      "svelte": "./src/sveltekit/components.ts",
+      "default": "./src/sveltekit/components.ts"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {

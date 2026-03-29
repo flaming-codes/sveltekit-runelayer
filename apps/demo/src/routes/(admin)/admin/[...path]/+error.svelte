@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { AdminErrorPage } from "@flaming-codes/sveltekit-runelayer/sveltekit";
+  import { AdminErrorPage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
 
   let { status, error } = $props();
 </script>

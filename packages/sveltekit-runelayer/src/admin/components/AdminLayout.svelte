@@ -30,6 +30,26 @@
 	let productName = $derived(ui.productName ?? "CMS");
 	let footerText = $derived(ui.footerText ?? "Powered by Runelayer");
 	let theme = $derived(ui.theme ?? "g100");
+
+	$effect(() => {
+		if (typeof document === "undefined") {
+			return;
+		}
+
+		const root = document.documentElement;
+		const previousTheme = root.getAttribute("theme");
+
+		root.setAttribute("theme", theme);
+
+		return () => {
+			if (previousTheme === null) {
+				root.removeAttribute("theme");
+				return;
+			}
+
+			root.setAttribute("theme", previousTheme);
+		};
+	});
 </script>
 
 <div class={`rk-shell rk-theme-${theme}`}>

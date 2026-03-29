@@ -1,6 +1,6 @@
 # Admin UI
 
-The recommended integration path is package-owned admin runtime from `@flaming-codes/sveltekit-runelayer/sveltekit`.
+The recommended integration path uses the split entry points: `@flaming-codes/sveltekit-runelayer/sveltekit/server` for server-side runtime and `@flaming-codes/sveltekit-runelayer/sveltekit/components` for client-safe Svelte components.
 
 ## Mounting model
 
@@ -20,7 +20,7 @@ export const actions = app.admin.actions;
 
 ```svelte
 <script lang="ts">
-  import { AdminPage } from "@flaming-codes/sveltekit-runelayer/sveltekit";
+  import { AdminPage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
   let { data, form } = $props();
 </script>
 
@@ -44,7 +44,7 @@ Add a thin admin error route so package-owned error UI is used:
 ```svelte
 <!-- src/routes/(admin)/admin/[...path]/+error.svelte -->
 <script lang="ts">
-  import { AdminErrorPage } from "@flaming-codes/sveltekit-runelayer/sveltekit";
+  import { AdminErrorPage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
   let { status, error } = $props();
 </script>
 

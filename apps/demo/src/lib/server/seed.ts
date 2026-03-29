@@ -1,4 +1,4 @@
-import type { RunelayerApp } from "@flaming-codes/sveltekit-runelayer/sveltekit";
+import type { RunelayerApp } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
 import {
   Authors,
   Categories,

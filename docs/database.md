@@ -96,7 +96,7 @@ Example drizzle-kit config:
 ```ts
 // drizzle.config.ts
 import { defineConfig } from "drizzle-kit";
-import { defineRunelayerDrizzleConfig } from "@flaming-codes/sveltekit-runelayer/sveltekit";
+import { defineRunelayerDrizzleConfig } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
 
 export default defineConfig(
   defineRunelayerDrizzleConfig({
