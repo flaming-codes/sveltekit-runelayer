@@ -31,7 +31,7 @@ npx vitest run -t "blog"          # Run tests matching a name pattern
 npx vitest --watch                # Watch mode
 ```
 
-### Package-level (from packages/runekit/)
+### Package-level (from packages/sveltekit-runelayer/)
 
 ```bash
 pnpm test                         # vp test
@@ -58,12 +58,12 @@ npx vp check --fix                # Combined format + lint + typecheck
 ### Monorepo Structure
 
 ```
-apps/web/           → SvelteKit demo app (depends on runekit workspace:*)
-packages/runekit/   → Core CMS library
+apps/web/           → SvelteKit demo app (depends on @flaming-codes/sveltekit-runelayer workspace:*)
+packages/sveltekit-runelayer/   → Core CMS library
 docs/               → Internal design documentation (14 files)
 ```
 
-### Module Structure (packages/runekit/src/)
+### Module Structure (packages/sveltekit-runelayer/src/)
 
 ```
 index.ts            → Public API surface (re-exports from all modules)
@@ -81,15 +81,15 @@ admin/              → Svelte 5 components (layout, dashboard, login, collectio
 ### Key Design Decisions
 
 - **Schema is single source of truth**: Collection configs drive DB table generation, validation, query layer, and admin rendering. Defined once in TypeScript at build time.
-- **Single package**: Despite PLAN.md mentioning separate packages, v1 keeps everything in `runekit` with internal module boundaries. Extract when the second adapter materializes.
+- **Single package**: Despite PLAN.md mentioning separate packages, v1 keeps everything in `@flaming-codes/sveltekit-runelayer` with internal module boundaries. Extract when the second adapter materializes.
 - **Header-based auth context**: The auth handle hook injects `x-user-id`/`x-user-role`/`x-user-email` headers after session resolution. Access functions read these headers. Headers are stripped from incoming requests to prevent spoofing.
 - **Deny-by-default access**: When an access function is defined but no `Request` is provided, access is denied (403). This prevents accidental server-side bypass.
 - **Push-based migrations**: `pushSchema()` creates missing tables/columns on startup. Never drops columns.
 
 ### Entry Points
 
-- `runekit` → `packages/runekit/src/index.ts` (main API)
-- `runekit/admin` → `packages/runekit/src/admin/index.ts` (Svelte components, separate for tree-shaking)
+- `@flaming-codes/sveltekit-runelayer` → `packages/sveltekit-runelayer/src/index.ts` (main API)
+- `@flaming-codes/sveltekit-runelayer/admin` → `packages/sveltekit-runelayer/src/admin/index.ts` (Svelte components, separate for tree-shaking)
 
 ### Test Structure
 

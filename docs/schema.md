@@ -5,7 +5,14 @@ The schema system is the single source of truth in Runekit. Every collection, gl
 ## Defining Collections
 
 ```ts
-import { defineCollection, text, number, select, relationship, slug } from "runekit";
+import {
+  defineCollection,
+  text,
+  number,
+  select,
+  relationship,
+  slug,
+} from "@flaming-codes/sveltekit-runelayer";
 
 const Posts = defineCollection({
   slug: "posts",
@@ -60,7 +67,7 @@ interface CollectionConfig {
 Globals are single-document types (e.g., site settings, navigation).
 
 ```ts
-import { defineGlobal, text, json } from "runekit";
+import { defineGlobal, text, json } from "@flaming-codes/sveltekit-runelayer";
 
 const SiteSettings = defineGlobal({
   slug: "site-settings",
@@ -83,7 +90,7 @@ Globals support `read` and `update` access (no `create` or `delete`), and `befor
 Combine collections and globals into a full schema:
 
 ```ts
-import { defineSchema } from "runekit";
+import { defineSchema } from "@flaming-codes/sveltekit-runelayer";
 
 const schema = defineSchema({
   collections: [Posts, Users, Media],

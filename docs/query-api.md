@@ -23,7 +23,7 @@ If `req` is omitted and the collection has access control functions, the operati
 List documents with optional pagination and sorting.
 
 ```ts
-import { find } from "runekit";
+import { find } from "@flaming-codes/sveltekit-runelayer";
 
 const docs = await find(ctx, {
   limit: 10,
@@ -141,7 +141,7 @@ The deny-by-default when no request is provided prevents accidental bypass in se
 The access check utility is also exported for custom use:
 
 ```ts
-import { checkAccess } from "runekit";
+import { checkAccess } from "@flaming-codes/sveltekit-runelayer";
 
 try {
   await checkAccess(accessFn, request, data, id);
@@ -169,7 +169,13 @@ The query layer maps between the `HookContext` used by the runner and the collec
 For cases where you need to bypass access control and hooks (e.g., migrations, seeding), use the raw database operations directly:
 
 ```ts
-import { findMany, findById, insertOne, updateOne, deleteOne } from "runekit";
+import {
+  findMany,
+  findById,
+  insertOne,
+  updateOne,
+  deleteOne,
+} from "@flaming-codes/sveltekit-runelayer";
 
 // Direct DB access — no access checks, no hooks
 const docs = findMany(db, table);

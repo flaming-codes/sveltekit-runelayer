@@ -1,12 +1,27 @@
 {
-  "name": "runekit",
-  "version": "0.0.1",
+  "name": "@flaming-codes/sveltekit-runelayer",
+  "version": "0.1.0",
   "description": "A CMS-as-a-package for SvelteKit apps — handles admin routes, storage, db, schemas, types, and auth.",
+  "homepage": "https://github.com/flaming-codes/sveltekit-runelayer#readme",
+  "bugs": {
+    "url": "https://github.com/flaming-codes/sveltekit-runelayer/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flaming-codes/sveltekit-runelayer.git"
+  },
+  "files": [
+    "src",
+    "package.json"
+  ],
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./admin": "./src/admin/index.ts",
     "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "vp pack",

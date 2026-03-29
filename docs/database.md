@@ -5,7 +5,7 @@ The database layer uses Drizzle ORM with SQLite (via better-sqlite3). It convert
 ## Initialization
 
 ```ts
-import { createDatabase, pushSchema } from "runekit";
+import { createDatabase, pushSchema } from "@flaming-codes/sveltekit-runelayer";
 
 const database = createDatabase({
   filename: "./data/runekit.db", // or ':memory:' for tests
@@ -78,7 +78,13 @@ When `auth: true`:
 Low-level operations work with any Drizzle table:
 
 ```ts
-import { findMany, findById, insertOne, updateOne, deleteOne } from "runekit";
+import {
+  findMany,
+  findById,
+  insertOne,
+  updateOne,
+  deleteOne,
+} from "@flaming-codes/sveltekit-runelayer";
 
 // Insert — auto-generates ID and timestamps
 const doc = insertOne(db, table, { title: "Hello" });

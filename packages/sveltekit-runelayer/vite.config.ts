@@ -1,9 +1,6 @@
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
-  pack: {
-    exports: true,
-  },
   lint: {
     options: {
       typeAware: true,

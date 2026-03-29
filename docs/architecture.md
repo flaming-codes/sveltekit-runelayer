@@ -40,7 +40,7 @@ All modules depend on `schema` for type definitions. The dependency is one-direc
 ## Package Structure
 
 ```
-packages/runekit/src/
+packages/sveltekit-runelayer/src/
 ├── index.ts          # Public API surface
 ├── config.ts         # RunekitConfig type + defineConfig()
 ├── plugin.ts         # createRunekit() — wires all modules together
@@ -89,7 +89,7 @@ Every query operation (find, create, update, remove) follows the same pattern:
 
 ### Single Package (Not Multi-Package)
 
-Despite the PLAN.md mentioning separate packages (`runekit-core`, `runekit-db-drizzle-sqlite`, etc.), v1 uses a single `runekit` package with internal module boundaries. This follows the second-use rule: the Postgres adapter that would motivate extraction does not exist yet. Internal modules (`src/db/`, `src/auth/`, etc.) maintain clean boundaries that enable future extraction.
+Despite the PLAN.md mentioning separate packages (`runekit-core`, `runekit-db-drizzle-sqlite`, etc.), v1 uses a single `@flaming-codes/sveltekit-runelayer` package with internal module boundaries. This follows the second-use rule: the Postgres adapter that would motivate extraction does not exist yet. Internal modules (`src/db/`, `src/auth/`, etc.) maintain clean boundaries that enable future extraction.
 
 ### SQLite-First with WAL Mode
 
@@ -135,7 +135,7 @@ The auth system injects user identity into request headers rather than using a s
 
 The package exposes two entry points:
 
-- `runekit` — main API: config, plugin, schema builders, auth, storage, DB, hooks, query
-- `runekit/admin` — Svelte components and route handlers for the admin UI
+- `@flaming-codes/sveltekit-runelayer` — main API: config, plugin, schema builders, auth, storage, DB, hooks, query
+- `@flaming-codes/sveltekit-runelayer/admin` — Svelte components and route handlers for the admin UI
 
 This separation allows tree-shaking: apps that only use the data API do not bundle admin UI code.

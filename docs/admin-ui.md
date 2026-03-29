@@ -1,6 +1,6 @@
 # Admin UI
 
-The admin UI provides a set of Svelte 5 components and SvelteKit handler factories for building a CMS admin panel. It is exported from `runekit/admin` and is route-isolated to prevent bloating the public site.
+The admin UI provides a set of Svelte 5 components and SvelteKit handler factories for building a CMS admin panel. It is exported from `@flaming-codes/sveltekit-runelayer/admin` and is route-isolated to prevent bloating the public site.
 
 ## Components
 
@@ -10,7 +10,7 @@ Shell layout with sidebar navigation and top bar.
 
 ```svelte
 <script lang="ts">
-  import { AdminLayout } from 'runekit/admin';
+  import { AdminLayout } from '@flaming-codes/sveltekit-runelayer/admin';
 </script>
 
 <AdminLayout
@@ -133,7 +133,7 @@ import {
   handleCollectionCreate,
   handleCollectionUpdate,
   handleCollectionDelete,
-} from "runekit/admin";
+} from "@flaming-codes/sveltekit-runelayer/admin";
 ```
 
 ### QueryAdapter Interface
@@ -173,14 +173,18 @@ interface QueryAdapter {
 
 ```ts
 // src/routes/admin/collections/[slug]/+page.server.ts
-import { handleCollectionList } from "runekit/admin";
+import { handleCollectionList } from "@flaming-codes/sveltekit-runelayer/admin";
 
 export const load = handleCollectionList(postsCollection, queryAdapter);
 ```
 
 ```ts
 // src/routes/admin/collections/[slug]/[id]/+page.server.ts
-import { handleCollectionGet, handleCollectionUpdate, handleCollectionDelete } from "runekit/admin";
+import {
+  handleCollectionGet,
+  handleCollectionUpdate,
+  handleCollectionDelete,
+} from "@flaming-codes/sveltekit-runelayer/admin";
 
 export const load = handleCollectionGet(postsCollection, queryAdapter);
 
@@ -195,7 +199,7 @@ export const actions = {
 The `getAdminRoutes` helper tells the host app what components and routes the admin UI needs:
 
 ```ts
-import { getAdminRoutes } from "runekit/admin";
+import { getAdminRoutes } from "@flaming-codes/sveltekit-runelayer/admin";
 
 const routes = getAdminRoutes({
   collections: [Posts, Users, Media],

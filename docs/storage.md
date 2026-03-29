@@ -33,7 +33,7 @@ interface StoredFile {
 ## Local Filesystem Adapter
 
 ```ts
-import { createLocalStorage } from "runekit";
+import { createLocalStorage } from "@flaming-codes/sveltekit-runelayer";
 
 const storage = createLocalStorage({
   directory: "./uploads", // Default: './uploads'
@@ -66,7 +66,7 @@ The `safePath()` function resolves the full path and verifies it does not escape
 Creates a SvelteKit-compatible POST handler for file uploads:
 
 ```ts
-import { createUploadHandler } from "runekit";
+import { createUploadHandler } from "@flaming-codes/sveltekit-runelayer";
 
 const uploadHandler = createUploadHandler({
   storage,
@@ -114,7 +114,7 @@ Note: MIME type validation checks the client-provided `Content-Type`, not the ac
 Creates a SvelteKit-compatible GET handler for serving uploaded files:
 
 ```ts
-import { createServeHandler } from "runekit";
+import { createServeHandler } from "@flaming-codes/sveltekit-runelayer";
 
 const serveHandler = createServeHandler({
   storage,

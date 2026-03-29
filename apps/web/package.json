@@ -11,7 +11,7 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
   },
   "dependencies": {
-    "runekit": "workspace:*"
+    "@flaming-codes/sveltekit-runelayer": "workspace:*"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "catalog:",

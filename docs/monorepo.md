@@ -5,11 +5,11 @@ Runekit is structured as a pnpm workspace monorepo with vite-plus as the unified
 ## Workspace Layout
 
 ```
-svelte-runekit/
+sveltekit-runelayer/
 ├── apps/
 │   └── web/                    # SvelteKit demo application
 ├── packages/
-│   └── runekit/                # Core CMS library
+│   └── sveltekit-runelayer/    # Core CMS library
 ├── docs/                       # Internal documentation
 ├── package.json                # Root workspace config
 ├── pnpm-workspace.yaml         # Workspace + dependency catalog
@@ -68,7 +68,7 @@ vite-plus (`vp`) is a unified CLI that wraps Vite, Vitest, Oxlint, and Oxfmt.
 ### Package Scripts
 
 ```json
-// packages/runekit
+// packages/sveltekit-runelayer
 {
   "build": "vp pack", // Build library for publishing
   "dev": "vp pack --watch", // Watch mode for development
@@ -103,7 +103,7 @@ vite-plus (`vp`) is a unified CLI that wraps Vite, Vitest, Oxlint, and Oxfmt.
 }
 ```
 
-### Library tsconfig (packages/runekit)
+### Library tsconfig (packages/sveltekit-runelayer)
 
 ```json
 {
@@ -144,7 +144,7 @@ Configured via `.vite-hooks/pre-commit`. Runs `vp check --fix` on staged files b
 
 ## Package Exports
 
-The runekit package uses TypeScript source as entry points (no pre-built dist):
+The `@flaming-codes/sveltekit-runelayer` package uses TypeScript source as entry points (no pre-built dist):
 
 ```json
 {
@@ -170,7 +170,7 @@ For publishing, `vp pack` builds the dist output with declarations.
 # Install dependencies
 pnpm install
 
-# Start dev server (runs web app with hot-reloading runekit)
+# Start dev server (runs web app with hot-reloading @flaming-codes/sveltekit-runelayer)
 pnpm dev
 
 # Run tests
@@ -187,8 +187,8 @@ pnpm check
 
 ```bash
 # Add to a specific package
-pnpm add <package> --filter runekit
-pnpm add -D <package> --filter runekit
+pnpm add <package> --filter @flaming-codes/sveltekit-runelayer
+pnpm add -D <package> --filter @flaming-codes/sveltekit-runelayer
 
 # Add to workspace catalog (for shared versions)
 # Edit pnpm-workspace.yaml catalog section, then reference with "catalog:"

@@ -8,7 +8,7 @@ import type { RunekitAuth } from "./types.js";
  * Usage in `src/routes/api/auth/[...all]/+server.ts`:
  * ```ts
  * import { auth } from "$lib/auth";
- * import { createAuthHandler } from "runekit/auth";
+ * import { createAuthHandler } from "@flaming-codes/sveltekit-runelayer";
  * const handler = createAuthHandler(auth);
  * export const GET = handler;
  * export const POST = handler;

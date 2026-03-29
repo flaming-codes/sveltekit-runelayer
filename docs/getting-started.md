@@ -11,7 +11,7 @@ Runekit is a CMS-as-a-package for SvelteKit applications. It runs inside your ap
 ## Installation
 
 ```bash
-pnpm add runekit
+pnpm add @flaming-codes/sveltekit-runelayer
 ```
 
 Runekit bundles `drizzle-orm`, `better-sqlite3`, and `better-auth` as dependencies.
@@ -22,7 +22,15 @@ Runekit bundles `drizzle-orm`, `better-sqlite3`, and `better-auth` as dependenci
 
 ```ts
 // src/lib/schema.ts
-import { defineCollection, text, number, select, slug, richText, relationship } from "runekit";
+import {
+  defineCollection,
+  text,
+  number,
+  select,
+  slug,
+  richText,
+  relationship,
+} from "@flaming-codes/sveltekit-runelayer";
 
 export const Posts = defineCollection({
   slug: "posts",
@@ -61,7 +69,7 @@ export const Users = defineCollection({
 
 ```ts
 // src/lib/runekit.ts
-import { defineConfig, createRunekit } from "runekit";
+import { defineConfig, createRunekit } from "@flaming-codes/sveltekit-runelayer";
 import { Posts, Users } from "./schema.js";
 
 const config = defineConfig({
@@ -89,7 +97,7 @@ export const handle = runekit.handle;
 
 ```ts
 // src/routes/api/auth/[...all]/+server.ts
-import { createAuthHandler } from "runekit";
+import { createAuthHandler } from "@flaming-codes/sveltekit-runelayer";
 import { runekit } from "$lib/runekit";
 
 const handler = createAuthHandler(runekit.auth);
@@ -102,7 +110,7 @@ export const POST = handler;
 ```ts
 // src/routes/+page.server.ts
 import { runekit } from "$lib/runekit";
-import { find } from "runekit";
+import { find } from "@flaming-codes/sveltekit-runelayer";
 import { Posts } from "$lib/schema";
 
 export async function load({ request }) {

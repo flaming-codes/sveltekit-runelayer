@@ -8,7 +8,7 @@ Runekit uses vitest (via vite-plus) for unit and integration testing. All tests 
 # From monorepo root
 pnpm run test           # Alias for vp run test -r
 
-# From packages/runekit
+# From packages/sveltekit-runelayer
 pnpm test               # Alias for vp test
 npx vitest run           # Direct vitest invocation
 npx vitest --watch       # Watch mode
@@ -19,7 +19,7 @@ npx vitest --watch       # Watch mode
 Tests are colocated with source code in `__tests__/` directories:
 
 ```
-packages/runekit/src/
+packages/sveltekit-runelayer/src/
 ├── schema/__tests__/schema.test.ts     # 6 tests
 ├── db/__tests__/db.test.ts             # 10 tests
 ├── auth/__tests__/access.test.ts       # 8 tests

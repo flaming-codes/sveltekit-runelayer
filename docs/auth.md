@@ -5,7 +5,7 @@ Runekit uses Better Auth for authentication and provides a role-based access con
 ## Setup
 
 ```ts
-import { defineConfig } from "runekit";
+import { defineConfig } from "@flaming-codes/sveltekit-runelayer";
 
 const config = defineConfig({
   collections: [
@@ -57,7 +57,7 @@ export const handle = runekit.handle;
 For the auth API endpoints, create `src/routes/api/auth/[...all]/+server.ts`:
 
 ```ts
-import { createAuthHandler } from "runekit";
+import { createAuthHandler } from "@flaming-codes/sveltekit-runelayer";
 import { runekit } from "$lib/runekit";
 
 const handler = createAuthHandler(runekit.auth);
@@ -103,7 +103,7 @@ type AccessFn = (args: { req: Request; id?: string; data?: unknown }) => boolean
 ### Built-in Helpers
 
 ```ts
-import { isAdmin, isLoggedIn, hasRole } from "runekit";
+import { isAdmin, isLoggedIn, hasRole } from "@flaming-codes/sveltekit-runelayer";
 
 // Allow only admin users
 isAdmin();
