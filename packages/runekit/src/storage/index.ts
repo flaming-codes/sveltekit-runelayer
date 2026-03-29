@@ -1,2 +1,4 @@
-// Storage module — will export file/asset storage adapters
-export const STORAGE_VERSION = "0.0.1";
+export type { StorageAdapter, UploadOptions, StoredFile } from './types.js';
+export { createLocalStorage, type LocalStorageConfig } from './local.js';
+export { createUploadHandler, type UploadHandlerConfig } from './handler.js';
+export { createServeHandler, type ServeHandlerConfig } from './serve.js';

@@ -1,2 +1,4 @@
-// Database module — will export DB client, migrations, query builders, etc.
-export const DB_VERSION = "0.0.1";
+export { generateTables, type GeneratedTables } from './schema.js';
+export { createDatabase, type DatabaseConfig, type RunekitDatabase } from './init.js';
+export { findMany, findById, insertOne, updateOne, deleteOne, type FindManyOpts } from './operations.js';
+export { pushSchema } from './migrate.js';

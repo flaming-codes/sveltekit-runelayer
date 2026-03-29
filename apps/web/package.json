@@ -14,7 +14,7 @@
     "runekit": "workspace:*"
   },
   "devDependencies": {
-    "@sveltejs/adapter-auto": "^7.0.0",
+    "@sveltejs/adapter-auto": "catalog:",
     "@sveltejs/kit": "catalog:",
     "@sveltejs/vite-plugin-svelte": "^6.2.4",
     "svelte": "catalog:",
