@@ -96,12 +96,12 @@ Total: **54 tests** across **6 test suites**.
 Use `:memory:` for test databases:
 
 ```ts
-import { createDatabase, pushSchema } from '../../db/init.js';
+import { createDatabase, pushSchema } from "../../db/init.js";
 
 let rdb: RunekitDatabase;
 
 beforeEach(() => {
-  rdb = createDatabase({ filename: ':memory:', collections: [collection] });
+  rdb = createDatabase({ filename: ":memory:", collections: [collection] });
   pushSchema(rdb);
 });
 ```
@@ -111,17 +111,17 @@ Each test gets a fresh database. No cleanup needed — the database is garbage c
 ### Mock Requests for Access Control
 
 ```ts
-const adminReq = new Request('http://test', {
-  headers: { 'x-user-id': '1', 'x-user-role': 'admin' }
+const adminReq = new Request("http://test", {
+  headers: { "x-user-id": "1", "x-user-role": "admin" },
 });
 
-const publicReq = new Request('http://test');
+const publicReq = new Request("http://test");
 ```
 
 ### Testing Hooks
 
 ```ts
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 const tracker = vi.fn();
 const collection = {
@@ -129,21 +129,21 @@ const collection = {
   hooks: { afterChange: [tracker] },
 };
 
-await create(ctx, { title: 'Test' });
+await create(ctx, { title: "Test" });
 expect(tracker).toHaveBeenCalledOnce();
 ```
 
 ### Temp Directories for Storage
 
 ```ts
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 let dir: string;
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), 'runekit-test-'));
+  dir = await mkdtemp(join(tmpdir(), "runekit-test-"));
 });
 
 afterEach(async () => {

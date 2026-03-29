@@ -22,22 +22,22 @@ interface UploadOptions {
 }
 
 interface StoredFile {
-  path: string;         // Relative path within storage
-  filename: string;     // Original filename
-  mimeType: string;     // MIME type
-  size: number;         // File size in bytes
-  url: string;          // Public URL for the file
+  path: string; // Relative path within storage
+  filename: string; // Original filename
+  mimeType: string; // MIME type
+  size: number; // File size in bytes
+  url: string; // Public URL for the file
 }
 ```
 
 ## Local Filesystem Adapter
 
 ```ts
-import { createLocalStorage } from 'runekit';
+import { createLocalStorage } from "runekit";
 
 const storage = createLocalStorage({
-  directory: './uploads',    // Default: './uploads'
-  urlPrefix: '/uploads',     // Default: '/uploads'
+  directory: "./uploads", // Default: './uploads'
+  urlPrefix: "/uploads", // Default: '/uploads'
 });
 ```
 
@@ -55,8 +55,8 @@ All storage operations validate that resolved paths stay within the configured d
 
 ```ts
 // These will throw "Path traversal detected":
-storage.delete('../../etc/passwd');
-storage.getStream('../secret');
+storage.delete("../../etc/passwd");
+storage.getStream("../secret");
 ```
 
 The `safePath()` function resolves the full path and verifies it does not escape the storage directory using `path.relative()`.
@@ -66,12 +66,12 @@ The `safePath()` function resolves the full path and verifies it does not escape
 Creates a SvelteKit-compatible POST handler for file uploads:
 
 ```ts
-import { createUploadHandler } from 'runekit';
+import { createUploadHandler } from "runekit";
 
 const uploadHandler = createUploadHandler({
   storage,
-  maxFileSize: 10 * 1024 * 1024,  // 10MB default
-  allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+  maxFileSize: 10 * 1024 * 1024, // 10MB default
+  allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"],
 });
 
 // In +server.ts:
@@ -114,11 +114,11 @@ Note: MIME type validation checks the client-provided `Content-Type`, not the ac
 Creates a SvelteKit-compatible GET handler for serving uploaded files:
 
 ```ts
-import { createServeHandler } from 'runekit';
+import { createServeHandler } from "runekit";
 
 const serveHandler = createServeHandler({
   storage,
-  urlPrefix: '/uploads',  // Must match storage urlPrefix
+  urlPrefix: "/uploads", // Must match storage urlPrefix
 });
 
 // In +server.ts:
@@ -136,17 +136,17 @@ export const GET = serveHandler;
 
 Based on file extension:
 
-| Extension | Content-Type |
-|-----------|-------------|
-| jpg, jpeg | image/jpeg |
-| png | image/png |
-| gif | image/gif |
-| webp | image/webp |
-| svg | image/svg+xml |
-| pdf | application/pdf |
-| mp4 | video/mp4 |
-| webm | video/webm |
-| (other) | application/octet-stream |
+| Extension | Content-Type             |
+| --------- | ------------------------ |
+| jpg, jpeg | image/jpeg               |
+| png       | image/png                |
+| gif       | image/gif                |
+| webp      | image/webp               |
+| svg       | image/svg+xml            |
+| pdf       | application/pdf          |
+| mp4       | video/mp4                |
+| webm      | video/webm               |
+| (other)   | application/octet-stream |
 
 ## Upload Collections
 
@@ -154,16 +154,14 @@ Collections with `upload: true` are designated as media collections:
 
 ```ts
 const Media = defineCollection({
-  slug: 'media',
-  fields: [
-    { name: 'alt', ...text() },
-  ],
+  slug: "media",
+  fields: [{ name: "alt", ...text() }],
   upload: {
-    mimeTypes: ['image/*', 'application/pdf'],
-    maxSize: 20 * 1024 * 1024,  // 20MB
+    mimeTypes: ["image/*", "application/pdf"],
+    maxSize: 20 * 1024 * 1024, // 20MB
     imageSizes: [
-      { name: 'thumbnail', width: 200, height: 200 },
-      { name: 'medium', width: 800 },
+      { name: "thumbnail", width: 200, height: 200 },
+      { name: "medium", width: 800 },
     ],
   },
 });
@@ -171,9 +169,10 @@ const Media = defineCollection({
 
 ```ts
 interface UploadConfig {
-  mimeTypes?: string[];       // Allowed MIME types
-  maxSize?: number;           // Max file size in bytes
-  imageSizes?: {              // Auto-generated image variants
+  mimeTypes?: string[]; // Allowed MIME types
+  maxSize?: number; // Max file size in bytes
+  imageSizes?: {
+    // Auto-generated image variants
     name: string;
     width: number;
     height?: number;

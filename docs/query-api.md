@@ -8,9 +8,9 @@ Every query operation requires a `QueryContext`:
 
 ```ts
 interface QueryContext {
-  db: RunekitDatabase;          // Database instance from createDatabase()
-  collection: CollectionConfig;  // Collection definition
-  req?: Request;                 // Request for access control (optional)
+  db: RunekitDatabase; // Database instance from createDatabase()
+  collection: CollectionConfig; // Collection definition
+  req?: Request; // Request for access control (optional)
 }
 ```
 
@@ -23,23 +23,23 @@ If `req` is omitted and the collection has access control functions, the operati
 List documents with optional pagination and sorting.
 
 ```ts
-import { find } from 'runekit';
+import { find } from "runekit";
 
 const docs = await find(ctx, {
   limit: 10,
   offset: 0,
-  sort: 'createdAt',
-  sortOrder: 'desc',
+  sort: "createdAt",
+  sortOrder: "desc",
 });
 ```
 
 ```ts
 interface FindArgs {
-  where?: Record<string, unknown>;  // Filter conditions (not yet implemented)
+  where?: Record<string, unknown>; // Filter conditions (not yet implemented)
   limit?: number;
   offset?: number;
-  sort?: string;                     // Column name to sort by
-  sortOrder?: 'asc' | 'desc';
+  sort?: string; // Column name to sort by
+  sortOrder?: "asc" | "desc";
 }
 ```
 
@@ -50,7 +50,7 @@ Returns an array of document objects.
 Get a single document by ID.
 
 ```ts
-const doc = await findOne(ctx, 'document-id');
+const doc = await findOne(ctx, "document-id");
 // Returns the document object or undefined
 ```
 
@@ -60,8 +60,8 @@ Create a new document.
 
 ```ts
 const doc = await create(ctx, {
-  title: 'New Post',
-  status: 'draft',
+  title: "New Post",
+  status: "draft",
 });
 // Returns the created document with auto-generated id and timestamps
 ```
@@ -76,8 +76,8 @@ const doc = await create(ctx, {
 Update an existing document.
 
 ```ts
-const doc = await update(ctx, 'document-id', {
-  title: 'Updated Title',
+const doc = await update(ctx, "document-id", {
+  title: "Updated Title",
 });
 // Returns the updated document
 ```
@@ -92,7 +92,7 @@ const doc = await update(ctx, 'document-id', {
 Delete a document.
 
 ```ts
-const doc = await remove(ctx, 'document-id');
+const doc = await remove(ctx, "document-id");
 // Returns the deleted document
 ```
 
@@ -106,31 +106,33 @@ Access control is checked automatically before every operation:
 ```ts
 // Collection with access control
 const Posts = defineCollection({
-  slug: 'posts',
+  slug: "posts",
   access: {
     create: isLoggedIn(),
     read: () => true,
     update: isLoggedIn(),
     delete: isAdmin(),
   },
-  fields: [/* ... */],
+  fields: [
+    /* ... */
+  ],
 });
 
 // This works — public read
 const docs = await find(ctx);
 
 // This throws 403 — requires authentication
-const created = await create(ctx, { title: 'New' });
+const created = await create(ctx, { title: "New" });
 ```
 
 ### Access Check Rules
 
-| AccessFn | Request | Result |
-|----------|---------|--------|
-| Not defined | Any | **Allowed** (public) |
-| Defined | Provided, returns `true` | **Allowed** |
-| Defined | Provided, returns `false` | **Denied** (403) |
-| Defined | Not provided | **Denied** (403) |
+| AccessFn    | Request                   | Result               |
+| ----------- | ------------------------- | -------------------- |
+| Not defined | Any                       | **Allowed** (public) |
+| Defined     | Provided, returns `true`  | **Allowed**          |
+| Defined     | Provided, returns `false` | **Denied** (403)     |
+| Defined     | Not provided              | **Denied** (403)     |
 
 The deny-by-default when no request is provided prevents accidental bypass in server-side code.
 
@@ -139,7 +141,7 @@ The deny-by-default when no request is provided prevents accidental bypass in se
 The access check utility is also exported for custom use:
 
 ```ts
-import { checkAccess } from 'runekit';
+import { checkAccess } from "runekit";
 
 try {
   await checkAccess(accessFn, request, data, id);
@@ -167,9 +169,9 @@ The query layer maps between the `HookContext` used by the runner and the collec
 For cases where you need to bypass access control and hooks (e.g., migrations, seeding), use the raw database operations directly:
 
 ```ts
-import { findMany, findById, insertOne, updateOne, deleteOne } from 'runekit';
+import { findMany, findById, insertOne, updateOne, deleteOne } from "runekit";
 
 // Direct DB access — no access checks, no hooks
 const docs = findMany(db, table);
-const doc = insertOne(db, table, { title: 'Seeded' });
+const doc = insertOne(db, table, { title: "Seeded" });
 ```

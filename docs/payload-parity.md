@@ -5,24 +5,26 @@ Feature-by-feature comparison of Runekit v1 against Payload CMS v3, identifying 
 ## 1. Collections
 
 ### Payload v3 Offers
+
 - 20+ field types across data, presentational, and virtual categories
 - Config: `slug`, `fields`, `auth`, `upload`, `versions`, `access`, `hooks`, `admin`, `timestamps`, `defaultSort`, `dbName`, `endpoints`, `labels`, `trash`, `indexes`, `graphQL`
 
 ### Runekit v1 Status
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| `slug`, `fields`, `labels` | Implemented | Core collection config |
-| `access` (CRUD) | Implemented | Per-operation access functions |
-| `hooks` (6 lifecycle types) | Implemented | beforeChange, afterChange, beforeDelete, afterDelete, beforeRead, afterRead |
-| `timestamps` | Implemented | Auto createdAt/updatedAt |
-| `versions` / `drafts` | Implemented (schema) | _status/_version columns; publish workflow not yet wired |
-| `admin` (useAsTitle, defaultColumns) | Implemented | Basic admin config |
-| `auth` flag | Implemented | Adds auth columns to collection |
-| `upload` flag | Implemented | Upload config with mimeTypes, maxSize, imageSizes |
-| 16 field types | Implemented | text, textarea, number, email, select, multiSelect, checkbox, date, relationship, upload, richText, json, slug, group, array, row, collapsible |
+| Feature                              | Status               | Notes                                                                                                                                          |
+| ------------------------------------ | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slug`, `fields`, `labels`           | Implemented          | Core collection config                                                                                                                         |
+| `access` (CRUD)                      | Implemented          | Per-operation access functions                                                                                                                 |
+| `hooks` (6 lifecycle types)          | Implemented          | beforeChange, afterChange, beforeDelete, afterDelete, beforeRead, afterRead                                                                    |
+| `timestamps`                         | Implemented          | Auto createdAt/updatedAt                                                                                                                       |
+| `versions` / `drafts`                | Implemented (schema) | \_status/\_version columns; publish workflow not yet wired                                                                                     |
+| `admin` (useAsTitle, defaultColumns) | Implemented          | Basic admin config                                                                                                                             |
+| `auth` flag                          | Implemented          | Adds auth columns to collection                                                                                                                |
+| `upload` flag                        | Implemented          | Upload config with mimeTypes, maxSize, imageSizes                                                                                              |
+| 16 field types                       | Implemented          | text, textarea, number, email, select, multiSelect, checkbox, date, relationship, upload, richText, json, slug, group, array, row, collapsible |
 
 ### Deferred to v2
+
 - `trash` (soft delete)
 - Compound `indexes`
 - Custom REST `endpoints`
@@ -38,22 +40,26 @@ Feature-by-feature comparison of Runekit v1 against Payload CMS v3, identifying 
 ## 2. Globals
 
 ### Runekit v1 Status
+
 - `slug`, `fields`, `label`, `admin.group` — Implemented
 - `access` (read, update) — Implemented
 - `hooks` (beforeChange, afterChange) — Implemented
 - `versions` — Implemented (schema level)
 
 ### Deferred to v2
+
 - `livePreview`, custom admin components, `preview` URL, `readVersions` access
 
 ## 3. Auth
 
 ### Payload v3 Offers
+
 - Auth-enabled collections with login/logout/refresh/forgot/reset/verify/unlock
 - Strategies: cookies, JWT, API keys, custom
 - Config: `tokenExpiration`, `verify`, `maxLoginAttempts`, `lockTime`, `useAPIKey`, `useSessions`
 
 ### Runekit v1 Status
+
 - Better Auth handles login/logout/refresh, password hashing, session management
 - Email/password auth enabled
 - Role-based access control (admin/editor/user)
@@ -61,6 +67,7 @@ Feature-by-feature comparison of Runekit v1 against Payload CMS v3, identifying 
 - Anti-spoofing header protection
 
 ### Deferred to v2
+
 - Custom auth strategies
 - `loginWithUsername`
 - API key support
@@ -70,23 +77,27 @@ Feature-by-feature comparison of Runekit v1 against Payload CMS v3, identifying 
 ## 4. Access Control
 
 ### Payload v3 Offers
+
 - Collection-level: create, read, update, delete, admin, unlock, readVersions
 - Field-level: create, read, update
 - Functions receive `{ req, id, data, siblingData }`
 - Can return boolean OR query constraint (WHERE clause)
 
 ### Runekit v1 Status
+
 - Collection-level: create, read, update, delete — Implemented
 - Field-level: create, read, update — Implemented (schema types)
 - Functions receive `{ req, id, data }` — Implemented
 - Returns boolean only — **query constraints not yet supported**
 
 ### Gap: Query Constraints
+
 Payload allows access functions to return WHERE clauses (e.g., "users can only read their own documents"). Runekit v1 only supports boolean returns. This is architecturally significant and should be added before v2.
 
 ## 5. Uploads / Media
 
 ### Runekit v1 Status
+
 - Local filesystem storage adapter — Implemented
 - StorageAdapter contract for future S3/cloud — Implemented
 - Upload/serve handlers — Implemented
@@ -94,6 +105,7 @@ Payload allows access functions to return WHERE clauses (e.g., "users can only r
 - `mimeTypes`, `maxSize`, `imageSizes` config — Implemented (schema)
 
 ### Deferred to v2
+
 - Image resizing (Sharp integration)
 - `focalPoint` / smart crop
 - Cloud storage adapters (S3, etc.)
@@ -102,16 +114,19 @@ Payload allows access functions to return WHERE clauses (e.g., "users can only r
 ## 6. Versions / Drafts
 
 ### Runekit v1 Status
+
 - `_status` (draft/published) column — Implemented
 - `_version` counter — Implemented
 - `maxPerDoc` config — Implemented (schema)
 
 ### Not Yet Wired
+
 - Publish/unpublish API operations
 - Version history storage and retrieval
 - Restore to previous version
 
 ### Deferred to v2
+
 - Autosave with interval
 - Version diff/comparison view
 - Scheduled publishing
@@ -120,30 +135,36 @@ Payload allows access functions to return WHERE clauses (e.g., "users can only r
 ## 7. Localization
 
 ### Runekit v1 Status
+
 - Field-level `localized: true` flag — Implemented (schema)
 - Top-level localization config — Not yet implemented
 
 ### Required for Full Support
+
 - `localization` config with `locales`, `defaultLocale`, `fallbackLocale`
 - Locale-keyed storage (per-field locale variants in DB)
 - `locale` parameter on query operations
 - Locale switcher in admin UI
 
 ### Deferred to v2
+
 - Per-locale fallback chains
 - Locale-specific labels/RTL config
 
 ## 8. Rich Text
 
 ### Payload v3 Approach
+
 Lexical editor with feature-based extensibility (React-bound).
 
 ### Runekit v1 Approach
+
 Tiptap (Svelte-native). Currently a textarea placeholder in admin UI.
 
 **Data format**: Tiptap JSON (different from Payload's Lexical JSON). No cross-platform content portability. This is a conscious lock-in decision since Lexical is React-specific.
 
 ### Deferred to v2
+
 - Full Tiptap integration with toolbar
 - Custom blocks/nodes plugin API
 - Inline embeds
@@ -151,9 +172,11 @@ Tiptap (Svelte-native). Currently a textarea placeholder in admin UI.
 ## 9. Admin UI
 
 ### Payload v3 Offers (Next.js)
+
 Dashboard, Collection List/Edit, Version History, Account, Login, Forgot Password, Create First User, custom components, branding, nav customization.
 
 ### Runekit v1 Status
+
 - Dashboard with collection cards — Implemented
 - Collection list with sortable table and pagination — Implemented
 - Collection edit with field rendering — Implemented
@@ -164,6 +187,7 @@ Dashboard, Collection List/Edit, Version History, Account, Login, Forgot Passwor
 - Server handler factories — Implemented
 
 ### Deferred to v2
+
 - Version history view
 - Account/profile management
 - Forgot password view
@@ -175,14 +199,14 @@ Dashboard, Collection List/Edit, Version History, Account, Login, Forgot Passwor
 
 ## Risk Register
 
-| # | Risk | Impact | Severity |
-|---|------|--------|----------|
-| 1 | Access control lacks query constraints | Cannot implement "users see only their own docs" | High |
-| 2 | Rich text format lock-in (Tiptap vs Lexical) | No content portability with Payload | Medium |
-| 3 | Admin UI is the largest engineering effort | Must render 15+ field types correctly | High |
-| 4 | Better Auth session ↔ access control mapping | Needs careful design for req.user | Medium |
-| 5 | Version storage with SQLite single-writer | Heavy autosave could bottleneck | Low (autosave deferred) |
-| 6 | Polymorphic relationships need depth-controlled population | Required for real content modeling | Medium |
+| #   | Risk                                                       | Impact                                           | Severity                |
+| --- | ---------------------------------------------------------- | ------------------------------------------------ | ----------------------- |
+| 1   | Access control lacks query constraints                     | Cannot implement "users see only their own docs" | High                    |
+| 2   | Rich text format lock-in (Tiptap vs Lexical)               | No content portability with Payload              | Medium                  |
+| 3   | Admin UI is the largest engineering effort                 | Must render 15+ field types correctly            | High                    |
+| 4   | Better Auth session ↔ access control mapping               | Needs careful design for req.user                | Medium                  |
+| 5   | Version storage with SQLite single-writer                  | Heavy autosave could bottleneck                  | Low (autosave deferred) |
+| 6   | Polymorphic relationships need depth-controlled population | Required for real content modeling               | Medium                  |
 
 ## Recommendations for v1 Completion
 

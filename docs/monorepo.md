@@ -57,11 +57,11 @@ vite-plus (`vp`) is a unified CLI that wraps Vite, Vitest, Oxlint, and Oxfmt.
 
 ```json
 {
-  "dev": "vp run web#dev",           // Run web app dev server
-  "build": "vp run build -r",        // Build all packages recursively
-  "check": "vp check",               // Lint + type check
-  "ready": "vp fmt && vp lint && vp run test -r && vp run build -r",  // Full quality gate
-  "prepare": "vp config"             // Initialize vite-plus
+  "dev": "vp run web#dev", // Run web app dev server
+  "build": "vp run build -r", // Build all packages recursively
+  "check": "vp check", // Lint + type check
+  "ready": "vp fmt && vp lint && vp run test -r && vp run build -r", // Full quality gate
+  "prepare": "vp config" // Initialize vite-plus
 }
 ```
 
@@ -70,19 +70,19 @@ vite-plus (`vp`) is a unified CLI that wraps Vite, Vitest, Oxlint, and Oxfmt.
 ```json
 // packages/runekit
 {
-  "build": "vp pack",                // Build library for publishing
-  "dev": "vp pack --watch",          // Watch mode for development
-  "test": "vp test",                 // Run vitest
-  "check": "vp check"                // Lint + type check
+  "build": "vp pack", // Build library for publishing
+  "dev": "vp pack --watch", // Watch mode for development
+  "test": "vp test", // Run vitest
+  "check": "vp check" // Lint + type check
 }
 ```
 
 ```json
 // apps/web
 {
-  "dev": "vp dev",                   // SvelteKit dev server
-  "build": "vp build",              // SvelteKit build
-  "preview": "vp preview",          // Preview production build
+  "dev": "vp dev", // SvelteKit dev server
+  "build": "vp build", // SvelteKit build
+  "preview": "vp preview", // Preview production build
   "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
 }
 ```
@@ -90,6 +90,7 @@ vite-plus (`vp`) is a unified CLI that wraps Vite, Vitest, Oxlint, and Oxfmt.
 ## TypeScript Configuration
 
 ### Root tsconfig.json
+
 ```json
 {
   "compilerOptions": {
@@ -103,6 +104,7 @@ vite-plus (`vp`) is a unified CLI that wraps Vite, Vitest, Oxlint, and Oxfmt.
 ```
 
 ### Library tsconfig (packages/runekit)
+
 ```json
 {
   "extends": "../../tsconfig.json",
@@ -126,7 +128,7 @@ vite-plus uses Oxlint (Rust-based linter) with type-aware rules:
 ```ts
 // vite.config.ts (root)
 export default defineConfig({
-  staged: { "*": "vp check --fix" },  // Pre-commit hook
+  staged: { "*": "vp check --fix" }, // Pre-commit hook
   lint: {
     options: {
       typeAware: true,

@@ -4,14 +4,14 @@ Hooks are lifecycle callbacks that run before and after CRUD operations. They en
 
 ## Hook Types
 
-| Hook | When | Can Modify Data | Error Behavior |
-|------|------|----------------|----------------|
-| `beforeChange` | Before create/update | Yes (return modified data) | Throws — blocks the operation |
-| `afterChange` | After create/update | No | Caught and logged — does not block |
-| `beforeDelete` | Before delete | No (can throw to abort) | Throws — blocks the operation |
-| `afterDelete` | After delete | No | Caught and logged — does not block |
-| `beforeRead` | Before read/find | No (can throw to abort) | Throws — blocks the operation |
-| `afterRead` | After read/find | No | Caught and logged — does not block |
+| Hook           | When                 | Can Modify Data            | Error Behavior                     |
+| -------------- | -------------------- | -------------------------- | ---------------------------------- |
+| `beforeChange` | Before create/update | Yes (return modified data) | Throws — blocks the operation      |
+| `afterChange`  | After create/update  | No                         | Caught and logged — does not block |
+| `beforeDelete` | Before delete        | No (can throw to abort)    | Throws — blocks the operation      |
+| `afterDelete`  | After delete         | No                         | Caught and logged — does not block |
+| `beforeRead`   | Before read/find     | No (can throw to abort)    | Throws — blocks the operation      |
+| `afterRead`    | After read/find      | No                         | Caught and logged — does not block |
 
 ## Hook Signatures
 
@@ -25,12 +25,16 @@ type HookArgs = {
   id?: string;
 };
 
-type BeforeChangeHook = (args: HookArgs) => Record<string, unknown> | Promise<Record<string, unknown>>;
-type AfterChangeHook  = (args: HookArgs) => void | Promise<void>;
-type BeforeDeleteHook = (args: Omit<HookArgs, 'data'>) => void | Promise<void>;
-type AfterDeleteHook  = (args: Omit<HookArgs, 'data'>) => void | Promise<void>;
-type BeforeReadHook   = (args: Omit<HookArgs, 'data'>) => void | Promise<void>;
-type AfterReadHook    = (args: Omit<HookArgs, 'data'> & { doc: Record<string, unknown> }) => void | Promise<void>;
+type BeforeChangeHook = (
+  args: HookArgs,
+) => Record<string, unknown> | Promise<Record<string, unknown>>;
+type AfterChangeHook = (args: HookArgs) => void | Promise<void>;
+type BeforeDeleteHook = (args: Omit<HookArgs, "data">) => void | Promise<void>;
+type AfterDeleteHook = (args: Omit<HookArgs, "data">) => void | Promise<void>;
+type BeforeReadHook = (args: Omit<HookArgs, "data">) => void | Promise<void>;
+type AfterReadHook = (
+  args: Omit<HookArgs, "data"> & { doc: Record<string, unknown> },
+) => void | Promise<void>;
 ```
 
 ### Hooks Runner (Internal)
@@ -40,7 +44,7 @@ The hooks runner module uses a broader `HookContext` type:
 ```ts
 interface HookContext {
   collection: string;
-  operation: 'create' | 'read' | 'update' | 'delete';
+  operation: "create" | "read" | "update" | "delete";
   req?: Request;
   data?: Record<string, unknown>;
   id?: string;
@@ -52,8 +56,10 @@ interface HookContext {
 
 ```ts
 const Posts = defineCollection({
-  slug: 'posts',
-  fields: [/* ... */],
+  slug: "posts",
+  fields: [
+    /* ... */
+  ],
   hooks: {
     beforeChange: [
       // Auto-generate slug from title
@@ -63,7 +69,7 @@ const Posts = defineCollection({
             ...args,
             data: {
               ...args.data,
-              slug: args.data.title.toString().toLowerCase().replace(/\s+/g, '-'),
+              slug: args.data.title.toString().toLowerCase().replace(/\s+/g, "-"),
             },
           };
         }
@@ -74,7 +80,7 @@ const Posts = defineCollection({
     afterChange: [
       // Send notification
       async (args) => {
-        await sendWebhook('post-updated', { id: args.id, data: args.data });
+        await sendWebhook("post-updated", { id: args.id, data: args.data });
       },
     ],
 
@@ -82,7 +88,7 @@ const Posts = defineCollection({
       // Prevent deletion of pinned posts
       async (args) => {
         const doc = await findById(db, table, args.id!);
-        if (doc?.pinned) throw new Error('Cannot delete pinned post');
+        if (doc?.pinned) throw new Error("Cannot delete pinned post");
       },
     ],
   },
@@ -119,7 +125,7 @@ async function runAfterHooks(hooks, context): Promise<void> {
     try {
       await hook(context);
     } catch (err) {
-      console.error('[runekit] afterHook error:', err);
+      console.error("[runekit] afterHook error:", err);
     }
   }
 }
@@ -132,12 +138,14 @@ async function runAfterHooks(hooks, context): Promise<void> {
 ## Hook Execution Order in Query Operations
 
 For a `create` operation:
+
 1. Access control check
 2. `beforeChange` hooks (can modify `data`)
 3. Database `insertOne` (uses potentially modified data from hooks)
 4. `afterChange` hooks (receive the created document)
 
 For an `update` operation:
+
 1. Access control check
 2. Fetch existing document
 3. `beforeChange` hooks (receive `data`, `id`, `existingDoc`)
@@ -145,12 +153,14 @@ For an `update` operation:
 5. `afterChange` hooks
 
 For a `remove` operation:
+
 1. Access control check
 2. `beforeDelete` hooks
 3. Database `deleteOne`
 4. `afterDelete` hooks
 
 For `find`/`findOne` operations:
+
 1. Access control check
 2. `beforeRead` hooks
 3. Database query

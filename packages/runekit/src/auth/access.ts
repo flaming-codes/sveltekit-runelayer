@@ -7,7 +7,7 @@ type AccessFn = (args: AccessContext) => boolean | Promise<boolean>;
  * Requires a session cookie — inspects the `x-user-role` header set by auth middleware.
  */
 export function isAdmin(): AccessFn {
-	return hasRole("admin");
+  return hasRole("admin");
 }
 
 /**
@@ -15,9 +15,9 @@ export function isAdmin(): AccessFn {
  * Returns true if the request carries a valid session (indicated by `x-user-id` header).
  */
 export function isLoggedIn(): AccessFn {
-	return ({ req }) => {
-		return req.headers.has("x-user-id");
-	};
+  return ({ req }) => {
+    return req.headers.has("x-user-id");
+  };
 }
 
 /**
@@ -25,7 +25,7 @@ export function isLoggedIn(): AccessFn {
  * The role is read from the `x-user-role` header injected by the auth handle hook.
  */
 export function hasRole(role: Role): AccessFn {
-	return ({ req }) => {
-		return req.headers.get("x-user-role") === role;
-	};
+  return ({ req }) => {
+    return req.headers.get("x-user-role") === role;
+  };
 }

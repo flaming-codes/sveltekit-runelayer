@@ -26,7 +26,8 @@
     "svelte": "catalog:",
     "testcontainers": "catalog:",
     "typescript": "catalog:",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "@sveltejs/kit": "^2.0.0",

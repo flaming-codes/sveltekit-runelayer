@@ -27,6 +27,7 @@ Incoming request with x-user-role: admin (malicious)
 ### Auth Secret
 
 The `BETTER_AUTH_SECRET` environment variable is used for:
+
 - Signing session tokens/cookies
 - CSRF protection
 
@@ -47,6 +48,7 @@ This means server-side code that calls query operations without passing a `Reque
 ### Access Function Isolation
 
 Access functions receive only a `Request` object with injected headers. They do not receive the full SvelteKit `event` or `locals`, which:
+
 - Prevents access functions from depending on SvelteKit-specific APIs
 - Makes them testable with plain `new Request()` objects
 - Limits the blast radius of a compromised access function
@@ -61,12 +63,13 @@ All storage adapter operations validate paths using `safePath()`:
 function safePath(directory: string, userPath: string): string {
   const resolved = resolve(directory, userPath);
   const rel = relative(resolve(directory), resolved);
-  if (rel.startsWith('..')) throw new Error('Path traversal detected');
+  if (rel.startsWith("..")) throw new Error("Path traversal detected");
   return resolved;
 }
 ```
 
 This prevents:
+
 - `../../etc/passwd` in `delete()`, `getStream()`, `exists()`
 - `../../../root/.ssh/id_rsa` in file reads
 - Absolute paths that escape the storage directory
@@ -74,6 +77,7 @@ This prevents:
 ### Upload Validation
 
 The upload handler validates:
+
 - **File presence** — rejects requests without a `file` field (400)
 - **File size** — rejects files exceeding `maxFileSize` (413)
 - **MIME type** — rejects files not in `allowedMimeTypes` (415)
@@ -86,6 +90,7 @@ MIME type validation checks the client-provided `Content-Type` header, which is 
 ### Serve Handler Protection
 
 The file serve handler:
+
 - Strips the URL prefix to extract the file path
 - Rejects paths containing `..`
 - Checks file existence before streaming
@@ -100,6 +105,7 @@ Drizzle ORM uses parameterized queries for all operations. User input never appe
 ### Migration Safety
 
 `pushSchema()` only creates tables and adds columns. It never:
+
 - Drops tables
 - Removes columns
 - Modifies column types
@@ -116,8 +122,8 @@ The admin handler factories (`handleCollectionCreate`, etc.) do not enforce auth
 ```ts
 // src/routes/admin/+layout.server.ts
 export const load = ({ locals }) => {
-  if (!locals.user || locals.user.role !== 'admin') {
-    throw redirect(303, '/login');
+  if (!locals.user || locals.user.role !== "admin") {
+    throw redirect(303, "/login");
   }
 };
 ```
@@ -129,6 +135,7 @@ Admin form actions rely on SvelteKit's built-in CSRF protection (origin checking
 ### No Rate Limiting
 
 There is no built-in rate limiting for:
+
 - Login attempts (Better Auth's `maxLoginAttempts` is per-user, not per-IP)
 - API requests
 - File uploads

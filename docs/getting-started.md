@@ -22,32 +22,36 @@ Runekit bundles `drizzle-orm`, `better-sqlite3`, and `better-auth` as dependenci
 
 ```ts
 // src/lib/schema.ts
-import { defineCollection, text, number, select, slug, richText, relationship } from 'runekit';
+import { defineCollection, text, number, select, slug, richText, relationship } from "runekit";
 
 export const Posts = defineCollection({
-  slug: 'posts',
-  labels: { singular: 'Post', plural: 'Posts' },
+  slug: "posts",
+  labels: { singular: "Post", plural: "Posts" },
   fields: [
-    { name: 'title', label: 'Title', ...text({ required: true }) },
-    { name: 'slug', label: 'Slug', ...slug({ from: 'title' }) },
-    { name: 'content', label: 'Content', ...richText() },
-    { name: 'status', label: 'Status', ...select({
-      options: [
-        { label: 'Draft', value: 'draft' },
-        { label: 'Published', value: 'published' },
-      ],
-      defaultValue: 'draft',
-    })},
+    { name: "title", label: "Title", ...text({ required: true }) },
+    { name: "slug", label: "Slug", ...slug({ from: "title" }) },
+    { name: "content", label: "Content", ...richText() },
+    {
+      name: "status",
+      label: "Status",
+      ...select({
+        options: [
+          { label: "Draft", value: "draft" },
+          { label: "Published", value: "published" },
+        ],
+        defaultValue: "draft",
+      }),
+    },
   ],
-  admin: { useAsTitle: 'title' },
+  admin: { useAsTitle: "title" },
   timestamps: true,
 });
 
 export const Users = defineCollection({
-  slug: 'users',
+  slug: "users",
   fields: [
-    { name: 'name', label: 'Name', ...text({ required: true }) },
-    { name: 'email', label: 'Email', ...text({ required: true }) },
+    { name: "name", label: "Name", ...text({ required: true }) },
+    { name: "email", label: "Email", ...text({ required: true }) },
   ],
   auth: true,
 });
@@ -57,16 +61,16 @@ export const Users = defineCollection({
 
 ```ts
 // src/lib/runekit.ts
-import { defineConfig, createRunekit } from 'runekit';
-import { Posts, Users } from './schema.js';
+import { defineConfig, createRunekit } from "runekit";
+import { Posts, Users } from "./schema.js";
 
 const config = defineConfig({
   collections: [Posts, Users],
   auth: {
-    secret: process.env.AUTH_SECRET || 'dev-secret-change-in-production',
-    baseURL: process.env.ORIGIN || 'http://localhost:5173',
+    secret: process.env.AUTH_SECRET || "dev-secret-change-in-production",
+    baseURL: process.env.ORIGIN || "http://localhost:5173",
   },
-  dbPath: './data/runekit.db',
+  dbPath: "./data/runekit.db",
 });
 
 export const runekit = createRunekit(config);
@@ -76,7 +80,7 @@ export const runekit = createRunekit(config);
 
 ```ts
 // src/hooks.server.ts
-import { runekit } from '$lib/runekit';
+import { runekit } from "$lib/runekit";
 
 export const handle = runekit.handle;
 ```
@@ -85,8 +89,8 @@ export const handle = runekit.handle;
 
 ```ts
 // src/routes/api/auth/[...all]/+server.ts
-import { createAuthHandler } from 'runekit';
-import { runekit } from '$lib/runekit';
+import { createAuthHandler } from "runekit";
+import { runekit } from "$lib/runekit";
 
 const handler = createAuthHandler(runekit.auth);
 export const GET = handler;
@@ -97,14 +101,14 @@ export const POST = handler;
 
 ```ts
 // src/routes/+page.server.ts
-import { runekit } from '$lib/runekit';
-import { find } from 'runekit';
-import { Posts } from '$lib/schema';
+import { runekit } from "$lib/runekit";
+import { find } from "runekit";
+import { Posts } from "$lib/schema";
 
 export async function load({ request }) {
   const posts = await find(
     { db: runekit.database, collection: Posts, req: request },
-    { limit: 10, sort: 'createdAt', sortOrder: 'desc' },
+    { limit: 10, sort: "createdAt", sortOrder: "desc" },
   );
 
   return { posts };
@@ -115,12 +119,12 @@ export async function load({ request }) {
 
 ```ts
 interface RunekitConfig {
-  collections: CollectionConfig[];    // Required
-  auth: AuthConfig;                   // Required
-  globals?: GlobalConfig[];           // Default: []
-  adminPath?: string;                 // Default: '/admin'
-  dbPath?: string;                    // Default: './data/runekit.db'
-  storage?: LocalStorageConfig;       // Default: { directory: './uploads', urlPrefix: '/uploads' }
+  collections: CollectionConfig[]; // Required
+  auth: AuthConfig; // Required
+  globals?: GlobalConfig[]; // Default: []
+  adminPath?: string; // Default: '/admin'
+  dbPath?: string; // Default: './data/runekit.db'
+  storage?: LocalStorageConfig; // Default: { directory: './uploads', urlPrefix: '/uploads' }
 }
 ```
 

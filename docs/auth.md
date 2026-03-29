@@ -5,16 +5,18 @@ Runekit uses Better Auth for authentication and provides a role-based access con
 ## Setup
 
 ```ts
-import { defineConfig } from 'runekit';
+import { defineConfig } from "runekit";
 
 const config = defineConfig({
-  collections: [/* ... */],
+  collections: [
+    /* ... */
+  ],
   auth: {
-    secret: process.env.AUTH_SECRET!,    // Required: signing secret
-    baseURL: 'http://localhost:5173',     // Required: app base URL
-    basePath: '/api/auth',               // Optional (default: '/api/auth')
-    sessionMaxAge: 60 * 60 * 24 * 7,    // Optional (default: 7 days)
-    requireEmailVerification: false,     // Optional (default: false)
+    secret: process.env.AUTH_SECRET!, // Required: signing secret
+    baseURL: "http://localhost:5173", // Required: app base URL
+    basePath: "/api/auth", // Optional (default: '/api/auth')
+    sessionMaxAge: 60 * 60 * 24 * 7, // Optional (default: 7 days)
+    requireEmailVerification: false, // Optional (default: false)
   },
 });
 ```
@@ -23,10 +25,10 @@ const config = defineConfig({
 
 ```ts
 interface AuthConfig {
-  secret: string;                    // Token signing secret
-  baseURL: string;                   // Public app URL
-  basePath?: string;                 // Auth API prefix (default: '/api/auth')
-  sessionMaxAge?: number;            // Session TTL in seconds (default: 604800)
+  secret: string; // Token signing secret
+  baseURL: string; // Public app URL
+  basePath?: string; // Auth API prefix (default: '/api/auth')
+  sessionMaxAge?: number; // Session TTL in seconds (default: 604800)
   requireEmailVerification?: boolean; // Require email verification (default: false)
 }
 ```
@@ -47,7 +49,7 @@ The `handle` hook returned by `createRunekit()`:
 In your `src/hooks.server.ts`:
 
 ```ts
-import { runekit } from '$lib/runekit';
+import { runekit } from "$lib/runekit";
 
 export const handle = runekit.handle;
 ```
@@ -55,8 +57,8 @@ export const handle = runekit.handle;
 For the auth API endpoints, create `src/routes/api/auth/[...all]/+server.ts`:
 
 ```ts
-import { createAuthHandler } from 'runekit';
-import { runekit } from '$lib/runekit';
+import { createAuthHandler } from "runekit";
+import { runekit } from "$lib/runekit";
 
 const handler = createAuthHandler(runekit.auth);
 export const GET = handler;
@@ -70,7 +72,7 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: Role;            // 'admin' | 'editor' | 'user'
+  role: Role; // 'admin' | 'editor' | 'user'
   emailVerified: boolean;
   image?: string | null;
   createdAt: Date;
@@ -83,7 +85,7 @@ Better Auth manages user storage. The `role` field is added as an additional use
 ## Roles
 
 ```ts
-type Role = 'admin' | 'editor' | 'user';
+type Role = "admin" | "editor" | "user";
 ```
 
 Roles are stored as a string on the user record. The type can be extended via TypeScript module augmentation if needed.
@@ -95,26 +97,22 @@ Access functions are used in collection/global configs and field configs to cont
 ### Signature
 
 ```ts
-type AccessFn = (args: {
-  req: Request;
-  id?: string;
-  data?: unknown;
-}) => boolean | Promise<boolean>;
+type AccessFn = (args: { req: Request; id?: string; data?: unknown }) => boolean | Promise<boolean>;
 ```
 
 ### Built-in Helpers
 
 ```ts
-import { isAdmin, isLoggedIn, hasRole } from 'runekit';
+import { isAdmin, isLoggedIn, hasRole } from "runekit";
 
 // Allow only admin users
-isAdmin()
+isAdmin();
 
 // Allow any authenticated user
-isLoggedIn()
+isLoggedIn();
 
 // Allow users with a specific role
-hasRole('editor')
+hasRole("editor");
 ```
 
 These functions check the `x-user-id` and `x-user-role` headers that are injected by the auth handle hook.
@@ -123,11 +121,13 @@ These functions check the `x-user-id` and `x-user-role` headers that are injecte
 
 ```ts
 const Posts = defineCollection({
-  slug: 'posts',
-  fields: [/* ... */],
+  slug: "posts",
+  fields: [
+    /* ... */
+  ],
   access: {
     create: isLoggedIn(),
-    read: () => true,           // Public read
+    read: () => true, // Public read
     update: isLoggedIn(),
     delete: isAdmin(),
   },
@@ -151,16 +151,16 @@ const Posts = defineCollection({
 
 ```ts
 const isOwner: AccessFn = ({ req, id }) => {
-  const userId = req.headers.get('x-user-id');
+  const userId = req.headers.get("x-user-id");
   // Check if the requesting user owns the document
   return userId === id;
 };
 
 const Posts = defineCollection({
-  slug: 'posts',
+  slug: "posts",
   access: {
     update: async ({ req, id, data }) => {
-      if (req.headers.get('x-user-role') === 'admin') return true;
+      if (req.headers.get("x-user-role") === "admin") return true;
       return isOwner({ req, id, data });
     },
   },
@@ -194,9 +194,9 @@ Collections with `auth: true` get additional database columns (`hash`, `salt`, `
 
 ```ts
 interface CollectionAuthConfig {
-  tokenExpiration?: number;     // Token lifetime in ms
-  verify?: boolean;             // Require email verification
-  maxLoginAttempts?: number;    // Lock after N failed attempts
-  lockTime?: number;            // Lock duration in ms
+  tokenExpiration?: number; // Token lifetime in ms
+  verify?: boolean; // Require email verification
+  maxLoginAttempts?: number; // Lock after N failed attempts
+  lockTime?: number; // Lock duration in ms
 }
 ```

@@ -67,6 +67,7 @@ packages/runekit/src/
 ### Request Handling
 
 For every incoming request, the `handle` hook:
+
 1. Strips any externally-provided `x-user-*` headers (anti-spoofing)
 2. Resolves the session from Better Auth cookies
 3. Injects `x-user-id`, `x-user-role`, `x-user-email` headers from the session
@@ -77,6 +78,7 @@ For every incoming request, the `handle` hook:
 ### Query Operations
 
 Every query operation (find, create, update, remove) follows the same pattern:
+
 1. **Access check** — evaluate the collection's access function against the request
 2. **Before hooks** — run sequentially, each can modify the context/data
 3. **Database operation** — execute the Drizzle query
@@ -92,6 +94,7 @@ Despite the PLAN.md mentioning separate packages (`runekit-core`, `runekit-db-dr
 ### SQLite-First with WAL Mode
 
 SQLite with WAL (Write-Ahead Logging) mode provides:
+
 - Single-file deployment (no database server)
 - Concurrent reads during writes
 - Crash-safe durability
@@ -100,6 +103,7 @@ SQLite with WAL (Write-Ahead Logging) mode provides:
 ### Push-Based Migrations
 
 Instead of generating migration SQL files, Runekit uses push-based migration:
+
 - On startup, `pushSchema()` compares the schema definition against the existing database
 - Missing tables are created with `CREATE TABLE`
 - Missing columns are added with `ALTER TABLE ADD COLUMN`
@@ -110,6 +114,7 @@ This is appropriate for development and single-developer CMS use cases. Producti
 ### Header-Based User Context
 
 The auth system injects user identity into request headers rather than using a shared context object. This means:
+
 - Access control functions receive a standard `Request` object
 - No dependency on SvelteKit's `event.locals` in the core library
 - Access functions are testable with plain `new Request()` objects
@@ -117,14 +122,14 @@ The auth system injects user identity into request headers rather than using a s
 
 ## Technology Stack
 
-| Concern | Library | Why |
-|---------|---------|-----|
-| Database ORM | Drizzle ORM | Type-safe, lightweight, SQLite-first support |
-| SQLite Driver | better-sqlite3 | Synchronous, fast, stable, WAL support |
-| Authentication | Better Auth | SvelteKit-native, Drizzle adapter, email/password |
-| UI Framework | Svelte 5 | Runes-based reactivity, SvelteKit integration |
-| Build Tool | vite-plus | Unified Vite + Vitest + Oxlint monorepo toolchain |
-| Package Manager | pnpm 10 | Workspace support, catalog-based dependency management |
+| Concern         | Library        | Why                                                    |
+| --------------- | -------------- | ------------------------------------------------------ |
+| Database ORM    | Drizzle ORM    | Type-safe, lightweight, SQLite-first support           |
+| SQLite Driver   | better-sqlite3 | Synchronous, fast, stable, WAL support                 |
+| Authentication  | Better Auth    | SvelteKit-native, Drizzle adapter, email/password      |
+| UI Framework    | Svelte 5       | Runes-based reactivity, SvelteKit integration          |
+| Build Tool      | vite-plus      | Unified Vite + Vitest + Oxlint monorepo toolchain      |
+| Package Manager | pnpm 10        | Workspace support, catalog-based dependency management |
 
 ## Entry Points
 

@@ -92,16 +92,16 @@ pnpm add @uppy/core @uppy/dashboard @uppy/svelte @uppy/tus
 
 ## Version Compatibility Matrix
 
-| Library | Svelte 5 | SvelteKit 2 | Runes Mode | Status |
-|---------|----------|-------------|------------|--------|
-| Drizzle ORM | N/A (server) | Yes | N/A | Stable |
-| better-sqlite3 | N/A (server) | Yes | N/A | Stable |
-| Better Auth | Yes | Yes (first-class) | N/A | Stable |
-| Carbon Svelte | Compat mode | Yes | No global | Works |
-| TanStack Table v8 | **No** | N/A | N/A | **Broken** |
-| TanStack table-core | Yes (with wrapper) | Yes | Yes | Works |
-| Superforms | Compat mode | Yes | No global | Works |
-| Tiptap core | Yes (with wrapper) | Yes | Yes | Works |
-| Tipex | Yes (native) | Yes | Yes | Works |
-| Uppy 5.x | Yes | Yes | Yes | Works |
-| svelte-dnd-action | Yes | Yes | Yes | Works |
+| Library             | Svelte 5           | SvelteKit 2       | Runes Mode | Status     |
+| ------------------- | ------------------ | ----------------- | ---------- | ---------- |
+| Drizzle ORM         | N/A (server)       | Yes               | N/A        | Stable     |
+| better-sqlite3      | N/A (server)       | Yes               | N/A        | Stable     |
+| Better Auth         | Yes                | Yes (first-class) | N/A        | Stable     |
+| Carbon Svelte       | Compat mode        | Yes               | No global  | Works      |
+| TanStack Table v8   | **No**             | N/A               | N/A        | **Broken** |
+| TanStack table-core | Yes (with wrapper) | Yes               | Yes        | Works      |
+| Superforms          | Compat mode        | Yes               | No global  | Works      |
+| Tiptap core         | Yes (with wrapper) | Yes               | Yes        | Works      |
+| Tipex               | Yes (native)       | Yes               | Yes        | Works      |
+| Uppy 5.x            | Yes                | Yes               | Yes        | Works      |
+| svelte-dnd-action   | Yes                | Yes               | Yes        | Works      |

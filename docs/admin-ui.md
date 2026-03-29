@@ -24,6 +24,7 @@ Shell layout with sidebar navigation and top bar.
 ```
 
 Props:
+
 - `collections` — `CollectionConfig[]` for sidebar nav
 - `globals` — `GlobalConfig[]` for sidebar nav
 - `user` — current user (null = not logged in)
@@ -59,6 +60,7 @@ Sortable table with pagination for listing documents.
 ```
 
 Features:
+
 - Columns from `collection.admin.defaultColumns` (or first 3 fields)
 - Client-side column sorting (click column headers)
 - Pagination controls (Prev/Next)
@@ -78,6 +80,7 @@ Form for creating and editing documents.
 ```
 
 Features:
+
 - Renders fields via FieldRenderer based on field type
 - Hidden `id` field for updates
 - Save/Create button
@@ -105,17 +108,17 @@ Dispatches to the correct field component based on field type:
 
 Each field type has a corresponding Svelte component in `src/admin/components/fields/`:
 
-| Component | Field Types | Input Type |
-|-----------|------------|------------|
-| `TextField` | text, email, slug | `<input type="text">` |
-| `NumberField` | number | `<input type="number">` |
-| `CheckboxField` | checkbox | `<input type="checkbox">` |
-| `SelectField` | select | `<select>` |
-| `TextareaField` | textarea | `<textarea>` |
-| `DateField` | date | `<input type="date">` or `datetime-local` |
-| `RichTextField` | richText | `<textarea>` (Tiptap placeholder) |
-| `JsonField` | json | `<textarea>` with JSON |
-| `RelationshipField` | relationship | `<input type="text">` (search placeholder) |
+| Component           | Field Types       | Input Type                                 |
+| ------------------- | ----------------- | ------------------------------------------ |
+| `TextField`         | text, email, slug | `<input type="text">`                      |
+| `NumberField`       | number            | `<input type="number">`                    |
+| `CheckboxField`     | checkbox          | `<input type="checkbox">`                  |
+| `SelectField`       | select            | `<select>`                                 |
+| `TextareaField`     | textarea          | `<textarea>`                               |
+| `DateField`         | date              | `<input type="date">` or `datetime-local`  |
+| `RichTextField`     | richText          | `<textarea>` (Tiptap placeholder)          |
+| `JsonField`         | json              | `<textarea>` with JSON                     |
+| `RelationshipField` | relationship      | `<input type="text">` (search placeholder) |
 
 All field components use Svelte 5 runes (`$props()`, `$bindable`).
 
@@ -130,7 +133,7 @@ import {
   handleCollectionCreate,
   handleCollectionUpdate,
   handleCollectionDelete,
-} from 'runekit/admin';
+} from "runekit/admin";
 ```
 
 ### QueryAdapter Interface
@@ -139,16 +142,28 @@ Handlers require a `QueryAdapter` that bridges to the database:
 
 ```ts
 interface QueryAdapter {
-  find(collection: string, opts: {
-    page?: number;
-    limit?: number;
-    sort?: string;
-    where?: Record<string, unknown>;
-  }): Promise<{ docs: Record<string, unknown>[]; totalDocs: number; totalPages: number; page: number }>;
+  find(
+    collection: string,
+    opts: {
+      page?: number;
+      limit?: number;
+      sort?: string;
+      where?: Record<string, unknown>;
+    },
+  ): Promise<{
+    docs: Record<string, unknown>[];
+    totalDocs: number;
+    totalPages: number;
+    page: number;
+  }>;
 
   findById(collection: string, id: string): Promise<Record<string, unknown> | null>;
   create(collection: string, data: Record<string, unknown>): Promise<Record<string, unknown>>;
-  update(collection: string, id: string, data: Record<string, unknown>): Promise<Record<string, unknown>>;
+  update(
+    collection: string,
+    id: string,
+    data: Record<string, unknown>,
+  ): Promise<Record<string, unknown>>;
   deleteDoc(collection: string, id: string): Promise<void>;
   count(collection: string): Promise<number>;
 }
@@ -158,14 +173,14 @@ interface QueryAdapter {
 
 ```ts
 // src/routes/admin/collections/[slug]/+page.server.ts
-import { handleCollectionList } from 'runekit/admin';
+import { handleCollectionList } from "runekit/admin";
 
 export const load = handleCollectionList(postsCollection, queryAdapter);
 ```
 
 ```ts
 // src/routes/admin/collections/[slug]/[id]/+page.server.ts
-import { handleCollectionGet, handleCollectionUpdate, handleCollectionDelete } from 'runekit/admin';
+import { handleCollectionGet, handleCollectionUpdate, handleCollectionDelete } from "runekit/admin";
 
 export const load = handleCollectionGet(postsCollection, queryAdapter);
 
@@ -180,7 +195,7 @@ export const actions = {
 The `getAdminRoutes` helper tells the host app what components and routes the admin UI needs:
 
 ```ts
-import { getAdminRoutes } from 'runekit/admin';
+import { getAdminRoutes } from "runekit/admin";
 
 const routes = getAdminRoutes({
   collections: [Posts, Users, Media],

@@ -15,5 +15,5 @@ import type { RunekitAuth } from "./types.js";
  * ```
  */
 export function createAuthHandler(runekitAuth: RunekitAuth) {
-	return toSvelteKitHandler(runekitAuth.auth as any);
+  return toSvelteKitHandler(runekitAuth.auth as any);
 }
