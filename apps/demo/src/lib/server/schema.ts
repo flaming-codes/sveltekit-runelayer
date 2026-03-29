@@ -1,5 +1,6 @@
 import {
   defineCollection,
+  defineGlobal,
   text,
   textarea,
   number,
@@ -316,7 +317,6 @@ export const Products = defineCollection({
   access: { read: () => true },
 });
 
-// Globals implemented as singleton collections (CMS globals DB support TBD)
 export const SiteSettings = defineCollection({
   slug: "site_settings",
   labels: { singular: "Site Settings", plural: "Site Settings" },
@@ -357,3 +357,32 @@ export const allCollections = [
   SiteSettings,
   Navigation,
 ];
+
+export const SiteSettingsGlobal = defineGlobal({
+  slug: "site-settings",
+  label: "Site Settings",
+  fields: [
+    { name: "siteName", label: "Site Name", ...text({ required: true }) },
+    { name: "tagline", label: "Tagline", ...text() },
+    { name: "footerText", label: "Footer Text", ...text() },
+  ],
+  access: {
+    read: isLoggedIn(),
+    update: isAdmin(),
+  },
+});
+
+export const NavigationGlobal = defineGlobal({
+  slug: "main-navigation",
+  label: "Main Navigation",
+  fields: [
+    { name: "label", label: "Label", ...text({ required: true }) },
+    { name: "items", label: "Menu Items", ...json({ defaultValue: [] }) },
+  ],
+  access: {
+    read: isLoggedIn(),
+    update: isAdmin(),
+  },
+});
+
+export const allGlobals = [SiteSettingsGlobal, NavigationGlobal];

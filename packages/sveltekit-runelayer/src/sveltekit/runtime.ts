@@ -2,11 +2,13 @@ import { error, fail, redirect } from "@sveltejs/kit";
 import type { Actions, Handle, RequestEvent } from "@sveltejs/kit";
 import { defineConfig } from "../config.js";
 import { createRunelayer } from "../plugin.js";
+import type { RunelayerInstance } from "../plugin.js";
 import { create, find, findOne, remove, update } from "../query/index.js";
 import type { CollectionConfig } from "../schema/collections.js";
-import type { RunelayerInstance } from "../plugin.js";
 import type { FindArgs } from "../query/types.js";
+import type { GlobalConfig } from "../schema/globals.js";
 import type { ComponentType } from "svelte";
+import { getGlobalBySlug, readGlobalDocument, updateGlobalDocument } from "./globals.js";
 import { toSerializable } from "./serializable.js";
 import type {
   CollectionInput,
@@ -21,7 +23,8 @@ type AdminRoute =
   | { kind: "logout" }
   | { kind: "collection-list"; slug: string }
   | { kind: "collection-create"; slug: string }
-  | { kind: "collection-edit"; slug: string; id: string };
+  | { kind: "collection-edit"; slug: string; id: string }
+  | { kind: "global-edit"; slug: string };
 
 function normalizeAdminPath(path: string): string {
   if (!path.startsWith("/")) return `/${path}`;
@@ -55,6 +58,10 @@ function parseAdminRoute(path: string | undefined): AdminRoute | null {
         id: segments[2],
       };
     }
+  }
+
+  if (segments[0] === "globals" && segments.length === 2) {
+    return { kind: "global-edit", slug: segments[1] };
   }
 
   return null;
@@ -154,6 +161,14 @@ function getCollectionBySlug(runelayer: RunelayerInstance, slug: string): Collec
   return collection;
 }
 
+function resolveGlobalBySlug(runelayer: RunelayerInstance, slug: string): GlobalConfig {
+  const global = getGlobalBySlug(runelayer.globals, slug);
+  if (!global) {
+    throw error(404, `Unknown global: ${slug}`);
+  }
+  return global;
+}
+
 function getUser(event: RequestEvent): { email: string; role: string } | null {
   const user = (event.locals as Record<string, unknown>).user;
   if (!user || typeof user !== "object") return null;
@@ -204,12 +219,22 @@ function adminQueryApi(
   return strictAccess ? withRequest(event) : system;
 }
 
+function adminRequest(event: RequestEvent, strictAccess: boolean, adminPath: string): Request {
+  return strictAccess ? event.request : systemRequest(adminPath);
+}
+
 export function createRunelayerRuntime(
   config: RunelayerAppConfig,
   page: ComponentType,
 ): RunelayerApp {
   const adminPath = normalizeAdminPath(config.admin?.path ?? "/admin");
   const strictAccess = config.admin?.strictAccess ?? true;
+  const ui = {
+    theme: config.admin?.ui?.theme ?? "g100",
+    appName: config.admin?.ui?.appName ?? "Runelayer",
+    productName: config.admin?.ui?.productName ?? "CMS",
+    footerText: config.admin?.ui?.footerText ?? "Powered by Runelayer",
+  };
   const authBasePath = config.auth.basePath ?? "/api/auth";
 
   const { admin: _admin, ...runelayerConfig } = config;
@@ -238,6 +263,7 @@ export function createRunelayerRuntime(
     const user = getUser(event);
     const baseData = {
       basePath: adminPath,
+      ui,
       collections: toSerializable(runelayer.collections),
       globals: toSerializable(runelayer.globals),
       user: user ? { email: user.email } : null,
@@ -262,11 +288,16 @@ export function createRunelayerRuntime(
           count: await countDocuments(runelayer, collection.slug),
         })),
       );
+      const dashboardGlobals = runelayer.globals.map((global) => ({
+        slug: global.slug,
+        label: global.label ?? global.slug,
+      }));
 
       return {
         ...baseData,
         view: "dashboard",
         dashboardCollections,
+        dashboardGlobals,
       };
     }
 
@@ -301,6 +332,22 @@ export function createRunelayerRuntime(
         ...baseData,
         view: "collection-create",
         collection,
+      });
+    }
+
+    if (route.kind === "global-edit") {
+      const global = resolveGlobalBySlug(runelayer, route.slug);
+      const document = await readGlobalDocument(
+        runelayer,
+        global,
+        adminRequest(event, strictAccess, adminPath),
+      );
+
+      return toSerializable({
+        ...baseData,
+        view: "global-edit",
+        global,
+        document,
       });
     }
 
@@ -380,20 +427,31 @@ export function createRunelayerRuntime(
 
     update: async (event) => {
       const route = parseAdminRoute(event.params.path);
-      if (!route || route.kind !== "collection-edit") {
-        throw error(404, "Update action is only valid on collection edit routes");
+      if (!route || (route.kind !== "collection-edit" && route.kind !== "global-edit")) {
+        throw error(404, "Update action is only valid on collection/global edit routes");
       }
 
       guardAdminRoute(event, route, strictAccess, adminPath);
-      const collection = getCollectionBySlug(runelayer, route.slug);
-      const query = adminQueryApi(strictAccess, withRequest, system, event);
-
       const formData = await event.request.formData();
       const data = Object.fromEntries(formData.entries()) as Record<string, unknown>;
-      const id = typeof data.id === "string" ? data.id : route.id;
-      delete data.id;
 
-      const document = await query.update(collection, id, data);
+      let document: unknown;
+      if (route.kind === "global-edit") {
+        const global = resolveGlobalBySlug(runelayer, route.slug);
+        document = await updateGlobalDocument(
+          runelayer,
+          global,
+          adminRequest(event, strictAccess, adminPath),
+          data,
+        );
+      } else {
+        const collection = getCollectionBySlug(runelayer, route.slug);
+        const query = adminQueryApi(strictAccess, withRequest, system, event);
+        const id = typeof data.id === "string" ? data.id : route.id;
+        delete data.id;
+        document = await query.update(collection, id, data);
+      }
+
       return {
         success: true,
         document: toSerializable(document),

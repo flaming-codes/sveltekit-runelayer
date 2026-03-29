@@ -15,10 +15,20 @@
     "package.json"
   ],
   "type": "module",
+  "svelte": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./admin": "./src/admin/index.ts",
-    "./sveltekit": "./src/sveltekit/index.ts",
+    ".": {
+      "svelte": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./admin": {
+      "svelte": "./src/admin/index.ts",
+      "default": "./src/admin/index.ts"
+    },
+    "./sveltekit": {
+      "svelte": "./src/sveltekit/index.ts",
+      "default": "./src/sveltekit/index.ts"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -33,6 +43,8 @@
   "dependencies": {
     "@libsql/client": "catalog:",
     "better-auth": "catalog:",
+    "carbon-components-svelte": "catalog:",
+    "carbon-icons-svelte": "catalog:",
     "drizzle-orm": "catalog:"
   },
   "devDependencies": {

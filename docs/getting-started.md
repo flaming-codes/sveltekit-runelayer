@@ -124,15 +124,36 @@ export const actions = runelayer.admin.actions;
 ```svelte
 <!-- src/routes/(admin)/admin/[...path]/+page.svelte -->
 <script lang="ts">
-  import { runelayer } from "$lib/server/runelayer";
-  const Page = runelayer.admin.Page;
+  import { AdminPage } from "@flaming-codes/sveltekit-runelayer/sveltekit";
   let { data, form } = $props();
 </script>
 
-<Page {data} {form} />
+<AdminPage {data} {form} />
 ```
 
 Keep the public site in a separate route group (for example, `src/routes/(site)`), so `/admin` does not inherit frontend layouts/data-loading.
+
+Also add thin admin-only layout and error wiring:
+
+```svelte
+<!-- src/routes/(admin)/+layout.svelte -->
+<script lang="ts">
+  import "carbon-components-svelte/css/all.css";
+  let { children } = $props();
+</script>
+
+{@render children()}
+```
+
+```svelte
+<!-- src/routes/(admin)/admin/[...path]/+error.svelte -->
+<script lang="ts">
+  import { AdminErrorPage } from "@flaming-codes/sveltekit-runelayer/sveltekit";
+  let { status, error } = $props();
+</script>
+
+<AdminErrorPage {status} {error} />
+```
 
 ## 7. Query content with request-bound helpers
 

@@ -6,6 +6,7 @@ import { migrateDatabaseForTests } from "../../__testutils__/migrations.js";
 import { isLoggedIn } from "../../auth/index.js";
 import { defineCollection } from "../../schema/collections.js";
 import { text } from "../../schema/fields.js";
+import { defineGlobal } from "../../schema/globals.js";
 import { createRunelayerRuntime } from "../runtime.js";
 
 const Posts = defineCollection({
@@ -19,6 +20,27 @@ const Posts = defineCollection({
   },
 });
 
+const SiteSettings = defineGlobal({
+  slug: "site-settings",
+  label: "Site Settings",
+  fields: [{ name: "siteName", ...text({ required: true }) }],
+  access: {
+    read: () => true,
+    update: isLoggedIn(),
+  },
+  hooks: {
+    beforeChange: [
+      (ctx) => ({
+        ...ctx,
+        data: {
+          ...ctx.data,
+          siteName: typeof ctx.data.siteName === "string" ? ctx.data.siteName.trim() : "",
+        },
+      }),
+    ],
+  },
+});
+
 async function createTestApp(strictAccess: boolean) {
   const tempDir = mkdtempSync(join(tmpdir(), "runelayer-sveltekit-"));
   const dbUrl = `file:${join(tempDir, "test.db")}`;
@@ -27,6 +49,7 @@ async function createTestApp(strictAccess: boolean) {
   return createRunelayerRuntime(
     {
       collections: [Posts],
+      globals: [SiteSettings],
       auth: {
         secret: "test-secret-minimum-32-chars-long",
         baseURL: "http://localhost:5173",
@@ -90,6 +113,10 @@ describe("createRunelayerApp", () => {
 
     const editView = await app.admin.load(makeEvent(`collections/posts/${created.id}`));
     expect(editView.view).toBe("collection-edit");
+
+    const globalView = await app.admin.load(makeEvent("globals/site-settings"));
+    expect(globalView.view).toBe("global-edit");
+    expect((globalView.global as Record<string, unknown>).slug).toBe("site-settings");
   });
 
   it("dispatches create/update/delete admin actions", async () => {
@@ -127,9 +154,38 @@ describe("createRunelayerApp", () => {
     expect(docs).toHaveLength(0);
   });
 
+  it("dispatches global update action and persists the singleton document", async () => {
+    const app = await createTestApp(false);
+
+    const updated = await (app.admin.actions.update as any)(
+      makeEvent("globals/site-settings", {
+        form: {
+          siteName: "  Runelayer CMS  ",
+        },
+      }),
+    );
+
+    expect(updated.success).toBe(true);
+    expect(updated.document.id).toBe("site-settings");
+    expect(updated.document.siteName).toBe("Runelayer CMS");
+
+    const globalView = await app.admin.load(makeEvent("globals/site-settings"));
+    expect(globalView.document).toMatchObject({
+      id: "site-settings",
+      siteName: "Runelayer CMS",
+    });
+  });
+
   it("throws 404 for unknown collections in admin routes", async () => {
     const app = await createTestApp(false);
     await expect(app.admin.load(makeEvent("collections/missing"))).rejects.toMatchObject({
+      status: 404,
+    });
+  });
+
+  it("throws 404 for unknown globals in admin routes", async () => {
+    const app = await createTestApp(false);
+    await expect(app.admin.load(makeEvent("globals/missing"))).rejects.toMatchObject({
       status: 404,
     });
   });

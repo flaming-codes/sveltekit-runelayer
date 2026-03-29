@@ -33,7 +33,12 @@ Admin is mounted with one catch-all route that re-exports:
 
 - `app.admin.load`
 - `app.admin.actions`
-- `app.admin.Page`
+- package-owned `AdminPage`
+
+The admin route group also includes:
+
+- `src/routes/(admin)/+layout.svelte` to load Carbon CSS only for admin pages
+- `src/routes/(admin)/admin/[...path]/+error.svelte` to render package-owned admin 404/500 UI
 
 ## Query model in demo pages
 

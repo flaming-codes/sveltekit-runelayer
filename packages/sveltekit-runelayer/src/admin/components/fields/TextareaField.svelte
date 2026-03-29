@@ -1,6 +1,12 @@
 <script lang="ts">
-	let { name, label, value = $bindable(''), required = false }: {
-		name: string; label?: string; value: string; required?: boolean;
+	let { name, label, value = $bindable(""), required = false }: {
+		name: string;
+		label?: string;
+		value: string;
+		required?: boolean;
 	} = $props();
 </script>
-<label>{label ?? name} <textarea {name} bind:value {required} rows="4"></textarea></label>
+
+<label class="rk-field-label" for={name}>{label ?? name}</label>
+<textarea class="rk-field-input rk-field-textarea" id={name} {name} bind:value required={required} rows={4}
+></textarea>
