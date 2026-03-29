@@ -32,8 +32,16 @@ describe("host-managed migration contract", () => {
   it("exports a drizzle-kit schema object for host migration files", () => {
     const schema = createDrizzleKitSchema([Posts]);
     expect(schema).toHaveProperty("posts");
+    expect(schema).toHaveProperty("user");
+    expect(schema).toHaveProperty("session");
+    expect(schema).toHaveProperty("account");
+    expect(schema).toHaveProperty("verification");
+
     const tableConfig = getTableConfig(schema.posts);
     expect(tableConfig.name).toBe("posts");
+
+    const userTable = getTableConfig(schema.user);
+    expect(userTable.name).toBe("user");
   });
 
   it("requires pre-applied migrations before runtime CRUD", async () => {

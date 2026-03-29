@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import type { AuthConfig, RunelayerAuth } from "./types.js";
+import { betterAuthSchema } from "./schema.js";
 
 export type { AuthConfig, User, Session, Role, AccessContext, RunelayerAuth } from "./types.js";
 export { isAdmin, isLoggedIn, hasRole } from "./access.js";
@@ -22,7 +23,10 @@ export function createAuth(
     secret: config.secret,
     baseURL: config.baseURL,
     basePath: config.basePath ?? "/api/auth",
-    database: drizzleAdapter(db, { provider: "sqlite" }),
+    database: drizzleAdapter(db, {
+      provider: "sqlite",
+      schema: betterAuthSchema,
+    }),
     emailAndPassword: { enabled: true },
     session: {
       expiresIn: config.sessionMaxAge ?? 60 * 60 * 24 * 7, // 7 days

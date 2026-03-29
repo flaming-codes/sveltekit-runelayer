@@ -79,7 +79,11 @@ All write operations use `.returning()`.
 
 Runtime schema push is not part of `sveltekit-runelayer` startup. Hosts must generate and apply migrations before app startup.
 
-The package exports `createDrizzleKitSchema(collections)` to help hosts expose schema objects to drizzle-kit.
+The package exports `createDrizzleKitSchema(collections)` to help hosts expose schema objects to
+drizzle-kit. The generated schema includes:
+
+- collection tables derived from `CollectionConfig[]`
+- Better Auth tables (`user`, `session`, `account`, `verification`)
 
 Example host schema export:
 

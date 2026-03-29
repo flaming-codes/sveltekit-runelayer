@@ -44,6 +44,10 @@ The `handle` hook returned by `createRunelayer()`:
 3. **Injects user context** — sets `x-user-id`, `x-user-role`, `x-user-email` headers and populates `event.locals.user`/`event.locals.session`
 4. **Routes auth API** — requests to `/api/auth/*` are handled by Better Auth directly
 
+Runelayer passes an explicit Drizzle schema map (`user`, `session`, `account`, `verification`) to
+the Better Auth Drizzle adapter, so auth works even when Drizzle is initialized without
+`fullSchema` metadata.
+
 ### SvelteKit Integration
 
 In your `src/hooks.server.ts`:
