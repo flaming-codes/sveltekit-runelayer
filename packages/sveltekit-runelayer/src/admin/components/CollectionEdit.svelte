@@ -8,7 +8,11 @@
 		basePath?: string;
 	} = $props();
 
-	let values = $state<Record<string, any>>(document ? { ...document } : {});
+	let values = $state<Record<string, any>>({});
+	$effect(() => {
+		values = document ? { ...document } : {};
+	});
+
 	let isNew = $derived(!document?.id);
 	let slug = $derived(collection.slug);
 	let label = $derived(collection.labels?.singular ?? slug);
@@ -29,12 +33,9 @@
 
 	<div class="rk-actions">
 		<button type="submit">{isNew ? 'Create' : 'Save'}</button>
-		<a href="{basePath}/collections/{slug}">Cancel</a>
+		<a href={`${basePath}/collections/${slug}`}>Cancel</a>
 		{#if !isNew}
-			<form method="POST" action="?/delete" style="display:inline">
-				<input type="hidden" name="id" value={document?.id} />
-				<button type="submit" class="rk-delete">Delete</button>
-			</form>
+			<button type="submit" formmethod="POST" formaction="?/delete" class="rk-delete">Delete</button>
 		{/if}
 	</div>
 </form>
