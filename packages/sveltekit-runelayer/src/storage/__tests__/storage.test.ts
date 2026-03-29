@@ -10,7 +10,7 @@ let storage: StorageAdapter;
 let testDir: string;
 
 beforeEach(() => {
-  testDir = join(tmpdir(), `runekit-test-${randomUUID()}`);
+  testDir = join(tmpdir(), `runelayer-test-${randomUUID()}`);
   storage = createLocalStorage({ directory: testDir, urlPrefix: "/files" });
 });
 

@@ -16,7 +16,7 @@
 </script>
 
 <svelte:head>
-  <title>{data.author.name} | Authors | Runekit Demo</title>
+  <title>{data.author.name} | Authors | Runelayer Demo</title>
 </svelte:head>
 
 <div class="author-detail">

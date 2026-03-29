@@ -13,7 +13,7 @@ Every query operation requires a `QueryContext`:
 
 ```ts
 interface QueryContext {
-  db: RunekitDatabase; // Database instance from createDatabase()
+  db: RunelayerDatabase; // Database instance from createDatabase()
   collection: CollectionConfig; // Collection definition
   req?: Request; // Request for access control (optional)
 }

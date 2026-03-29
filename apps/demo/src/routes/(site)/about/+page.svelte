@@ -30,7 +30,7 @@
   <Row>
     <Column>
       <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">
-        {settings.siteName ?? "Runekit Demo"}
+        {settings.siteName ?? "Runelayer Demo"}
       </h1>
       {#if settings.tagline}
         <p style="font-size: 1.25rem; color: var(--cds-text-secondary); margin-bottom: 1.5rem;">

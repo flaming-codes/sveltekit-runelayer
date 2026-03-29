@@ -13,7 +13,7 @@
 </script>
 
 <svelte:head>
-  <title>Categories | Runekit Demo</title>
+  <title>Categories | Runelayer Demo</title>
 </svelte:head>
 
 <div class="categories-list">

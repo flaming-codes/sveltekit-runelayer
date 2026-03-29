@@ -47,7 +47,7 @@
 </script>
 
 <svelte:head>
-  <title>Blog | Runekit Demo</title>
+  <title>Blog | Runelayer Demo</title>
 </svelte:head>
 
 <div class="blog-list">

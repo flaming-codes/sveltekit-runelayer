@@ -17,7 +17,7 @@ import { isDockerRunning } from "./docker-check.js";
 
 import {
   defineConfig,
-  createRunekit,
+  createRunelayer,
   defineCollection,
   text,
   email,
@@ -27,7 +27,7 @@ import {
   findOne,
   update,
   remove,
-  type RunekitInstance,
+  type RunelayerInstance,
   type QueryContext,
   type CollectionConfig,
 } from "../index.js";
@@ -83,7 +83,7 @@ describe.skipIf(!isDockerRunning())("Testcontainers — Mailpit Email Integratio
   let mailpitContainer: StartedTestContainer;
   let mailpitSmtpPort: number;
   let mailpitApiUrl: string;
-  let kit: RunekitInstance;
+  let kit: RunelayerInstance;
   let tmpDir: string;
   let dbUrl: string;
 
@@ -99,10 +99,10 @@ describe.skipIf(!isDockerRunning())("Testcontainers — Mailpit Email Integratio
     mailpitApiUrl = `http://${mailpitContainer.getHost()}:${mailpitApiPort}`;
 
     // Create CMS instance
-    tmpDir = await mkdtemp(join(tmpdir(), "runekit-containers-e2e-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "runelayer-containers-e2e-"));
     dbUrl = `file:${join(tmpDir, "containers.db")}`;
     await migrateDatabaseForTests(dbUrl, [Users, Notifications]);
-    kit = createRunekit(
+    kit = createRunelayer(
       defineConfig({
         collections: [Users, Notifications],
         database: { url: dbUrl },
@@ -141,10 +141,10 @@ describe.skipIf(!isDockerRunning())("Testcontainers — Mailpit Email Integratio
       const client = createConnection(mailpitSmtpPort, mailpitContainer.getHost(), () => {
         const commands = [
           "EHLO localhost\r\n",
-          "MAIL FROM:<cms@runekit.dev>\r\n",
+          "MAIL FROM:<cms@runelayer.dev>\r\n",
           "RCPT TO:<admin@example.com>\r\n",
           "DATA\r\n",
-          "From: cms@runekit.dev\r\nTo: admin@example.com\r\nSubject: Welcome to Runekit CMS\r\n\r\nYour CMS account has been created.\r\n.\r\n",
+          "From: cms@runelayer.dev\r\nTo: admin@example.com\r\nSubject: Welcome to Runelayer CMS\r\n\r\nYour CMS account has been created.\r\n.\r\n",
           "QUIT\r\n",
         ];
 
@@ -172,7 +172,7 @@ describe.skipIf(!isDockerRunning())("Testcontainers — Mailpit Email Integratio
     const messages = await getMailpitMessages(mailpitApiUrl);
     expect(messages.length).toBeGreaterThanOrEqual(1);
 
-    const welcome = messages.find((m) => m.Subject.includes("Welcome to Runekit"));
+    const welcome = messages.find((m) => m.Subject.includes("Welcome to Runelayer"));
     expect(welcome).toBeDefined();
     expect(welcome!.To[0].Address).toBe("admin@example.com");
   });
@@ -214,7 +214,7 @@ describe.skipIf(!isDockerRunning())("Testcontainers — Mailpit Email Integratio
     // Record that we sent the welcome email
     const notif = await create(notifCtx, {
       recipient: "admin@example.com",
-      subject: "Welcome to Runekit CMS",
+      subject: "Welcome to Runelayer CMS",
       body: "Your CMS account has been created.",
       sent: true,
     });

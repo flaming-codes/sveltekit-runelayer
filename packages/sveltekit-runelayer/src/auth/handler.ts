@@ -1,5 +1,5 @@
 import { toSvelteKitHandler } from "better-auth/svelte-kit";
-import type { RunekitAuth } from "./types.js";
+import type { RunelayerAuth } from "./types.js";
 
 /**
  * Creates a SvelteKit request handler for Better Auth API endpoints.
@@ -14,6 +14,6 @@ import type { RunekitAuth } from "./types.js";
  * export const POST = handler;
  * ```
  */
-export function createAuthHandler(runekitAuth: RunekitAuth) {
-  return toSvelteKitHandler(runekitAuth.auth as any);
+export function createAuthHandler(runelayerAuth: RunelayerAuth) {
+  return toSvelteKitHandler(runelayerAuth.auth as any);
 }

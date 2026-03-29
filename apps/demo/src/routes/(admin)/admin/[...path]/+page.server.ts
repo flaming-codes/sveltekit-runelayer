@@ -1,4 +1,4 @@
-import { getRunelayerApp } from "$lib/server/runekit.js";
+import { getRunelayerApp } from "$lib/server/runelayer.js";
 
 const app = getRunelayerApp();
 

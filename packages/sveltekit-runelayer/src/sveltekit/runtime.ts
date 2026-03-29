@@ -1,10 +1,10 @@
 import { error, fail, redirect } from "@sveltejs/kit";
 import type { Actions, Handle, RequestEvent } from "@sveltejs/kit";
 import { defineConfig } from "../config.js";
-import { createRunekit } from "../plugin.js";
+import { createRunelayer } from "../plugin.js";
 import { create, find, findOne, remove, update } from "../query/index.js";
 import type { CollectionConfig } from "../schema/collections.js";
-import type { RunekitInstance } from "../plugin.js";
+import type { RunelayerInstance } from "../plugin.js";
 import type { FindArgs } from "../query/types.js";
 import type { ComponentType } from "svelte";
 import { toSerializable } from "./serializable.js";
@@ -72,8 +72,8 @@ function getCountValue(row: unknown): number {
   return Number(firstValue ?? 0);
 }
 
-async function countDocuments(runekit: RunekitInstance, collection: string): Promise<number> {
-  const result = await runekit.database.client.execute(
+async function countDocuments(runelayer: RunelayerInstance, collection: string): Promise<number> {
+  const result = await runelayer.database.client.execute(
     `SELECT COUNT(*) AS count FROM ${quoteIdent(collection)}`,
   );
   return getCountValue(result.rows[0]);
@@ -108,15 +108,15 @@ function systemRequest(adminPath: string): Request {
 }
 
 function createQueryApi(
-  runekit: RunekitInstance,
+  runelayer: RunelayerInstance,
   requestFactory: () => Request,
 ): RunelayerQueryApi {
   return {
     async find(collectionInput: CollectionInput, args: FindArgs = {}) {
-      const collection = resolveCollection(runekit.collections, collectionInput);
+      const collection = resolveCollection(runelayer.collections, collectionInput);
       return await find(
         {
-          db: runekit.database,
+          db: runelayer.database,
           collection,
           req: requestFactory(),
         },
@@ -125,29 +125,29 @@ function createQueryApi(
     },
 
     async findOne(collectionInput: CollectionInput, id: string) {
-      const collection = resolveCollection(runekit.collections, collectionInput);
-      return await findOne({ db: runekit.database, collection, req: requestFactory() }, id);
+      const collection = resolveCollection(runelayer.collections, collectionInput);
+      return await findOne({ db: runelayer.database, collection, req: requestFactory() }, id);
     },
 
     async create(collectionInput: CollectionInput, data: Record<string, unknown>) {
-      const collection = resolveCollection(runekit.collections, collectionInput);
-      return await create({ db: runekit.database, collection, req: requestFactory() }, data);
+      const collection = resolveCollection(runelayer.collections, collectionInput);
+      return await create({ db: runelayer.database, collection, req: requestFactory() }, data);
     },
 
     async update(collectionInput: CollectionInput, id: string, data: Record<string, unknown>) {
-      const collection = resolveCollection(runekit.collections, collectionInput);
-      return await update({ db: runekit.database, collection, req: requestFactory() }, id, data);
+      const collection = resolveCollection(runelayer.collections, collectionInput);
+      return await update({ db: runelayer.database, collection, req: requestFactory() }, id, data);
     },
 
     async remove(collectionInput: CollectionInput, id: string) {
-      const collection = resolveCollection(runekit.collections, collectionInput);
-      return await remove({ db: runekit.database, collection, req: requestFactory() }, id);
+      const collection = resolveCollection(runelayer.collections, collectionInput);
+      return await remove({ db: runelayer.database, collection, req: requestFactory() }, id);
     },
   };
 }
 
-function getCollectionBySlug(runekit: RunekitInstance, slug: string): CollectionConfig {
-  const collection = runekit.collections.find((entry) => entry.slug === slug);
+function getCollectionBySlug(runelayer: RunelayerInstance, slug: string): CollectionConfig {
+  const collection = runelayer.collections.find((entry) => entry.slug === slug);
   if (!collection) {
     throw error(404, `Unknown collection: ${slug}`);
   }
@@ -212,19 +212,19 @@ export function createRunelayerRuntime(
   const strictAccess = config.admin?.strictAccess ?? true;
   const authBasePath = config.auth.basePath ?? "/api/auth";
 
-  const { admin: _admin, ...runekitConfig } = config;
-  const runekit = createRunekit(
+  const { admin: _admin, ...runelayerConfig } = config;
+  const runelayer = createRunelayer(
     defineConfig({
-      ...runekitConfig,
+      ...runelayerConfig,
       adminPath,
     }),
   );
 
-  const system = createQueryApi(runekit, () => systemRequest(adminPath));
+  const system = createQueryApi(runelayer, () => systemRequest(adminPath));
 
   const withRequest = (eventOrRequest: RequestEvent | Request): RunelayerQueryApi => {
     const req = toRequest(eventOrRequest);
-    return createQueryApi(runekit, () => req);
+    return createQueryApi(runelayer, () => req);
   };
 
   const load = async (event: RequestEvent): Promise<Record<string, unknown>> => {
@@ -238,8 +238,8 @@ export function createRunelayerRuntime(
     const user = getUser(event);
     const baseData = {
       basePath: adminPath,
-      collections: toSerializable(runekit.collections),
-      globals: toSerializable(runekit.globals),
+      collections: toSerializable(runelayer.collections),
+      globals: toSerializable(runelayer.globals),
       user: user ? { email: user.email } : null,
     };
 
@@ -256,10 +256,10 @@ export function createRunelayerRuntime(
 
     if (route.kind === "dashboard") {
       const dashboardCollections = await Promise.all(
-        runekit.collections.map(async (collection) => ({
+        runelayer.collections.map(async (collection) => ({
           slug: collection.slug,
           label: collection.labels?.plural ?? collection.slug,
-          count: await countDocuments(runekit, collection.slug),
+          count: await countDocuments(runelayer, collection.slug),
         })),
       );
 
@@ -271,7 +271,7 @@ export function createRunelayerRuntime(
     }
 
     if (route.kind === "collection-list") {
-      const collection = getCollectionBySlug(runekit, route.slug);
+      const collection = getCollectionBySlug(runelayer, route.slug);
       const query = adminQueryApi(strictAccess, withRequest, system, event);
 
       const page = Math.max(1, Number(event.url.searchParams.get("page") ?? "1"));
@@ -281,7 +281,7 @@ export function createRunelayerRuntime(
         limit,
         offset,
       });
-      const totalDocs = await countDocuments(runekit, collection.slug);
+      const totalDocs = await countDocuments(runelayer, collection.slug);
       const totalPages = Math.max(1, Math.ceil(totalDocs / limit));
 
       return toSerializable({
@@ -296,7 +296,7 @@ export function createRunelayerRuntime(
     }
 
     if (route.kind === "collection-create") {
-      const collection = getCollectionBySlug(runekit, route.slug);
+      const collection = getCollectionBySlug(runelayer, route.slug);
       return toSerializable({
         ...baseData,
         view: "collection-create",
@@ -304,7 +304,7 @@ export function createRunelayerRuntime(
       });
     }
 
-    const collection = getCollectionBySlug(runekit, route.slug);
+    const collection = getCollectionBySlug(runelayer, route.slug);
     const query = adminQueryApi(strictAccess, withRequest, system, event);
     const document = await query.findOne(collection, route.id);
 
@@ -365,7 +365,7 @@ export function createRunelayerRuntime(
       }
 
       guardAdminRoute(event, route, strictAccess, adminPath);
-      const collection = getCollectionBySlug(runekit, route.slug);
+      const collection = getCollectionBySlug(runelayer, route.slug);
       const query = adminQueryApi(strictAccess, withRequest, system, event);
 
       const formData = await event.request.formData();
@@ -385,7 +385,7 @@ export function createRunelayerRuntime(
       }
 
       guardAdminRoute(event, route, strictAccess, adminPath);
-      const collection = getCollectionBySlug(runekit, route.slug);
+      const collection = getCollectionBySlug(runelayer, route.slug);
       const query = adminQueryApi(strictAccess, withRequest, system, event);
 
       const formData = await event.request.formData();
@@ -407,7 +407,7 @@ export function createRunelayerRuntime(
       }
 
       guardAdminRoute(event, route, strictAccess, adminPath);
-      const collection = getCollectionBySlug(runekit, route.slug);
+      const collection = getCollectionBySlug(runelayer, route.slug);
       const query = adminQueryApi(strictAccess, withRequest, system, event);
 
       const formData = await event.request.formData();
@@ -436,7 +436,7 @@ export function createRunelayerRuntime(
   };
 
   return {
-    handle: runekit.handle as Handle,
+    handle: runelayer.handle as Handle,
     admin: {
       load,
       actions,

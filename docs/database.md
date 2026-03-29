@@ -17,7 +17,7 @@ const database = createDatabase({
 `createDatabase` returns:
 
 ```ts
-interface RunekitDatabase {
+interface RunelayerDatabase {
   db: LibSQLDatabase; // Drizzle instance
   tables: GeneratedTables; // slug -> Drizzle table
   client: Client; // raw @libsql/client handle

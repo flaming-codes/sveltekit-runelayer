@@ -14,13 +14,13 @@ export interface DatabaseConfig extends DatabaseConnectionConfig {
   collections: CollectionConfig[];
 }
 
-export interface RunekitDatabase {
+export interface RunelayerDatabase {
   db: LibSQLDatabase;
   tables: GeneratedTables;
   client: Client;
 }
 
-export function createDatabase(config: DatabaseConfig): RunekitDatabase {
+export function createDatabase(config: DatabaseConfig): RunelayerDatabase {
   const client = createClient({
     url: config.url,
     authToken: config.authToken,

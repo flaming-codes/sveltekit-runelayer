@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createDatabase, type RunekitDatabase } from "../../db/init.js";
+import { createDatabase, type RunelayerDatabase } from "../../db/init.js";
 import { text } from "../../schema/fields.js";
 import type { CollectionConfig } from "../../schema/collections.js";
 import { checkAccess } from "../access.js";
@@ -12,7 +12,7 @@ const collection: CollectionConfig = {
   fields: [{ name: "title", ...text({ required: true }) }],
 };
 
-let rdb: RunekitDatabase;
+let rdb: RunelayerDatabase;
 let ctx: QueryContext;
 
 beforeEach(async () => {

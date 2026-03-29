@@ -1,6 +1,6 @@
 import type { Actions, Handle, RequestEvent } from "@sveltejs/kit";
 import type { ComponentType } from "svelte";
-import type { RunekitConfig } from "../config.js";
+import type { RunelayerConfig } from "../config.js";
 import type { CollectionConfig } from "../schema/collections.js";
 import type { FindArgs } from "../query/types.js";
 
@@ -13,7 +13,7 @@ export interface RunelayerAdminConfig {
   strictAccess?: boolean;
 }
 
-export interface RunelayerAppConfig extends Omit<RunekitConfig, "adminPath"> {
+export interface RunelayerAppConfig extends Omit<RunelayerConfig, "adminPath"> {
   admin?: RunelayerAdminConfig;
 }
 

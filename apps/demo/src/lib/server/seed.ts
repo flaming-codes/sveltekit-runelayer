@@ -128,10 +128,10 @@ export async function seed(app: RunelayerApp) {
   // ─── Posts ─────────────────────────────────────────────────
   await Promise.all([
     api.create(Posts, {
-      title: "Getting Started with Runekit CMS",
-      slug: "getting-started-with-runekit",
+      title: "Getting Started with Runelayer CMS",
+      slug: "getting-started-with-runelayer",
       excerpt:
-        "Learn how to set up Runekit CMS in your SvelteKit application in under five minutes.",
+        "Learn how to set up Runelayer CMS in your SvelteKit application in under five minutes.",
       content: JSON.stringify({
         type: "doc",
         content: [
@@ -139,7 +139,7 @@ export async function seed(app: RunelayerApp) {
           {
             type: "paragraph",
             content:
-              "Runekit is a CMS-as-a-package for SvelteKit apps. It runs inside your application's Node process with SQLite, Better Auth, and local filesystem storage.",
+              "Runelayer is a CMS-as-a-package for SvelteKit apps. It runs inside your application's Node process with SQLite, Better Auth, and local filesystem storage.",
           },
           { type: "heading", content: "Installation" },
           {
@@ -150,7 +150,7 @@ export async function seed(app: RunelayerApp) {
           {
             type: "paragraph",
             content:
-              "Define your collections, set up auth, and create the Runekit instance. The schema drives everything — database tables, validation, the query API, and admin UI.",
+              "Define your collections, set up auth, and create the Runelayer instance. The schema drives everything — database tables, validation, the query API, and admin UI.",
           },
         ],
       }),
@@ -160,10 +160,10 @@ export async function seed(app: RunelayerApp) {
       publishedAt: "2025-12-01T10:00:00.000Z",
       featured: true,
       readTime: 5,
-      metadata: JSON.stringify({ keywords: ["runekit", "cms", "sveltekit", "tutorial"] }),
-      seo_metaTitle: "Getting Started with Runekit CMS | Tutorial",
+      metadata: JSON.stringify({ keywords: ["runelayer", "cms", "sveltekit", "tutorial"] }),
+      seo_metaTitle: "Getting Started with Runelayer CMS | Tutorial",
       seo_metaDescription:
-        "A step-by-step guide to integrating Runekit CMS into your SvelteKit project.",
+        "A step-by-step guide to integrating Runelayer CMS into your SvelteKit project.",
     }),
     api.create(Posts, {
       title: "Building Design Systems with Carbon and Svelte 5",
@@ -208,7 +208,7 @@ export async function seed(app: RunelayerApp) {
           {
             type: "paragraph",
             content:
-              "The single source of truth principle is at the heart of Runekit's architecture. Define your collections in TypeScript and the system generates database tables, validation rules, query APIs, and admin UI components automatically.",
+              "The single source of truth principle is at the heart of Runelayer's architecture. Define your collections in TypeScript and the system generates database tables, validation rules, query APIs, and admin UI components automatically.",
           },
           { type: "heading", content: "Benefits" },
           {
@@ -272,7 +272,7 @@ export async function seed(app: RunelayerApp) {
           {
             type: "paragraph",
             content:
-              "Runekit implements a deny-by-default access control model. When an access function exists but no request context is provided, access is automatically denied — preventing accidental server-side bypasses.",
+              "Runelayer implements a deny-by-default access control model. When an access function exists but no request context is provided, access is automatically denied — preventing accidental server-side bypasses.",
           },
           { type: "heading", content: "Built-in Helpers" },
           {
@@ -343,17 +343,17 @@ export async function seed(app: RunelayerApp) {
       seo_metaDescription: "Build responsive layouts using Carbon Design System's 16-column grid.",
     }),
     api.create(Posts, {
-      title: "Migrating from Payload CMS to Runekit",
-      slug: "payload-to-runekit-migration",
+      title: "Migrating from Payload CMS to Runelayer",
+      slug: "payload-to-runelayer-migration",
       excerpt:
-        "A practical guide for teams transitioning from Payload CMS to the lighter Runekit approach.",
+        "A practical guide for teams transitioning from Payload CMS to the lighter Runelayer approach.",
       content: JSON.stringify({
         type: "doc",
         content: [
           {
             type: "paragraph",
             content:
-              "Runekit shares many concepts with Payload CMS — collections, fields, access control, hooks — but runs as a package inside your SvelteKit app rather than a separate server process.",
+              "Runelayer shares many concepts with Payload CMS — collections, fields, access control, hooks — but runs as a package inside your SvelteKit app rather than a separate server process.",
           },
         ],
       }),
@@ -364,9 +364,9 @@ export async function seed(app: RunelayerApp) {
       featured: false,
       readTime: 12,
       metadata: JSON.stringify({ keywords: ["migration", "payload", "comparison"] }),
-      seo_metaTitle: "Migrating from Payload CMS to Runekit",
+      seo_metaTitle: "Migrating from Payload CMS to Runelayer",
       seo_metaDescription:
-        "A step-by-step migration guide from Payload CMS to Runekit for SvelteKit apps.",
+        "A step-by-step migration guide from Payload CMS to Runelayer for SvelteKit apps.",
     }),
     api.create(Posts, {
       title: "File Uploads and Media Management",
@@ -378,7 +378,7 @@ export async function seed(app: RunelayerApp) {
           {
             type: "paragraph",
             content:
-              "Runekit's storage adapter provides secure file uploads with UUID-based naming, MIME type validation, and path traversal protection. Files are streamed efficiently to clients.",
+              "Runelayer's storage adapter provides secure file uploads with UUID-based naming, MIME type validation, and path traversal protection. Files are streamed efficiently to clients.",
           },
         ],
       }),
@@ -389,9 +389,9 @@ export async function seed(app: RunelayerApp) {
       featured: false,
       readTime: 6,
       metadata: JSON.stringify({ keywords: ["uploads", "storage", "media", "security"] }),
-      seo_metaTitle: "File Uploads in Runekit CMS",
+      seo_metaTitle: "File Uploads in Runelayer CMS",
       seo_metaDescription:
-        "Learn how to handle file uploads securely with Runekit's storage system.",
+        "Learn how to handle file uploads securely with Runelayer's storage system.",
     }),
     api.create(Posts, {
       title: "The Future of Embedded CMS",
@@ -423,8 +423,8 @@ export async function seed(app: RunelayerApp) {
   // ─── Products ──────────────────────────────────────────────
   await Promise.all([
     api.create(Products, {
-      name: "Runekit Starter",
-      slug: "runekit-starter",
+      name: "Runelayer Starter",
+      slug: "runelayer-starter",
       price: 0,
       description: JSON.stringify({
         type: "doc",
@@ -432,7 +432,7 @@ export async function seed(app: RunelayerApp) {
           {
             type: "paragraph",
             content:
-              "The open-source core of Runekit CMS. Perfect for personal blogs, portfolios, and small business sites. Includes all 16 field types, SQLite database, and Better Auth integration.",
+              "The open-source core of Runelayer CMS. Perfect for personal blogs, portfolios, and small business sites. Includes all 16 field types, SQLite database, and Better Auth integration.",
           },
         ],
       }),
@@ -450,8 +450,8 @@ export async function seed(app: RunelayerApp) {
       inStock: true,
     }),
     api.create(Products, {
-      name: "Runekit Pro",
-      slug: "runekit-pro",
+      name: "Runelayer Pro",
+      slug: "runelayer-pro",
       price: 29,
       description: JSON.stringify({
         type: "doc",
@@ -477,8 +477,8 @@ export async function seed(app: RunelayerApp) {
       inStock: true,
     }),
     api.create(Products, {
-      name: "Runekit Enterprise",
-      slug: "runekit-enterprise",
+      name: "Runelayer Enterprise",
+      slug: "runelayer-enterprise",
       price: 199,
       description: JSON.stringify({
         type: "doc",
@@ -516,16 +516,16 @@ export async function seed(app: RunelayerApp) {
   // ─── Pages ─────────────────────────────────────────────────
   await Promise.all([
     api.create(Pages, {
-      title: "About Runekit",
+      title: "About Runelayer",
       slug: "about",
       layout: "default",
       hero_heading: "Built for SvelteKit Developers",
       hero_subheading:
-        "Runekit is a CMS-as-a-package that runs inside your SvelteKit application. No separate server. No external database. Just your app with content management built in.",
+        "Runelayer is a CMS-as-a-package that runs inside your SvelteKit application. No separate server. No external database. Just your app with content management built in.",
       hero_showCta: true,
       showRecent: true,
       showCategories: true,
-      email: "hello@runekit.dev",
+      email: "hello@runelayer.dev",
       phone: "+1 (555) 123-4567",
     }),
     api.create(Pages, {
@@ -533,23 +533,23 @@ export async function seed(app: RunelayerApp) {
       slug: "contact",
       layout: "sidebar",
       hero_heading: "Get in Touch",
-      hero_subheading: "Have questions about Runekit? We would love to hear from you.",
+      hero_subheading: "Have questions about Runelayer? We would love to hear from you.",
       hero_showCta: false,
       showRecent: false,
       showCategories: true,
       customHtml: "<p>Office hours: Mon-Fri 9am-5pm PST</p>",
-      email: "support@runekit.dev",
+      email: "support@runelayer.dev",
       phone: "+1 (555) 987-6543",
     }),
   ]);
 
   // ─── Site Settings (singleton) ─────────────────────────────
   await api.create(SiteSettings, {
-    siteName: "Runekit Demo",
+    siteName: "Runelayer Demo",
     tagline: "CMS-as-a-Package for SvelteKit",
     description:
-      "This demo application showcases the features of Runekit CMS integrated with Carbon Design System. It demonstrates collections, field types, access control, hooks, and more.",
-    footerText: "Built with Runekit CMS, SvelteKit, and Carbon Design System.",
+      "This demo application showcases the features of Runelayer CMS integrated with Carbon Design System. It demonstrates collections, field types, access control, hooks, and more.",
+    footerText: "Built with Runelayer CMS, SvelteKit, and Carbon Design System.",
   });
 
   // ─── Navigation (singleton) ────────────────────────────────

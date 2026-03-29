@@ -27,7 +27,7 @@ describe("File Upload & Media Management — Full Journey", () => {
   let storageDir: string;
 
   beforeAll(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "runekit-storage-e2e-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "runelayer-storage-e2e-"));
     storageDir = join(tmpDir, "uploads");
 
     storage = createLocalStorage({

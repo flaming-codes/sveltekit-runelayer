@@ -15,7 +15,7 @@
 </script>
 
 <svelte:head>
-  <title>{data.category.name} | Categories | Runekit Demo</title>
+  <title>{data.category.name} | Categories | Runelayer Demo</title>
 </svelte:head>
 
 <div class="category-detail">

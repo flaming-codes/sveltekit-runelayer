@@ -3,7 +3,7 @@ export {
   createDatabase,
   type DatabaseConnectionConfig,
   type DatabaseConfig,
-  type RunekitDatabase,
+  type RunelayerDatabase,
 } from "./init.js";
 export {
   findMany,

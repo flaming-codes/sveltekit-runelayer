@@ -17,7 +17,7 @@
                     └────┬─────┘
                          │
                     ┌────▼─────┐
-                    │  plugin  │  (createRunekit)
+                    │  plugin  │  (createRunelayer)
                     └────┬─────┘
            ┌─────────┬──┼──┬─────────┐
            │         │  │  │         │
@@ -41,8 +41,8 @@ All runtime modules depend on schema types; schema does not depend on runtime mo
 ```
 packages/sveltekit-runelayer/src/
 ├── index.ts          # Public API
-├── config.ts         # RunekitConfig + defineConfig()
-├── plugin.ts         # createRunekit() composition root
+├── config.ts         # RunelayerConfig + defineConfig()
+├── plugin.ts         # createRunelayer() composition root
 ├── schema/           # Collection/global/field definitions
 ├── db/               # Drizzle + libsql integration, schema generation, CRUD
 ├── auth/             # Better Auth integration and access helpers
@@ -55,13 +55,13 @@ packages/sveltekit-runelayer/src/
 
 ## Runtime Flow
 
-### Initialization (`createRunekit`)
+### Initialization (`createRunelayer`)
 
 1. Create libsql client + Drizzle DB instance
 2. Generate table metadata from collection config
 3. Initialize Better Auth with Drizzle adapter (`provider: "sqlite"`)
 4. Initialize storage adapter
-5. Return `RunekitInstance` with SvelteKit `handle`
+5. Return `RunelayerInstance` with SvelteKit `handle`
 
 Migration application is intentionally external to runtime initialization.
 

@@ -1,8 +1,8 @@
-import type { RunekitDatabase } from "../db/init.js";
+import type { RunelayerDatabase } from "../db/init.js";
 import type { CollectionConfig } from "../schema/collections.js";
 
 export interface QueryContext {
-  db: RunekitDatabase;
+  db: RunelayerDatabase;
   collection: CollectionConfig;
   req?: Request;
 }

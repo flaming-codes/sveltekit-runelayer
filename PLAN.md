@@ -1,4 +1,4 @@
-# Runekit CMS v1 Plan (Updated With Engineering Directives)
+# Runelayer CMS v1 Plan (Updated With Engineering Directives)
 
 ## Summary
 
@@ -9,7 +9,7 @@
 ## Primary Engineering Directives
 
 - Single source of truth per concern: schema metadata defined once and reused for DB mapping, validation, query layer, and admin rendering.
-- No duplicate logic across packages: shared core utilities in `runekit-core`; adapters only implement contracts.
+- No duplicate logic across packages: shared core utilities in `runelayer-core`; adapters only implement contracts.
 - "Second-use rule" for abstractions: do not introduce abstractions until at least 2 concrete usages exist.
 - Low-LOC preference: smallest correct implementation, short functions, minimal public API surface, explicit deletion of dead code each milestone.
 - Maintainability-first boundaries: stable package contracts, internal extension hooks in v1, unstable APIs clearly marked internal.
@@ -46,7 +46,7 @@
 
 ### Phase 4: Integration
 
-- [x] **Plugin wiring** (`src/plugin.ts`) — createRunekit() initializes DB, auth, storage, push schema, returns handle hook
+- [x] **Plugin wiring** (`src/plugin.ts`) — createRunelayer() initializes DB, auth, storage, push schema, returns handle hook
 - [x] **Config system** — defineConfig() with collections, globals, auth, storage, dbPath
 - [x] **Main exports** (`src/index.ts`) — Unified public API surface
 - [ ] **Demo app** (`apps/demo`) — working example with collections
@@ -72,9 +72,9 @@
 ## Implementation Changes
 
 - Keep package split, but enforce lean boundaries:
-- `runekit-core` owns domain model, access, hooks, query API, shared types.
-- `runekit-db-drizzle-sqlite`, `runekit-auth-better`, and storage packages are thin adapters.
-- `runekit-admin-carbon` is route-isolated and lazy-loaded to prevent public-site bloat.
+- `runelayer-core` owns domain model, access, hooks, query API, shared types.
+- `runelayer-db-drizzle-sqlite`, `runelayer-auth-better`, and storage packages are thin adapters.
+- `runelayer-admin-carbon` is route-isolated and lazy-loaded to prevent public-site bloat.
 - Add architecture guardrails:
 - ADRs for only high-impact decisions.
 - API review checklist for every new export.

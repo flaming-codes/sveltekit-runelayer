@@ -18,7 +18,7 @@
 </script>
 
 <svelte:head>
-  <title>{data.post.seo_metaTitle ?? data.post.title} | Runekit Demo</title>
+  <title>{data.post.seo_metaTitle ?? data.post.title} | Runelayer Demo</title>
   {#if data.post.seo_metaDescription}
     <meta name="description" content={data.post.seo_metaDescription} />
   {/if}

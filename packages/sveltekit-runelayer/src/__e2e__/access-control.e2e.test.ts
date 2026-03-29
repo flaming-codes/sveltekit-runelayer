@@ -16,7 +16,7 @@ import { join } from "node:path";
 
 import {
   defineConfig,
-  createRunekit,
+  createRunelayer,
   defineCollection,
   text,
   select,
@@ -27,7 +27,7 @@ import {
   create,
   update,
   remove,
-  type RunekitInstance,
+  type RunelayerInstance,
   type QueryContext,
   type CollectionConfig,
   type AccessFn,
@@ -116,7 +116,7 @@ const publicReq = new Request("http://localhost"); // No auth headers
 // --- Test Suite ---
 
 describe("Role-Based Access Control — Full Journey", () => {
-  let kit: RunekitInstance;
+  let kit: RunelayerInstance;
   let tmpDir: string;
   let dbUrl: string;
 
@@ -125,10 +125,10 @@ describe("Role-Based Access Control — Full Journey", () => {
   }
 
   beforeAll(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "runekit-acl-e2e-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "runelayer-acl-e2e-"));
     dbUrl = `file:${join(tmpDir, "acl.db")}`;
     await migrateDatabaseForTests(dbUrl, [PublicPages, InternalNotes, SecretDocs]);
-    kit = createRunekit(
+    kit = createRunelayer(
       defineConfig({
         collections: [PublicPages, InternalNotes, SecretDocs],
         database: { url: dbUrl },

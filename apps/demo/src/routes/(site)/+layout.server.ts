@@ -10,7 +10,7 @@ export async function load() {
   ]);
 
   const settings = (settingsRows[0] as SiteSettingsRow) ?? {
-    siteName: "Runekit Demo",
+    siteName: "Runelayer Demo",
     tagline: "CMS-as-a-Package",
   };
 
@@ -20,7 +20,7 @@ export async function load() {
 
   return {
     siteSettings: {
-      siteName: settings.siteName ?? "Runekit Demo",
+      siteName: settings.siteName ?? "Runelayer Demo",
       tagline: settings.tagline ?? "",
       description: settings.description ?? "",
       footerText: settings.footerText ?? "",

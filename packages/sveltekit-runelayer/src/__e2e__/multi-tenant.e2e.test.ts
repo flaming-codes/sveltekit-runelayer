@@ -15,7 +15,7 @@ import { join } from "node:path";
 
 import {
   defineConfig,
-  createRunekit,
+  createRunelayer,
   defineCollection,
   text,
   select,
@@ -23,7 +23,7 @@ import {
   create,
   update,
   remove,
-  type RunekitInstance,
+  type RunelayerInstance,
   type QueryContext,
   type CollectionConfig,
   type AccessFn,
@@ -141,7 +141,7 @@ const globexUser1Req = tenantReq("globex", "globex-user-1");
 // --- Test Suite ---
 
 describe("Multi-Tenant CMS — Full Journey", () => {
-  let kit: RunekitInstance;
+  let kit: RunelayerInstance;
   let tmpDir: string;
   let dbUrl: string;
 
@@ -150,10 +150,10 @@ describe("Multi-Tenant CMS — Full Journey", () => {
   }
 
   beforeAll(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "runekit-tenant-e2e-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "runelayer-tenant-e2e-"));
     dbUrl = `file:${join(tmpDir, "tenant.db")}`;
     await migrateDatabaseForTests(dbUrl, [Projects, Tasks]);
-    kit = createRunekit(
+    kit = createRunelayer(
       defineConfig({
         collections: [Projects, Tasks],
         database: { url: dbUrl },
@@ -266,7 +266,7 @@ describe("Multi-Tenant CMS — Full Journey", () => {
   });
 
   it("tenant users can see all content (app-level filtering needed)", async () => {
-    // Note: Runekit v1 access control returns boolean, not query constraints
+    // Note: Runelayer v1 access control returns boolean, not query constraints
     // So at the DB level, all authenticated users see all rows
     // Tenant filtering must be done at the application layer
     const acmeView = await find(ctx(Projects, acmeUser1Req));

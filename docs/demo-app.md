@@ -15,12 +15,12 @@ The demo app in `apps/demo/` showcases the high-level SvelteKit integration API.
 src/lib/server/
 ├── schema.ts
 ├── drizzle-schema.ts
-├── runekit.ts
+├── runelayer.ts
 ├── seed.ts
 └── query-helpers.ts
 ```
 
-`runekit.ts` creates the app integration via `createRunelayerApp`.
+`runelayer.ts` creates the app integration via `createRunelayerApp`.
 
 ## Route isolation model
 

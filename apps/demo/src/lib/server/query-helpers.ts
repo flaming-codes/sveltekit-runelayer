@@ -1,5 +1,5 @@
 import type { RequestEvent } from "@sveltejs/kit";
-import { getRunelayerApp } from "./runekit.js";
+import { getRunelayerApp } from "./runelayer.js";
 
 // Re-export parseJson from shared module for server files that need it
 export { parseJson } from "../parse-json.js";

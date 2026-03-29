@@ -35,7 +35,7 @@ Runtime does not auto-migrate schema. Tests explicitly pre-apply schema before C
 import { createDatabase } from "../../db/init.js";
 import { applySchemaForTests } from "../../__testutils__/migrations.js";
 
-let rdb: RunekitDatabase;
+let rdb: RunelayerDatabase;
 
 beforeEach(async () => {
   rdb = createDatabase({ url: ":memory:", collections: [collection] });

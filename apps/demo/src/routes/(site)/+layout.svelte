@@ -37,7 +37,7 @@
 </script>
 
 <Header
-  company="Runekit"
+  company="Runelayer"
   platformName="Demo"
   bind:isSideNavOpen={isSideNavOpen}
 >

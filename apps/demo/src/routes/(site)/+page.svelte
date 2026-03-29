@@ -6,14 +6,14 @@
 </script>
 
 <svelte:head>
-  <title>Runekit Demo</title>
+  <title>Runelayer Demo</title>
 </svelte:head>
 
 <div class="home">
   <!-- Hero Section -->
   <section class="hero">
     <Tile>
-      <h1>Runekit Demo</h1>
+      <h1>Runelayer Demo</h1>
       <p class="tagline">
         A CMS-as-a-package for SvelteKit — powered by SQLite, Better Auth, and Svelte 5 runes.
       </p>

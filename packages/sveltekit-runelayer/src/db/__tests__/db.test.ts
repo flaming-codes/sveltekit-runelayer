@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { generateTables } from "../schema.js";
-import { createDatabase, type RunekitDatabase } from "../init.js";
+import { createDatabase, type RunelayerDatabase } from "../init.js";
 import { insertOne, findById, findMany, updateOne, deleteOne } from "../operations.js";
 import { text, number, checkbox, json, array, relationship } from "../../schema/fields.js";
 import type { CollectionConfig } from "../../schema/collections.js";
@@ -66,7 +66,7 @@ describe("generateTables", () => {
 });
 
 describe("createDatabase + migrated schema", () => {
-  let rdb: RunekitDatabase;
+  let rdb: RunelayerDatabase;
 
   beforeEach(async () => {
     rdb = createDatabase({ url: ":memory:", collections: [postsCollection] });
@@ -82,7 +82,7 @@ describe("createDatabase + migrated schema", () => {
 });
 
 describe("CRUD operations", () => {
-  let rdb: RunekitDatabase;
+  let rdb: RunelayerDatabase;
   const tbl = () => rdb.tables.posts;
 
   beforeEach(async () => {

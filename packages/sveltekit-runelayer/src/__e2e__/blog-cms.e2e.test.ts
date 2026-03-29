@@ -17,7 +17,7 @@ import { join } from "node:path";
 
 import {
   defineConfig,
-  createRunekit,
+  createRunelayer,
   defineCollection,
   text,
   textarea,
@@ -35,7 +35,7 @@ import {
   create,
   update,
   remove,
-  type RunekitInstance,
+  type RunelayerInstance,
   type QueryContext,
   type CollectionConfig,
 } from "../index.js";
@@ -115,7 +115,7 @@ const Posts: CollectionConfig = defineCollection({
 // --- Test Suite ---
 
 describe("Blog CMS Platform — Full User Journey", () => {
-  let kit: RunekitInstance;
+  let kit: RunelayerInstance;
   let tmpDir: string;
   let dbUrl: string;
   let authorCtx: QueryContext;
@@ -123,11 +123,11 @@ describe("Blog CMS Platform — Full User Journey", () => {
   let postCtx: QueryContext;
 
   beforeAll(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "runekit-blog-e2e-"));
+    tmpDir = await mkdtemp(join(tmpdir(), "runelayer-blog-e2e-"));
     dbUrl = `file:${join(tmpDir, "blog.db")}`;
     await migrateDatabaseForTests(dbUrl, [Authors, Categories, Posts]);
 
-    kit = createRunekit(
+    kit = createRunelayer(
       defineConfig({
         collections: [Authors, Categories, Posts],
         database: { url: dbUrl },

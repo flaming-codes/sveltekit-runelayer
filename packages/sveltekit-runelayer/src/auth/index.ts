@@ -1,14 +1,14 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { svelteKitHandler } from "better-auth/svelte-kit";
-import type { AuthConfig, RunekitAuth } from "./types.js";
+import type { AuthConfig, RunelayerAuth } from "./types.js";
 
-export type { AuthConfig, User, Session, Role, AccessContext, RunekitAuth } from "./types.js";
+export type { AuthConfig, User, Session, Role, AccessContext, RunelayerAuth } from "./types.js";
 export { isAdmin, isLoggedIn, hasRole } from "./access.js";
 export { createAuthHandler } from "./handler.js";
 
 /**
- * Initializes Runekit auth backed by Better Auth + Drizzle/SQLite.
+ * Initializes Runelayer auth backed by Better Auth + Drizzle/SQLite.
  *
  * Returns the raw Better Auth instance and a SvelteKit `handle` hook
  * that manages sessions and injects user context into request headers.
@@ -17,7 +17,7 @@ export function createAuth(
   config: AuthConfig,
   /** Drizzle database instance (from `drizzle(sqlite)`) */
   db: any,
-): RunekitAuth {
+): RunelayerAuth {
   const auth = betterAuth({
     secret: config.secret,
     baseURL: config.baseURL,
@@ -69,5 +69,5 @@ export function createAuth(
     return resolve(event);
   };
 
-  return { auth: auth as unknown as RunekitAuth["auth"], handle };
+  return { auth: auth as unknown as RunelayerAuth["auth"], handle };
 }

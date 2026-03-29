@@ -37,7 +37,7 @@ interface AuthConfig {
 
 ### Session Management
 
-The `handle` hook returned by `createRunekit()`:
+The `handle` hook returned by `createRunelayer()`:
 
 1. **Strips spoofed headers** — removes any incoming `x-user-id`, `x-user-role`, `x-user-email` headers
 2. **Resolves session** — calls Better Auth's `getSession()` API with the request cookies
@@ -49,9 +49,9 @@ The `handle` hook returned by `createRunekit()`:
 In your `src/hooks.server.ts`:
 
 ```ts
-import { runekit } from "$lib/runekit";
+import { runelayer } from "$lib/runelayer";
 
-export const handle = runekit.handle;
+export const handle = runelayer.handle;
 ```
 
 In the high-level `createRunelayerApp` integration, no separate `src/routes/api/auth/[...all]/+server.ts` route is required. The global `handle` hook routes auth requests at `auth.basePath` (default `/api/auth`).

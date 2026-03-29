@@ -125,7 +125,7 @@ async function runAfterHooks(hooks, context): Promise<void> {
     try {
       await hook(context);
     } catch (err) {
-      console.error("[runekit] afterHook error:", err);
+      console.error("[runelayer] afterHook error:", err);
     }
   }
 }

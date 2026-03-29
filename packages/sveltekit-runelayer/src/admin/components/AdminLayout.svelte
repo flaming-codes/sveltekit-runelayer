@@ -14,7 +14,7 @@
 
 <div class="rk-admin">
 	<nav class="rk-sidebar">
-		<div class="rk-sidebar-brand"><a href={basePath}>Runekit</a></div>
+		<div class="rk-sidebar-brand"><a href={basePath}>Runelayer</a></div>
 		<ul>
 			<li><a href={basePath}>Dashboard</a></li>
 			{#if collections.length}

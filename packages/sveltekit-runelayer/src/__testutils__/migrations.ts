@@ -1,6 +1,6 @@
 import { getTableConfig } from "drizzle-orm/sqlite-core";
 import type { CollectionConfig } from "../schema/collections.js";
-import { createDatabase, type RunekitDatabase } from "../db/init.js";
+import { createDatabase, type RunelayerDatabase } from "../db/init.js";
 
 function quoteIdent(name: string): string {
   return `"${name.replaceAll(`"`, `""`)}"`;
@@ -13,7 +13,7 @@ function quoteIdent(name: string): string {
 export async function applySchemaForTests({
   client,
   tables,
-}: Pick<RunekitDatabase, "client" | "tables">): Promise<void> {
+}: Pick<RunelayerDatabase, "client" | "tables">): Promise<void> {
   for (const table of Object.values(tables)) {
     const { name, columns } = getTableConfig(table);
 

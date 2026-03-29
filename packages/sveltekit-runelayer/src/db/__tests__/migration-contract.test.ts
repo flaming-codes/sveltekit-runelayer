@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { getTableConfig } from "drizzle-orm/sqlite-core";
 import {
   createDrizzleKitSchema,
-  createRunekit,
+  createRunelayer,
   create,
   defineCollection,
   defineConfig,
@@ -40,7 +40,7 @@ describe("host-managed migration contract", () => {
     tmpDir = await mkdtemp(join(tmpdir(), "runelayer-contract-"));
     const dbUrl = `file:${join(tmpDir, "contract.db")}`;
 
-    const unresolvedKit = createRunekit(
+    const unresolvedKit = createRunelayer(
       defineConfig({
         collections: [Posts],
         database: { url: dbUrl },
@@ -68,7 +68,7 @@ describe("host-managed migration contract", () => {
 
     await migrateDatabaseForTests(dbUrl, [Posts]);
 
-    const migratedKit = createRunekit(
+    const migratedKit = createRunelayer(
       defineConfig({
         collections: [Posts],
         database: { url: dbUrl },

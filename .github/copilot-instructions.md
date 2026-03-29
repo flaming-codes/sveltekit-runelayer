@@ -67,8 +67,8 @@ docs/               → Internal design documentation (14 files)
 
 ```
 index.ts            → Public API surface (re-exports from all modules)
-config.ts           → RunekitConfig type + defineConfig()
-plugin.ts           → createRunekit() — wires all modules, returns SvelteKit handle hook
+config.ts           → RunelayerConfig type + defineConfig()
+plugin.ts           → createRunelayer() — wires all modules, returns SvelteKit handle hook
 schema/             → Single source of truth: 16 field types, collection/global definitions
 db/                 → Drizzle ORM + libsql: schema→table generation, async CRUD, drizzle-kit schema helper
 auth/               → Better Auth: session management, role-based access (isAdmin/isLoggedIn/hasRole)
