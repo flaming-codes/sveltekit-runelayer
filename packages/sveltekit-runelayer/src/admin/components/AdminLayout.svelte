@@ -80,8 +80,7 @@
 
 	<Theme theme="g10">
 	<div class="rk-shell" data-admin-theme="g10">
-		<Theme theme="g100">
-			<Header
+		<Header
 				href={basePath}
 				companyName={appName}
 				platformName={productName}
@@ -139,7 +138,6 @@
 				</HeaderAction>
 			</HeaderUtilities>
 			</Header>
-		</Theme>
 
 		<SideNav bind:isOpen={isSideNavOpen} aria-label="Admin navigation" fixed={false}>
 			<SideNavItems>

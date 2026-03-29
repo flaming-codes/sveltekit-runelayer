@@ -16,7 +16,7 @@
 </script>
 
 <div class="rk-dashboard">
-	<div class="rk-dashboard-header" data-carbon-theme="g100">
+	<div class="rk-dashboard-header">
 		<div class="rk-dashboard-header-inner">
 			<h1 class="rk-dashboard-title">Dashboard</h1>
 			<p class="rk-dashboard-description">
@@ -100,11 +100,14 @@
 		margin: -2rem -1.5rem 0;
 	}
 
-	/* ── Page header (g100 themed) ── */
+	/* ── Page header (g100 scoped) ── */
 
 	.rk-dashboard-header {
-		background: #161616;
-		color: #f4f4f4;
+		--rk-header-bg: var(--cds-background-inverse);
+		--rk-header-text: var(--cds-text-inverse);
+		--rk-header-text-secondary: var(--cds-text-placeholder);
+		background: var(--rk-header-bg);
+		color: var(--rk-header-text);
 		padding: 3rem 0 2.5rem;
 	}
 
@@ -127,7 +130,7 @@
 		max-width: 42rem;
 		font-size: 1rem;
 		line-height: 1.5;
-		color: #c6c6c6;
+		color: var(--rk-header-text-secondary);
 	}
 
 	/* ── Sections ── */
@@ -172,14 +175,14 @@
 		align-items: flex-start;
 		min-height: 16rem;
 		padding: 1.25rem;
-		background: var(--cds-ui-background, #fff);
+		background: var(--cds-ui-background);
 		border: none;
 		text-decoration: none;
 		transition: background-color 110ms;
 	}
 
 	:global(.rk-card:hover) {
-		background: var(--cds-layer-01, #f4f4f4);
+		background: var(--cds-layer-01);
 	}
 
 	.rk-card-label {
