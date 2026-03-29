@@ -49,7 +49,8 @@ packages/sveltekit-runelayer/src/
 ├── storage/          # Local filesystem adapter
 ├── hooks/            # Lifecycle hook runner
 ├── query/            # Access-controlled CRUD orchestration
-└── admin/            # Admin handlers + Svelte components
+├── admin/            # Admin Svelte components
+└── sveltekit/        # High-level app integration surface
 ```
 
 ## Runtime Flow
@@ -87,9 +88,15 @@ Each query operation (`find`, `findOne`, `create`, `update`, `remove`) executes:
 
 ## Key Decisions
 
-### Single package
+### Single package + high-level subpath
 
-The project ships as `@flaming-codes/sveltekit-runelayer` with internal boundaries (`db`, `auth`, `query`, etc.). This keeps v1 simple while preserving future extraction options.
+The project ships as `@flaming-codes/sveltekit-runelayer` with internal boundaries (`db`, `auth`, `query`, etc.) and a high-level SvelteKit integration subpath: `@flaming-codes/sveltekit-runelayer/sveltekit`.
+
+The `sveltekit` subpath provides:
+
+- `createRunelayerApp()` for package-owned integration wiring
+- `defineRunelayerDrizzleConfig()` for host drizzle-kit setup
+- single admin catch-all runtime (`load`, `actions`, `Page`)
 
 ### libsql-first SQLite compatibility
 
@@ -121,5 +128,6 @@ Access control receives only `Request` data with verified auth headers, avoiding
 
 - `@flaming-codes/sveltekit-runelayer`
 - `@flaming-codes/sveltekit-runelayer/admin`
+- `@flaming-codes/sveltekit-runelayer/sveltekit`
 
-This split keeps admin-specific code tree-shakeable.
+This split keeps low-level APIs, admin components, and high-level host integration independently consumable.

@@ -1,16 +1,13 @@
-import type { QueryContext, CollectionConfig } from "@flaming-codes/sveltekit-runelayer";
-import { getRunekit } from "./runekit.js";
+import type { RequestEvent } from "@sveltejs/kit";
+import { getRunelayerApp } from "./runekit.js";
 
 // Re-export parseJson from shared module for server files that need it
 export { parseJson } from "../parse-json.js";
 
-/**
- * Create a QueryContext for a collection.
- * Pass `request` from the SvelteKit load event to satisfy access control.
- */
-export function ctx(collection: CollectionConfig, request?: Request): QueryContext {
-  const req = request ?? new Request("http://localhost");
-  return { db: getRunekit().database, collection, req };
+export type QueryRequest = RequestEvent | Request;
+
+export function query(request?: QueryRequest) {
+  return getRunelayerApp().withRequest(request ?? new Request("http://localhost"));
 }
 
 /** Build an id→record lookup map from query results. */

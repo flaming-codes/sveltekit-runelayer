@@ -2,6 +2,11 @@
 
 The query API is the public-facing data access layer. It wraps raw database operations with access control checks and hook execution, providing a safe, consistent interface for all content operations.
 
+If you use the high-level SvelteKit integration (`createRunelayerApp`), call queries through:
+
+- `runelayer.withRequest(request)` for request-bound access checks
+- `runelayer.system` for explicit server-context operations (seeding/jobs)
+
 ## Query Context
 
 Every query operation requires a `QueryContext`:

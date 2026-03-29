@@ -18,6 +18,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./admin": "./src/admin/index.ts",
+    "./sveltekit": "./src/sveltekit/index.ts",
     "./package.json": "./package.json"
   },
   "publishConfig": {

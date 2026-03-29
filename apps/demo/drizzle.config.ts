@@ -1,10 +1,12 @@
 import { defineConfig } from "drizzle-kit";
+import { defineRunelayerDrizzleConfig } from "@flaming-codes/sveltekit-runelayer/sveltekit";
 
-export default defineConfig({
-  dialect: "sqlite",
-  schema: "./src/lib/server/drizzle-schema.ts",
-  out: "./drizzle",
-  dbCredentials: {
-    url: "file:./data/demo.db",
-  },
-});
+export default defineConfig(
+  defineRunelayerDrizzleConfig({
+    schema: "./src/lib/server/drizzle-schema.ts",
+    out: "./drizzle",
+    database: {
+      url: "file:./data/demo.db",
+    },
+  }),
+);

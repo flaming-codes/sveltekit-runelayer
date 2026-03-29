@@ -1,9 +1,4 @@
-import {
-  find,
-  create,
-  type RunekitInstance,
-  type QueryContext,
-} from "@flaming-codes/sveltekit-runelayer";
+import type { RunelayerApp } from "@flaming-codes/sveltekit-runelayer/sveltekit";
 import {
   Authors,
   Categories,
@@ -15,53 +10,46 @@ import {
   Navigation,
 } from "./schema.js";
 
-function ctx(runekit: RunekitInstance, collection: any): QueryContext {
-  // Create a synthetic admin request for seeding
-  const req = new Request("http://localhost");
-  req.headers.set("x-user-id", "seed-admin");
-  req.headers.set("x-user-role", "admin");
-  req.headers.set("x-user-email", "admin@demo.local");
-  return { db: runekit.database, collection, req };
-}
+export async function seed(app: RunelayerApp) {
+  const api = app.system;
 
-export async function seed(runekit: RunekitInstance) {
   // Check if already seeded
-  const existing = await find(ctx(runekit, Categories));
+  const existing = await api.find(Categories);
   if (existing.length > 0) return;
 
   console.log("[demo] Seeding demo data...");
 
   // ─── Categories ────────────────────────────────────────────
   const categories = await Promise.all([
-    create(ctx(runekit, Categories), {
+    api.create(Categories, {
       name: "Technology",
       slug: "technology",
       description: "Latest in software, hardware, and digital innovation.",
       sortOrder: 1,
       featured: true,
     }),
-    create(ctx(runekit, Categories), {
+    api.create(Categories, {
       name: "Design",
       slug: "design",
       description: "UI/UX, visual design, and creative processes.",
       sortOrder: 2,
       featured: true,
     }),
-    create(ctx(runekit, Categories), {
+    api.create(Categories, {
       name: "Business",
       slug: "business",
       description: "Strategy, management, and entrepreneurship insights.",
       sortOrder: 3,
       featured: false,
     }),
-    create(ctx(runekit, Categories), {
+    api.create(Categories, {
       name: "Tutorials",
       slug: "tutorials",
       description: "Step-by-step guides and how-to articles.",
       sortOrder: 4,
       featured: true,
     }),
-    create(ctx(runekit, Categories), {
+    api.create(Categories, {
       name: "News",
       slug: "news",
       description: "Industry news and announcements.",
@@ -73,7 +61,7 @@ export async function seed(runekit: RunekitInstance) {
 
   // ─── Authors ───────────────────────────────────────────────
   const authors = await Promise.all([
-    create(ctx(runekit, Authors), {
+    api.create(Authors, {
       name: "Alice Chen",
       slug: "alice-chen",
       email: "alice@example.com",
@@ -81,7 +69,7 @@ export async function seed(runekit: RunekitInstance) {
       role: "staff",
       active: true,
     }),
-    create(ctx(runekit, Authors), {
+    api.create(Authors, {
       name: "Marcus Rivera",
       slug: "marcus-rivera",
       email: "marcus@example.com",
@@ -89,7 +77,7 @@ export async function seed(runekit: RunekitInstance) {
       role: "staff",
       active: true,
     }),
-    create(ctx(runekit, Authors), {
+    api.create(Authors, {
       name: "Priya Sharma",
       slug: "priya-sharma",
       email: "priya@example.com",
@@ -102,7 +90,7 @@ export async function seed(runekit: RunekitInstance) {
 
   // ─── Media ─────────────────────────────────────────────────
   const mediaItems = await Promise.all([
-    create(ctx(runekit, Media), {
+    api.create(Media, {
       filename: "hero-banner.jpg",
       alt: "Abstract gradient background",
       caption: "Hero banner for the homepage",
@@ -110,7 +98,7 @@ export async function seed(runekit: RunekitInstance) {
       mimeType: "image/jpeg",
       tags: JSON.stringify(["banner"]),
     }),
-    create(ctx(runekit, Media), {
+    api.create(Media, {
       filename: "svelte-logo.png",
       alt: "Svelte framework logo",
       caption: "The Svelte logo",
@@ -118,7 +106,7 @@ export async function seed(runekit: RunekitInstance) {
       mimeType: "image/svg+xml",
       tags: JSON.stringify(["icon"]),
     }),
-    create(ctx(runekit, Media), {
+    api.create(Media, {
       filename: "code-editor.jpg",
       alt: "Code editor with syntax highlighting",
       caption: "Modern code editor showing TypeScript",
@@ -126,7 +114,7 @@ export async function seed(runekit: RunekitInstance) {
       mimeType: "image/jpeg",
       tags: JSON.stringify(["photo", "screenshot"]),
     }),
-    create(ctx(runekit, Media), {
+    api.create(Media, {
       filename: "team-meeting.jpg",
       alt: "Team collaboration session",
       caption: "Design review meeting",
@@ -139,7 +127,7 @@ export async function seed(runekit: RunekitInstance) {
 
   // ─── Posts ─────────────────────────────────────────────────
   await Promise.all([
-    create(ctx(runekit, Posts), {
+    api.create(Posts, {
       title: "Getting Started with Runekit CMS",
       slug: "getting-started-with-runekit",
       excerpt:
@@ -177,7 +165,7 @@ export async function seed(runekit: RunekitInstance) {
       seo_metaDescription:
         "A step-by-step guide to integrating Runekit CMS into your SvelteKit project.",
     }),
-    create(ctx(runekit, Posts), {
+    api.create(Posts, {
       title: "Building Design Systems with Carbon and Svelte 5",
       slug: "carbon-design-systems-svelte-5",
       excerpt:
@@ -209,7 +197,7 @@ export async function seed(runekit: RunekitInstance) {
       seo_metaDescription:
         "Integrate Carbon Components Svelte into your Svelte 5 application for a consistent design system.",
     }),
-    create(ctx(runekit, Posts), {
+    api.create(Posts, {
       title: "Schema-Driven Development: A New Paradigm",
       slug: "schema-driven-development",
       excerpt:
@@ -241,7 +229,7 @@ export async function seed(runekit: RunekitInstance) {
       seo_metaDescription:
         "How schema-first CMS design improves developer experience and content safety.",
     }),
-    create(ctx(runekit, Posts), {
+    api.create(Posts, {
       title: "SQLite as Your CMS Database: Why It Works",
       slug: "sqlite-cms-database",
       excerpt:
@@ -273,7 +261,7 @@ export async function seed(runekit: RunekitInstance) {
       seo_metaDescription:
         "Discover why SQLite with WAL mode is an excellent choice for content management systems.",
     }),
-    create(ctx(runekit, Posts), {
+    api.create(Posts, {
       title: "Access Control Patterns in Modern CMS",
       slug: "access-control-patterns",
       excerpt:
@@ -305,7 +293,7 @@ export async function seed(runekit: RunekitInstance) {
       seo_metaDescription:
         "Learn how to implement role-based access control in your content management system.",
     }),
-    create(ctx(runekit, Posts), {
+    api.create(Posts, {
       title: "The Power of Lifecycle Hooks in Content Management",
       slug: "lifecycle-hooks-cms",
       excerpt:
@@ -331,7 +319,7 @@ export async function seed(runekit: RunekitInstance) {
       seo_metaDescription:
         "How to use beforeChange, afterChange, and other lifecycle hooks for content automation.",
     }),
-    create(ctx(runekit, Posts), {
+    api.create(Posts, {
       title: "Responsive Layouts with Carbon Grid System",
       slug: "carbon-grid-responsive",
       excerpt: "Master Carbon's 16-column grid system for building responsive, content-rich pages.",
@@ -354,7 +342,7 @@ export async function seed(runekit: RunekitInstance) {
       seo_metaTitle: "Carbon Grid System Guide",
       seo_metaDescription: "Build responsive layouts using Carbon Design System's 16-column grid.",
     }),
-    create(ctx(runekit, Posts), {
+    api.create(Posts, {
       title: "Migrating from Payload CMS to Runekit",
       slug: "payload-to-runekit-migration",
       excerpt:
@@ -380,7 +368,7 @@ export async function seed(runekit: RunekitInstance) {
       seo_metaDescription:
         "A step-by-step migration guide from Payload CMS to Runekit for SvelteKit apps.",
     }),
-    create(ctx(runekit, Posts), {
+    api.create(Posts, {
       title: "File Uploads and Media Management",
       slug: "file-uploads-media",
       excerpt: "Handling file uploads with path traversal protection and streaming delivery.",
@@ -405,7 +393,7 @@ export async function seed(runekit: RunekitInstance) {
       seo_metaDescription:
         "Learn how to handle file uploads securely with Runekit's storage system.",
     }),
-    create(ctx(runekit, Posts), {
+    api.create(Posts, {
       title: "The Future of Embedded CMS",
       slug: "future-embedded-cms",
       excerpt: "Why CMS-as-a-package is gaining traction and what it means for the Jamstack.",
@@ -434,7 +422,7 @@ export async function seed(runekit: RunekitInstance) {
 
   // ─── Products ──────────────────────────────────────────────
   await Promise.all([
-    create(ctx(runekit, Products), {
+    api.create(Products, {
       name: "Runekit Starter",
       slug: "runekit-starter",
       price: 0,
@@ -461,7 +449,7 @@ export async function seed(runekit: RunekitInstance) {
       image: svelteLogo.id,
       inStock: true,
     }),
-    create(ctx(runekit, Products), {
+    api.create(Products, {
       name: "Runekit Pro",
       slug: "runekit-pro",
       price: 29,
@@ -488,7 +476,7 @@ export async function seed(runekit: RunekitInstance) {
       image: codeEditor.id,
       inStock: true,
     }),
-    create(ctx(runekit, Products), {
+    api.create(Products, {
       name: "Runekit Enterprise",
       slug: "runekit-enterprise",
       price: 199,
@@ -527,7 +515,7 @@ export async function seed(runekit: RunekitInstance) {
 
   // ─── Pages ─────────────────────────────────────────────────
   await Promise.all([
-    create(ctx(runekit, Pages), {
+    api.create(Pages, {
       title: "About Runekit",
       slug: "about",
       layout: "default",
@@ -540,7 +528,7 @@ export async function seed(runekit: RunekitInstance) {
       email: "hello@runekit.dev",
       phone: "+1 (555) 123-4567",
     }),
-    create(ctx(runekit, Pages), {
+    api.create(Pages, {
       title: "Contact Us",
       slug: "contact",
       layout: "sidebar",
@@ -556,7 +544,7 @@ export async function seed(runekit: RunekitInstance) {
   ]);
 
   // ─── Site Settings (singleton) ─────────────────────────────
-  await create(ctx(runekit, SiteSettings), {
+  await api.create(SiteSettings, {
     siteName: "Runekit Demo",
     tagline: "CMS-as-a-Package for SvelteKit",
     description:
@@ -565,7 +553,7 @@ export async function seed(runekit: RunekitInstance) {
   });
 
   // ─── Navigation (singleton) ────────────────────────────────
-  await create(ctx(runekit, Navigation), {
+  await api.create(Navigation, {
     label: "Main Navigation",
     items: JSON.stringify([
       { label: "Home", href: "/", order: 1 },

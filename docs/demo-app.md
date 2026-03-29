@@ -1,6 +1,6 @@
 # Demo Application
 
-The demo app in `apps/demo/` showcases `@flaming-codes/sveltekit-runelayer` inside a full SvelteKit site.
+The demo app in `apps/demo/` showcases the high-level SvelteKit integration API.
 
 ## Stack
 
@@ -14,37 +14,39 @@ The demo app in `apps/demo/` showcases `@flaming-codes/sveltekit-runelayer` insi
 ```
 src/lib/server/
 ├── schema.ts
+├── drizzle-schema.ts
 ├── runekit.ts
 ├── seed.ts
 └── query-helpers.ts
 ```
 
-`runekit.ts` uses:
+`runekit.ts` creates the app integration via `createRunelayerApp`.
 
-- `database.url` (`file:./data/demo.db`)
-- optional `database.authToken`
-- Better Auth config (`secret`, `baseURL`)
+## Route isolation model
 
-## Routes
+The demo uses route groups to air-gap admin from the public site:
 
-Demo routes cover blog, categories, authors, products, gallery, pages, and Better Auth API endpoints.
+- `src/routes/(site)` → public frontend layouts/pages
+- `src/routes/(admin)/admin/[...path]` → CMS admin mount
 
-## Features demonstrated
+Admin is mounted with one catch-all route that re-exports:
 
-- schema-driven collections
-- lifecycle hooks
-- role-based access helpers
-- query API pagination/sorting
-- local media storage
-- seeded demo content
+- `app.admin.load`
+- `app.admin.actions`
+- `app.admin.Page`
+
+## Query model in demo pages
+
+Site routes call `query(request).find(...)`, which delegates to `app.withRequest(request)`.
+
+Seeding uses `app.system` for explicit server-context writes.
 
 ## Migration model in demo
 
-The demo follows the same migration contract as the package:
-
 - schema is exported for drizzle-kit
+- `drizzle.config.ts` uses `defineRunelayerDrizzleConfig`
 - migrations are applied before runtime startup
-- `createRunekit()` does not mutate schema
+- runtime does not mutate schema
 
 ## Running
 

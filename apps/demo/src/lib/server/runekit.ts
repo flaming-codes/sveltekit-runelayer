@@ -1,15 +1,14 @@
 import {
-  defineConfig,
-  createRunekit,
-  type RunekitInstance,
-} from "@flaming-codes/sveltekit-runelayer";
+  createRunelayerApp,
+  type RunelayerApp,
+} from "@flaming-codes/sveltekit-runelayer/sveltekit";
 import { allCollections } from "./schema.js";
 
-let _instance: RunekitInstance | undefined;
+let _app: RunelayerApp | undefined;
 
-export function getRunekit(): RunekitInstance {
-  if (!_instance) {
-    const config = defineConfig({
+export function getRunelayerApp(): RunelayerApp {
+  if (!_app) {
+    _app = createRunelayerApp({
       collections: allCollections,
       auth: {
         secret: process.env.AUTH_SECRET || "demo-secret-do-not-use-in-production-minimum-32-chars",
@@ -19,8 +18,12 @@ export function getRunekit(): RunekitInstance {
         url: "file:./data/demo.db",
         authToken: process.env.DATABASE_AUTH_TOKEN,
       },
+      admin: {
+        path: "/admin",
+        strictAccess: false,
+      },
     });
-    _instance = createRunekit(config);
   }
-  return _instance;
+
+  return _app;
 }

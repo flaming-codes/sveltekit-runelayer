@@ -2,6 +2,13 @@
 
 Validated library decisions for `sveltekit-runelayer`.
 
+## App consumption model
+
+- primary host integration path: `@flaming-codes/sveltekit-runelayer/sveltekit`
+- single admin catch-all mount (`/admin/[...path]`) with package-owned `load/actions/Page`
+- default admin access policy: strict admin-only (`admin.strictAccess: true`)
+- host query consumption: `withRequest(request)` for route-bound operations, `system` for jobs/seeding
+
 ## Core stack
 
 ### Drizzle ORM + libsql client

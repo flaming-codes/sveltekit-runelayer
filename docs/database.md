@@ -96,15 +96,18 @@ Example drizzle-kit config:
 ```ts
 // drizzle.config.ts
 import { defineConfig } from "drizzle-kit";
+import { defineRunelayerDrizzleConfig } from "@flaming-codes/sveltekit-runelayer/sveltekit";
 
-export default defineConfig({
-  dialect: "sqlite",
-  schema: "./src/lib/server/drizzle-schema.ts",
-  out: "./drizzle",
-  dbCredentials: {
-    url: process.env.DATABASE_URL ?? "file:./data/sveltekit-runelayer.db",
-  },
-});
+export default defineConfig(
+  defineRunelayerDrizzleConfig({
+    schema: "./src/lib/server/drizzle-schema.ts",
+    out: "./drizzle",
+    database: {
+      url: process.env.DATABASE_URL ?? "file:./data/sveltekit-runelayer.db",
+      authToken: process.env.DATABASE_AUTH_TOKEN,
+    },
+  }),
+);
 ```
 
 Apply migrations before starting your app.

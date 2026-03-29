@@ -63,14 +63,14 @@ Benefits:
 
 ## Known limitations
 
-- admin handlers are not auto-gated; host routes must enforce auth/role checks
+- strict admin gating can be disabled (`admin.strictAccess: false`), which intentionally relaxes access checks
 - no built-in global request rate limiting
 - MIME validation is header-based unless host adds content sniffing
 
 ## Deployment checklist
 
 - set a strong `BETTER_AUTH_SECRET`
-- enforce admin route auth in host app
+- keep `admin.strictAccess` enabled unless you explicitly need an open admin integration
 - configure upload allowlists and size limits
 - apply drizzle-kit migrations before startup
 - run behind HTTPS and apply rate limiting at edge/proxy level

@@ -54,16 +54,7 @@ import { runekit } from "$lib/runekit";
 export const handle = runekit.handle;
 ```
 
-For the auth API endpoints, create `src/routes/api/auth/[...all]/+server.ts`:
-
-```ts
-import { createAuthHandler } from "@flaming-codes/sveltekit-runelayer";
-import { runekit } from "$lib/runekit";
-
-const handler = createAuthHandler(runekit.auth);
-export const GET = handler;
-export const POST = handler;
-```
+In the high-level `createRunelayerApp` integration, no separate `src/routes/api/auth/[...all]/+server.ts` route is required. The global `handle` hook routes auth requests at `auth.basePath` (default `/api/auth`).
 
 ## User Model
 

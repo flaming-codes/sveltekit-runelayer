@@ -1,6 +1,8 @@
 # Getting Started
 
-`sveltekit-runelayer` is a CMS-as-a-package for SvelteKit applications. It runs inside your app process with SQLite-compatible libsql connections, Drizzle ORM, Better Auth, and local file storage.
+`sveltekit-runelayer` now ships a high-level SvelteKit integration surface at `@flaming-codes/sveltekit-runelayer/sveltekit`.
+
+Use this path when integrating the CMS into an app.
 
 ## Prerequisites
 
@@ -12,15 +14,14 @@
 
 ```bash
 pnpm add @flaming-codes/sveltekit-runelayer
+pnpm add -D drizzle-kit
 ```
-
-The package ships with `drizzle-orm`, `@libsql/client`, and `better-auth`.
 
 ## 1. Define collections
 
 ```ts
 // src/lib/server/schema.ts
-import { defineCollection, text, select, slug, richText } from "@flaming-codes/sveltekit-runelayer";
+import { defineCollection, text, slug, richText, select } from "@flaming-codes/sveltekit-runelayer";
 
 export const Posts = defineCollection({
   slug: "posts",
@@ -42,7 +43,7 @@ export const Posts = defineCollection({
 });
 ```
 
-## 2. Export drizzle-kit schema and run migrations
+## 2. Export schema for drizzle-kit
 
 ```ts
 // src/lib/server/drizzle-schema.ts
@@ -52,45 +53,52 @@ import { Posts } from "./schema.js";
 export const runelayerSchema = createDrizzleKitSchema([Posts]);
 ```
 
+## 3. Use the drizzle helper config
+
 ```ts
 // drizzle.config.ts
 import { defineConfig } from "drizzle-kit";
+import { defineRunelayerDrizzleConfig } from "@flaming-codes/sveltekit-runelayer/sveltekit";
 
-export default defineConfig({
-  dialect: "sqlite",
-  schema: "./src/lib/server/drizzle-schema.ts",
-  out: "./drizzle",
-  dbCredentials: {
-    url: process.env.DATABASE_URL ?? "file:./data/sveltekit-runelayer.db",
-  },
-});
+export default defineConfig(
+  defineRunelayerDrizzleConfig({
+    schema: "./src/lib/server/drizzle-schema.ts",
+    out: "./drizzle",
+    database: {
+      url: "file:./data/sveltekit-runelayer.db",
+      // authToken: process.env.DATABASE_AUTH_TOKEN,
+    },
+  }),
+);
 ```
 
-Generate/apply migrations before app startup.
+Generate and apply migrations before startup.
 
-## 3. Initialize sveltekit-runelayer
+## 4. Create the app integration instance
 
 ```ts
 // src/lib/server/runelayer.ts
-import { defineConfig, createRunekit } from "@flaming-codes/sveltekit-runelayer";
+import { createRunelayerApp } from "@flaming-codes/sveltekit-runelayer/sveltekit";
 import { Posts } from "./schema.js";
 
-const config = defineConfig({
+export const runelayer = createRunelayerApp({
   collections: [Posts],
-  database: {
-    url: process.env.DATABASE_URL ?? "file:./data/sveltekit-runelayer.db",
-    authToken: process.env.DATABASE_AUTH_TOKEN,
-  },
   auth: {
     secret: process.env.AUTH_SECRET ?? "dev-secret-change-in-production",
     baseURL: process.env.ORIGIN ?? "http://localhost:5173",
   },
+  database: {
+    url: process.env.DATABASE_URL ?? "file:./data/sveltekit-runelayer.db",
+    authToken: process.env.DATABASE_AUTH_TOKEN,
+  },
+  admin: {
+    path: "/admin",
+    // strictAccess: true (default)
+  },
 });
-
-export const runelayer = createRunekit(config);
 ```
 
-## 4. Add SvelteKit handle hook
+## 5. Wire the global handle hook
 
 ```ts
 // src/hooks.server.ts
@@ -99,68 +107,61 @@ import { runelayer } from "$lib/server/runelayer";
 export const handle = runelayer.handle;
 ```
 
-## 5. Add Better Auth route
+No extra auth route file is required for the default integration path.
+
+## 6. Mount admin in one catch-all route
+
+Create an isolated admin route group:
 
 ```ts
-// src/routes/api/auth/[...all]/+server.ts
-import { createAuthHandler } from "@flaming-codes/sveltekit-runelayer";
+// src/routes/(admin)/admin/[...path]/+page.server.ts
 import { runelayer } from "$lib/server/runelayer";
 
-const handler = createAuthHandler(runelayer.auth);
-export const GET = handler;
-export const POST = handler;
+export const load = runelayer.admin.load;
+export const actions = runelayer.admin.actions;
 ```
 
-## 6. Query content
+```svelte
+<!-- src/routes/(admin)/admin/[...path]/+page.svelte -->
+<script lang="ts">
+  import { runelayer } from "$lib/server/runelayer";
+  const Page = runelayer.admin.Page;
+  let { data, form } = $props();
+</script>
+
+<Page {data} {form} />
+```
+
+Keep the public site in a separate route group (for example, `src/routes/(site)`), so `/admin` does not inherit frontend layouts/data-loading.
+
+## 7. Query content with request-bound helpers
 
 ```ts
-// src/routes/+page.server.ts
-import { find } from "@flaming-codes/sveltekit-runelayer";
+// src/routes/(site)/+page.server.ts
 import { runelayer } from "$lib/server/runelayer";
 import { Posts } from "$lib/server/schema";
 
 export async function load({ request }) {
-  const posts = await find(
-    { db: runelayer.database, collection: Posts, req: request },
-    { limit: 10, sort: "createdAt", sortOrder: "desc" },
-  );
+  const posts = await runelayer.withRequest(request).find(Posts, {
+    limit: 10,
+    sort: "createdAt",
+    sortOrder: "desc",
+  });
 
   return { posts };
 }
 ```
 
-## Config reference
+For seeding/background jobs, use the explicit server context:
 
 ```ts
-interface RunekitConfig {
-  collections: CollectionConfig[];
-  auth: AuthConfig;
-  database?: {
-    url: string;
-    authToken?: string;
-  }; // default: { url: "file:./data/sveltekit-runelayer.db" }
-  globals?: GlobalConfig[];
-  adminPath?: string;
-  storage?: LocalStorageConfig;
-}
+await runelayer.system.create(Posts, { title: "Seeded" });
 ```
-
-## Startup model
-
-When `createRunekit(config)` is called:
-
-1. A libsql client is created using `database.url`
-2. Drizzle table metadata is generated from collection config
-3. Better Auth is initialized with the Drizzle adapter
-4. Local storage adapter is initialized
-5. A SvelteKit `handle` hook is returned
-
-`createRunekit` does not apply database schema migrations at runtime. Use drizzle-kit before startup.
 
 ## Next docs
 
-- [Schema](./schema.md)
-- [Database](./database.md)
-- [Query API](./query-api.md)
-- [Authentication](./auth.md)
 - [Architecture](./architecture.md)
+- [Database](./database.md)
+- [Authentication](./auth.md)
+- [Admin UI](./admin-ui.md)
+- [Query API](./query-api.md)
