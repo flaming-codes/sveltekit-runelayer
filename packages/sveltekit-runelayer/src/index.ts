@@ -59,7 +59,3 @@ export type { HookContext, CollectionHooks, GlobalHooks } from "./hooks/index.js
 // Query API
 export { find, findOne, create, update, remove } from "./query/index.js";
 export type { QueryContext, FindArgs } from "./query/index.js";
-
-// Environment
-export { readStrictAccess } from "./env.js";
-export type { RunelayerEnv } from "./env.js";

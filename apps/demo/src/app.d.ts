@@ -18,12 +18,6 @@ declare global {
       DATABASE_URL?: string;
       /** Turso auth token for remote databases. */
       DATABASE_AUTH_TOKEN?: string;
-      /**
-       * Admin access control.
-       * "true" (default) — require authenticated admin session.
-       * "false"          — disable auth guards (development only).
-       */
-      RUNELAYER_STRICT_ACCESS?: string;
     }
   }
 }

@@ -73,6 +73,14 @@ interface User {
 
 Better Auth manages user storage. The `role` field is added as an additional user field with default value `'user'`.
 
+## First Admin Bootstrap
+
+Runelayer checks whether any admin user exists in Better Auth's `user` table.
+
+- if at least one admin exists, `/admin/login` is shown and admin access requires admin auth
+- if no admin exists, admin routes redirect to `/admin/create-first-user`
+- the setup form posts `?/createFirstUser`, which creates the first user via Better Auth sign-up with `role: "admin"`
+
 ## Roles
 
 ```ts

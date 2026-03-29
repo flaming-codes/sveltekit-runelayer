@@ -32,8 +32,6 @@ export interface RunelayerAdminUIConfig {
 export interface RunelayerAdminConfig {
   /** Mount path for admin pages. @default "/admin" */
   path?: string;
-  /** Enforce authenticated admin role for all admin pages/actions. @default true */
-  strictAccess?: boolean;
   /** Package-owned admin UI options */
   ui?: RunelayerAdminUIConfig;
 }

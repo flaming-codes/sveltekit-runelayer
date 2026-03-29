@@ -2,6 +2,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { createClient } from "@libsql/client";
 import { migrateDatabaseForTests } from "../../__testutils__/migrations.js";
 import { isLoggedIn } from "../../auth/index.js";
 import { defineCollection } from "../../schema/collections.js";
@@ -59,10 +60,71 @@ const SiteSettings = defineGlobal({
   },
 });
 
-async function createTestApp(strictAccess: boolean) {
+interface TestAuthUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+}
+
+const DEFAULT_ADMIN_USER: TestAuthUser = {
+  id: "admin-1",
+  email: "admin@example.com",
+  name: "Admin",
+  role: "admin",
+};
+
+const ADMIN_LOCALS = {
+  user: {
+    email: "admin@example.com",
+    role: "admin",
+    name: "Admin",
+  },
+};
+
+const ADMIN_HEADERS = {
+  "x-user-id": "admin-1",
+  "x-user-role": "admin",
+  "x-user-email": "admin@example.com",
+};
+
+async function applyAuthSchemaForTests(url: string, users: TestAuthUser[] = []) {
+  const client = createClient({ url });
+  const now = new Date().toISOString();
+
+  try {
+    await client.execute(`
+      CREATE TABLE IF NOT EXISTS "user" (
+        "id" TEXT PRIMARY KEY NOT NULL,
+        "email" TEXT NOT NULL,
+        "name" TEXT NOT NULL,
+        "role" TEXT,
+        "image" TEXT,
+        "emailVerified" INTEGER NOT NULL,
+        "createdAt" TEXT NOT NULL,
+        "updatedAt" TEXT NOT NULL
+      )
+    `);
+
+    for (const user of users) {
+      await client.execute({
+        sql: `
+          INSERT INTO "user" ("id", "email", "name", "role", "image", "emailVerified", "createdAt", "updatedAt")
+          VALUES (?, ?, ?, ?, NULL, 1, ?, ?)
+        `,
+        args: [user.id, user.email, user.name, user.role, now, now],
+      });
+    }
+  } finally {
+    client.close();
+  }
+}
+
+async function createTestApp(options?: { authUsers?: TestAuthUser[] }) {
   const tempDir = mkdtempSync(join(tmpdir(), "runelayer-sveltekit-"));
   const dbUrl = `file:${join(tempDir, "test.db")}`;
   await migrateDatabaseForTests(dbUrl, [Posts]);
+  await applyAuthSchemaForTests(dbUrl, options?.authUsers ?? [DEFAULT_ADMIN_USER]);
 
   return createRunelayerRuntime(
     {
@@ -78,7 +140,6 @@ async function createTestApp(strictAccess: boolean) {
       },
       admin: {
         path: "/admin",
-        strictAccess,
       },
     },
     {} as any,
@@ -91,6 +152,7 @@ function makeEvent(
     method?: string;
     form?: Record<string, string>;
     locals?: Record<string, unknown>;
+    headers?: Record<string, string>;
     fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
   },
 ) {
@@ -98,9 +160,14 @@ function makeEvent(
   const url = new URL(`http://localhost${pathname}`);
 
   const body = options?.form ? new URLSearchParams(options.form) : undefined;
+  const headers = new Headers(options?.headers ?? {});
+  if (body) {
+    headers.set("content-type", "application/x-www-form-urlencoded");
+  }
+
   const request = new Request(url, {
     method: options?.method ?? (body ? "POST" : "GET"),
-    headers: body ? { "content-type": "application/x-www-form-urlencoded" } : undefined,
+    headers,
     body,
   });
 
@@ -113,36 +180,53 @@ function makeEvent(
   } as any;
 }
 
+function adminEvent(
+  path?: string,
+  options?: Omit<Parameters<typeof makeEvent>[1], "locals" | "headers">,
+) {
+  return makeEvent(path, {
+    ...options,
+    locals: ADMIN_LOCALS,
+    headers: ADMIN_HEADERS,
+  });
+}
+
+function requestUrl(input: RequestInfo | URL): string {
+  if (typeof input === "string") return input;
+  if (input instanceof URL) return input.toString();
+  return input.url;
+}
+
 describe("createRunelayerApp", () => {
   it("resolves admin paths and returns serializable payloads", async () => {
-    const app = await createTestApp(false);
+    const app = await createTestApp();
     const created = (await app.system.create(Posts, { title: "Hello" })) as { id: string };
 
-    const dashboard = await app.admin.load(makeEvent());
+    const dashboard = await app.admin.load(adminEvent());
     expect(dashboard.view).toBe("dashboard");
 
-    const list = await app.admin.load(makeEvent("collections/posts"));
+    const list = await app.admin.load(adminEvent("collections/posts"));
     expect(list.view).toBe("collection-list");
     expect((list.docs as unknown[]).length).toBe(1);
     expect(() => JSON.stringify(list)).not.toThrow();
     expect((list.collection as Record<string, unknown>).access).toEqual({});
 
-    const createView = await app.admin.load(makeEvent("collections/posts/create"));
+    const createView = await app.admin.load(adminEvent("collections/posts/create"));
     expect(createView.view).toBe("collection-create");
 
-    const editView = await app.admin.load(makeEvent(`collections/posts/${created.id}`));
+    const editView = await app.admin.load(adminEvent(`collections/posts/${created.id}`));
     expect(editView.view).toBe("collection-edit");
 
-    const globalView = await app.admin.load(makeEvent("globals/site-settings"));
+    const globalView = await app.admin.load(adminEvent("globals/site-settings"));
     expect(globalView.view).toBe("global-edit");
     expect((globalView.global as Record<string, unknown>).slug).toBe("site-settings");
   });
 
   it("dispatches create/update/delete admin actions", async () => {
-    const app = await createTestApp(false);
+    const app = await createTestApp();
 
     const created = await (app.admin.actions.create as any)(
-      makeEvent("collections/posts/create", {
+      adminEvent("collections/posts/create", {
         form: { title: "Draft" },
       }),
     );
@@ -151,7 +235,7 @@ describe("createRunelayerApp", () => {
     const id = created.document.id as string;
 
     const updated = await (app.admin.actions.update as any)(
-      makeEvent(`collections/posts/${id}`, {
+      adminEvent(`collections/posts/${id}`, {
         form: {
           id,
           title: "Published",
@@ -163,7 +247,7 @@ describe("createRunelayerApp", () => {
     expect(updated.document.title).toBe("Published");
 
     const deleted = await (app.admin.actions.delete as any)(
-      makeEvent(`collections/posts/${id}`, {
+      adminEvent(`collections/posts/${id}`, {
         form: { id },
       }),
     );
@@ -174,10 +258,10 @@ describe("createRunelayerApp", () => {
   });
 
   it("dispatches global update action and persists the singleton document", async () => {
-    const app = await createTestApp(false);
+    const app = await createTestApp();
 
     const updated = await (app.admin.actions.update as any)(
-      makeEvent("globals/site-settings", {
+      adminEvent("globals/site-settings", {
         form: {
           siteName: "  Runelayer CMS  ",
         },
@@ -188,7 +272,7 @@ describe("createRunelayerApp", () => {
     expect(updated.document.id).toBe("site-settings");
     expect(updated.document.siteName).toBe("Runelayer CMS");
 
-    const globalView = await app.admin.load(makeEvent("globals/site-settings"));
+    const globalView = await app.admin.load(adminEvent("globals/site-settings"));
     expect(globalView.document).toMatchObject({
       id: "site-settings",
       siteName: "Runelayer CMS",
@@ -196,21 +280,21 @@ describe("createRunelayerApp", () => {
   });
 
   it("throws 404 for unknown collections in admin routes", async () => {
-    const app = await createTestApp(false);
-    await expect(app.admin.load(makeEvent("collections/missing"))).rejects.toMatchObject({
+    const app = await createTestApp();
+    await expect(app.admin.load(adminEvent("collections/missing"))).rejects.toMatchObject({
       status: 404,
     });
   });
 
   it("throws 404 for unknown globals in admin routes", async () => {
-    const app = await createTestApp(false);
-    await expect(app.admin.load(makeEvent("globals/missing"))).rejects.toMatchObject({
+    const app = await createTestApp();
+    await expect(app.admin.load(adminEvent("globals/missing"))).rejects.toMatchObject({
       status: 404,
     });
   });
 
-  it("enforces strict admin access when enabled", async () => {
-    const app = await createTestApp(true);
+  it("enforces admin auth access", async () => {
+    const app = await createTestApp();
 
     await expect(app.admin.load(makeEvent())).rejects.toMatchObject({
       status: 303,
@@ -227,17 +311,111 @@ describe("createRunelayerApp", () => {
       status: 403,
     });
 
-    const adminView = await app.admin.load(
-      makeEvent(undefined, {
-        locals: { user: { email: "admin@example.com", role: "admin" } },
-      }),
-    );
+    const adminView = await app.admin.load(adminEvent());
 
     expect(adminView.view).toBe("dashboard");
   });
 
+  it("redirects to first-user setup when no admin exists", async () => {
+    const app = await createTestApp({ authUsers: [] });
+
+    await expect(app.admin.load(makeEvent())).rejects.toMatchObject({
+      status: 303,
+      location: "/admin/create-first-user",
+    });
+
+    const setupView = await app.admin.load(makeEvent("create-first-user"));
+    expect(setupView.view).toBe("create-first-user");
+  });
+
+  it("redirects login action to first-user setup when no admin exists", async () => {
+    const app = await createTestApp({ authUsers: [] });
+
+    await expect(
+      (app.admin.actions.login as any)(
+        makeEvent("login", {
+          form: {
+            email: "admin@example.com",
+            password: "secret",
+          },
+        }),
+      ),
+    ).rejects.toMatchObject({
+      status: 303,
+      location: "/admin/create-first-user",
+    });
+  });
+
+  it("creates the first admin user through the setup action", async () => {
+    const app = await createTestApp({ authUsers: [] });
+    const requests: Array<{ url: string; body: string }> = [];
+
+    await expect(
+      (app.admin.actions.createFirstUser as any)(
+        makeEvent("create-first-user", {
+          form: {
+            name: "First Admin",
+            email: "admin@example.com",
+            password: "super-secret-password",
+          },
+          fetch: async (input, init) => {
+            const body = init?.body;
+            if (typeof body !== "string") {
+              throw new Error("Expected JSON string body");
+            }
+            requests.push({ url: requestUrl(input), body });
+            return new Response(JSON.stringify({}), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            });
+          },
+        }),
+      ),
+    ).rejects.toMatchObject({
+      status: 303,
+      location: "/admin",
+    });
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0].url).toBe("/api/auth/sign-up/email");
+
+    const payload = JSON.parse(requests[0].body) as Record<string, unknown>;
+    expect(payload.name).toBe("First Admin");
+    expect(payload.email).toBe("admin@example.com");
+    expect(payload.password).toBe("super-secret-password");
+    expect(payload.role).toBe("admin");
+    expect(payload.callbackURL).toBe("/admin");
+  });
+
+  it("blocks first-user setup once an admin already exists", async () => {
+    const app = await createTestApp();
+
+    let called = false;
+
+    await expect(
+      (app.admin.actions.createFirstUser as any)(
+        makeEvent("create-first-user", {
+          form: {
+            name: "Another Admin",
+            email: "other@example.com",
+            password: "super-secret-password",
+          },
+          fetch: async () => {
+            called = true;
+            return new Response(null, { status: 200 });
+          },
+        }),
+      ),
+    ).rejects.toMatchObject({
+      status: 303,
+      location: "/admin/login",
+    });
+
+    expect(called).toBe(false);
+  });
+
   it("supports withRequest and system query APIs", async () => {
-    const app = await createTestApp(false);
+    const app = await createTestApp();
 
     await expect(
       app.withRequest(new Request("http://localhost")).create(Posts, { title: "Nope" }),

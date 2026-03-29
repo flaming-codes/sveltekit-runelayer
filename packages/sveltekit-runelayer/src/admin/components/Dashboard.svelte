@@ -100,15 +100,13 @@
 		margin: -2rem -1.5rem 0;
 	}
 
-	/* ── Page header (full-bleed, g100 scoped) ── */
+	/* ── Page header (full-bleed, g10) ── */
 
 	.rk-dashboard-header {
-		--rk-header-bg: var(--cds-background-inverse);
-		--rk-header-text: var(--cds-text-inverse);
-		--rk-header-text-secondary: var(--cds-text-placeholder);
-		background: var(--rk-header-bg);
-		color: var(--rk-header-text);
+		background: var(--cds-ui-background);
+		color: var(--cds-text-primary);
 		padding: 3rem 1.5rem 2.5rem;
+		border-bottom: 1px solid var(--cds-border-subtle);
 	}
 
 	.rk-dashboard-header-inner {
@@ -129,7 +127,7 @@
 		max-width: 42rem;
 		font-size: 1rem;
 		line-height: 1.5;
-		color: var(--rk-header-text-secondary);
+		color: var(--cds-text-secondary);
 	}
 
 	/* ── Sections ── */

@@ -98,7 +98,6 @@ export const runelayer = createRunelayerApp({
   },
   admin: {
     path: "/admin",
-    // strictAccess: true (default)
   },
 });
 ```
@@ -137,6 +136,11 @@ export const actions = runelayer.admin.actions;
 ```
 
 Keep the public site in a separate route group (for example, `src/routes/(site)`), so `/admin` does not inherit frontend layouts/data-loading.
+
+First-time setup is automatic:
+
+- if an admin user already exists, unauthenticated users are sent to `/admin/login`
+- if no admin exists yet, users are sent to `/admin/create-first-user` to create the first admin account
 
 Also add thin admin-only layout and error wiring:
 

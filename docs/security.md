@@ -63,14 +63,12 @@ Benefits:
 
 ## Known limitations
 
-- strict admin gating can be disabled (`admin.strictAccess: false`), which intentionally relaxes access checks
 - no built-in global request rate limiting
 - MIME validation is header-based unless host adds content sniffing
 
 ## Deployment checklist
 
 - set a strong `BETTER_AUTH_SECRET`
-- keep `admin.strictAccess` enabled unless you explicitly need an open admin integration
 - configure upload allowlists and size limits
 - apply drizzle-kit migrations before startup
 - run behind HTTPS and apply rate limiting at edge/proxy level

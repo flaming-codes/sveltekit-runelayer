@@ -10,16 +10,30 @@
 
 	let {
 		action = "?/login",
+		setupAction = "?/createFirstUser",
 		error = "",
+		mode = "login",
 		ui = {},
 	}: {
 		action?: string;
+		setupAction?: string;
 		error?: string;
+		mode?: "login" | "create-first-user";
 		ui?: { appName?: string; productName?: string };
 	} = $props();
 
+	let name = $state("");
 	let email = $state("");
 	let password = $state("");
+	let isCreateFirstUser = $derived(mode === "create-first-user");
+	let formAction = $derived(isCreateFirstUser ? setupAction : action);
+	let errorTitle = $derived(isCreateFirstUser ? "Setup failed" : "Authentication failed");
+	let subtitle = $derived(
+		isCreateFirstUser
+			? "Create the first administrator account to unlock the CMS."
+			: "Sign in to access the admin workspace.",
+	);
+	let submitLabel = $derived(isCreateFirstUser ? "Create admin user" : "Sign in");
 	let appName = $derived(ui.appName ?? "Runelayer");
 	let productName = $derived(ui.productName ?? "CMS");
 </script>
@@ -29,21 +43,31 @@
 		<div class="rk-login-header">
 			<p class="rk-login-eyebrow">{appName}</p>
 			<h1 class="rk-login-title">{productName}</h1>
-			<p class="rk-login-subtitle">Sign in to access the admin workspace.</p>
+			<p class="rk-login-subtitle">{subtitle}</p>
 		</div>
 
 		<Tile class="rk-login-card">
 			{#if error}
 				<InlineNotification
 					kind="error"
-					title="Authentication failed"
+					title={errorTitle}
 					subtitle={error}
 					lowContrast
 					hideCloseButton
 				/>
 			{/if}
 
-			<form method="POST" {action} class="rk-login-form">
+			<form method="POST" action={formAction} class="rk-login-form">
+				{#if isCreateFirstUser}
+					<TextInput
+						id="name"
+						name="name"
+						bind:value={name}
+						labelText="Full name"
+						placeholder="Admin User"
+						required
+					/>
+				{/if}
 				<TextInput
 					id="email"
 					name="email"
@@ -61,7 +85,7 @@
 					placeholder="Enter password"
 					required
 				/>
-				<Button type="submit" icon={Login}>Sign in</Button>
+				<Button type="submit" icon={Login}>{submitLabel}</Button>
 			</form>
 		</Tile>
 	</div>

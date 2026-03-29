@@ -181,6 +181,7 @@ Dashboard, Collection List/Edit, Version History, Account, Login, Forgot Passwor
 - Collection list with sortable table and pagination — Implemented
 - Collection edit with field rendering — Implemented
 - Login form — Implemented
+- Create first user flow — Implemented (`/admin/create-first-user` + `?/createFirstUser`)
 - Admin layout with sidebar — Implemented
 - 10 field renderers — Implemented
 - Route helper for host app — Implemented

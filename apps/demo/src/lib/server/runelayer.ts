@@ -23,7 +23,6 @@ export function getRunelayerApp(): RunelayerApp {
       },
       admin: {
         path: "/admin",
-        strictAccess: false,
         ui: {
           appName: "Runelayer",
           productName: "Demo Admin",

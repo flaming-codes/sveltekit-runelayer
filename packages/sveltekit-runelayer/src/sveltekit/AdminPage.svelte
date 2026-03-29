@@ -17,8 +17,14 @@
   } = $props();
 </script>
 
-{#if data.view === "login"}
-  <AdminLoginPage action="?/login" error={form?.error ?? data.error ?? ""} ui={data.ui} />
+{#if data.view === "login" || data.view === "create-first-user"}
+  <AdminLoginPage
+    action="?/login"
+    setupAction="?/createFirstUser"
+    mode={data.view === "create-first-user" ? "create-first-user" : "login"}
+    error={form?.error ?? data.error ?? ""}
+    ui={data.ui}
+  />
 {:else if data.view === "dashboard"}
   <AdminShell
     collections={data.collections}

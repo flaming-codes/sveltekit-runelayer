@@ -1,7 +1,6 @@
 import type { Actions, Handle, RequestEvent } from "@sveltejs/kit";
 import type { Component } from "svelte";
 import { defineConfig } from "../config.js";
-import { readStrictAccess } from "../env.js";
 import { createRunelayer } from "../plugin.js";
 import type { RunelayerInstance } from "../plugin.js";
 import { create, find, findOne, remove, update } from "../query/index.js";
@@ -20,6 +19,7 @@ import type {
 type AdminRoute =
   | { kind: "dashboard" }
   | { kind: "login" }
+  | { kind: "create-first-user" }
   | { kind: "logout" }
   | { kind: "profile" }
   | { kind: "health" }
@@ -42,6 +42,9 @@ function parseAdminRoute(path: string | undefined): AdminRoute | null {
 
   if (segments.length === 0) return { kind: "dashboard" };
   if (segments.length === 1 && segments[0] === "login") return { kind: "login" };
+  if (segments.length === 1 && segments[0] === "create-first-user") {
+    return { kind: "create-first-user" };
+  }
   if (segments.length === 1 && segments[0] === "logout") return { kind: "logout" };
   if (segments.length === 1 && segments[0] === "profile") return { kind: "profile" };
   if (segments.length === 1 && segments[0] === "health") return { kind: "health" };
@@ -88,6 +91,22 @@ async function countDocuments(runelayer: RunelayerInstance, collection: string):
     `SELECT COUNT(*) AS count FROM ${quoteIdent(collection)}`,
   );
   return getCountValue(result.rows[0]);
+}
+
+async function countAdminUsers(runelayer: RunelayerInstance): Promise<number> {
+  try {
+    const result = await runelayer.database.client.execute(
+      `SELECT COUNT(*) AS count FROM "user" WHERE LOWER(COALESCE(role, '')) = 'admin'`,
+    );
+    return getCountValue(result.rows[0]);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    // If Better Auth tables are not migrated yet, treat this as "no admins".
+    if (message.toLowerCase().includes(`no such table`) && message.toLowerCase().includes(`user`)) {
+      return 0;
+    }
+    throw error;
+  }
 }
 
 function resolveCollection(
@@ -181,19 +200,6 @@ function formField(formData: FormData, key: string): string {
   return typeof value === "string" ? value : "";
 }
 
-function adminQueryApi(
-  strictAccess: boolean,
-  withRequest: (eventOrRequest: RequestEvent | Request) => RunelayerQueryApi,
-  system: RunelayerQueryApi,
-  event: RequestEvent,
-): RunelayerQueryApi {
-  return strictAccess ? withRequest(event) : system;
-}
-
-function adminRequest(event: RequestEvent, strictAccess: boolean, adminPath: string): Request {
-  return strictAccess ? event.request : systemRequest(adminPath);
-}
-
 export function createRunelayerRuntime(
   config: RunelayerAppConfig,
   page: Component<any>,
@@ -216,21 +222,36 @@ export function createRunelayerRuntime(
     return global;
   }
 
-  function guardAdminRoute(
+  async function guardAdminRoute(
     event: RequestEvent,
     route: AdminRoute,
-    strictAccess: boolean,
     adminPath: string,
-  ): void {
-    if (!strictAccess) return;
-
+    adminExists: boolean,
+  ): Promise<void> {
     const user = getUser(event);
 
+    if (route.kind === "create-first-user") {
+      if (adminExists) {
+        if (user?.role === "admin") {
+          throw redirect(303, adminPath);
+        }
+        throw redirect(303, `${adminPath}/login`);
+      }
+      return;
+    }
+
     if (route.kind === "login") {
+      if (!adminExists) {
+        throw redirect(303, `${adminPath}/create-first-user`);
+      }
       if (user?.role === "admin") {
         throw redirect(303, adminPath);
       }
       return;
+    }
+
+    if (!adminExists) {
+      throw redirect(303, `${adminPath}/create-first-user`);
     }
 
     if (!user) {
@@ -242,7 +263,6 @@ export function createRunelayerRuntime(
     }
   }
   const adminPath = normalizeAdminPath(config.admin?.path ?? "/admin");
-  const strictAccess = readStrictAccess() ?? config.admin?.strictAccess ?? true;
   const ui = {
     appName: config.admin?.ui?.appName ?? "Runelayer",
     productName: config.admin?.ui?.productName ?? "CMS",
@@ -299,7 +319,8 @@ export function createRunelayerRuntime(
       };
     }
 
-    guardAdminRoute(event, route, strictAccess, adminPath);
+    const adminExists = (await countAdminUsers(runelayer)) > 0;
+    await guardAdminRoute(event, route, adminPath, adminExists);
 
     const user = getUser(event);
     const baseData = {
@@ -317,6 +338,13 @@ export function createRunelayerRuntime(
       return {
         ...baseData,
         view: "login",
+      };
+    }
+
+    if (route.kind === "create-first-user") {
+      return {
+        ...baseData,
+        view: "create-first-user",
       };
     }
 
@@ -354,7 +382,7 @@ export function createRunelayerRuntime(
 
     if (route.kind === "collection-list") {
       const collection = getCollectionBySlug(runelayer, route.slug);
-      const query = adminQueryApi(strictAccess, withRequest, system, event);
+      const query = withRequest(event);
 
       const page = Math.max(1, Number(event.url.searchParams.get("page") ?? "1"));
       const limit = Math.max(1, Number(event.url.searchParams.get("limit") ?? "20"));
@@ -389,11 +417,7 @@ export function createRunelayerRuntime(
 
     if (route.kind === "global-edit") {
       const global = resolveGlobalBySlug(runelayer, route.slug);
-      const document = await readGlobalDocument(
-        runelayer,
-        global,
-        adminRequest(event, strictAccess, adminPath),
-      );
+      const document = await readGlobalDocument(runelayer, global, event.request);
 
       return toSerializable({
         ...baseData,
@@ -404,7 +428,7 @@ export function createRunelayerRuntime(
     }
 
     const collection = getCollectionBySlug(runelayer, route.slug);
-    const query = adminQueryApi(strictAccess, withRequest, system, event);
+    const query = withRequest(event);
     const document = await query.findOne(collection, route.id);
 
     if (!document) {
@@ -426,8 +450,8 @@ export function createRunelayerRuntime(
         throw error(404, "Login action is only valid on /admin/login");
       }
 
-      if (!strictAccess) {
-        throw redirect(303, adminPath);
+      if ((await countAdminUsers(runelayer)) === 0) {
+        throw redirect(303, `${adminPath}/create-first-user`);
       }
 
       const formData = await event.request.formData();
@@ -457,15 +481,65 @@ export function createRunelayerRuntime(
       throw redirect(303, adminPath);
     },
 
+    createFirstUser: async (event) => {
+      const route = parseAdminRoute(event.params.path);
+      if (!route || route.kind !== "create-first-user") {
+        throw error(404, "Create-first-user action is only valid on /admin/create-first-user");
+      }
+
+      if ((await countAdminUsers(runelayer)) > 0) {
+        throw redirect(303, `${adminPath}/login`);
+      }
+
+      const formData = await event.request.formData();
+      const name = formField(formData, "name").trim();
+      const email = formField(formData, "email").trim();
+      const password = formField(formData, "password");
+
+      if (!name || !email || !password) {
+        return fail(400, { error: "Name, email, and password are required." });
+      }
+
+      const response = await event.fetch(`${authBasePath}/sign-up/email`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role: "admin",
+          callbackURL: adminPath,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        const message =
+          payload &&
+          typeof payload === "object" &&
+          "message" in payload &&
+          typeof payload.message === "string"
+            ? payload.message
+            : "Unable to create the first admin user.";
+
+        return fail(400, { error: message });
+      }
+
+      throw redirect(303, adminPath);
+    },
+
     create: async (event) => {
       const route = parseAdminRoute(event.params.path);
       if (!route || route.kind !== "collection-create") {
         throw error(404, "Create action is only valid on collection create routes");
       }
 
-      guardAdminRoute(event, route, strictAccess, adminPath);
+      const adminExists = (await countAdminUsers(runelayer)) > 0;
+      await guardAdminRoute(event, route, adminPath, adminExists);
       const collection = getCollectionBySlug(runelayer, route.slug);
-      const query = adminQueryApi(strictAccess, withRequest, system, event);
+      const query = withRequest(event);
 
       const formData = await event.request.formData();
       const data = Object.fromEntries(formData.entries()) as Record<string, unknown>;
@@ -483,22 +557,18 @@ export function createRunelayerRuntime(
         throw error(404, "Update action is only valid on collection/global edit routes");
       }
 
-      guardAdminRoute(event, route, strictAccess, adminPath);
+      const adminExists = (await countAdminUsers(runelayer)) > 0;
+      await guardAdminRoute(event, route, adminPath, adminExists);
       const formData = await event.request.formData();
       const data = Object.fromEntries(formData.entries()) as Record<string, unknown>;
 
       let document: unknown;
       if (route.kind === "global-edit") {
         const global = resolveGlobalBySlug(runelayer, route.slug);
-        document = await updateGlobalDocument(
-          runelayer,
-          global,
-          adminRequest(event, strictAccess, adminPath),
-          data,
-        );
+        document = await updateGlobalDocument(runelayer, global, event.request, data);
       } else {
         const collection = getCollectionBySlug(runelayer, route.slug);
-        const query = adminQueryApi(strictAccess, withRequest, system, event);
+        const query = withRequest(event);
         const id = typeof data.id === "string" ? data.id : route.id;
         delete data.id;
         document = await query.update(collection, id, data);
@@ -516,9 +586,10 @@ export function createRunelayerRuntime(
         throw error(404, "Delete action is only valid on collection edit routes");
       }
 
-      guardAdminRoute(event, route, strictAccess, adminPath);
+      const adminExists = (await countAdminUsers(runelayer)) > 0;
+      await guardAdminRoute(event, route, adminPath, adminExists);
       const collection = getCollectionBySlug(runelayer, route.slug);
-      const query = adminQueryApi(strictAccess, withRequest, system, event);
+      const query = withRequest(event);
 
       const formData = await event.request.formData();
       const formId = formData.get("id");
@@ -537,7 +608,7 @@ export function createRunelayerRuntime(
         throw error(405, "Unsupported admin action");
       }
 
-      if (strictAccess && getUser(event)) {
+      if (getUser(event)) {
         await event.fetch(`${authBasePath}/sign-out`, { method: "POST" }).catch(() => null);
       }
 

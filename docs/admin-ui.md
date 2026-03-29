@@ -57,6 +57,7 @@ Supported views under the admin mount:
 
 - `/admin` → dashboard
 - `/admin/login` → login form
+- `/admin/create-first-user` → first admin setup form (only when no admin user exists)
 - `/admin/collections/:slug` → collection list
 - `/admin/collections/:slug/create` → collection create form
 - `/admin/collections/:slug/:id` → collection edit form
@@ -65,6 +66,7 @@ Supported views under the admin mount:
 Supported actions:
 
 - `?/login`
+- `?/createFirstUser` (first admin setup)
 - `?/create` (collection create)
 - `?/update` (collection update and global update)
 - `?/delete` (collection delete)
@@ -72,15 +74,10 @@ Supported actions:
 
 ## Access and globals behavior
 
-`admin.strictAccess` defaults to `true`.
-
-When enabled:
-
+- if no admin user exists yet, requests redirect to `/admin/create-first-user`
 - unauthenticated requests redirect to `/admin/login`
 - authenticated non-admin users receive `403`
 - admin users can access all admin routes/actions
-
-When disabled, admin runtime uses system-context requests for admin data operations (useful for local/demo wiring).
 
 Global editing is runtime-managed in admin scope:
 
@@ -101,7 +98,6 @@ Package-owned admin pages render with Carbon-first primitives:
 ```ts
 admin: {
   path: "/admin",
-  strictAccess: true,
   ui: {
     appName: "Runelayer",
     productName: "CMS",
