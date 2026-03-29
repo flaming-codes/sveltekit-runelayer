@@ -1,9 +1,23 @@
 <script lang="ts">
-	let { action = "?/login", error = "", ui = {} }: {
+	import {
+		Button,
+		InlineNotification,
+		PasswordInput,
+		TextInput,
+		Tile,
+	} from "carbon-components-svelte";
+	import { Login } from "carbon-icons-svelte";
+
+	let {
+		action = "?/login",
+		error = "",
+		ui = {},
+	}: {
 		action?: string;
 		error?: string;
 		ui?: { appName?: string; productName?: string };
 	} = $props();
+
 	let email = $state("");
 	let password = $state("");
 	let appName = $derived(ui.appName ?? "Runelayer");
@@ -11,66 +25,96 @@
 </script>
 
 <section class="rk-login-page">
-	<div class="rk-login-card">
-		<h1>{appName} {productName}</h1>
-		<p>Sign in to access the admin workspace.</p>
-		{#if error}
-			<p class="rk-error">{error}</p>
-		{/if}
-		<form method="POST" {action}>
-			<label for="email">Email</label>
-			<input id="email" name="email" type="email" bind:value={email} required />
-			<label for="password">Password</label>
-			<input id="password" name="password" type="password" bind:value={password} required />
-			<button type="submit">Sign In</button>
-		</form>
+	<div class="rk-login-wrapper">
+		<div class="rk-login-header">
+			<p class="rk-login-eyebrow">{appName}</p>
+			<h1 class="rk-login-title">{productName}</h1>
+			<p class="rk-login-subtitle">Sign in to access the admin workspace.</p>
+		</div>
+
+		<Tile class="rk-login-card">
+			{#if error}
+				<InlineNotification
+					kind="error"
+					title="Authentication failed"
+					subtitle={error}
+					lowContrast
+					hideCloseButton
+				/>
+			{/if}
+
+			<form method="POST" {action} class="rk-login-form">
+				<TextInput
+					id="email"
+					name="email"
+					type="email"
+					bind:value={email}
+					labelText="Email"
+					placeholder="admin@example.com"
+					required
+				/>
+				<PasswordInput
+					id="password"
+					name="password"
+					bind:value={password}
+					labelText="Password"
+					placeholder="Enter password"
+					required
+				/>
+				<Button type="submit" icon={Login}>Sign in</Button>
+			</form>
+		</Tile>
 	</div>
 </section>
 
 <style>
 	.rk-login-page {
-		grid-column: 1 / -1;
 		display: grid;
 		place-items: center;
-		min-height: 70vh;
+		min-height: 100vh;
+		padding: 2rem;
+		background: var(--cds-background);
 	}
 
-	.rk-login-card {
-		width: min(460px, 100%);
-		padding: 1.5rem;
-		border: 1px solid var(--cds-border-subtle);
-		background: var(--cds-layer-02);
+	.rk-login-wrapper {
+		width: min(28rem, 100%);
 	}
 
-	.rk-login-card p {
+	.rk-login-header {
+		margin-bottom: 2rem;
+	}
+
+	.rk-login-eyebrow {
+		margin: 0 0 0.25rem;
+		font-size: 0.75rem;
+		line-height: 1.34;
+		letter-spacing: 0.32px;
+		text-transform: uppercase;
 		color: var(--cds-text-secondary);
-		margin: 0.5rem 0 1rem;
 	}
 
-	form {
+	.rk-login-title {
+		margin: 0;
+		font-size: 2.625rem;
+		font-weight: 300;
+		line-height: 1.2;
+		color: var(--cds-text-primary);
+	}
+
+	.rk-login-subtitle {
+		margin: 0.5rem 0 0;
+		font-size: 1rem;
+		line-height: 1.5;
+		color: var(--cds-text-secondary);
+	}
+
+	:global(.rk-login-card) {
+		padding: 2rem;
+	}
+
+	.rk-login-form {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
-	}
-
-	input {
-		padding: 0.65rem 0.75rem;
-		border: 1px solid var(--cds-border-strong-01);
-		background: var(--cds-field);
-		color: inherit;
-	}
-
-	button {
-		margin-top: 0.5rem;
-		padding: 0.65rem 0.9rem;
-		border: 1px solid var(--cds-button-primary);
-		background: var(--cds-button-primary);
-		color: var(--cds-text-on-color);
-		cursor: pointer;
-	}
-
-	.rk-error {
-		color: var(--cds-support-error);
-		font-weight: 600;
+		gap: 1.5rem;
 	}
 </style>

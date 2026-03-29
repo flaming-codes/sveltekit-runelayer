@@ -16,7 +16,7 @@ export function getRunelayerApp(): RunelayerApp {
         baseURL: process.env.ORIGIN || "http://localhost:5173",
       },
       database: {
-        url: "file:./data/demo.db",
+        url: process.env.DATABASE_URL || "file:./data/demo.db",
         authToken: process.env.DATABASE_AUTH_TOKEN,
       },
       admin: {

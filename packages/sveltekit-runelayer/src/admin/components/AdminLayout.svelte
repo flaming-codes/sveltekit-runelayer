@@ -3,9 +3,6 @@
 		Content,
 		Header,
 		HeaderAction,
-		HeaderNav,
-		HeaderNavItem,
-		HeaderNavMenu,
 		HeaderUtilities,
 		SideNav,
 		SideNavDivider,
@@ -16,7 +13,7 @@
 		SkipToContent,
 		Theme,
 	} from "carbon-components-svelte";
-	import { Dashboard, Folders, Settings, UserAvatar } from "carbon-icons-svelte";
+	import { Dashboard, Folders, Login, Logout, Settings, UserAvatar } from "carbon-icons-svelte";
 	import type { Snippet } from "svelte";
 	import type { CollectionConfig } from "../../schema/collections.js";
 	import type { GlobalConfig } from "../../schema/globals.js";
@@ -38,7 +35,7 @@
 	}: {
 		collections?: CollectionConfig[];
 		globals?: GlobalConfig[];
-		user?: { email: string } | null;
+		user?: { email: string; role?: string; name?: string; image?: string | null } | null;
 		basePath?: string;
 		currentPath?: string;
 		ui?: AdminUiConfig;
@@ -58,12 +55,14 @@
 			: currentPath,
 	);
 	let collectionSectionOpen = $derived(
-		collections.some((collection) =>
-			normalizedCurrentPath.startsWith(`${normalizedBasePath}/collections/${collection.slug}`),
-		),
+		collections.length > 0 ||
+			collections.some((collection) =>
+				normalizedCurrentPath.startsWith(`${normalizedBasePath}/collections/${collection.slug}`),
+			),
 	);
 	let globalSectionOpen = $derived(
-		globals.some((global) => normalizedCurrentPath === `${normalizedBasePath}/globals/${global.slug}`),
+		globals.length > 0 ||
+			globals.some((global) => normalizedCurrentPath === `${normalizedBasePath}/globals/${global.slug}`),
 	);
 
 	function isDashboardActive() {
@@ -93,50 +92,52 @@
 				<SkipToContent />
 			</svelte:fragment>
 
-			<HeaderNav aria-label="Admin sections">
-				<HeaderNavItem href={basePath} text="Dashboard" isSelected={isDashboardActive()} />
-				{#if collections.length > 0}
-					<HeaderNavMenu text="Collections" expanded={collectionSectionOpen}>
-						{#each collections as collection}
-							<HeaderNavItem
-								href={`${basePath}/collections/${collection.slug}`}
-								text={collection.labels?.plural ?? collection.slug}
-								isSelected={isCollectionActive(collection.slug)}
-							/>
-						{/each}
-					</HeaderNavMenu>
-				{/if}
-				{#if globals.length > 0}
-					<HeaderNavMenu text="Globals" expanded={globalSectionOpen}>
-						{#each globals as global}
-							<HeaderNavItem
-								href={`${basePath}/globals/${global.slug}`}
-								text={global.label ?? global.slug}
-								isSelected={isGlobalActive(global.slug)}
-							/>
-						{/each}
-					</HeaderNavMenu>
-				{/if}
-			</HeaderNav>
-
-			{#if user}
-				<HeaderUtilities>
-					<HeaderAction
-						icon={UserAvatar}
-						text={user.email}
-						bind:isOpen={isUserMenuOpen}
-						iconDescription="Account menu"
-					>
-						<div class="rk-user-panel">
-							<p class="rk-user-panel-label">Signed in</p>
-							<p class="rk-user-panel-email">{user.email}</p>
-							<form method="POST" action={`${basePath}/logout`}>
-								<button class="rk-user-panel-button" type="submit">Log out</button>
-							</form>
-						</div>
-					</HeaderAction>
-				</HeaderUtilities>
-			{/if}
+			<HeaderUtilities>
+				<HeaderAction
+					icon={UserAvatar}
+					text={user ? (user.name || user.email) : "Account"}
+					bind:isOpen={isUserMenuOpen}
+					iconDescription="Account menu"
+				>
+					<div class="rk-user-panel">
+						{#if user}
+							<div class="rk-user-panel-header">
+								<p class="rk-user-panel-label">Signed in as</p>
+								{#if user.name}
+									<p class="rk-user-panel-name">{user.name}</p>
+								{/if}
+								<p class="rk-user-panel-email">{user.email}</p>
+								{#if user.role}
+									<p class="rk-user-panel-role">{user.role}</p>
+								{/if}
+							</div>
+							<nav class="rk-user-panel-nav">
+								<a href={`${basePath}/profile`} class="rk-user-panel-link">
+									<UserAvatar size={16} />
+									Profile
+								</a>
+								<form method="POST" action={`${basePath}/logout`}>
+									<button class="rk-user-panel-link rk-user-panel-link--danger" type="submit">
+										<Logout size={16} />
+										Log out
+									</button>
+								</form>
+							</nav>
+						{:else}
+							<div class="rk-user-panel-header">
+								<p class="rk-user-panel-label">Not signed in</p>
+								<p class="rk-user-panel-email">Sign in to manage your account.</p>
+							</div>
+							<nav class="rk-user-panel-nav">
+								<a href={`${basePath}/login`} class="rk-user-panel-link">
+									<Login size={16} />
+									Log in
+								</a>
+							</nav>
+						{/if}
+					</div>
+				</HeaderAction>
+			</HeaderUtilities>
 		</Header>
 
 		<SideNav bind:isOpen={isSideNavOpen} aria-label="Admin navigation" fixed={false}>
@@ -207,12 +208,17 @@
 	}
 
 	.rk-user-panel {
-		display: grid;
-		gap: 0.5rem;
-		padding: 1rem;
 		min-width: 16rem;
 		background: var(--cds-layer);
 		border-left: 1px solid var(--cds-border-subtle);
+	}
+
+	.rk-user-panel-header {
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+		padding: 1rem;
+		border-bottom: 1px solid var(--cds-border-subtle);
 	}
 
 	.rk-user-panel-label {
@@ -220,28 +226,63 @@
 		font-size: 0.75rem;
 		color: var(--cds-text-secondary);
 		text-transform: uppercase;
-		letter-spacing: 0.08em;
+		letter-spacing: 0.32px;
+	}
+
+	.rk-user-panel-name {
+		margin: 0.25rem 0 0;
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--cds-text-primary);
 	}
 
 	.rk-user-panel-email {
 		margin: 0;
 		font-size: 0.875rem;
+		color: var(--cds-text-secondary);
 		word-break: break-word;
 	}
 
-	.rk-user-panel-button {
+	.rk-user-panel-role {
+		margin: 0.25rem 0 0;
+		font-size: 0.75rem;
+		color: var(--cds-text-secondary);
+		text-transform: capitalize;
+	}
+
+	.rk-user-panel-nav {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.rk-user-panel-link {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
 		width: 100%;
 		padding: 0.875rem 1rem;
 		border: 0;
-		background: var(--cds-button-secondary);
-		color: var(--cds-text-on-color);
+		background: transparent;
+		color: var(--cds-text-primary);
 		font: inherit;
+		font-size: 0.875rem;
 		text-align: left;
+		text-decoration: none;
 		cursor: pointer;
+		transition: background-color 110ms;
 	}
 
-	.rk-user-panel-button:hover {
-		background: var(--cds-button-secondary-hover);
+	.rk-user-panel-link:hover {
+		background: var(--cds-layer-hover);
+	}
+
+	.rk-user-panel-link--danger {
+		color: var(--cds-support-error);
+	}
+
+	.rk-user-panel-link--danger:hover {
+		background: var(--cds-support-error);
+		color: var(--cds-text-on-color);
 	}
 
 	.rk-shell-footer {
@@ -261,11 +302,7 @@
 		align-items: stretch;
 	}
 
-	:global(.rk-shell .bx--header__menu-bar) {
-		padding-left: 1rem;
-	}
-
-	:global(.rk-shell .bx--header-panel) {
+:global(.rk-shell .bx--header-panel) {
 		width: auto;
 	}
 

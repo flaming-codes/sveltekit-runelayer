@@ -6,6 +6,7 @@
     AdminErrorPage,
     AdminGlobalEditorPage,
     AdminLoginPage,
+    AdminProfilePage,
     AdminShell,
   } from "../admin/index.js";
 
@@ -31,6 +32,17 @@
       globals={data.dashboardGlobals ?? []}
       basePath={data.basePath}
     />
+  </AdminShell>
+{:else if data.view === "profile"}
+  <AdminShell
+    collections={data.collections}
+    globals={data.globals}
+    user={data.user}
+    basePath={data.basePath}
+    currentPath={data.currentPath}
+    ui={data.ui}
+  >
+    <AdminProfilePage user={data.user} basePath={data.basePath} />
   </AdminShell>
 {:else if data.view === "collection-list"}
   <AdminShell

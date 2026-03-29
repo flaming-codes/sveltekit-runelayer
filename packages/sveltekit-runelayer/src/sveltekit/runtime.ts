@@ -2,6 +2,7 @@ import { error, fail, redirect } from "@sveltejs/kit";
 import type { Actions, Handle, RequestEvent } from "@sveltejs/kit";
 import type { Component } from "svelte";
 import { defineConfig } from "../config.js";
+import { readStrictAccess } from "../env.js";
 import { createRunelayer } from "../plugin.js";
 import type { RunelayerInstance } from "../plugin.js";
 import { create, find, findOne, remove, update } from "../query/index.js";
@@ -21,6 +22,7 @@ type AdminRoute =
   | { kind: "dashboard" }
   | { kind: "login" }
   | { kind: "logout" }
+  | { kind: "profile" }
   | { kind: "collection-list"; slug: string }
   | { kind: "collection-create"; slug: string }
   | { kind: "collection-edit"; slug: string; id: string }
@@ -41,6 +43,7 @@ function parseAdminRoute(path: string | undefined): AdminRoute | null {
   if (segments.length === 0) return { kind: "dashboard" };
   if (segments.length === 1 && segments[0] === "login") return { kind: "login" };
   if (segments.length === 1 && segments[0] === "logout") return { kind: "logout" };
+  if (segments.length === 1 && segments[0] === "profile") return { kind: "profile" };
 
   if (segments[0] === "collections") {
     if (segments.length === 2) {
@@ -169,14 +172,23 @@ function resolveGlobalBySlug(runelayer: RunelayerInstance, slug: string): Global
   return global;
 }
 
-function getUser(event: RequestEvent): { email: string; role: string } | null {
+interface AdminUser {
+  email: string;
+  role: string;
+  name: string;
+  image: string | null;
+}
+
+function getUser(event: RequestEvent): AdminUser | null {
   const user = (event.locals as Record<string, unknown>).user;
   if (!user || typeof user !== "object") return null;
 
   const record = user as Record<string, unknown>;
   const email = typeof record.email === "string" ? record.email : "";
   const role = typeof record.role === "string" ? record.role : "user";
-  return { email, role };
+  const name = typeof record.name === "string" ? record.name : "";
+  const image = typeof record.image === "string" ? record.image : null;
+  return { email, role, name, image };
 }
 
 function formField(formData: FormData, key: string): string {
@@ -228,7 +240,7 @@ export function createRunelayerRuntime(
   page: Component<any>,
 ): RunelayerApp {
   const adminPath = normalizeAdminPath(config.admin?.path ?? "/admin");
-  const strictAccess = config.admin?.strictAccess ?? true;
+  const strictAccess = readStrictAccess() ?? config.admin?.strictAccess ?? true;
   const ui = {
     appName: config.admin?.ui?.appName ?? "Runelayer",
     productName: config.admin?.ui?.productName ?? "CMS",
@@ -266,7 +278,9 @@ export function createRunelayerRuntime(
       ui,
       collections: toSerializable(runelayer.collections),
       globals: toSerializable(runelayer.globals),
-      user: user ? { email: user.email } : null,
+      user: user
+        ? { email: user.email, role: user.role, name: user.name, image: user.image }
+        : null,
     };
 
     if (route.kind === "login") {
@@ -278,6 +292,13 @@ export function createRunelayerRuntime(
 
     if (route.kind === "logout") {
       throw redirect(303, adminPath);
+    }
+
+    if (route.kind === "profile") {
+      return {
+        ...baseData,
+        view: "profile",
+      };
     }
 
     if (route.kind === "dashboard") {
