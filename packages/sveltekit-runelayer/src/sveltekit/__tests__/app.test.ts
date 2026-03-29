@@ -7,7 +7,25 @@ import { isLoggedIn } from "../../auth/index.js";
 import { defineCollection } from "../../schema/collections.js";
 import { text } from "../../schema/fields.js";
 import { defineGlobal } from "../../schema/globals.js";
+import type { SvelteKitUtils } from "../types.js";
 import { createRunelayerRuntime } from "../runtime.js";
+
+// Test-compatible stubs that mirror @sveltejs/kit's redirect/error/fail behaviour.
+const kit: SvelteKitUtils = {
+  redirect(status: number, location: string | URL): never {
+    throw Object.assign(new Error(), { status, location: location.toString() });
+  },
+  error(status: number, body?: string | { message: string }): never {
+    const message = typeof body === "string" ? body : (body?.message ?? "Error");
+    throw Object.assign(new Error(message), {
+      status,
+      body: typeof body === "object" ? body : { message },
+    });
+  },
+  fail(status: number, data?: any) {
+    return { status, data } as any;
+  },
+};
 
 const Posts = defineCollection({
   slug: "posts",
@@ -48,6 +66,7 @@ async function createTestApp(strictAccess: boolean) {
 
   return createRunelayerRuntime(
     {
+      kit,
       collections: [Posts],
       globals: [SiteSettings],
       auth: {

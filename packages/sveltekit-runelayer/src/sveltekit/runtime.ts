@@ -1,4 +1,3 @@
-import { error, fail, redirect } from "@sveltejs/kit";
 import type { Actions, Handle, RequestEvent } from "@sveltejs/kit";
 import type { Component } from "svelte";
 import { defineConfig } from "../config.js";
@@ -158,22 +157,6 @@ function createQueryApi(
   };
 }
 
-function getCollectionBySlug(runelayer: RunelayerInstance, slug: string): CollectionConfig {
-  const collection = runelayer.collections.find((entry) => entry.slug === slug);
-  if (!collection) {
-    throw error(404, `Unknown collection: ${slug}`);
-  }
-  return collection;
-}
-
-function resolveGlobalBySlug(runelayer: RunelayerInstance, slug: string): GlobalConfig {
-  const global = getGlobalBySlug(runelayer.globals, slug);
-  if (!global) {
-    throw error(404, `Unknown global: ${slug}`);
-  }
-  return global;
-}
-
 interface AdminUser {
   email: string;
   role: string;
@@ -198,32 +181,6 @@ function formField(formData: FormData, key: string): string {
   return typeof value === "string" ? value : "";
 }
 
-function guardAdminRoute(
-  event: RequestEvent,
-  route: AdminRoute,
-  strictAccess: boolean,
-  adminPath: string,
-): void {
-  if (!strictAccess) return;
-
-  const user = getUser(event);
-
-  if (route.kind === "login") {
-    if (user?.role === "admin") {
-      throw redirect(303, adminPath);
-    }
-    return;
-  }
-
-  if (!user) {
-    throw redirect(303, `${adminPath}/login`);
-  }
-
-  if (user.role !== "admin") {
-    throw error(403, "Admin access required");
-  }
-}
-
 function adminQueryApi(
   strictAccess: boolean,
   withRequest: (eventOrRequest: RequestEvent | Request) => RunelayerQueryApi,
@@ -241,6 +198,49 @@ export function createRunelayerRuntime(
   config: RunelayerAppConfig,
   page: Component<any>,
 ): RunelayerApp {
+  const { redirect, error, fail } = config.kit;
+
+  function getCollectionBySlug(runelayer: RunelayerInstance, slug: string): CollectionConfig {
+    const collection = runelayer.collections.find((entry) => entry.slug === slug);
+    if (!collection) {
+      throw error(404, `Unknown collection: ${slug}`);
+    }
+    return collection;
+  }
+
+  function resolveGlobalBySlug(runelayer: RunelayerInstance, slug: string): GlobalConfig {
+    const global = getGlobalBySlug(runelayer.globals, slug);
+    if (!global) {
+      throw error(404, `Unknown global: ${slug}`);
+    }
+    return global;
+  }
+
+  function guardAdminRoute(
+    event: RequestEvent,
+    route: AdminRoute,
+    strictAccess: boolean,
+    adminPath: string,
+  ): void {
+    if (!strictAccess) return;
+
+    const user = getUser(event);
+
+    if (route.kind === "login") {
+      if (user?.role === "admin") {
+        throw redirect(303, adminPath);
+      }
+      return;
+    }
+
+    if (!user) {
+      throw redirect(303, `${adminPath}/login`);
+    }
+
+    if (user.role !== "admin") {
+      throw error(403, "Admin access required");
+    }
+  }
   const adminPath = normalizeAdminPath(config.admin?.path ?? "/admin");
   const strictAccess = readStrictAccess() ?? config.admin?.strictAccess ?? true;
   const ui = {
@@ -250,7 +250,7 @@ export function createRunelayerRuntime(
   };
   const authBasePath = config.auth.basePath ?? "/api/auth";
 
-  const { admin: _admin, ...runelayerConfig } = config;
+  const { admin: _admin, kit: _kit, ...runelayerConfig } = config;
   const runelayer = createRunelayer(
     defineConfig({
       ...runelayerConfig,
@@ -531,7 +531,7 @@ export function createRunelayerRuntime(
       };
     },
 
-    default: async (event) => {
+    logout: async (event) => {
       const route = parseAdminRoute(event.params.path);
       if (!route || route.kind !== "logout") {
         throw error(405, "Unsupported admin action");

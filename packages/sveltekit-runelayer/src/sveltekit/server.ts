@@ -19,4 +19,5 @@ export type {
   RunelayerApp,
   RunelayerAppConfig,
   RunelayerQueryApi,
+  SvelteKitUtils,
 } from "./types.js";

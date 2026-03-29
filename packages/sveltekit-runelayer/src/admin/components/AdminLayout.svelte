@@ -115,7 +115,7 @@
 									<UserAvatar size={16} />
 									Profile
 								</a>
-								<form method="POST" action={`${basePath}/logout`}>
+								<form method="POST" action={`${basePath}/logout?/logout`}>
 									<button class="rk-user-panel-link rk-user-panel-link--danger" type="submit">
 										<Logout size={16} />
 										Log out

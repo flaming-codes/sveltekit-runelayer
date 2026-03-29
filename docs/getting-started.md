@@ -81,10 +81,12 @@ Generate and apply migrations before startup.
 
 ```ts
 // src/lib/server/runelayer.ts
+import { redirect, error, fail } from "@sveltejs/kit";
 import { createRunelayerApp } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
 import { Posts } from "./schema.js";
 
 export const runelayer = createRunelayerApp({
+  kit: { redirect, error, fail },
   collections: [Posts],
   auth: {
     secret: process.env.AUTH_SECRET ?? "dev-secret-change-in-production",

@@ -6,6 +6,20 @@ import type { FindArgs } from "../query/types.js";
 
 export type CollectionInput = string | CollectionConfig;
 
+/**
+ * SvelteKit utility functions injected from the host application.
+ *
+ * These must come from the host's `@sveltejs/kit` import so that thrown
+ * `Redirect` / `HttpError` instances pass `instanceof` checks in the
+ * SvelteKit runtime. A library that bundles its own copy of `@sveltejs/kit`
+ * creates distinct classes that the runtime does not recognise.
+ */
+export interface SvelteKitUtils {
+  redirect: (status: number, location: string | URL) => never;
+  error: (status: number, body?: string | { message: string }) => never;
+  fail: <T extends Record<string, unknown>>(status: number, data?: T) => any;
+}
+
 export interface RunelayerAdminUIConfig {
   /** Organization or product family label in the shell header. @default "Runelayer" */
   appName?: string;
@@ -26,6 +40,18 @@ export interface RunelayerAdminConfig {
 
 export interface RunelayerAppConfig extends Omit<RunelayerConfig, "adminPath"> {
   admin?: RunelayerAdminConfig;
+  /**
+   * SvelteKit utility functions (`redirect`, `error`, `fail`) from the host app.
+   *
+   * Required so that thrown Redirect/HttpError objects are recognised by the
+   * SvelteKit runtime. Pass them straight from your `@sveltejs/kit` import:
+   *
+   * ```ts
+   * import { redirect, error, fail } from "@sveltejs/kit";
+   * createRunelayerApp({ kit: { redirect, error, fail }, ... });
+   * ```
+   */
+  kit: SvelteKitUtils;
 }
 
 export interface RunelayerQueryApi {

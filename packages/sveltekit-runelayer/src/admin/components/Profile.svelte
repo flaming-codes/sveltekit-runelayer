@@ -68,7 +68,7 @@
 						</div>
 
 						<div class="rk-profile-actions">
-							<form method="POST" action={`${basePath}/logout`}>
+							<form method="POST" action={`${basePath}/logout?/logout`}>
 								<Button type="submit" kind="danger-tertiary" icon={Logout}>
 									Log out
 								</Button>

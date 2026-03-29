@@ -1,3 +1,4 @@
+import { redirect, error, fail } from "@sveltejs/kit";
 import {
   createRunelayerApp,
   type RunelayerApp,
@@ -9,6 +10,7 @@ let _app: RunelayerApp | undefined;
 export function getRunelayerApp(): RunelayerApp {
   if (!_app) {
     _app = createRunelayerApp({
+      kit: { redirect, error, fail },
       collections: allCollections,
       globals: allGlobals,
       auth: {
