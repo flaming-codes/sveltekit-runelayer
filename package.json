@@ -10,6 +10,13 @@
     "ready": "vp fmt && vp lint && vp run test -r && vp run build -r",
     "prepare": "vp config"
   },
+  "dependencies": {
+    "@carbon/charts-svelte": "catalog:",
+    "carbon-components-svelte": "catalog:",
+    "carbon-icons-svelte": "catalog:",
+    "carbon-pictograms-svelte": "catalog:",
+    "carbon-preprocess-svelte": "catalog:"
+  },
   "devDependencies": {
     "@madebywild/agent-harness-framework": "^1.7.0",
     "vite-plus": "catalog:",

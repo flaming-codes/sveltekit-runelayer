@@ -1,16 +1,12 @@
 import type { Actions, Handle, RequestEvent } from "@sveltejs/kit";
-import type { ComponentType } from "svelte";
+import type { Component } from "svelte";
 import type { RunelayerConfig } from "../config.js";
 import type { CollectionConfig } from "../schema/collections.js";
 import type { FindArgs } from "../query/types.js";
 
 export type CollectionInput = string | CollectionConfig;
 
-export type RunelayerAdminTheme = "white" | "g10" | "g80" | "g90" | "g100";
-
 export interface RunelayerAdminUIConfig {
-  /** Carbon theme for package-owned admin pages. @default "g100" */
-  theme?: RunelayerAdminTheme;
   /** Organization or product family label in the shell header. @default "Runelayer" */
   appName?: string;
   /** Product label in the shell header. @default "CMS" */
@@ -43,7 +39,7 @@ export interface RunelayerQueryApi {
 export interface RunelayerAdminRuntime {
   load: (event: RequestEvent) => Promise<Record<string, unknown>>;
   actions: Actions;
-  Page: ComponentType;
+  Page: Component<any>;
 }
 
 export interface RunelayerApp {

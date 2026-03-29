@@ -1,17 +1,18 @@
 <script lang="ts">
-	let { name, label, value = $bindable(""), options = [], required = false }: {
+	import { Select, SelectItem } from "carbon-components-svelte";
+
+	let { name, label, value = $bindable(), options = [], required = false }: {
 		name: string;
 		label?: string;
-		value: string;
+		value?: string;
 		options: { label: string; value: string }[];
 		required?: boolean;
 	} = $props();
 </script>
 
-<label class="rk-field-label" for={name}>{label ?? name}</label>
-<select class="rk-field-input" id={name} {name} bind:value required={required}>
-	<option value="">Select an option</option>
+<Select id={name} {name} labelText={label ?? name} bind:selected={value} {required}>
+	<SelectItem value="" text="Select an option" />
 	{#each options as option}
-		<option value={option.value}>{option.label}</option>
+		<SelectItem value={option.value} text={option.label} />
 	{/each}
-</select>
+</Select>

@@ -98,6 +98,18 @@
     },
     {
       "enabled": true,
+      "id": "carbon-svelte",
+      "overrides": {
+        "claude": ".harness/src/skills/carbon-svelte/OVERRIDES.claude.yaml",
+        "codex": ".harness/src/skills/carbon-svelte/OVERRIDES.codex.yaml",
+        "copilot": ".harness/src/skills/carbon-svelte/OVERRIDES.copilot.yaml"
+      },
+      "registry": "local",
+      "sourcePath": ".harness/src/skills/carbon-svelte/SKILL.md",
+      "type": "skill"
+    },
+    {
+      "enabled": true,
       "id": "optimizer-performance",
       "overrides": {
         "claude": ".harness/src/subagents/optimizer-performance.overrides.claude.yaml",

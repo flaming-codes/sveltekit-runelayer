@@ -1,12 +1,12 @@
 <script lang="ts">
-	let { name, label, value = $bindable(""), required = false }: {
+	import { TextArea } from "carbon-components-svelte";
+
+	let { name, label, value = $bindable(), required = false }: {
 		name: string;
 		label?: string;
-		value: string;
+		value?: null | string;
 		required?: boolean;
 	} = $props();
 </script>
 
-<label class="rk-field-label" for={name}>{label ?? name}</label>
-<textarea class="rk-field-input rk-field-textarea" id={name} {name} bind:value required={required} rows={4}
-></textarea>
+<TextArea id={name} {name} labelText={label ?? name} bind:value {required} rows={4} />

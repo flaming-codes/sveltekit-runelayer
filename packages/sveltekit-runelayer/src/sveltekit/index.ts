@@ -11,7 +11,6 @@ export { default as AdminErrorPage } from "./AdminErrorPage.svelte";
 export type {
   CollectionInput,
   RunelayerAdminConfig,
-  RunelayerAdminTheme,
   RunelayerAdminUIConfig,
   RunelayerAdminRuntime,
   RunelayerApp,

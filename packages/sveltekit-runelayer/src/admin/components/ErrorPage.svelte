@@ -62,8 +62,8 @@
 	.rk-error-container {
 		display: flex;
 		width: min(640px, 100%);
-		border: 1px solid var(--cds-border-subtle, #525252);
-		background: var(--cds-layer-02, #262626);
+		border: 1px solid var(--cds-border-subtle);
+		background: var(--cds-layer-02);
 		overflow: hidden;
 	}
 
@@ -73,15 +73,15 @@
 		justify-content: center;
 		min-width: 140px;
 		padding: 2rem 1.5rem;
-		background: var(--cds-layer-accent-01, #393939);
+		background: var(--cds-layer-accent-01);
 	}
 
 	.rk-error-status-404 {
-		background: var(--cds-support-warning, #f1c21b);
+		background: var(--cds-support-warning);
 	}
 
 	.rk-error-status-5xx {
-		background: var(--cds-support-error, #da1e28);
+		background: var(--cds-support-error);
 	}
 
 	.rk-error-code {
@@ -89,11 +89,11 @@
 		font-weight: 300;
 		line-height: 1;
 		letter-spacing: -0.02em;
-		color: var(--cds-text-primary, #f4f4f4);
+		color: var(--cds-text-primary);
 	}
 
 	.rk-error-status-404 .rk-error-code {
-		color: var(--cds-text-inverse, #161616);
+		color: var(--cds-text-inverse);
 	}
 
 	.rk-error-body {
@@ -109,7 +109,7 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
-		color: var(--cds-text-helper, #a8a8a8);
+		color: var(--cds-text-helper);
 		margin: 0;
 	}
 
@@ -118,23 +118,23 @@
 		font-weight: 400;
 		line-height: 1.3;
 		margin: 0;
-		color: var(--cds-text-primary, #f4f4f4);
+		color: var(--cds-text-primary);
 	}
 
 	.rk-error-subtitle {
 		font-size: 0.875rem;
 		line-height: 1.5;
-		color: var(--cds-text-secondary, #c6c6c6);
+		color: var(--cds-text-secondary);
 		margin: 0.25rem 0 0;
 	}
 
 	.rk-error-hint {
 		font-size: 0.8125rem;
 		line-height: 1.5;
-		color: var(--cds-text-helper, #a8a8a8);
+		color: var(--cds-text-helper);
 		margin: 0;
 		padding-top: 0.5rem;
-		border-top: 1px solid var(--cds-border-subtle, #525252);
+		border-top: 1px solid var(--cds-border-subtle);
 	}
 
 	.rk-error-actions {
@@ -149,8 +149,8 @@
 		padding: 0.6875rem 1rem;
 		font-size: 0.875rem;
 		font-weight: 400;
-		background: var(--cds-button-primary, #0f62fe);
-		color: #fff;
+		background: var(--cds-button-primary);
+		color: var(--cds-text-on-color);
 		text-decoration: none;
 		border: none;
 		cursor: pointer;
@@ -158,7 +158,7 @@
 	}
 
 	.rk-error-btn-primary:hover {
-		background: var(--cds-button-primary-hover, #0353e9);
+		background: var(--cds-button-primary-hover);
 	}
 
 	.rk-error-btn-secondary {
@@ -168,14 +168,14 @@
 		font-size: 0.875rem;
 		font-weight: 400;
 		background: transparent;
-		color: var(--cds-text-primary, #f4f4f4);
-		border: 1px solid var(--cds-button-secondary, #6f6f6f);
+		color: var(--cds-text-primary);
+		border: 1px solid var(--cds-button-secondary);
 		cursor: pointer;
 		transition: background 0.15s;
 	}
 
 	.rk-error-btn-secondary:hover {
-		background: var(--cds-layer-hover-02, #474747);
+		background: var(--cds-layer-hover-02);
 	}
 
 	@media (max-width: 480px) {

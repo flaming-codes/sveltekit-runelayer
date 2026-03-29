@@ -23,7 +23,6 @@ export function getRunelayerApp(): RunelayerApp {
         path: "/admin",
         strictAccess: false,
         ui: {
-          theme: "g100",
           appName: "Runelayer",
           productName: "Demo Admin",
           footerText: "Runelayer CMS admin built with Carbon UI Shell.",

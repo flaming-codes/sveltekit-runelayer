@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { ComponentType } from "svelte";
   import {
     AdminCollectionEditorPage,
     AdminCollectionListPage,
@@ -12,73 +11,86 @@
 
   let { data, form }: {
     data: Record<string, any>;
-    form?: { error?: string };
+    form?: { error?: string } | null;
   } = $props();
-
-  const pageMap = {
-    dashboard: AdminDashboardPage,
-    "collection-list": AdminCollectionListPage,
-    "collection-create": AdminCollectionEditorPage,
-    "collection-edit": AdminCollectionEditorPage,
-    "global-edit": AdminGlobalEditorPage,
-  } satisfies Record<string, ComponentType>;
-
-  let activePage = $derived(pageMap[data.view] ?? null);
-  let activePageProps = $derived.by(() => {
-    if (data.view === "dashboard") {
-      return {
-        collections: data.dashboardCollections ?? [],
-        globals: data.dashboardGlobals ?? [],
-        basePath: data.basePath,
-      };
-    }
-    if (data.view === "collection-list") {
-      return {
-        collection: data.collection,
-        documents: data.docs,
-        page: data.page,
-        totalPages: data.totalPages,
-        totalDocs: data.totalDocs,
-        basePath: data.basePath,
-      };
-    }
-    if (data.view === "collection-create") {
-      return {
-        collection: data.collection,
-        document: null,
-        basePath: data.basePath,
-      };
-    }
-    if (data.view === "collection-edit") {
-      return {
-        collection: data.collection,
-        document: data.document,
-        basePath: data.basePath,
-      };
-    }
-    if (data.view === "global-edit") {
-      return {
-        global: data.global,
-        document: data.document,
-        basePath: data.basePath,
-      };
-    }
-    return {};
-  });
 </script>
 
 {#if data.view === "login"}
   <AdminLoginPage action="?/login" error={form?.error ?? data.error ?? ""} ui={data.ui} />
-{:else if activePage}
+{:else if data.view === "dashboard"}
   <AdminShell
     collections={data.collections}
     globals={data.globals}
     user={data.user}
     basePath={data.basePath}
+    currentPath={data.currentPath}
     ui={data.ui}
   >
-    {@const ActivePage = activePage}
-    <ActivePage {...activePageProps} />
+    <AdminDashboardPage
+      collections={data.dashboardCollections ?? []}
+      globals={data.dashboardGlobals ?? []}
+      basePath={data.basePath}
+    />
+  </AdminShell>
+{:else if data.view === "collection-list"}
+  <AdminShell
+    collections={data.collections}
+    globals={data.globals}
+    user={data.user}
+    basePath={data.basePath}
+    currentPath={data.currentPath}
+    ui={data.ui}
+  >
+    <AdminCollectionListPage
+      collection={data.collection}
+      documents={data.docs}
+      page={data.page}
+      limit={data.limit}
+      totalPages={data.totalPages}
+      totalDocs={data.totalDocs}
+      basePath={data.basePath}
+    />
+  </AdminShell>
+{:else if data.view === "collection-create"}
+  <AdminShell
+    collections={data.collections}
+    globals={data.globals}
+    user={data.user}
+    basePath={data.basePath}
+    currentPath={data.currentPath}
+    ui={data.ui}
+  >
+    <AdminCollectionEditorPage
+      collection={data.collection}
+      document={null}
+      basePath={data.basePath}
+    />
+  </AdminShell>
+{:else if data.view === "collection-edit"}
+  <AdminShell
+    collections={data.collections}
+    globals={data.globals}
+    user={data.user}
+    basePath={data.basePath}
+    currentPath={data.currentPath}
+    ui={data.ui}
+  >
+    <AdminCollectionEditorPage
+      collection={data.collection}
+      document={data.document}
+      basePath={data.basePath}
+    />
+  </AdminShell>
+{:else if data.view === "global-edit"}
+  <AdminShell
+    collections={data.collections}
+    globals={data.globals}
+    user={data.user}
+    basePath={data.basePath}
+    currentPath={data.currentPath}
+    ui={data.ui}
+  >
+    <AdminGlobalEditorPage global={data.global} document={data.document} basePath={data.basePath} />
   </AdminShell>
 {:else}
   <AdminErrorPage

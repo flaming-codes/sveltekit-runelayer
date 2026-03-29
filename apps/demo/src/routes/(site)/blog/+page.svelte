@@ -13,6 +13,16 @@
 
   import { statusColor, formatDate } from "$lib/format.js";
 
+  type BlogRow = {
+    id: string;
+    title: string;
+    authorName: string | undefined;
+    status: string;
+    publishedAt: string;
+    readTime: string;
+    slug: string;
+  };
+
   let { data } = $props();
 
   let searchTerm = $state("");
@@ -34,15 +44,15 @@
       publishedAt: formatDate(p.publishedAt),
       readTime: p.readTime ? `${p.readTime} min` : "---",
       slug: p.slug,
-    })),
+    })) satisfies BlogRow[],
   );
 
   const headers = [
-    { key: "title", value: "Title" },
-    { key: "authorName", value: "Author" },
-    { key: "status", value: "Status" },
-    { key: "publishedAt", value: "Published" },
-    { key: "readTime", value: "Read Time" },
+    { key: "title" as const, value: "Title" },
+    { key: "authorName" as const, value: "Author" },
+    { key: "status" as const, value: "Status" },
+    { key: "publishedAt" as const, value: "Published" },
+    { key: "readTime" as const, value: "Read Time" },
   ];
 </script>
 
@@ -70,7 +80,7 @@
           persistent
           value={searchTerm}
           on:input={(e) => {
-            searchTerm = e.detail;
+            searchTerm = (e.target as HTMLInputElement | null)?.value ?? "";
           }}
           on:clear={() => {
             searchTerm = "";

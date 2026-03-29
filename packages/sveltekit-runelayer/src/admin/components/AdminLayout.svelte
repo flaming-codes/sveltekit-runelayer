@@ -1,10 +1,27 @@
 <script lang="ts">
+	import {
+		Content,
+		Header,
+		HeaderAction,
+		HeaderNav,
+		HeaderNavItem,
+		HeaderNavMenu,
+		HeaderUtilities,
+		SideNav,
+		SideNavDivider,
+		SideNavItems,
+		SideNavLink,
+		SideNavMenu,
+		SideNavMenuItem,
+		SkipToContent,
+		Theme,
+	} from "carbon-components-svelte";
+	import { Dashboard, Folders, Settings, UserAvatar } from "carbon-icons-svelte";
 	import type { Snippet } from "svelte";
 	import type { CollectionConfig } from "../../schema/collections.js";
 	import type { GlobalConfig } from "../../schema/globals.js";
 
 	type AdminUiConfig = {
-		theme?: "white" | "g10" | "g80" | "g90" | "g100";
 		appName?: string;
 		productName?: string;
 		footerText?: string;
@@ -15,6 +32,7 @@
 		globals = [],
 		user = null,
 		basePath = "/admin",
+		currentPath = "/admin",
 		ui = {},
 		children,
 	}: {
@@ -22,213 +40,242 @@
 		globals?: GlobalConfig[];
 		user?: { email: string } | null;
 		basePath?: string;
+		currentPath?: string;
 		ui?: AdminUiConfig;
 		children: Snippet;
 	} = $props();
 
+	let isSideNavOpen = $state(false);
+	let isUserMenuOpen = $state(false);
+
 	let appName = $derived(ui.appName ?? "Runelayer");
 	let productName = $derived(ui.productName ?? "CMS");
 	let footerText = $derived(ui.footerText ?? "Powered by Runelayer");
-	let theme = $derived(ui.theme ?? "g100");
+	let normalizedBasePath = $derived(basePath.endsWith("/") ? basePath.slice(0, -1) : basePath);
+	let normalizedCurrentPath = $derived(
+		currentPath.endsWith("/") && currentPath.length > 1
+			? currentPath.slice(0, -1)
+			: currentPath,
+	);
+	let collectionSectionOpen = $derived(
+		collections.some((collection) =>
+			normalizedCurrentPath.startsWith(`${normalizedBasePath}/collections/${collection.slug}`),
+		),
+	);
+	let globalSectionOpen = $derived(
+		globals.some((global) => normalizedCurrentPath === `${normalizedBasePath}/globals/${global.slug}`),
+	);
 
-	$effect(() => {
-		if (typeof document === "undefined") {
-			return;
-		}
+	function isDashboardActive() {
+		return normalizedCurrentPath === normalizedBasePath;
+	}
 
-		const root = document.documentElement;
-		const previousTheme = root.getAttribute("theme");
+	function isCollectionActive(slug: string) {
+		return normalizedCurrentPath.startsWith(`${normalizedBasePath}/collections/${slug}`);
+	}
 
-		root.setAttribute("theme", theme);
+	function isGlobalActive(slug: string) {
+		return normalizedCurrentPath === `${normalizedBasePath}/globals/${slug}`;
+	}
 
-		return () => {
-			if (previousTheme === null) {
-				root.removeAttribute("theme");
-				return;
-			}
-
-			root.setAttribute("theme", previousTheme);
-		};
-	});
 </script>
 
-<div class={`rk-shell rk-theme-${theme}`}>
-	<header class="rk-shell-header">
-		<div class="rk-shell-brand">
-			<a href={basePath}>{appName}</a>
-			<span>{productName}</span>
-		</div>
-		<nav class="rk-shell-topnav" aria-label="Admin sections">
-			<a href={basePath}>Dashboard</a>
-			{#if collections.length > 0}
-				<a href={`${basePath}/collections/${collections[0].slug}`}>Collections</a>
-			{/if}
-			{#if globals.length > 0}
-				<a href={`${basePath}/globals/${globals[0].slug}`}>Globals</a>
-			{/if}
-		</nav>
-		{#if user}
-			<div class="rk-shell-user">
-				<span>{user.email}</span>
-				<form method="POST" action={`${basePath}/logout`}>
-					<button type="submit">Logout</button>
-				</form>
-			</div>
-		{/if}
-	</header>
+	<Theme theme="g10">
+	<div class="rk-shell" data-admin-theme="g10">
+		<Header
+			href={basePath}
+			companyName={appName}
+			platformName={productName}
+			bind:isSideNavOpen
+			uiShellAriaLabel={`${appName} ${productName}`}
+		>
+			<svelte:fragment slot="skipToContent">
+				<SkipToContent />
+			</svelte:fragment>
 
-	<div class="rk-shell-body">
-		<aside class="rk-shell-sidebar" aria-label="Admin navigation">
-			<a href={basePath}>Dashboard</a>
-			{#if collections.length > 0}
-				<p class="rk-nav-heading">Collections</p>
-				{#each collections as collection}
-					<a href={`${basePath}/collections/${collection.slug}`}
-						>{collection.labels?.plural ?? collection.slug}</a
+			<HeaderNav aria-label="Admin sections">
+				<HeaderNavItem href={basePath} text="Dashboard" isSelected={isDashboardActive()} />
+				{#if collections.length > 0}
+					<HeaderNavMenu text="Collections" expanded={collectionSectionOpen}>
+						{#each collections as collection}
+							<HeaderNavItem
+								href={`${basePath}/collections/${collection.slug}`}
+								text={collection.labels?.plural ?? collection.slug}
+								isSelected={isCollectionActive(collection.slug)}
+							/>
+						{/each}
+					</HeaderNavMenu>
+				{/if}
+				{#if globals.length > 0}
+					<HeaderNavMenu text="Globals" expanded={globalSectionOpen}>
+						{#each globals as global}
+							<HeaderNavItem
+								href={`${basePath}/globals/${global.slug}`}
+								text={global.label ?? global.slug}
+								isSelected={isGlobalActive(global.slug)}
+							/>
+						{/each}
+					</HeaderNavMenu>
+				{/if}
+			</HeaderNav>
+
+			{#if user}
+				<HeaderUtilities>
+					<HeaderAction
+						icon={UserAvatar}
+						text={user.email}
+						bind:isOpen={isUserMenuOpen}
+						iconDescription="Account menu"
 					>
-				{/each}
+						<div class="rk-user-panel">
+							<p class="rk-user-panel-label">Signed in</p>
+							<p class="rk-user-panel-email">{user.email}</p>
+							<form method="POST" action={`${basePath}/logout`}>
+								<button class="rk-user-panel-button" type="submit">Log out</button>
+							</form>
+						</div>
+					</HeaderAction>
+				</HeaderUtilities>
 			{/if}
-			{#if globals.length > 0}
-				<p class="rk-nav-heading">Globals</p>
-				{#each globals as global}
-					<a href={`${basePath}/globals/${global.slug}`}>{global.label ?? global.slug}</a>
-				{/each}
-			{/if}
-		</aside>
+		</Header>
 
-		<main class="rk-shell-content" id="main-content">
+		<SideNav bind:isOpen={isSideNavOpen} aria-label="Admin navigation" fixed={false}>
+			<SideNavItems>
+				<SideNavLink
+					href={basePath}
+					text="Dashboard"
+					icon={Dashboard}
+					isSelected={isDashboardActive()}
+				/>
+				{#if collections.length > 0}
+					<SideNavMenu text="Collections" icon={Folders} expanded={collectionSectionOpen}>
+						{#each collections as collection}
+							<SideNavMenuItem
+								href={`${basePath}/collections/${collection.slug}`}
+								text={collection.labels?.plural ?? collection.slug}
+								isSelected={isCollectionActive(collection.slug)}
+							/>
+						{/each}
+					</SideNavMenu>
+				{/if}
+				{#if globals.length > 0}
+					<SideNavMenu text="Globals" icon={Settings} expanded={globalSectionOpen}>
+						{#each globals as global}
+							<SideNavMenuItem
+								href={`${basePath}/globals/${global.slug}`}
+								text={global.label ?? global.slug}
+								isSelected={isGlobalActive(global.slug)}
+							/>
+						{/each}
+					</SideNavMenu>
+				{/if}
+				<SideNavDivider />
+			</SideNavItems>
+		</SideNav>
+
+		<Content id="main-content" class="rk-shell-content">
 			<div class="rk-grid">
 				{@render children()}
 			</div>
 			<footer class="rk-shell-footer">{footerText}</footer>
-		</main>
+		</Content>
 	</div>
-</div>
+</Theme>
 
 <style>
 	.rk-shell {
 		min-height: 100vh;
-		background: var(--cds-layer-01, #161616);
-		color: var(--cds-text-primary, #f4f4f4);
+		background: var(--cds-layer-01);
+		color: var(--cds-text-primary);
 	}
 
-	.rk-theme-white,
-	.rk-theme-g10 {
-		background: var(--cds-layer-01, #f4f4f4);
-		color: var(--cds-text-primary, #161616);
-	}
-
-	.rk-shell-header {
-		display: grid;
-		grid-template-columns: auto 1fr auto;
-		align-items: center;
-		gap: 1rem;
-		padding: 0.75rem 1rem;
-		border-bottom: 1px solid var(--cds-border-subtle, #393939);
-	}
-
-	.rk-shell-brand {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		font-weight: 700;
-	}
-
-	.rk-shell-brand a {
-		color: inherit;
-		text-decoration: none;
-	}
-
-	.rk-shell-brand span {
-		font-size: 0.875rem;
-		opacity: 0.75;
-	}
-
-	.rk-shell-topnav {
-		display: flex;
-		gap: 0.75rem;
-	}
-
-	.rk-shell-topnav a,
-	.rk-shell-sidebar a {
-		color: inherit;
-		text-decoration: none;
-		padding: 0.35rem 0.5rem;
-		border-radius: 4px;
-	}
-
-	.rk-shell-topnav a:hover,
-	.rk-shell-sidebar a:hover {
-		background: var(--cds-layer-hover-01, rgba(141, 141, 141, 0.2));
-	}
-
-	.rk-shell-user {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		font-size: 0.875rem;
-	}
-
-	.rk-shell-user button {
-		padding: 0.45rem 0.75rem;
-		border: 1px solid var(--cds-border-subtle, #6f6f6f);
-		background: transparent;
-		color: inherit;
-		cursor: pointer;
-	}
-
-	.rk-shell-body {
-		display: grid;
-		grid-template-columns: 250px minmax(0, 1fr);
-		min-height: calc(100vh - 61px);
-	}
-
-	.rk-shell-sidebar {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-		padding: 1rem;
-		border-right: 1px solid var(--cds-border-subtle, #393939);
-	}
-
-	.rk-nav-heading {
-		margin: 0.75rem 0 0.25rem;
-		font-size: 0.75rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		opacity: 0.7;
-	}
-
-	.rk-shell-content {
-		padding: 1rem;
+	:global(.rk-shell-content) {
+		padding: 0 0 2rem;
 	}
 
 	.rk-grid {
 		display: grid;
 		grid-template-columns: repeat(16, minmax(0, 1fr));
 		gap: 1rem;
+		padding: 1.5rem 1rem 0;
+		max-width: 99rem;
+		margin: 0 auto;
 	}
 
 	.rk-grid > :global(*) {
 		grid-column: 1 / -1;
 	}
 
-	.rk-shell-footer {
-		margin-top: 2rem;
-		padding-top: 1rem;
-		border-top: 1px solid var(--cds-border-subtle, #393939);
+	.rk-user-panel {
+		display: grid;
+		gap: 0.5rem;
+		padding: 1rem;
+		min-width: 16rem;
+		background: var(--cds-layer);
+		border-left: 1px solid var(--cds-border-subtle);
+	}
+
+	.rk-user-panel-label {
+		margin: 0;
+		font-size: 0.75rem;
+		color: var(--cds-text-secondary);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	.rk-user-panel-email {
+		margin: 0;
 		font-size: 0.875rem;
-		opacity: 0.8;
+		word-break: break-word;
+	}
+
+	.rk-user-panel-button {
+		width: 100%;
+		padding: 0.875rem 1rem;
+		border: 0;
+		background: var(--cds-button-secondary);
+		color: var(--cds-text-on-color);
+		font: inherit;
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.rk-user-panel-button:hover {
+		background: var(--cds-button-secondary-hover);
+	}
+
+	.rk-shell-footer {
+		max-width: 99rem;
+		margin: 2rem auto 0;
+		padding: 1rem;
+		border-top: 1px solid var(--cds-border-subtle);
+		font-size: 0.875rem;
+		color: var(--cds-text-secondary);
+	}
+
+	:global(.rk-shell .bx--side-nav) {
+		border-right: 1px solid var(--cds-border-subtle);
+	}
+
+	:global(.rk-shell .bx--header__global) {
+		align-items: stretch;
+	}
+
+	:global(.rk-shell .bx--header__menu-bar) {
+		padding-left: 1rem;
+	}
+
+	:global(.rk-shell .bx--header-panel) {
+		width: auto;
 	}
 
 	@media (max-width: 1024px) {
-		.rk-shell-body {
-			grid-template-columns: 1fr;
+		.rk-grid {
+			padding-inline: 0;
 		}
 
-		.rk-shell-sidebar {
-			border-right: 0;
-			border-bottom: 1px solid var(--cds-border-subtle, #393939);
+		.rk-shell-footer {
+			padding-inline: 0;
 		}
 	}
 </style>

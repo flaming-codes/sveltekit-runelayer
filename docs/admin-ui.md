@@ -91,6 +91,11 @@ Global editing is runtime-managed in admin scope:
 
 ## UI configuration
 
+Package-owned admin pages render with Carbon-first primitives:
+
+- `AdminShell` uses Carbon UIShell header, menu, side nav, and content regions
+- dashboard, collection list, and editor pages use Carbon grid, tiles, data table, pagination, and form controls
+
 `createRunelayerApp` accepts package-owned admin UI config:
 
 ```ts
@@ -98,13 +103,14 @@ admin: {
   path: "/admin",
   strictAccess: true,
   ui: {
-    theme: "g100", // "white" | "g10" | "g80" | "g90" | "g100"
     appName: "Runelayer",
     productName: "CMS",
     footerText: "Powered by Runelayer",
   },
 }
 ```
+
+Package-owned admin pages render inside a fixed Carbon `g10` theme boundary. UI config customizes labels and footer copy, but not the theme itself.
 
 ## `@flaming-codes/sveltekit-runelayer/admin` exports (breaking)
 

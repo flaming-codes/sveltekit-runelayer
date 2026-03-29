@@ -14,7 +14,6 @@ export { defineRunelayerDrizzleConfig } from "./drizzle-config.js";
 export type {
   CollectionInput,
   RunelayerAdminConfig,
-  RunelayerAdminTheme,
   RunelayerAdminUIConfig,
   RunelayerAdminRuntime,
   RunelayerApp,

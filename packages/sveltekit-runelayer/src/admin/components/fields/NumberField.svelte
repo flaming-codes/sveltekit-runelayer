@@ -1,11 +1,12 @@
 <script lang="ts">
-	let { name, label, value = $bindable(0), required = false }: {
+	import { NumberInput } from "carbon-components-svelte";
+
+	let { name, label, value = $bindable(), required = false }: {
 		name: string;
 		label?: string;
-		value: number;
+		value?: null | number;
 		required?: boolean;
 	} = $props();
 </script>
 
-<label class="rk-field-label" for={name}>{label ?? name}</label>
-<input class="rk-field-input" id={name} {name} type="number" bind:value required={required} />
+<NumberInput id={name} {name} labelText={label ?? name} bind:value {required} allowEmpty />

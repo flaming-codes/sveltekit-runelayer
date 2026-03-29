@@ -1,19 +1,20 @@
 <script lang="ts">
-	let { name, label, value = $bindable(""), required = false, includeTime = false }: {
+	import { TextInput } from "carbon-components-svelte";
+
+	let { name, label, value = $bindable(), required = false, includeTime = false }: {
 		name: string;
 		label?: string;
-		value: string;
+		value?: string;
 		required?: boolean;
 		includeTime?: boolean;
 	} = $props();
 </script>
 
-<label class="rk-field-label" for={name}>{label ?? name}</label>
-<input
-	class="rk-field-input"
+<TextInput
 	id={name}
 	{name}
 	type={includeTime ? "datetime-local" : "date"}
+	labelText={label ?? name}
 	bind:value
-	required={required}
+	{required}
 />

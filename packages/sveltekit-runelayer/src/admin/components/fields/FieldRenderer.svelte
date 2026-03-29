@@ -16,7 +16,7 @@
 	} = $props();
 
 	let label = $derived(field.label ?? field.name);
-	let req = $derived(field.required ?? false);
+	let req = $derived("required" in field ? field.required ?? false : false);
 </script>
 
 {#if field.type === "text" || field.type === "slug"}

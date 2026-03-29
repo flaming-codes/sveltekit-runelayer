@@ -1,12 +1,11 @@
 <script lang="ts">
-	let { name, label, value = $bindable(false) }: {
+	import { Checkbox } from "carbon-components-svelte";
+
+	let { name, label, value = $bindable() }: {
 		name: string;
 		label?: string;
-		value: boolean;
+		value?: boolean;
 	} = $props();
 </script>
 
-<label class="rk-field-checkbox" for={name}>
-	<input id={name} {name} type="checkbox" bind:checked={value} />
-	<span>{label ?? name}</span>
-</label>
+<Checkbox id={name} {name} labelText={label ?? name} bind:checked={value} />

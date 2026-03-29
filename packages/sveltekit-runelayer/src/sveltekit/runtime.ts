@@ -1,5 +1,6 @@
 import { error, fail, redirect } from "@sveltejs/kit";
 import type { Actions, Handle, RequestEvent } from "@sveltejs/kit";
+import type { Component } from "svelte";
 import { defineConfig } from "../config.js";
 import { createRunelayer } from "../plugin.js";
 import type { RunelayerInstance } from "../plugin.js";
@@ -7,7 +8,6 @@ import { create, find, findOne, remove, update } from "../query/index.js";
 import type { CollectionConfig } from "../schema/collections.js";
 import type { FindArgs } from "../query/types.js";
 import type { GlobalConfig } from "../schema/globals.js";
-import type { ComponentType } from "svelte";
 import { getGlobalBySlug, readGlobalDocument, updateGlobalDocument } from "./globals.js";
 import { toSerializable } from "./serializable.js";
 import type {
@@ -225,12 +225,11 @@ function adminRequest(event: RequestEvent, strictAccess: boolean, adminPath: str
 
 export function createRunelayerRuntime(
   config: RunelayerAppConfig,
-  page: ComponentType,
+  page: Component<any>,
 ): RunelayerApp {
   const adminPath = normalizeAdminPath(config.admin?.path ?? "/admin");
   const strictAccess = config.admin?.strictAccess ?? true;
   const ui = {
-    theme: config.admin?.ui?.theme ?? "g100",
     appName: config.admin?.ui?.appName ?? "Runelayer",
     productName: config.admin?.ui?.productName ?? "CMS",
     footerText: config.admin?.ui?.footerText ?? "Powered by Runelayer",
@@ -263,6 +262,7 @@ export function createRunelayerRuntime(
     const user = getUser(event);
     const baseData = {
       basePath: adminPath,
+      currentPath: event.url.pathname,
       ui,
       collections: toSerializable(runelayer.collections),
       globals: toSerializable(runelayer.globals),
@@ -321,6 +321,7 @@ export function createRunelayerRuntime(
         collection,
         docs,
         page,
+        limit,
         totalPages,
         totalDocs,
       });

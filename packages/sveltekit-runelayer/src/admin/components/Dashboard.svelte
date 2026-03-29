@@ -211,11 +211,11 @@
 
 	:global(.rk-page .bx--tile),
 	:global(.rk-page .bx--clickable-tile) {
-		background: var(--cds-layer-01, #161616);
+		background: var(--cds-layer-01);
 	}
 
 	:global(.rk-page .bx--clickable-tile:hover) {
-		background: var(--cds-layer-hover-01, #262626);
+		background: var(--cds-layer-hover-01);
 	}
 
 	:global(.rk-row-spacing) {
@@ -237,7 +237,7 @@
 		line-height: 1.33333;
 		letter-spacing: 0.32px;
 		text-transform: uppercase;
-		color: var(--cds-text-secondary, #c6c6c6);
+		color: var(--cds-text-secondary);
 	}
 
 	.rk-hero-copy h1,
@@ -250,7 +250,7 @@
 		margin: 1rem 0 0;
 		font-size: 1.25rem;
 		line-height: 1.4;
-		color: var(--cds-text-secondary, #c6c6c6);
+		color: var(--cds-text-secondary);
 	}
 
 	.rk-tag-row {
@@ -288,7 +288,7 @@
 		margin: 0;
 		font-size: 0.875rem;
 		line-height: 1.42857;
-		color: var(--cds-text-secondary, #c6c6c6);
+		color: var(--cds-text-secondary);
 	}
 
 	.rk-action-stack {
@@ -316,7 +316,7 @@
 		align-items: end;
 		gap: 1rem;
 		padding-bottom: 0.75rem;
-		border-bottom: 1px solid var(--cds-border-subtle, #393939);
+		border-bottom: 1px solid var(--cds-border-subtle);
 	}
 
 	.rk-resource-header {
@@ -330,7 +330,7 @@
 		margin: 0;
 		font-size: 1rem;
 		font-weight: 600;
-		line-height: 1.375;
+		color: var(--cds-link-primary);
 	}
 
 	.rk-resource-metric {
@@ -348,7 +348,7 @@
 		margin: auto 0 0;
 		font-size: 0.875rem;
 		font-weight: 600;
-		color: var(--cds-link-primary, #78a9ff);
+		color: var(--cds-link-primary);
 	}
 
 	:global(.rk-empty-tile h3) {
