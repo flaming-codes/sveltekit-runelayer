@@ -227,11 +227,11 @@ async function createAuthJourneyHarness(): Promise<Harness> {
 
   const appFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const path = requestPath(input);
-    const url = new URL(path, "http://localhost");
+    const url = new URL(path, "http://localhost:3000");
     const headers = new Headers(init?.headers ?? {});
     cookieJar.apply(headers);
     if (!headers.has("origin")) {
-      headers.set("origin", "http://localhost");
+      headers.set("origin", "http://localhost:3000");
     }
 
     const request = new Request(url, {
@@ -255,7 +255,7 @@ async function createAuthJourneyHarness(): Promise<Harness> {
   };
 
   const resolveLocals = async (pathname: string): Promise<Record<string, unknown>> => {
-    const url = new URL(`http://localhost${pathname}`);
+    const url = new URL(`http://localhost:3000${pathname}`);
     const headers = new Headers();
     cookieJar.apply(headers);
 
@@ -285,7 +285,7 @@ async function createAuthJourneyHarness(): Promise<Harness> {
     },
   ) => {
     const pathname = path ? `/admin/${path}` : "/admin";
-    const url = new URL(`http://localhost${pathname}`);
+    const url = new URL(`http://localhost:3000${pathname}`);
     const headers = new Headers();
     cookieJar.apply(headers);
 
