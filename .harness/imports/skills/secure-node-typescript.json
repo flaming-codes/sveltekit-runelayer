@@ -1,0 +1,106 @@
+{
+  "audit": {
+    "allowed": true,
+    "allowUnaudited": false,
+    "allowUnsafe": false,
+    "audited": true,
+    "detailsUrl": "https://skills.sh/joacod/skills",
+    "providers": [
+      {
+        "outcome": "pass",
+        "provider": "gen",
+        "raw": "Safe"
+      },
+      {
+        "outcome": "pass",
+        "provider": "socket",
+        "raw": "0 alerts"
+      },
+      {
+        "outcome": "warn",
+        "provider": "snyk",
+        "raw": "Low Risk"
+      }
+    ],
+    "reason": "warn"
+  },
+  "files": [
+    {
+      "path": "assets/eslint-security.config.js",
+      "sha256": "8753ad1006f073e2c0e47dd74d849c47d8a02a99d322a23fffbd871167af20c0",
+      "sizeBytes": 7303
+    },
+    {
+      "path": "assets/tsconfig.secure.json",
+      "sha256": "39a94f6955672c1e1587b1ab87fd9f292f4802177306b250f199fe7e551f5e13",
+      "sizeBytes": 1342
+    },
+    {
+      "path": "references/authentication.md",
+      "sha256": "ba773d0839ec062a3f55f423dfcfdfc4b92c3d8894f406ce415b5f7e1b259f06",
+      "sizeBytes": 15183
+    },
+    {
+      "path": "references/dependencies.md",
+      "sha256": "5153cf3c04c82f59d0be0546f1ee0f3dd241d6e6ce549f4705a9b9ccde556718",
+      "sizeBytes": 11308
+    },
+    {
+      "path": "references/error-logging.md",
+      "sha256": "9adc57019832260ff33013b0d7c9e655a7a084f2ec5f5b65fbbef84c63cfc988",
+      "sizeBytes": 13638
+    },
+    {
+      "path": "references/filesystem-paths.md",
+      "sha256": "9f2a52ef5ac509270fa1a5678ab6670eb1fd6a298ef098152419ce31b23feb9b",
+      "sizeBytes": 15435
+    },
+    {
+      "path": "references/http-security.md",
+      "sha256": "f9dc729b896b5c8f22b287853c270273a1e4a48683a5b22372dcc52b438402af",
+      "sizeBytes": 13950
+    },
+    {
+      "path": "references/input-validation.md",
+      "sha256": "49cc9df87c29b5de61a060c7b6d0465923ca51d133c57e0f58fd62e4ec47ee6f",
+      "sizeBytes": 10793
+    },
+    {
+      "path": "references/operational.md",
+      "sha256": "8864fe40a2fcec88532fdcaeedc587c10d536728c80cfb2b5300e2ff26101d52",
+      "sizeBytes": 15156
+    },
+    {
+      "path": "references/runtime-safety.md",
+      "sha256": "c10d454d296157f95a1406e021ad0afce40d433a4d3bbad96656a79a27e7695c",
+      "sizeBytes": 15177
+    },
+    {
+      "path": "references/security-index.md",
+      "sha256": "973bd533d60814e77959616ac3eb2697c2e5668c4696fbe3a73d68b18a0e2d30",
+      "sizeBytes": 11556
+    },
+    {
+      "path": "references/typescript-safety.md",
+      "sha256": "616d06a10fa860fb5c7c0f7d5b2e690db76cead94b6addc7c60d6325a0e2b6f3",
+      "sizeBytes": 9078
+    },
+    {
+      "path": "scripts/audit-tsconfig.py",
+      "sha256": "a9aa041e025aefb2237a8170c6092f4179c22e012970bf911cff7d50db8c6989",
+      "sizeBytes": 10973
+    },
+    {
+      "path": "SKILL.md",
+      "sha256": "74674d9ccdd15f6af8f633991f841d34c2d98d2e15082748c102cee642f3480f",
+      "sizeBytes": 7167
+    }
+  ],
+  "id": "secure-node-typescript",
+  "importedAt": "2026-03-30T20:12:27.296Z",
+  "resolvedSource": "https://github.com/joacod/skills.git",
+  "skillsCliVersion": "1.4.6",
+  "source": "joacod/skills",
+  "upstreamSkill": "secure-node-typescript",
+  "version": 1
+}

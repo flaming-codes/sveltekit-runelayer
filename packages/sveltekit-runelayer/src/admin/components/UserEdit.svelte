@@ -124,7 +124,16 @@
 							<Button type="submit">{isNew ? "Create user" : "Save changes"}</Button>
 							<Button kind="secondary" href={`${basePath}/users`}>Back to users</Button>
 							{#if !isNew}
-								<Button type="submit" kind="danger" formaction="?/deleteUser">Delete user</Button>
+								<Button
+									type="submit"
+									kind="danger"
+									formaction="?/deleteUser"
+									on:click={(e) => {
+										if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+											e.preventDefault();
+										}
+									}}
+								>Delete user</Button>
 							{/if}
 						</div>
 					</Tile>

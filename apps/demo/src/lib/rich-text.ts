@@ -53,7 +53,7 @@ export function renderRichText(content: unknown): string {
         const text = extractText(node);
         switch (node.type) {
           case "heading": {
-            const level = (node.attrs?.level as number) ?? 2;
+            const level = Math.max(1, Math.min(6, Number(node.attrs?.level) || 2));
             return `<h${level}>${text}</h${level}>`;
           }
           case "paragraph":

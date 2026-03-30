@@ -44,6 +44,39 @@
       "type": "skill"
     },
     {
+      "id": "owasp-security",
+      "overrideSha256ByProvider": {
+        "claude": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "codex": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "copilot": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847"
+      },
+      "registry": "local",
+      "sourceSha256": "60d888887c51cd216f4c8cfb2ed72332bd43ff47e0a0d5b7365bf75c52e7b3d8",
+      "type": "skill"
+    },
+    {
+      "id": "secure-development",
+      "overrideSha256ByProvider": {
+        "claude": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "codex": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "copilot": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847"
+      },
+      "registry": "local",
+      "sourceSha256": "ebd1d998568224decb1f57abcddf71c2aef1a16d3bb1ef5f14ad55a07b04775c",
+      "type": "skill"
+    },
+    {
+      "id": "secure-node-typescript",
+      "overrideSha256ByProvider": {
+        "claude": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "codex": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
+        "copilot": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847"
+      },
+      "registry": "local",
+      "sourceSha256": "89dc49945bf7bc0b7dd1a9b9dcc7c4fcf96310bbacc2cee66fd93eafb8763912",
+      "type": "skill"
+    },
+    {
       "id": "svelte-runes",
       "overrideSha256ByProvider": {
         "claude": "09bfcc6a14b83e2192b8673677725c84883ee9cd0c70e45c9ec09daa8f2b2847",
@@ -209,8 +242,8 @@
       "type": "subagent"
     }
   ],
-  "generatedAt": "2026-03-29T14:52:25.632Z",
-  "manifestFingerprint": "d8829ba40c6682572a7f0fb10d3f5a14b8866ba28465f22df1f73e20663ab919",
+  "generatedAt": "2026-03-30T20:13:21.333Z",
+  "manifestFingerprint": "162bf39c44f30746609a893c124ceed44c5297e713b7ed88cbbd8dc7a82600ef",
   "outputs": [
     {
       "contentSha256": "d50869dabac65e199f186a041320e6ee5f7e34883061deea8f5b2df25949a50b",

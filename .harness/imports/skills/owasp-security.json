@@ -1,0 +1,41 @@
+{
+  "audit": {
+    "allowed": true,
+    "allowUnaudited": false,
+    "allowUnsafe": false,
+    "audited": true,
+    "detailsUrl": "https://skills.sh/hoodini/ai-agents-skills",
+    "providers": [
+      {
+        "outcome": "pass",
+        "provider": "gen",
+        "raw": "Safe"
+      },
+      {
+        "outcome": "pass",
+        "provider": "socket",
+        "raw": "0 alerts"
+      },
+      {
+        "outcome": "warn",
+        "provider": "snyk",
+        "raw": "Low Risk"
+      }
+    ],
+    "reason": "warn"
+  },
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "c73880511ba405f12244573607e1c8cd2ae1fe2bf10bcb3c4551fda8bc8596f0",
+      "sizeBytes": 13688
+    }
+  ],
+  "id": "owasp-security",
+  "importedAt": "2026-03-30T20:12:22.966Z",
+  "resolvedSource": "https://github.com/hoodini/ai-agents-skills.git",
+  "skillsCliVersion": "1.4.6",
+  "source": "hoodini/ai-agents-skills",
+  "upstreamSkill": "owasp-security",
+  "version": 1
+}

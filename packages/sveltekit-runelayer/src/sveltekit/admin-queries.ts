@@ -36,46 +36,12 @@ export async function countDocuments(
   return getCountValue(result.rows[0]);
 }
 
-async function countUsers(runelayer: RunelayerInstance): Promise<number> {
-  const result = await runelayer.database.client.execute(`SELECT COUNT(*) AS count FROM "user"`);
-  return getCountValue(result.rows[0]);
-}
-
-async function promoteSingleUserToAdmin(runelayer: RunelayerInstance): Promise<number> {
-  const totalUsers = await countUsers(runelayer);
-  if (totalUsers !== 1) {
-    return 0;
-  }
-
-  await runelayer.database.client.execute(`
-    UPDATE "user"
-    SET role = 'admin'
-    WHERE id IN (
-      SELECT id
-      FROM "user"
-      ORDER BY createdAt ASC
-      LIMIT 1
-    )
-  `);
-
-  const result = await runelayer.database.client.execute(
-    `SELECT COUNT(*) AS count FROM "user" WHERE (',' || LOWER(COALESCE(role, '')) || ',') LIKE '%,admin,%'`,
-  );
-  return getCountValue(result.rows[0]);
-}
-
 export async function countAdminUsers(runelayer: RunelayerInstance): Promise<number> {
   try {
     const result = await runelayer.database.client.execute(
       `SELECT COUNT(*) AS count FROM "user" WHERE (',' || LOWER(COALESCE(role, '')) || ',') LIKE '%,admin,%'`,
     );
-    const adminCount = getCountValue(result.rows[0]);
-    if (adminCount > 0) {
-      return adminCount;
-    }
-
-    // Compatibility path: early first-user bootstrap could create exactly one non-admin user.
-    return await promoteSingleUserToAdmin(runelayer);
+    return getCountValue(result.rows[0]);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     // If Better Auth tables are not migrated yet, treat this as "no admins".
@@ -167,6 +133,7 @@ export function getUser(event: RequestEvent): AdminUser | null {
 
   const record = user as Record<string, unknown>;
   const id = typeof record.id === "string" ? record.id : "";
+  if (!id) return null;
   const email = typeof record.email === "string" ? record.email : "";
   const role = typeof record.role === "string" ? record.role : "user";
   const name = typeof record.name === "string" ? record.name : "";

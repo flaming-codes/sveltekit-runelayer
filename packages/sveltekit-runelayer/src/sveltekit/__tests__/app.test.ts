@@ -308,7 +308,7 @@ describe("createRunelayerApp", () => {
     await expect(
       app.admin.load(
         makeEvent(undefined, {
-          locals: { user: { email: "editor@example.com", role: "editor" } },
+          locals: { user: { id: "editor-1", email: "editor@example.com", role: "editor" } },
         }),
       ),
     ).rejects.toMatchObject({
@@ -350,7 +350,7 @@ describe("createRunelayerApp", () => {
     });
   });
 
-  it("repairs legacy single-user bootstrap and redirects unauthenticated admins to login", async () => {
+  it("does not auto-promote non-admin users — redirects to first-user setup", async () => {
     const app = await createTestApp({
       authUsers: [
         {
@@ -362,9 +362,11 @@ describe("createRunelayerApp", () => {
       ],
     });
 
+    // A non-admin user should NOT be silently promoted to admin.
+    // Since no admin exists, the setup flow is required.
     await expect(app.admin.load(makeEvent())).rejects.toMatchObject({
       status: 303,
-      location: "/admin/login",
+      location: "/admin/create-first-user",
     });
   });
 

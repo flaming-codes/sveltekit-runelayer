@@ -116,9 +116,15 @@ export function createRunelayerRuntime(
     return query && query.length > 0 ? `${path}?${query}` : path;
   };
 
+  const safeInt = (value: string | null, fallback: number, max?: number): number => {
+    const parsed = Number.parseInt(value ?? "", 10);
+    const clamped = Number.isFinite(parsed) && parsed >= 1 ? parsed : fallback;
+    return max ? Math.min(clamped, max) : clamped;
+  };
+
   const fetchManagedUserList = async (event: RequestEvent): Promise<ManagedUserList> => {
-    const page = Math.max(1, Number(event.url.searchParams.get("page") ?? "1"));
-    const limit = Math.max(1, Number(event.url.searchParams.get("limit") ?? "20"));
+    const page = safeInt(event.url.searchParams.get("page"), 1);
+    const limit = safeInt(event.url.searchParams.get("limit"), 20, 100);
     const offset = (page - 1) * limit;
     const role = normalizeUserRole(event.url.searchParams.get("role") ?? "");
     const search = (event.url.searchParams.get("q") ?? "").trim();
@@ -309,8 +315,8 @@ export function createRunelayerRuntime(
       const collection = getCollectionBySlug(runelayer, route.slug);
       const query = withRequest(event);
 
-      const page = Math.max(1, Number(event.url.searchParams.get("page") ?? "1"));
-      const limit = Math.max(1, Number(event.url.searchParams.get("limit") ?? "20"));
+      const page = safeInt(event.url.searchParams.get("page"), 1);
+      const limit = safeInt(event.url.searchParams.get("limit"), 20, 100);
       const offset = (page - 1) * limit;
       const docs = await query.find(collection, {
         limit,

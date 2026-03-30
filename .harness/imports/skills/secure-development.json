@@ -1,0 +1,41 @@
+{
+  "audit": {
+    "allowed": true,
+    "allowUnaudited": false,
+    "allowUnsafe": false,
+    "audited": true,
+    "detailsUrl": "https://skills.sh/hack23/homepage",
+    "providers": [
+      {
+        "outcome": "pass",
+        "provider": "gen",
+        "raw": "Safe"
+      },
+      {
+        "outcome": "pass",
+        "provider": "socket",
+        "raw": "0 alerts"
+      },
+      {
+        "outcome": "warn",
+        "provider": "snyk",
+        "raw": "Low Risk"
+      }
+    ],
+    "reason": "warn"
+  },
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "ec1b562bb3818bae42fa16b1f6199aa1316cb52dffb87202d5c144c94a58371d",
+      "sizeBytes": 14451
+    }
+  ],
+  "id": "secure-development",
+  "importedAt": "2026-03-30T20:13:21.335Z",
+  "resolvedSource": "https://github.com/hack23/homepage.git",
+  "skillsCliVersion": "1.4.6",
+  "source": "hack23/homepage",
+  "upstreamSkill": "secure-development",
+  "version": 1
+}

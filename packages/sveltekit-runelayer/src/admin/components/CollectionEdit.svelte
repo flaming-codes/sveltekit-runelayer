@@ -101,6 +101,11 @@
 									form={formId}
 									formmethod="POST"
 									formaction="?/delete"
+									on:click={(e) => {
+										if (!confirm("Are you sure you want to delete this document? This action cannot be undone.")) {
+											e.preventDefault();
+										}
+									}}
 								>
 									Delete document
 								</Button>

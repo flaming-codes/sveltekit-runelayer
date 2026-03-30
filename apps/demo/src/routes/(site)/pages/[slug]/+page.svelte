@@ -75,7 +75,7 @@
           {/if}
           {#if page.customHtml}
             <div style="margin-top: 0.5rem;">
-              {@html page.customHtml}
+              {page.customHtml}
             </div>
           {/if}
         </Tile>
