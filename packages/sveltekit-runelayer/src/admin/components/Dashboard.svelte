@@ -94,22 +94,16 @@
 </div>
 
 <style>
-	.rk-page-header {
-		background: var(--cds-ui-background);
-		border-bottom: 1px solid var(--cds-border-subtle);
-		padding: var(--cds-spacing-09) var(--cds-spacing-06) var(--cds-spacing-07);
-	}
+	@import "./page-layout.css";
 
-	.rk-page-header-inner {
-		max-width: 90rem;
-		margin: 0 auto;
+	/* Dashboard has a taller header than the standard page layout */
+	.rk-page-header {
+		padding: var(--cds-spacing-09) var(--cds-spacing-06) var(--cds-spacing-07);
 	}
 
 	.rk-page-header h1 {
 		margin: 0 0 var(--cds-spacing-03);
 		font-size: 2.625rem;
-		font-weight: 300;
-		line-height: 1.2;
 	}
 
 	.rk-description {
@@ -118,12 +112,6 @@
 		font-size: 1rem;
 		line-height: 1.5;
 		color: var(--cds-text-secondary);
-	}
-
-	.rk-page-body {
-		max-width: 90rem;
-		margin: 0 auto;
-		padding: var(--cds-spacing-05) var(--cds-spacing-06) var(--cds-spacing-07);
 	}
 
 	.rk-section {
@@ -196,16 +184,13 @@
 	}
 
 	@media (max-width: 672px) {
+		/* Dashboard keeps taller header padding on mobile */
 		.rk-page-header {
 			padding: var(--cds-spacing-07) var(--cds-spacing-05) var(--cds-spacing-06);
 		}
 
 		.rk-page-header h1 {
 			font-size: 1.75rem;
-		}
-
-		.rk-page-body {
-			padding-inline: var(--cds-spacing-05);
 		}
 	}
 </style>

@@ -112,29 +112,29 @@
 									<p class="rk-user-panel-role">{user.role}</p>
 								{/if}
 							</div>
-							<nav class="rk-user-panel-nav">
-								<a href={`${basePath}/profile`} class="rk-user-panel-link">
+							<div class="rk-user-panel-nav" role="menu" aria-label="User actions">
+								<a href={`${basePath}/profile`} class="rk-user-panel-link" role="menuitem">
 									<UserAvatar size={16} />
 									Profile
 								</a>
 								<form method="POST" action={`${basePath}/logout?/logout`}>
-									<button class="rk-user-panel-link rk-user-panel-link--danger" type="submit">
+									<button class="rk-user-panel-link rk-user-panel-link--danger" type="submit" role="menuitem">
 										<Logout size={16} />
 										Log out
 									</button>
 								</form>
-							</nav>
+							</div>
 						{:else}
 							<div class="rk-user-panel-header">
 								<p class="rk-user-panel-label">Not signed in</p>
 								<p class="rk-user-panel-email">Sign in to manage your account.</p>
 							</div>
-							<nav class="rk-user-panel-nav">
-								<a href={`${basePath}/login`} class="rk-user-panel-link">
+							<div class="rk-user-panel-nav" role="menu" aria-label="User actions">
+								<a href={`${basePath}/login`} class="rk-user-panel-link" role="menuitem">
 									<Login size={16} />
 									Log in
 								</a>
-							</nav>
+							</div>
 						{/if}
 					</div>
 				</HeaderAction>

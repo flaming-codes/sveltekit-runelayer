@@ -15,8 +15,13 @@
 	} = $props();
 
 	let values = $state<Record<string, any>>({});
+	let lastDocId = $state<string | undefined>(undefined);
 	$effect(() => {
-		values = document ? { ...document } : {};
+		const currentId = document?.id;
+		if (currentId !== lastDocId) {
+			values = document ? { ...document } : {};
+			lastDocId = currentId;
+		}
 	});
 
 	let label = $derived(global.label ?? global.slug);
@@ -60,45 +65,7 @@
 </section>
 
 <style>
-	.rk-page-header {
-		background: var(--cds-ui-background);
-		border-bottom: 1px solid var(--cds-border-subtle);
-		padding: var(--cds-spacing-06) var(--cds-spacing-06) var(--cds-spacing-05);
-	}
-
-	.rk-page-header-inner {
-		max-width: 90rem;
-		margin: 0 auto;
-	}
-
-	.rk-page-title-row {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: var(--cds-spacing-05);
-		margin-top: var(--cds-spacing-04);
-	}
-
-	.rk-eyebrow {
-		margin: 0;
-		font-size: 0.75rem;
-		letter-spacing: 0.32px;
-		text-transform: uppercase;
-		color: var(--cds-text-secondary);
-	}
-
-	.rk-page-title-group h1 {
-		margin: var(--cds-spacing-02) 0 0;
-		font-size: 1.75rem;
-		font-weight: 300;
-		line-height: 1.2;
-	}
-
-	.rk-page-body {
-		max-width: 90rem;
-		margin: 0 auto;
-		padding: var(--cds-spacing-05) var(--cds-spacing-06) var(--cds-spacing-07);
-	}
+	@import "./page-layout.css";
 
 	.rk-form {
 		max-width: 48rem;
@@ -120,20 +87,5 @@
 		display: grid;
 		gap: var(--cds-spacing-05);
 		margin-top: var(--cds-spacing-06);
-	}
-
-	@media (max-width: 672px) {
-		.rk-page-header {
-			padding: var(--cds-spacing-05) var(--cds-spacing-05) var(--cds-spacing-04);
-		}
-
-		.rk-page-body {
-			padding-inline: var(--cds-spacing-05);
-		}
-
-		.rk-page-title-row {
-			flex-direction: column;
-			align-items: flex-start;
-		}
 	}
 </style>

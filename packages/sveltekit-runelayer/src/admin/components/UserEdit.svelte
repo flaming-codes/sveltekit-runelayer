@@ -5,6 +5,7 @@
 		Button,
 		Column,
 		Grid,
+		Modal,
 		Row,
 		Select,
 		SelectItem,
@@ -39,9 +40,15 @@
 	let title = $derived(isNew ? "Create user" : "Edit user");
 	let actionName = $derived(isNew ? "?/createUser" : "?/updateUser");
 	let role = $state("user");
+	let lastUserId = $state<string | undefined>(undefined);
+	let deleteModalOpen = $state(false);
 
 	$effect(() => {
-		role = managedUser?.role ?? "user";
+		const currentId = managedUser?.id;
+		if (currentId !== lastUserId) {
+			role = managedUser?.role ?? "user";
+			lastUserId = currentId;
+		}
 	});
 </script>
 
@@ -124,14 +131,8 @@
 								<Button kind="secondary" href={`${basePath}/users`}>Back to users</Button>
 								{#if !isNew}
 									<Button
-										type="submit"
 										kind="danger"
-										formaction="?/deleteUser"
-										on:click={(e) => {
-											if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
-												e.preventDefault();
-											}
-										}}
+										on:click={() => { deleteModalOpen = true; }}
 									>Delete user</Button>
 								{/if}
 							</div>
@@ -140,105 +141,35 @@
 				</Row>
 			</Grid>
 		</form>
+
+		{#if !isNew}
+			<form id="user-delete-form" method="POST" action="?/deleteUser">
+				<input type="hidden" name="id" value={managedUser?.id} />
+			</form>
+			<Modal
+				danger
+				bind:open={deleteModalOpen}
+				modalHeading="Delete user"
+				primaryButtonText="Delete"
+				secondaryButtonText="Cancel"
+				on:click:button--secondary={() => { deleteModalOpen = false; }}
+				on:submit={() => {
+					const form = window.document.getElementById("user-delete-form");
+					if (form instanceof HTMLFormElement) form.requestSubmit();
+				}}
+			>
+				<p>Are you sure you want to delete this user? This action cannot be undone.</p>
+			</Modal>
+		{/if}
 	</div>
 </section>
 
 <style>
-	.rk-page-header {
-		background: var(--cds-ui-background);
-		border-bottom: 1px solid var(--cds-border-subtle);
-		padding: var(--cds-spacing-06) var(--cds-spacing-06) var(--cds-spacing-05);
-	}
-
-	.rk-page-header-inner {
-		max-width: 90rem;
-		margin: 0 auto;
-	}
-
-	.rk-page-title-row {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: var(--cds-spacing-05);
-		margin-top: var(--cds-spacing-04);
-	}
-
-	.rk-eyebrow {
-		margin: 0;
-		font-size: 0.75rem;
-		letter-spacing: 0.32px;
-		text-transform: uppercase;
-		color: var(--cds-text-secondary);
-	}
-
-	.rk-page-title-row h1 {
-		margin: var(--cds-spacing-02) 0 0;
-		font-size: 1.75rem;
-		font-weight: 300;
-		line-height: 1.2;
-	}
-
-	.rk-page-body {
-		max-width: 90rem;
-		margin: 0 auto;
-		padding: var(--cds-spacing-05) var(--cds-spacing-06) var(--cds-spacing-07);
-	}
-
-	.rk-form {
-		width: 100%;
-	}
+	@import "./page-layout.css";
+	@import "./editor-layout.css";
 
 	:global(.rk-editor-tile),
 	:global(.rk-sidebar-tile) {
 		height: 100%;
-	}
-
-	.rk-fields {
-		display: grid;
-		gap: var(--cds-spacing-05);
-	}
-
-	.rk-sidebar-title {
-		margin: 0;
-		font-size: 1rem;
-		font-weight: 600;
-	}
-
-	.rk-meta-list {
-		display: grid;
-		gap: var(--cds-spacing-04);
-		margin: var(--cds-spacing-06) 0;
-	}
-
-	.rk-meta-list div {
-		padding-top: var(--cds-spacing-04);
-		border-top: 1px solid var(--cds-border-subtle);
-	}
-
-	.rk-meta-list dt {
-		font-size: 0.75rem;
-		text-transform: uppercase;
-		letter-spacing: 0.32px;
-		color: var(--cds-text-secondary);
-	}
-
-	.rk-meta-list dd {
-		margin: var(--cds-spacing-02) 0 0;
-		word-break: break-word;
-	}
-
-	.rk-actions {
-		display: grid;
-		gap: var(--cds-spacing-03);
-	}
-
-	@media (max-width: 672px) {
-		.rk-page-header {
-			padding: var(--cds-spacing-05) var(--cds-spacing-05) var(--cds-spacing-04);
-		}
-
-		.rk-page-body {
-			padding-inline: var(--cds-spacing-05);
-		}
 	}
 </style>
