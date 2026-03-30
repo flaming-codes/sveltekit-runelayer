@@ -3,13 +3,9 @@
 		Breadcrumb,
 		BreadcrumbItem,
 		Button,
-		Column,
 		DataTable,
-		Grid,
 		Pagination,
-		Row,
 		Tag,
-		Tile,
 		Toolbar,
 		ToolbarContent,
 		ToolbarSearch,
@@ -134,160 +130,106 @@
 </script>
 
 <section class="rk-page">
-	<Grid fullWidth condensed>
-		<Row>
-			<Column sm={4} md={8} lg={12}>
-				<Breadcrumb noTrailingSlash>
-					<BreadcrumbItem href={basePath}>Dashboard</BreadcrumbItem>
-					<BreadcrumbItem href={`${basePath}/collections/${slug}`} isCurrentPage>{label}</BreadcrumbItem>
-				</Breadcrumb>
-				<div class="rk-page-header">
+	<div class="rk-page-header">
+		<div class="rk-page-header-inner">
+			<Breadcrumb noTrailingSlash>
+				<BreadcrumbItem href={basePath}>Dashboard</BreadcrumbItem>
+				<BreadcrumbItem href={`${basePath}/collections/${slug}`} isCurrentPage>{label}</BreadcrumbItem>
+			</Breadcrumb>
+			<div class="rk-page-title-row">
+				<div>
 					<p class="rk-eyebrow">Collection</p>
-					<h1>{label}</h1>
-					<p class="rk-description">
-						Manage {singularLabel.toLowerCase()} entries with Carbon data table controls.
-					</p>
+					<h1>{totalDocs} {label}</h1>
 				</div>
-			</Column>
-			<Column sm={4} md={8} lg={4} class="rk-page-action">
 				<Button href={`${basePath}/collections/${slug}/create`}>Create {singularLabel}</Button>
-			</Column>
-		</Row>
+			</div>
+		</div>
+	</div>
 
-		<Row>
-			<Column sm={4} md={4} lg={4}>
-				<Tile class="rk-summary-tile">
-					<p class="rk-summary-label">Documents</p>
-					<p class="rk-summary-value">{totalDocs}</p>
-					<Tag type="green">Live schema</Tag>
-				</Tile>
-			</Column>
-			<Column sm={4} md={4} lg={4}>
-				<Tile class="rk-summary-tile">
-					<p class="rk-summary-label">Visible</p>
-					<p class="rk-summary-value">{filtered.length}</p>
-					<p class="rk-summary-copy">Filtered on the current page.</p>
-				</Tile>
-			</Column>
-			<Column sm={4} md={8} lg={8}>
-				<Tile class="rk-summary-tile">
-					<p class="rk-summary-label">Columns</p>
-					<div class="rk-tag-row">
-						{#each columns as column}
-							<Tag type="cool-gray">{formatHeading(column)}</Tag>
-						{/each}
-					</div>
-				</Tile>
-			</Column>
-		</Row>
-
-		<Row>
-			<Column sm={4} md={8} lg={16}>
-				<DataTable {headers} {rows} sortable>
-					<Toolbar>
-						<ToolbarContent>
-							<ToolbarSearch
-								persistent
-								value={searchTerm}
-								on:input={(event: Event) => {
-									searchTerm = (event.target as HTMLInputElement | null)?.value ?? "";
-								}}
-								on:clear={() => {
-									searchTerm = "";
-								}}
-							/>
-							<Button kind="ghost" href={buildCollectionHref(1)}>Reset</Button>
-						</ToolbarContent>
-					</Toolbar>
-					<svelte:fragment slot="cell" let:row let:cell>
-						{#if cell.key === firstColumn}
-							<a href={`${basePath}/collections/${slug}/${row.id}`} class="rk-table-link">{cell.value}</a>
-						{:else if cell.key === "actions"}
-							<a href={`${basePath}/collections/${slug}/${row.id}`} class="rk-table-link">Open</a>
-						{:else if cell.value === "Yes" || cell.value === "No"}
-							<Tag type={cell.value === "Yes" ? "green" : "gray"}>{cell.value}</Tag>
-						{:else}
-							{cell.value}
-						{/if}
-					</svelte:fragment>
-				</DataTable>
-			</Column>
-		</Row>
+	<div class="rk-page-body">
+		<DataTable {headers} {rows} sortable size="short">
+			<Toolbar>
+				<ToolbarContent>
+					<ToolbarSearch
+						persistent
+						value={searchTerm}
+						on:input={(event: Event) => {
+							searchTerm = (event.target as HTMLInputElement | null)?.value ?? "";
+						}}
+						on:clear={() => {
+							searchTerm = "";
+						}}
+					/>
+				</ToolbarContent>
+			</Toolbar>
+			<svelte:fragment slot="cell" let:row let:cell>
+				{#if cell.key === firstColumn}
+					<a href={`${basePath}/collections/${slug}/${row.id}`} class="rk-table-link">{cell.value}</a>
+				{:else if cell.key === "actions"}
+					<a href={`${basePath}/collections/${slug}/${row.id}`} class="rk-table-link">Open</a>
+				{:else if cell.value === "Yes" || cell.value === "No"}
+					<Tag size="sm" type={cell.value === "Yes" ? "green" : "gray"}>{cell.value}</Tag>
+				{:else}
+					{cell.value}
+				{/if}
+			</svelte:fragment>
+		</DataTable>
 
 		{#if totalPages > 1}
-			<Row>
-				<Column sm={4} md={8} lg={16}>
-					<nav class="rk-pagination" aria-label={`${label} pagination`}>
-						<Pagination
-							totalItems={totalDocs}
-							pageSize={limit}
-							page={page}
-							pageSizes={[10, 20, 50]}
-							on:change={(event: CustomEvent<{ page?: number; pageSize?: number }>) => {
-								const nextPage = event.detail.page ?? page;
-								const nextLimit = event.detail.pageSize ?? limit;
-								window.location.assign(buildCollectionHref(nextPage, nextLimit));
-							}}
-						/>
-					</nav>
-				</Column>
-			</Row>
+			<Pagination
+				totalItems={totalDocs}
+				pageSize={limit}
+				page={page}
+				pageSizes={[10, 20, 50]}
+				on:change={(event: CustomEvent<{ page?: number; pageSize?: number }>) => {
+					const nextPage = event.detail.page ?? page;
+					const nextLimit = event.detail.pageSize ?? limit;
+					window.location.assign(buildCollectionHref(nextPage, nextLimit));
+				}}
+			/>
 		{/if}
-	</Grid>
+	</div>
 </section>
 
 <style>
-	.rk-page {
-		grid-column: 1 / -1;
-	}
-
 	.rk-page-header {
-		margin: 1rem 0 2rem;
+		background: var(--cds-ui-background);
+		border-bottom: 1px solid var(--cds-border-subtle);
+		padding: var(--cds-spacing-06) var(--cds-spacing-06) var(--cds-spacing-05);
 	}
 
-	:global(.rk-page-action) {
+	.rk-page-header-inner {
+		max-width: 90rem;
+		margin: 0 auto;
+	}
+
+	.rk-page-title-row {
 		display: flex;
 		align-items: flex-end;
-		justify-content: flex-end;
+		justify-content: space-between;
+		gap: var(--cds-spacing-05);
+		margin-top: var(--cds-spacing-04);
 	}
 
-	.rk-eyebrow,
-	.rk-summary-label {
+	.rk-eyebrow {
 		margin: 0;
 		font-size: 0.75rem;
-		letter-spacing: 0.08em;
+		letter-spacing: 0.32px;
 		text-transform: uppercase;
 		color: var(--cds-text-secondary);
 	}
 
-	.rk-page-header h1,
-	.rk-summary-value {
-		margin: 0.5rem 0 0;
-		font-size: clamp(2rem, 3vw, 3rem);
+	.rk-page-title-row h1 {
+		margin: var(--cds-spacing-02) 0 0;
+		font-size: 1.75rem;
 		font-weight: 300;
+		line-height: 1.2;
 	}
 
-	.rk-description,
-	.rk-summary-copy {
-		margin: 0.75rem 0 0;
-		color: var(--cds-text-secondary);
-	}
-
-	:global(.rk-summary-tile) {
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-	}
-
-	.rk-tag-row {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-	}
-
-	.rk-pagination {
-		margin-top: 1rem;
+	.rk-page-body {
+		max-width: 90rem;
+		margin: 0 auto;
+		padding: var(--cds-spacing-05) var(--cds-spacing-06) var(--cds-spacing-07);
 	}
 
 	.rk-table-link {
@@ -300,9 +242,18 @@
 		text-decoration: underline;
 	}
 
-	@media (max-width: 1055px) {
-		:global(.rk-page-action) {
-			justify-content: flex-start;
+	@media (max-width: 672px) {
+		.rk-page-header {
+			padding: var(--cds-spacing-05) var(--cds-spacing-05) var(--cds-spacing-04);
+		}
+
+		.rk-page-body {
+			padding-inline: var(--cds-spacing-05);
+		}
+
+		.rk-page-title-row {
+			flex-direction: column;
+			align-items: flex-start;
 		}
 	}
 </style>

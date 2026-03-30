@@ -100,12 +100,29 @@ User management is runtime-managed via Better Auth admin endpoints:
 - rotate password from the user editor
 - prevent deleting your own account and prevent removing the final admin account
 
+## Layout hierarchy
+
+All admin pages follow a consistent layout pattern:
+
+1. **Page header** — full-width band with `--cds-ui-background` background and `--cds-border-subtle` bottom border. Contains breadcrumb navigation, an uppercase eyebrow label, the page title (h1), and optional action button or status tag aligned right.
+2. **Page body** — max-width `90rem`, centered, with `--cds-spacing-06` horizontal padding. Contains the page-specific content (data tables, editor forms, cards).
+
+Edit pages (CollectionEdit, UserEdit, GlobalEdit) use a two-column Grid inside the page body: 11-column content tile + 5-column sidebar tile with metadata and actions.
+
+List pages (UsersList, CollectionList) render search/filter controls above a Carbon DataTable with toolbar integration.
+
+The Dashboard page uses a taller header variant and card grid sections for collections and globals.
+
+All spacing uses Carbon spacing tokens (`--cds-spacing-02` through `--cds-spacing-09`). No hardcoded pixel or rem values outside the Carbon scale.
+
+Every page includes breadcrumb navigation back to the Dashboard.
+
 ## UI configuration
 
 Package-owned admin pages render with Carbon-first primitives:
 
 - `AdminShell` uses Carbon UIShell header, menu, side nav, and content regions
-- dashboard, collection list, and editor pages use Carbon grid, tiles, data table, pagination, and form controls
+- dashboard, collection list, and editor pages use Carbon grid, data table, pagination, and form controls
 
 `createRunelayerApp` accepts package-owned admin UI config:
 
@@ -134,6 +151,8 @@ The admin subpath now exposes Carbon-structured primitives:
 - `AdminGlobalEditorPage`
 - `AdminUsersListPage`
 - `AdminUserEditorPage`
+- `AdminProfilePage`
+- `AdminHealthPage`
 - `AdminErrorPage`
 - `AdminFieldRenderer`
 

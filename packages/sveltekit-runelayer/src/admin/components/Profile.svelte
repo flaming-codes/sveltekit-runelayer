@@ -1,5 +1,7 @@
 <script lang="ts">
 	import {
+		Breadcrumb,
+		BreadcrumbItem,
 		Button,
 		Column,
 		Grid,
@@ -18,113 +20,127 @@
 	} = $props();
 
 	let displayName = $derived(user?.name || user?.email || "Unknown");
-	let initials = $derived.by(() => {
-		if (!user) return "?";
-		const source = user.name || user.email;
-		return source
-			.split(/[\s@]+/)
-			.slice(0, 2)
-			.map((part) => part[0]?.toUpperCase() ?? "")
-			.join("");
-	});
 </script>
 
-<div class="rk-profile">
-	<div class="rk-profile-header">
-		<h1 class="rk-profile-title">Profile</h1>
-		<p class="rk-profile-description">Your account details and session information.</p>
+<div class="rk-page">
+	<div class="rk-page-header">
+		<div class="rk-page-header-inner">
+			<Breadcrumb noTrailingSlash>
+				<BreadcrumbItem href={basePath}>Dashboard</BreadcrumbItem>
+				<BreadcrumbItem href={`${basePath}/profile`} isCurrentPage>Profile</BreadcrumbItem>
+			</Breadcrumb>
+			<div class="rk-page-title-row">
+				<div>
+					<p class="rk-eyebrow">Account</p>
+					<h1>Profile</h1>
+				</div>
+			</div>
+		</div>
 	</div>
 
-	{#if user}
-		<Grid condensed fullWidth>
-			<Row>
-				<Column sm={4} md={4} lg={6}>
-					<Tile class="rk-profile-card">
-						<div class="rk-profile-avatar">
-							{#if user.image}
-								<img src={user.image} alt={displayName} class="rk-avatar-img" />
-							{:else}
-								<div class="rk-avatar-placeholder">
-									<UserAvatar size={32} />
-								</div>
-							{/if}
-						</div>
+	<div class="rk-page-body">
+		{#if user}
+			<Grid condensed fullWidth>
+				<Row>
+					<Column sm={4} md={4} lg={6}>
+						<Tile class="rk-profile-card">
+							<div class="rk-profile-avatar">
+								{#if user.image}
+									<img src={user.image} alt={displayName} class="rk-avatar-img" />
+								{:else}
+									<div class="rk-avatar-placeholder">
+										<UserAvatar size={32} />
+									</div>
+								{/if}
+							</div>
 
-						<div class="rk-profile-info">
-							<p class="rk-profile-label">Name</p>
-							<p class="rk-profile-value">{displayName}</p>
-						</div>
+							<div class="rk-profile-info">
+								<p class="rk-profile-label">Name</p>
+								<p class="rk-profile-value">{displayName}</p>
+							</div>
 
-						<div class="rk-profile-info">
-							<p class="rk-profile-label">Email</p>
-							<p class="rk-profile-value">{user.email}</p>
-						</div>
+							<div class="rk-profile-info">
+								<p class="rk-profile-label">Email</p>
+								<p class="rk-profile-value">{user.email}</p>
+							</div>
 
-						<div class="rk-profile-info">
-							<p class="rk-profile-label">Role</p>
-							<Tag type={user.role === "admin" ? "blue" : user.role === "editor" ? "teal" : "cool-gray"}>
-								{user.role}
-							</Tag>
-						</div>
+							<div class="rk-profile-info">
+								<p class="rk-profile-label">Role</p>
+								<Tag size="sm" type={user.role === "admin" ? "blue" : user.role === "editor" ? "teal" : "cool-gray"}>
+									{user.role}
+								</Tag>
+							</div>
 
-						<div class="rk-profile-actions">
-							<form method="POST" action={`${basePath}/logout?/logout`}>
-								<Button type="submit" kind="danger-tertiary" icon={Logout}>
-									Log out
-								</Button>
-							</form>
-						</div>
-					</Tile>
-				</Column>
-			</Row>
-		</Grid>
-	{:else}
-		<Tile>
-			<p>No user session found. You may need to log in.</p>
-			<Button href={`${basePath}/login`} kind="primary">Log in</Button>
-		</Tile>
-	{/if}
+							<div class="rk-profile-actions">
+								<form method="POST" action={`${basePath}/logout?/logout`}>
+									<Button type="submit" kind="danger-tertiary" icon={Logout}>
+										Log out
+									</Button>
+								</form>
+							</div>
+						</Tile>
+					</Column>
+				</Row>
+			</Grid>
+		{:else}
+			<Tile>
+				<p>No user session found. You may need to log in.</p>
+				<Button href={`${basePath}/login`} kind="primary">Log in</Button>
+			</Tile>
+		{/if}
+	</div>
 </div>
 
 <style>
-	.rk-profile {
-		grid-column: 1 / -1;
-	}
-
-	.rk-profile-header {
-		padding-bottom: 2rem;
-		margin-bottom: 2rem;
+	.rk-page-header {
+		background: var(--cds-ui-background);
 		border-bottom: 1px solid var(--cds-border-subtle);
+		padding: var(--cds-spacing-06) var(--cds-spacing-06) var(--cds-spacing-05);
 	}
 
-	.rk-profile-title {
-		margin: 0 0 0.5rem;
-		font-size: 2.625rem;
-		font-weight: 300;
-		line-height: 1.2;
-		color: var(--cds-text-primary);
+	.rk-page-header-inner {
+		max-width: 90rem;
+		margin: 0 auto;
 	}
 
-	.rk-profile-description {
+	.rk-page-title-row {
+		margin-top: var(--cds-spacing-04);
+	}
+
+	.rk-eyebrow {
 		margin: 0;
-		font-size: 1rem;
-		line-height: 1.5;
+		font-size: 0.75rem;
+		letter-spacing: 0.32px;
+		text-transform: uppercase;
 		color: var(--cds-text-secondary);
 	}
 
-	:global(.rk-profile .bx--grid) {
+	.rk-page-title-row h1 {
+		margin: var(--cds-spacing-02) 0 0;
+		font-size: 1.75rem;
+		font-weight: 300;
+		line-height: 1.2;
+	}
+
+	.rk-page-body {
+		max-width: 90rem;
+		margin: 0 auto;
+		padding: var(--cds-spacing-05) var(--cds-spacing-06) var(--cds-spacing-07);
+	}
+
+	:global(.rk-page .bx--grid) {
 		padding-inline: 0;
 	}
 
-	:global(.rk-profile .bx--row) {
+	:global(.rk-page .bx--row) {
 		margin-inline: 0;
 	}
 
 	:global(.rk-profile-card) {
 		display: flex;
 		flex-direction: column;
-		gap: 1.5rem;
-		padding: 2rem;
+		gap: var(--cds-spacing-06);
+		padding: var(--cds-spacing-06);
 	}
 
 	.rk-profile-avatar {
@@ -156,7 +172,7 @@
 	.rk-profile-info {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
+		gap: var(--cds-spacing-02);
 	}
 
 	.rk-profile-label {
@@ -176,7 +192,17 @@
 	}
 
 	.rk-profile-actions {
-		padding-top: 1rem;
+		padding-top: var(--cds-spacing-05);
 		border-top: 1px solid var(--cds-border-subtle);
+	}
+
+	@media (max-width: 672px) {
+		.rk-page-header {
+			padding: var(--cds-spacing-05) var(--cds-spacing-05) var(--cds-spacing-04);
+		}
+
+		.rk-page-body {
+			padding-inline: var(--cds-spacing-05);
+		}
 	}
 </style>

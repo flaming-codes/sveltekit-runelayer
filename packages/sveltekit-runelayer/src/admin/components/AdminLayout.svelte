@@ -182,9 +182,7 @@
 		</SideNav>
 
 		<Content id="main-content" class="rk-shell-content">
-			<div class="rk-grid">
-				{@render children()}
-			</div>
+			{@render children()}
 		</Content>
 	</div>
 </Theme>
@@ -197,20 +195,7 @@
 	}
 
 	:global(.rk-shell-content) {
-		padding: 0 0 2rem;
-	}
-
-	.rk-grid {
-		display: grid;
-		grid-template-columns: repeat(16, minmax(0, 1fr));
-		gap: 1rem;
-		padding: 2rem 1.5rem 0;
-		max-width: 90rem;
-		margin: 0 auto;
-	}
-
-	.rk-grid > :global(*) {
-		grid-column: 1 / -1;
+		padding: 0;
 	}
 
 	.rk-user-panel {
@@ -303,9 +288,4 @@
 		width: auto;
 	}
 
-	@media (max-width: 1024px) {
-		.rk-grid {
-			padding: 1.5rem 1rem 0;
-		}
-	}
 </style>
