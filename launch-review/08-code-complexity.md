@@ -2,191 +2,86 @@
 
 ## Synopsis
 
-The sveltekit-runelayer codebase is well-structured with clean module boundaries and minimal unnecessary abstraction. The core library modules (schema, db, auth, hooks, query, storage) are straightforward and small. The primary complexity hotspot is the `sveltekit/runtime.ts` file, a 433-line monolith that handles all admin route loading, guard logic, and data assembly. Secondary issues include duplicated type definitions between `schema/types.ts` and `hooks/types.ts`, duplicated utility functions across sveltekit files, and pervasive `as any` casts that erode type safety.
+`sveltekit-runelayer` is no longer organized around a single runtime god function. The worst of the old sprawl has already been split into `runtime-loaders.ts` and `resolveGuardedRoute()`, which is a real improvement. What remains is a set of compact but mentally dense coordination layers: `runtime.ts` still owns orchestration, `AdminPage.svelte` still acts as a hand-written view router, `db/schema.ts` still encodes several implicit storage rules, and `globals.ts` still follows a separate storage path from collections. The code is readable, but only if you already understand the CMS model and the SvelteKit integration contract.
 
 ## Grade: 7/10
 
-## Dependency Graph
+## Main Findings
 
-```
-index.ts (public API barrel)
-  +-- config.ts
-  +-- plugin.ts
-  |     +-- config.ts
-  |     +-- db/init.ts --> db/schema.ts --> schema/collections.ts, schema/fields.ts
-  |     +-- auth/index.ts --> auth/schema.ts, auth/handler.ts, auth/access.ts, auth/types.ts
-  |     +-- storage/local.ts --> storage/types.ts
-  |
-  +-- schema/index.ts --> schema/fields.ts, schema/collections.ts, schema/globals.ts, schema/types.ts
-  +-- db/index.ts --> db/init.ts, db/schema.ts, db/operations.ts, db/drizzle-kit.ts
-  +-- hooks/index.ts --> hooks/runner.ts, hooks/types.ts
-  +-- query/index.ts --> query/operations.ts, query/access.ts, query/types.ts
-  |     query/operations.ts --> db/operations.ts, hooks/runner.ts, query/access.ts
-  +-- storage/index.ts --> storage/types.ts, storage/local.ts, storage/handler.ts, storage/serve.ts
+### 1. `runtime.ts` is a composition root, not a simple entry point
 
-sveltekit/ (SvelteKit integration layer)
-  +-- app.ts --> runtime.ts --> AdminPage.svelte
-  |     runtime.ts --> plugin.ts, config.ts, admin-routing.ts, admin-queries.ts,
-  |                    admin-actions.ts, globals.ts, serializable.ts
-  +-- admin-actions.ts --> admin-queries.ts, admin-routing.ts, globals.ts, serializable.ts
-  +-- admin-queries.ts --> query/index.ts, plugin.ts
-  +-- globals.ts --> hooks/runner.ts, query/access.ts (uses raw SQL, bypasses db/operations.ts)
-  +-- server.ts --> app.ts (server-only entry with window guard)
-  +-- components.ts --> AdminPage.svelte, AdminErrorPage.svelte
+The current `runtime.ts` is much better than the old monolith, but it still concentrates a lot of meaning in one closure. It owns admin-path normalization, auth guard policy, the query API wiring, health interception, and the loader/action dependency graph. Understanding it means jumping between `[runtime.ts](/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/sveltekit/runtime.ts#L28)`, `[runtime-loaders.ts](/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/sveltekit/runtime-loaders.ts#L1)`, `[admin-actions.ts](/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/sveltekit/admin-actions.ts#L1)`, and `[admin-queries.ts](/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/sveltekit/admin-queries.ts#L1)`.
 
-admin/ (Svelte 5 UI components)
-  +-- index.ts (barrel for all admin components)
-  +-- AdminPage.svelte --> all page components via admin/index.ts
-  +-- components/fields/FieldRenderer.svelte --> 9 field components
-```
+The good news is that the old route-dispatch chain is gone. The remaining cost is not line count, it is closure density: `loaderCtx` carries a lot of implicit context, and the runtime still exposes a few special-case paths that only make sense once you know the auth and admin bootstrap rules.
 
-Key observations:
+### 2. `AdminPage.svelte` is still a manual view router
 
-- No circular dependencies detected.
-- `globals.ts` bypasses the standard db/operations layer, writing raw SQL directly. This is an intentional design choice (globals use a separate key-value table) but creates a parallel data path.
-- `auth/schema.ts` imports from `db/schema.ts` (for the `GeneratedTables` type), while `db/drizzle-kit.ts` imports from `auth/schema.ts`. This is a bidirectional dependency between `db` and `auth` at the module level, though not circular at the file level.
+`[AdminPage.svelte](/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/sveltekit/AdminPage.svelte#L1)` is now wrapped by `AdminShell` only once, which is cleaner than before. The remaining complexity is the manual `if/else` chain over `data.view` and the untyped `Record<string, any>` contract. The page works, but the data shape is implicit and easy to drift.
 
-## Complexity Hotspots
+This is the main place where a new contributor has to hold two files in their head at once: the loader shapes in `runtime-loaders.ts` and the rendering branches in `AdminPage.svelte`. A discriminated union would make that contract visible instead of tribal knowledge.
 
-### 1. `sveltekit/runtime.ts` -- The God Function
+### 3. `admin-actions.ts` is better factored, but still mixes too many concerns
 
-- **File**: `/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/sveltekit/runtime.ts`
-- **Issue**: `createRunelayerRuntime()` is a single 433-line function containing 12+ nested function definitions, a massive `load()` function (~190 lines) with a 13-branch if-else chain, and inline health check logic duplicated between `load()` and `handle`.
-- **Mental model required**: A reader must hold the entire function's closure scope in their head -- `runelayer`, `adminPath`, `ui`, `authBasePath`, all helper closures (`guardAdminRoute`, `fetchManagedUserList`, `fetchManagedUser`, `safeInt`, `authAdminPath`), and the `load` function with its 13 route-kind branches.
-- **Specific pain points**:
-  - Lines 184-375: The `load` function is ~190 lines with a long if-else chain dispatching on `route.kind`. Each branch assembles a different data shape.
-  - Lines 192-216 and 390-418: Health check logic is duplicated (once for HTML load, once for JSON API handle).
-  - Lines 125-167: `fetchManagedUserList` builds URLSearchParams with "magic" parameter names (`filterField`, `filterOperator`, `searchValue`, etc.) that come from Better Auth's undocumented API.
-- **Suggested simplification**: Extract route-specific loaders into a dispatch map (`Record<AdminRoute["kind"], (event, route) => Promise<...>>`). Extract the health check into a shared function. Move `fetchManagedUserList` and `fetchManagedUser` into `admin-queries.ts` where they conceptually belong.
+The shared `resolveGuardedRoute()` helper removed a lot of repeated guard boilerplate, which is good. The file is still cognitively heavy because it combines collection CRUD, global writes, auth login/bootstrap, and Better Auth user management in one module.
 
-### 2. `sveltekit/admin-actions.ts` -- Repetitive Boilerplate
+The special-case paths are what make it hard to reason about:
 
-- **File**: `/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/sveltekit/admin-actions.ts`
-- **Issue**: Every action handler repeats the same preamble: parse route, check route kind, count admin users, call guardAdminRoute. This pattern appears 8 times across the 397-line file.
-- **Mental model required**: Understanding why each action re-validates the route kind (defense-in-depth), plus the `AdminActionsConfig` interface that threads 8 dependencies from `runtime.ts`.
-- **Specific code pattern repeated 8 times** (lines 69-71, 105-108, 160-168, 181-189, etc.):
-  ```ts
-  const route = parseAdminRoute(event.params.path);
-  if (!route || route.kind !== "...") {
-    throw error(404, "...");
-  }
-  const adminExists = (await countAdminUsers(cfg.runelayer)) > 0;
-  await cfg.guardAdminRoute(event, route, cfg.adminPath, adminExists);
-  ```
-- **Suggested simplification**: Extract a shared `resolveAndGuard(event, expectedKind)` helper that consolidates route parsing, kind validation, admin existence check, and guard call.
+- `createFirstUser` has to coordinate signup, promotion to admin, and the "no admins exist yet" bootstrap rule.
+- `deleteUser` has to enforce self-delete protection and the last-admin invariant.
+- `create` and `update` mix form parsing, query-layer calls, and global-vs-collection branching.
 
-### 3. Duplicated Hook Type Definitions
+To understand those flows, you need `[runtime.ts](/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/sveltekit/runtime.ts#L50)`, `[admin-actions.ts](/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/sveltekit/admin-actions.ts#L55)`, and `[auth/index.ts](/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/auth/index.ts#L18)` together.
 
-- **Files**:
-  - `/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/schema/types.ts` (lines 34-53)
-  - `/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/hooks/types.ts` (lines 10-35)
-- **Issue**: Two separate type systems define hook signatures. `schema/types.ts` defines `BeforeChangeHook`, `AfterChangeHook`, etc. using `HookArgs`. `hooks/types.ts` defines identically-named types using `HookContext`. They are structurally different -- `HookArgs` uses `{ req, data, originalDoc, id }` while `HookContext` uses `{ collection, operation, req, data, id, existingDoc }`.
-- **Mental model required**: A contributor must understand that schema hooks are the user-facing API (what you write in config), while hooks/types are the internal runtime representation. But the names are identical, causing confusion.
-- **Evidence of confusion**: `query/operations.ts` casts all hooks with `as any` (lines 21, 27, 44, 46, 57, 59, 69, 72) to bridge the two incompatible types. `globals.ts` does the same (lines 124-128, 152-153, 178).
-- **Suggested simplification**: Unify into a single hook type system. Either make `HookContext` the canonical type everywhere, or create an adapter that converts schema-defined hooks to runtime hooks without `as any`.
+### 4. `db/schema.ts` encodes a lot of implicit CMS semantics
 
-### 4. Pervasive `as any` Type Erosion
+The schema-to-table mapper is compact, but it hides several important rules by omission. Some field types persist to columns, some are layout-only, some flatten into prefixed columns, and some create auxiliary tables. That is a clean implementation, but it is also easy to misread if you do not already know the Payload-style field model.
 
-- **Files**: Multiple files throughout the codebase
-- **Issue**: `as any` casts appear at critical junctions, defeating TypeScript's type safety exactly where it matters most.
-- **Specific locations**:
-  - `query/operations.ts` lines 21, 27, 44, 46, 57, 59, 69, 72 -- all hook invocations
-  - `globals.ts` lines 124-128, 152-153, 178 -- hook invocations
-  - `auth/index.ts` line 54 -- `(session.user as any).role`
-  - `auth/index.ts` line 69 -- `auth as unknown as RunelayerAuth["auth"]`
-  - `auth/handler.ts` line 18 -- `runelayerAuth.auth as any`
-  - `db/operations.ts` line 18 -- `(table as any)[opts.sort.column]`
-  - `plugin.ts` line 22 -- `handle` signature uses `event: any`
-  - `sveltekit/runtime.ts` -- `AdminPage.svelte` data is untyped `Record<string, any>`
-- **Mental model required**: A contributor cannot trust type signatures at module boundaries. They must read implementations to understand actual shapes.
-- **Suggested simplification**: Fix the root causes. Better Auth's user type should be extended with `role`. Hook types should be unified. The `handle` function should use SvelteKit's `Handle` type.
+The hidden contract is:
 
-### 5. `sveltekit/globals.ts` -- Parallel Data Path with Raw SQL
+- `row` and `collapsible` disappear structurally.
+- `group` prefixes columns.
+- `array` becomes a child table.
+- `relationship` with `hasMany` becomes a join table.
+- Unsupported field types silently fall through to `{}`.
 
-- **File**: `/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/sveltekit/globals.ts`
-- **Issue**: Globals bypass the standard `db/operations.ts` CRUD layer and write raw SQL against a `__runelayer_globals` key-value table. This means globals have their own table creation logic (`ensureGlobalTable`), their own SQL quoting (`quoteIdent` -- duplicated from `admin-queries.ts`), and their own data serialization.
-- **Mental model required**: Understanding that globals are stored fundamentally differently from collections, that `ensureGlobalTable` auto-creates a table at runtime (not via migrations), and that a `WeakSet<RunelayerInstance>` tracks initialization state.
-- **Duplication**: `quoteIdent` and `SAFE_IDENTIFIER` regex appear identically in both `globals.ts` (line 15-19) and `admin-queries.ts` (lines 8-19).
-- **Suggested simplification**: Extract `quoteIdent` into a shared utility. Document why globals use a different storage strategy. Consider whether globals could use the standard operations layer with a virtual "collection".
+That behavior is correct, but it is encoded as a switch statement plus omissions rather than as an explicit model. See `[db/schema.ts](/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/db/schema.ts#L10)`.
 
-### 6. `AdminPage.svelte` -- Massive View Router with Repeated Shell Props
+### 5. `query/operations.ts` and `globals.ts` still split the data model in two
 
-- **File**: `/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/sveltekit/AdminPage.svelte`
-- **Issue**: This 176-line component is a manually maintained view router. The `AdminShell` component receives the same 6 props (`collections`, `globals`, `user`, `basePath`, `currentPath`, `ui`) in 10 separate locations. Adding a new admin view requires adding a new branch and copy-pasting the shell wrapper.
-- **Suggested simplification**: Extract the shell props into a derived object and use a `{#snippet}` or wrapper pattern to avoid repeating the `AdminShell` props. Or use a component map pattern:
-  ```ts
-  const viewComponents = { dashboard: AdminDashboardPage, ... };
-  ```
+`[query/operations.ts](/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/query/operations.ts#L1)` is small, but it still relies on `as any` hook bridging and a loose table lookup by slug. That is not a lot of code, but it is the kind of code that forces readers to trust the implementation instead of the types.
 
-### 7. Untyped Data Contract Between `runtime.ts` Load and `AdminPage.svelte`
+`[globals.ts](/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/sveltekit/globals.ts#L1)` is the other mental-model hotspot. Globals do not use the normal generated table path at all. They create and maintain a separate table at runtime, then read and write it with raw SQL. That is a valid design, but it means the package really has two storage stories:
 
-- **Files**:
-  - `/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/sveltekit/runtime.ts` (load function)
-  - `/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/sveltekit/AdminPage.svelte`
-- **Issue**: The `load` function returns `Record<string, unknown>` and the Svelte component receives `Record<string, any>`. There is no shared type defining what each view returns. The contract is implicit: `runtime.ts` assembles an object with `view: "dashboard"` plus view-specific fields, and `AdminPage.svelte` destructures them. If either side changes a property name, there is no compile-time error.
-- **Mental model required**: A contributor must cross-reference `runtime.ts` branches with `AdminPage.svelte` branches by hand.
-- **Suggested simplification**: Define a discriminated union type like `AdminViewData = { view: "dashboard"; dashboardCollections: ... } | { view: "login" } | ...` and use it in both places.
+- collections go through generated Drizzle tables and the query layer
+- globals go through a separate key-value table and direct SQL
 
-## Naming & Clarity Issues
+That split is worth keeping, but it should stay explicit because it is easy for new contributors to assume globals behave like collections.
 
-1. **`runtime.ts` vs `app.ts`**: `app.ts` exists only to call `createRunelayerRuntime(config, AdminPage)`. The indirection is confusing -- `createRunelayerApp` (public) delegates to `createRunelayerRuntime` (internal). A reader encountering `createRunelayerApp` must trace through `app.ts` to find the actual implementation.
+### 6. Auth handling is correct but still conceptually elevated
 
-2. **`table` helper in `query/operations.ts`** (line 7): `function table(ctx)` is a confusingly generic name for "look up the Drizzle table object for this collection." `getTable` or `resolveTable` would be clearer.
+`[auth/index.ts](/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/auth/index.ts#L18)` is not especially long, but it has a non-trivial mental model: strip spoofed headers, resolve session, inject verified headers, then let Better Auth handle its own routes. On top of that, `[admin-queries.ts](/Users/tom/Github/sveltekit-runelayer/packages/sveltekit-runelayer/src/sveltekit/admin-queries.ts#L63)` creates a synthetic `systemRequest()` with admin headers so server-side code can bypass normal access checks on purpose.
 
-3. **`hookCtx` in `query/operations.ts`** (line 11): Abbreviation obscures purpose. `createHookContext` would be self-documenting.
-
-4. **`hc` variable** used throughout `query/operations.ts` and `globals.ts`: Short-lived abbreviation for "hook context." Acceptable in a tight scope but used across 5+ lines each time.
-
-5. **`cfg` parameter** in `admin-actions.ts` (line 35): `AdminActionsConfig` is a grab-bag of 8 dependencies. The name `cfg` gives no hint about what it contains. Consider destructuring at the function level.
-
-6. **`ManagedUser` vs `AdminUser` vs `User`**: Three user types exist -- `User` in `auth/types.ts`, `AdminUser` in `admin-queries.ts`, and `ManagedUser` in `admin-queries.ts`. `AdminUser` is the session user; `ManagedUser` is a user being managed by an admin. The distinction is not obvious from the names alone.
-
-7. **`toSerializable`**: The name suggests converting to a serializable format, but it actually strips functions via JSON round-trip. A name like `stripFunctions` or `deepCloneWithoutFunctions` would be more precise.
-
-## New Contributor Onboarding Difficulty
-
-The hardest parts for a new contributor, ranked:
-
-1. **Understanding the sveltekit integration layer**: The `sveltekit/` directory is the most complex module. A new contributor must understand how `createRunelayerApp` in `app.ts` delegates to `createRunelayerRuntime` in `runtime.ts`, which creates closures over the entire CMS state and returns `{ handle, admin, withRequest, system }`. The `admin.load` function is the core data provider, and `admin.actions` handles mutations. These are wired into SvelteKit's `+page.server.ts` by the host app. This requires understanding SvelteKit's load/actions model, Better Auth's admin API, and the internal routing system simultaneously.
-
-2. **The hook type split**: Encountering `as any` casts on every hook invocation raises immediate questions about type safety. Tracing why requires understanding both `schema/types.ts` and `hooks/types.ts` define different interfaces for the same concept.
-
-3. **The auth header-injection pattern**: Understanding that auth context flows via HTTP headers (`x-user-id`, `x-user-role`, `x-user-email`) injected in `auth/index.ts` and read in `auth/access.ts` requires reading both files. The `systemRequest()` function in `admin-queries.ts` creates a synthetic request with these headers to bypass access control for internal operations.
-
-4. **How globals work differently from collections**: Collections use generated Drizzle tables and the standard query layer. Globals use a manually-created `__runelayer_globals` key-value table with raw SQL. This divergence is not documented in code comments.
+That is fine, but it is a privileged path that new contributors will not guess without reading the code. It should stay very explicit in docs and comments.
 
 ## Action Items
 
 ### Critical
 
-- **Unify hook type definitions**: Merge `schema/types.ts` hook types and `hooks/types.ts` hook types into a single canonical definition. Eliminate all `as any` casts on hook invocations in `query/operations.ts` (8 occurrences) and `globals.ts` (4 occurrences). This is the highest-ROI change for type safety.
-
-- **Type the load-to-component data contract**: Define a discriminated union (`AdminViewData`) for the data returned by `runtime.ts` `load()` and consumed by `AdminPage.svelte`. This prevents silent breakage when view data shapes change.
+None.
 
 ### Medium
 
-- **Decompose `runtime.ts` load function**: Extract per-route loaders into a dispatch map or individual functions. The current 190-line if-else chain in `load()` is the single largest function in the codebase and the hardest to navigate.
-
-- **Extract shared `quoteIdent` utility**: `quoteIdent` and `SAFE_IDENTIFIER` are duplicated between `globals.ts` (lines 15-19) and `admin-queries.ts` (lines 8-19). Move to a shared `db/util.ts` or `db/sql.ts` module.
-
-- **Deduplicate health check logic**: The health check in `runtime.ts` appears twice -- in `load()` (lines 192-216) and `handle` (lines 390-418). Extract to a shared `buildHealthPayload(runelayer)` function.
-
-- **Extract action guard boilerplate**: The 4-line preamble (parse route, validate kind, count admins, guard) is repeated 8 times in `admin-actions.ts`. Extract a `resolveGuardedRoute(event, expectedKind, cfg)` helper.
+- Define a discriminated union for admin loader data and use it in both `runtime-loaders.ts` and `AdminPage.svelte` so the view contract is enforced by TypeScript.
+- Split Better Auth user-management helpers out of `admin-actions.ts` so `runtime.ts` and `admin-actions.ts` stop carrying auth bootstrap, collection CRUD, and user admin in the same mental bucket.
+- Replace the `as any` hook bridging in `query/operations.ts` and `globals.ts` with a single canonical hook context or adapter.
 
 ### Low
 
-- **Reduce `AdminPage.svelte` prop repetition**: The `AdminShell` component receives the same 6 props in 10 branches. Use a shared props object or wrapper component pattern.
+- Rename `table()` and `hookCtx()` in `query/operations.ts` to self-describing names; the current names are compact but do not help a reader who is not already inside that module.
+- Add a short comment or docstring near `systemRequest()` explaining that it is an intentional privileged server-only bypass, not a normal request factory.
+- Add a note in `db/schema.ts` that `row` and `collapsible` are layout-only while `array` and `hasMany relationship` create auxiliary tables.
 
-- **Improve naming**: Rename `table()` to `resolveTable()`, `hookCtx()` to `createHookContext()`, `toSerializable()` to `stripFunctions()`. These are safe renames with no behavior change.
+### Recommendation
 
-- **Remove `sveltekit/index.ts` deprecated barrel**: This file is marked deprecated but still exports everything. If no consumers rely on it, remove it. If consumers exist, add a deprecation timeline.
-
-- **Fix `auth/index.ts` line 54 type cast**: `(session.user as any).role` can be fixed by extending Better Auth's user type with the admin plugin's `role` field, removing the need for `as any`.
-
-### Recommendations
-
-- **Add inline comments in `globals.ts`** explaining why globals use a separate storage strategy (key-value table vs. generated Drizzle tables). The `WeakSet<RunelayerInstance>` pattern for lazy table creation is clever but non-obvious.
-
-- **Document the system request pattern**: `systemRequest()` in `admin-queries.ts` creates a fake `Request` with admin headers to bypass access control. This is a critical security-adjacent pattern that should have a doc comment explaining when and why it is safe to use.
-
-- **Consider a `sveltekit/health.ts` module**: Health check logic (DB ping, collection/global counts, timestamp) is currently inlined in `runtime.ts` twice. A dedicated module would make the health endpoint easier to extend (e.g., adding storage health checks).
+- Consider a view-map or wrapper pattern in `AdminPage.svelte` once another admin view is added; the current branch chain is fine now, but it will get harder to extend as the admin surface grows.
+- Consider extracting globals storage into a dedicated module with explicit "key-value table" semantics so the parallel path stays obvious as the package evolves.
