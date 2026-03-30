@@ -96,7 +96,7 @@
 		display: grid;
 		place-items: center;
 		min-height: 100vh;
-		padding: 2rem;
+		padding: var(--cds-spacing-07);
 		background: var(--cds-background);
 	}
 
@@ -105,11 +105,11 @@
 	}
 
 	.rk-login-header {
-		margin-bottom: 2rem;
+		margin-bottom: var(--cds-spacing-07);
 	}
 
 	.rk-login-eyebrow {
-		margin: 0 0 0.25rem;
+		margin: 0 0 var(--cds-spacing-02);
 		font-size: 0.75rem;
 		line-height: 1.34;
 		letter-spacing: 0.32px;
@@ -126,19 +126,19 @@
 	}
 
 	.rk-login-subtitle {
-		margin: 0.5rem 0 0;
+		margin: var(--cds-spacing-03) 0 0;
 		font-size: 1rem;
 		line-height: 1.5;
 		color: var(--cds-text-secondary);
 	}
 
 	:global(.rk-login-card) {
-		padding: 2rem;
+		padding: var(--cds-spacing-07);
 	}
 
 	.rk-login-form {
 		display: flex;
 		flex-direction: column;
-		gap: 1.5rem;
+		gap: var(--cds-spacing-06);
 	}
 </style>

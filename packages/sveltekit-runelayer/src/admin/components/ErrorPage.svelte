@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Button } from "carbon-components-svelte";
+
 	let {
 		status = 500,
 		error = null,
@@ -43,8 +45,8 @@
 			<p class="rk-error-hint">{hint}</p>
 
 			<div class="rk-error-actions">
-				<a class="rk-error-btn-primary" href={basePath}>Go to dashboard</a>
-				<button class="rk-error-btn-secondary" type="button" onclick={() => history.back()}>Go back</button>
+				<Button href={basePath}>Go to dashboard</Button>
+				<Button kind="secondary" on:click={() => history.back()}>Go back</Button>
 			</div>
 		</div>
 	</div>
@@ -56,7 +58,7 @@
 		display: grid;
 		place-items: center;
 		min-height: 70vh;
-		padding: 2rem 1rem;
+		padding: var(--cds-spacing-07) var(--cds-spacing-05);
 	}
 
 	.rk-error-container {
@@ -72,7 +74,7 @@
 		align-items: center;
 		justify-content: center;
 		min-width: 140px;
-		padding: 2rem 1.5rem;
+		padding: var(--cds-spacing-07) var(--cds-spacing-06);
 		background: var(--cds-layer-accent-01);
 	}
 
@@ -98,10 +100,10 @@
 
 	.rk-error-body {
 		flex: 1;
-		padding: 2rem;
+		padding: var(--cds-spacing-07);
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: var(--cds-spacing-03);
 	}
 
 	.rk-error-label {
@@ -125,7 +127,7 @@
 		font-size: 0.875rem;
 		line-height: 1.5;
 		color: var(--cds-text-secondary);
-		margin: 0.25rem 0 0;
+		margin: var(--cds-spacing-02) 0 0;
 	}
 
 	.rk-error-hint {
@@ -133,59 +135,25 @@
 		line-height: 1.5;
 		color: var(--cds-text-helper);
 		margin: 0;
-		padding-top: 0.5rem;
+		padding-top: var(--cds-spacing-03);
 		border-top: 1px solid var(--cds-border-subtle);
 	}
 
 	.rk-error-actions {
 		display: flex;
-		gap: 0.75rem;
-		margin-top: 1rem;
+		gap: var(--cds-spacing-04);
+		margin-top: var(--cds-spacing-05);
 	}
 
-	.rk-error-btn-primary {
-		display: inline-flex;
-		align-items: center;
-		padding: 0.6875rem 1rem;
-		font-size: 0.875rem;
-		font-weight: 400;
-		background: var(--cds-button-primary);
-		color: var(--cds-text-on-color);
-		text-decoration: none;
-		border: none;
-		cursor: pointer;
-		transition: background 0.15s;
-	}
-
-	.rk-error-btn-primary:hover {
-		background: var(--cds-button-primary-hover);
-	}
-
-	.rk-error-btn-secondary {
-		display: inline-flex;
-		align-items: center;
-		padding: 0.625rem 1rem;
-		font-size: 0.875rem;
-		font-weight: 400;
-		background: transparent;
-		color: var(--cds-text-primary);
-		border: 1px solid var(--cds-button-secondary);
-		cursor: pointer;
-		transition: background 0.15s;
-	}
-
-	.rk-error-btn-secondary:hover {
-		background: var(--cds-layer-hover-02);
-	}
-
-	@media (max-width: 480px) {
+	/* Carbon md breakpoint (672px) */
+	@media (max-width: 672px) {
 		.rk-error-container {
 			flex-direction: column;
 		}
 
 		.rk-error-status-block {
 			min-width: unset;
-			padding: 1.5rem;
+			padding: var(--cds-spacing-06);
 		}
 
 		.rk-error-code {
@@ -193,7 +161,7 @@
 		}
 
 		.rk-error-body {
-			padding: 1.5rem;
+			padding: var(--cds-spacing-06);
 		}
 
 		.rk-error-actions {

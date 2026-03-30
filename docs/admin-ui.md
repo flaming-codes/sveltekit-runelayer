@@ -115,7 +115,18 @@ The Dashboard page uses a taller header variant and card grid sections for colle
 
 All spacing uses Carbon spacing tokens (`--cds-spacing-02` through `--cds-spacing-09`). No hardcoded pixel or rem values outside the Carbon scale.
 
+Shared page-layout CSS (`.rk-page-header`, `.rk-page-header-inner`, `.rk-page-title-row`, `.rk-eyebrow`, `.rk-page-body`, and the 672px responsive breakpoint) lives in `page-layout.css` and is imported by all page components via `@import "./page-layout.css"`. Shared editor styles (`.rk-form`, `.rk-fields`, `.rk-sidebar-title`, `.rk-meta-list`, `.rk-actions`) live in `editor-layout.css` and are imported by CollectionEdit and UserEdit.
+
 Every page includes breadcrumb navigation back to the Dashboard.
+
+## Accessibility
+
+- Carbon `Button` is used for all interactive buttons, including the ErrorPage navigation. No hand-rolled button elements.
+- The user panel dropdown in AdminLayout uses `role="menu"` on its container and `role="menuitem"` on interactive items for screen reader support.
+- DataTable action links include descriptive `aria-label` attributes (e.g., `aria-label="Open {name}"`) so screen readers can distinguish between rows.
+- Delete confirmation dialogs use Carbon `Modal` (danger variant) instead of `window.confirm()` for consistent theming, keyboard navigation, and screen reader announcements.
+- Pagination uses SvelteKit `goto()` for client-side navigation instead of `window.location.assign()`, preserving client state and avoiding full page reloads.
+- `$effect` blocks that sync state from document props guard against unnecessary resets by comparing the document ID before overwriting values, preventing loss of unsaved edits.
 
 ## UI configuration
 

@@ -68,41 +68,7 @@
 </div>
 
 <style>
-	.rk-page-header {
-		background: var(--cds-ui-background);
-		border-bottom: 1px solid var(--cds-border-subtle);
-		padding: var(--cds-spacing-06) var(--cds-spacing-06) var(--cds-spacing-05);
-	}
-
-	.rk-page-header-inner {
-		max-width: 90rem;
-		margin: 0 auto;
-	}
-
-	.rk-page-title-row {
-		margin-top: var(--cds-spacing-04);
-	}
-
-	.rk-eyebrow {
-		margin: 0;
-		font-size: 0.75rem;
-		letter-spacing: 0.32px;
-		text-transform: uppercase;
-		color: var(--cds-text-secondary);
-	}
-
-	.rk-page-title-row h1 {
-		margin: var(--cds-spacing-02) 0 0;
-		font-size: 1.75rem;
-		font-weight: 300;
-		line-height: 1.2;
-	}
-
-	.rk-page-body {
-		max-width: 90rem;
-		margin: 0 auto;
-		padding: var(--cds-spacing-05) var(--cds-spacing-06) var(--cds-spacing-07);
-	}
+	@import "./page-layout.css";
 
 	:global(.rk-health-card) {
 		max-width: 32rem;
@@ -143,13 +109,4 @@
 		color: var(--cds-text-primary);
 	}
 
-	@media (max-width: 672px) {
-		.rk-page-header {
-			padding: var(--cds-spacing-05) var(--cds-spacing-05) var(--cds-spacing-04);
-		}
-
-		.rk-page-body {
-			padding-inline: var(--cds-spacing-05);
-		}
-	}
 </style>

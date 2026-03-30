@@ -1,0 +1,53 @@
+/*
+ * Shared editor-layout styles for CollectionEdit and UserEdit.
+ * Import in each editor component: @import "./editor-layout.css";
+ */
+
+.rk-form {
+  width: 100%;
+}
+
+/*
+ * Note: The :global(.rk-editor-tile) and :global(.rk-sidebar-tile) height
+ * rules must be defined in each Svelte component's <style> block because
+ * :global() is a Svelte-specific pseudo-class and not valid in plain CSS.
+ */
+
+.rk-fields {
+  display: grid;
+  gap: var(--cds-spacing-05);
+}
+
+.rk-sidebar-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.rk-meta-list {
+  display: grid;
+  gap: var(--cds-spacing-04);
+  margin: var(--cds-spacing-06) 0;
+}
+
+.rk-meta-list div {
+  padding-top: var(--cds-spacing-04);
+  border-top: 1px solid var(--cds-border-subtle);
+}
+
+.rk-meta-list dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.32px;
+  color: var(--cds-text-secondary);
+}
+
+.rk-meta-list dd {
+  margin: var(--cds-spacing-02) 0 0;
+  word-break: break-word;
+}
+
+.rk-actions {
+  display: grid;
+  gap: var(--cds-spacing-03);
+}

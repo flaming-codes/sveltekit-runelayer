@@ -10,8 +10,16 @@
 		ToolbarContent,
 		ToolbarSearch,
 	} from "carbon-components-svelte";
-	import type { DataTableHeader } from "carbon-components-svelte/src/DataTable/DataTable.svelte";
+	import { goto } from "$app/navigation";
 	import type { CollectionConfig } from "../../schema/collections.js";
+
+	type DataTableHeader<T = Record<string, unknown>> = {
+		key: keyof T & string;
+		value: string;
+		sort?: (a: T[keyof T], b: T[keyof T]) => number;
+		display?: (value: T[keyof T]) => string;
+		empty?: string;
+	};
 
 	type CollectionRow = {
 		id: string;
@@ -166,7 +174,7 @@
 				{#if cell.key === firstColumn}
 					<a href={`${basePath}/collections/${slug}/${row.id}`} class="rk-table-link">{cell.value}</a>
 				{:else if cell.key === "actions"}
-					<a href={`${basePath}/collections/${slug}/${row.id}`} class="rk-table-link">Open</a>
+					<a href={`${basePath}/collections/${slug}/${row.id}`} class="rk-table-link" aria-label={`Open ${row[firstColumn] || row.id}`}>Open</a>
 				{:else if cell.value === "Yes" || cell.value === "No"}
 					<Tag size="sm" type={cell.value === "Yes" ? "green" : "gray"}>{cell.value}</Tag>
 				{:else}
@@ -184,7 +192,7 @@
 				on:change={(event: CustomEvent<{ page?: number; pageSize?: number }>) => {
 					const nextPage = event.detail.page ?? page;
 					const nextLimit = event.detail.pageSize ?? limit;
-					window.location.assign(buildCollectionHref(nextPage, nextLimit));
+					goto(buildCollectionHref(nextPage, nextLimit));
 				}}
 			/>
 		{/if}
@@ -192,45 +200,7 @@
 </section>
 
 <style>
-	.rk-page-header {
-		background: var(--cds-ui-background);
-		border-bottom: 1px solid var(--cds-border-subtle);
-		padding: var(--cds-spacing-06) var(--cds-spacing-06) var(--cds-spacing-05);
-	}
-
-	.rk-page-header-inner {
-		max-width: 90rem;
-		margin: 0 auto;
-	}
-
-	.rk-page-title-row {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: var(--cds-spacing-05);
-		margin-top: var(--cds-spacing-04);
-	}
-
-	.rk-eyebrow {
-		margin: 0;
-		font-size: 0.75rem;
-		letter-spacing: 0.32px;
-		text-transform: uppercase;
-		color: var(--cds-text-secondary);
-	}
-
-	.rk-page-title-row h1 {
-		margin: var(--cds-spacing-02) 0 0;
-		font-size: 1.75rem;
-		font-weight: 300;
-		line-height: 1.2;
-	}
-
-	.rk-page-body {
-		max-width: 90rem;
-		margin: 0 auto;
-		padding: var(--cds-spacing-05) var(--cds-spacing-06) var(--cds-spacing-07);
-	}
+	@import "./page-layout.css";
 
 	.rk-table-link {
 		color: var(--cds-link-primary);
@@ -240,20 +210,5 @@
 
 	.rk-table-link:hover {
 		text-decoration: underline;
-	}
-
-	@media (max-width: 672px) {
-		.rk-page-header {
-			padding: var(--cds-spacing-05) var(--cds-spacing-05) var(--cds-spacing-04);
-		}
-
-		.rk-page-body {
-			padding-inline: var(--cds-spacing-05);
-		}
-
-		.rk-page-title-row {
-			flex-direction: column;
-			align-items: flex-start;
-		}
 	}
 </style>
