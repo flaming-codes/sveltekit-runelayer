@@ -58,6 +58,27 @@ the CMS user-management UI:
 - `POST /api/auth/admin/remove-user`
 - `POST /api/auth/admin/set-user-password`
 
+### Auth Route Matching (Origin Sensitivity)
+
+Better Auth's `svelteKitHandler` determines whether a request targets the auth API by
+comparing both the pathname prefix **and the origin** of the request URL against the
+configured `baseURL` and `basePath`. If the origins do not match, the request silently
+falls through to `resolve(event)` and is not handled by auth.
+
+This means `auth.baseURL` must exactly match the origin used in requests. In production
+this is typically not an issue since the app serves on a single origin. However, it is
+critical in test harnesses and reverse-proxy setups where request URLs might be constructed
+with a different host or port than the configured `baseURL`.
+
+```
+Request URL:  http://localhost/api/auth/sign-up/email
+baseURL:      http://localhost:3000
+→ origins differ → auth does NOT handle → 404
+```
+
+There is no warning or error when origins diverge. See the testing documentation for details
+on how the E2E test harness handles this.
+
 ### SvelteKit Integration
 
 In your `src/hooks.server.ts`:
