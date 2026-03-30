@@ -45,12 +45,21 @@ packages/sveltekit-runelayer/src/
 ├── plugin.ts         # createRunelayer() composition root
 ├── schema/           # Collection/global/field definitions
 ├── db/               # Drizzle + libsql integration, schema generation, CRUD
+│   └── sql-utils.ts  # Shared SQL identifier quoting (quoteIdent, assertSafeIdentifier)
 ├── auth/             # Better Auth integration and access helpers
 ├── storage/          # Local filesystem adapter
 ├── hooks/            # Lifecycle hook runner
 ├── query/            # Access-controlled CRUD orchestration
 ├── admin/            # Admin Svelte components
 └── sveltekit/        # High-level app integration surface
+    ├── runtime.ts           # createRunelayerRuntime() — orchestration root
+    ├── runtime-loaders.ts   # Per-route loader functions dispatched by route kind
+    ├── health.ts            # buildHealthPayload() — shared health check logic
+    ├── admin-actions.ts     # Form action handlers with resolveGuardedRoute() helper
+    ├── admin-queries.ts     # Query helpers and user management utilities
+    ├── admin-routing.ts     # AdminRoute type and parseAdminRoute()
+    ├── globals.ts           # Global document CRUD (key-value table)
+    └── AdminPage.svelte     # View router with single AdminShell wrapper
 ```
 
 ## Runtime Flow

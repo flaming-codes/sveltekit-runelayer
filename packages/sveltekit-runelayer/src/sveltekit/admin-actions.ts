@@ -32,6 +32,26 @@ export interface AdminActionsConfig {
   withRequest: (eventOrRequest: RequestEvent | Request) => RunelayerQueryApi;
 }
 
+/**
+ * Parse and validate the admin route, assert the expected kind, check
+ * admin existence, and run the auth guard. Returns the narrowed route
+ * on success.
+ */
+export async function resolveGuardedRoute<K extends AdminRoute["kind"]>(
+  event: RequestEvent,
+  expectedKind: K | K[],
+  cfg: AdminActionsConfig,
+): Promise<Extract<AdminRoute, { kind: K }>> {
+  const route = parseAdminRoute(event.params.path);
+  const kinds = Array.isArray(expectedKind) ? expectedKind : [expectedKind];
+  if (!route || !kinds.includes(route.kind as K)) {
+    throw cfg.kit.error(404, `Action is only valid on ${kinds.join("/")} routes`);
+  }
+  const adminExists = (await countAdminUsers(cfg.runelayer)) > 0;
+  await cfg.guardAdminRoute(event, route, cfg.adminPath, adminExists);
+  return route as Extract<AdminRoute, { kind: K }>;
+}
+
 export function createAdminActions(cfg: AdminActionsConfig): Actions {
   const { redirect, error, fail } = cfg.kit;
 
@@ -158,13 +178,7 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
     },
 
     create: async (event) => {
-      const route = parseAdminRoute(event.params.path);
-      if (!route || route.kind !== "collection-create") {
-        throw error(404, "Create action is only valid on collection create routes");
-      }
-
-      const adminExists = (await countAdminUsers(cfg.runelayer)) > 0;
-      await cfg.guardAdminRoute(event, route, cfg.adminPath, adminExists);
+      const route = await resolveGuardedRoute(event, "collection-create", cfg);
       const collection = cfg.getCollectionBySlug(cfg.runelayer, route.slug);
       const query = cfg.withRequest(event);
 
@@ -179,13 +193,7 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
     },
 
     update: async (event) => {
-      const route = parseAdminRoute(event.params.path);
-      if (!route || (route.kind !== "collection-edit" && route.kind !== "global-edit")) {
-        throw error(404, "Update action is only valid on collection/global edit routes");
-      }
-
-      const adminExists = (await countAdminUsers(cfg.runelayer)) > 0;
-      await cfg.guardAdminRoute(event, route, cfg.adminPath, adminExists);
+      const route = await resolveGuardedRoute(event, ["collection-edit", "global-edit"], cfg);
       const formData = await event.request.formData();
       const data = Object.fromEntries(formData.entries()) as Record<string, unknown>;
 
@@ -208,13 +216,7 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
     },
 
     delete: async (event) => {
-      const route = parseAdminRoute(event.params.path);
-      if (!route || route.kind !== "collection-edit") {
-        throw error(404, "Delete action is only valid on collection edit routes");
-      }
-
-      const adminExists = (await countAdminUsers(cfg.runelayer)) > 0;
-      await cfg.guardAdminRoute(event, route, cfg.adminPath, adminExists);
+      const route = await resolveGuardedRoute(event, "collection-edit", cfg);
       const collection = cfg.getCollectionBySlug(cfg.runelayer, route.slug);
       const query = cfg.withRequest(event);
 
@@ -230,13 +232,7 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
     },
 
     createUser: async (event) => {
-      const route = parseAdminRoute(event.params.path);
-      if (!route || route.kind !== "users-create") {
-        throw error(404, "Create-user action is only valid on /admin/users/create");
-      }
-
-      const adminExists = (await countAdminUsers(cfg.runelayer)) > 0;
-      await cfg.guardAdminRoute(event, route, cfg.adminPath, adminExists);
+      await resolveGuardedRoute(event, "users-create", cfg);
       const formData = await event.request.formData();
       const name = formField(formData, "name").trim();
       const email = formField(formData, "email").trim().toLowerCase();
@@ -276,13 +272,7 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
     },
 
     updateUser: async (event) => {
-      const route = parseAdminRoute(event.params.path);
-      if (!route || route.kind !== "users-edit") {
-        throw error(404, "Update-user action is only valid on /admin/users/:id");
-      }
-
-      const adminExists = (await countAdminUsers(cfg.runelayer)) > 0;
-      await cfg.guardAdminRoute(event, route, cfg.adminPath, adminExists);
+      const route = await resolveGuardedRoute(event, "users-edit", cfg);
       const formData = await event.request.formData();
       const name = formField(formData, "name").trim();
       const email = formField(formData, "email").trim().toLowerCase();
@@ -335,13 +325,7 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
     },
 
     deleteUser: async (event) => {
-      const route = parseAdminRoute(event.params.path);
-      if (!route || route.kind !== "users-edit") {
-        throw error(404, "Delete-user action is only valid on /admin/users/:id");
-      }
-
-      const adminExists = (await countAdminUsers(cfg.runelayer)) > 0;
-      await cfg.guardAdminRoute(event, route, cfg.adminPath, adminExists);
+      const route = await resolveGuardedRoute(event, "users-edit", cfg);
       const currentUser = getUser(event);
       if (currentUser?.id === route.id) {
         return fail(400, { error: "You cannot delete your own account." });

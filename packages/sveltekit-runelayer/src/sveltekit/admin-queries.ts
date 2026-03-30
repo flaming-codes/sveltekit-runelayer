@@ -4,19 +4,9 @@ import { create, find, findOne, remove, update } from "../query/index.js";
 import type { CollectionConfig } from "../schema/collections.js";
 import type { FindArgs } from "../query/types.js";
 import type { CollectionInput, RunelayerQueryApi } from "./types.js";
+import { assertSafeIdentifier, quoteIdent } from "../db/sql-utils.js";
 
-const SAFE_IDENTIFIER = /^[a-zA-Z_][a-zA-Z0-9_-]*$/;
-
-function assertSafeIdentifier(name: string): void {
-  if (!SAFE_IDENTIFIER.test(name)) {
-    throw new Error(`Unsafe SQL identifier: ${name}`);
-  }
-}
-
-export function quoteIdent(name: string): string {
-  assertSafeIdentifier(name);
-  return `"${name.replaceAll(`"`, `""`)}"`;
-}
+export { assertSafeIdentifier, quoteIdent };
 
 export function getCountValue(row: unknown): number {
   if (!row || typeof row !== "object") return 0;

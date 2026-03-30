@@ -6,7 +6,6 @@
 	import SelectField from "./SelectField.svelte";
 	import TextareaField from "./TextareaField.svelte";
 	import DateField from "./DateField.svelte";
-	import RichTextField from "./RichTextField.svelte";
 	import JsonField from "./JsonField.svelte";
 	import RelationshipField from "./RelationshipField.svelte";
 
@@ -46,7 +45,7 @@
 		includeTime={field.includeTime}
 	/>
 {:else if field.type === "richText"}
-	<RichTextField name={field.name} {label} bind:value={values[field.name]} required={req} />
+	<JsonField name={field.name} {label} bind:value={values[field.name]} required={req} helperText="Rich text JSON (Tiptap integration placeholder)" />
 {:else if field.type === "json"}
 	<JsonField name={field.name} {label} bind:value={values[field.name]} required={req} />
 {:else if field.type === "relationship"}

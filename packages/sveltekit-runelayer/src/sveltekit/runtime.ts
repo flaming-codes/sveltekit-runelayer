@@ -5,13 +5,11 @@ import { createRunelayer } from "../plugin.js";
 import type { RunelayerInstance } from "../plugin.js";
 import type { CollectionConfig } from "../schema/collections.js";
 import type { GlobalConfig } from "../schema/globals.js";
-import { getGlobalBySlug, readGlobalDocument } from "./globals.js";
-import { toSerializable } from "./serializable.js";
+import { getGlobalBySlug } from "./globals.js";
 import { normalizeAdminPath, parseAdminRoute } from "./admin-routing.js";
 import type { AdminRoute } from "./admin-routing.js";
 import {
   countAdminUsers,
-  countDocuments,
   createQueryApi,
   getUser,
   systemRequest,
@@ -23,6 +21,9 @@ import {
 import type { ManagedUser, ManagedUserList } from "./admin-queries.js";
 import { createAdminActions } from "./admin-actions.js";
 import type { RunelayerApp, RunelayerAppConfig, RunelayerQueryApi } from "./types.js";
+import { buildHealthPayload } from "./health.js";
+import { dispatchLoader } from "./runtime-loaders.js";
+import type { LoaderContext } from "./runtime-loaders.js";
 
 export function createRunelayerRuntime(
   config: RunelayerAppConfig,
@@ -181,6 +182,18 @@ export function createRunelayerRuntime(
     return user;
   };
 
+  const loaderCtx: LoaderContext = {
+    runelayer,
+    adminPath,
+    ui,
+    kit: config.kit,
+    getCollectionBySlug,
+    resolveGlobalBySlug,
+    withRequest,
+    fetchManagedUserList,
+    fetchManagedUser,
+  };
+
   const load = async (event: RequestEvent): Promise<Record<string, unknown>> => {
     const route = parseAdminRoute(event.params.path);
     if (!route) {
@@ -188,190 +201,12 @@ export function createRunelayerRuntime(
     }
 
     // Health endpoint is public — no auth guard.
-    if (route.kind === "health") {
-      let dbOk = false;
-      try {
-        await runelayer.database.client.execute("SELECT 1");
-        dbOk = true;
-      } catch {
-        // database unreachable
-      }
-      const status = dbOk ? "ok" : "degraded";
-      return {
-        basePath: adminPath,
-        currentPath: event.url.pathname,
-        ui,
-        collections: [],
-        globals: [],
-        user: null,
-        view: "health",
-        health: {
-          status,
-          database: dbOk,
-          collections: runelayer.collections.length,
-          globals: runelayer.globals.length,
-          timestamp: new Date().toISOString(),
-        },
-      };
+    if (route.kind !== "health") {
+      const adminExists = (await countAdminUsers(runelayer)) > 0;
+      await guardAdminRoute(event, route, adminPath, adminExists);
     }
 
-    const adminExists = (await countAdminUsers(runelayer)) > 0;
-    await guardAdminRoute(event, route, adminPath, adminExists);
-
-    const user = getUser(event);
-    const baseData = {
-      basePath: adminPath,
-      currentPath: event.url.pathname,
-      ui,
-      collections: toSerializable(runelayer.collections),
-      globals: toSerializable(runelayer.globals),
-      user: user
-        ? { id: user.id, email: user.email, role: user.role, name: user.name, image: user.image }
-        : null,
-    };
-
-    if (route.kind === "login") {
-      return {
-        ...baseData,
-        view: "login",
-      };
-    }
-
-    if (route.kind === "create-first-user") {
-      return {
-        ...baseData,
-        view: "create-first-user",
-      };
-    }
-
-    if (route.kind === "logout") {
-      throw redirect(303, adminPath);
-    }
-
-    if (route.kind === "profile") {
-      return {
-        ...baseData,
-        view: "profile",
-      };
-    }
-
-    if (route.kind === "dashboard") {
-      const dashboardCollections = await Promise.all(
-        runelayer.collections.map(async (collection) => ({
-          slug: collection.slug,
-          label: collection.labels?.plural ?? collection.slug,
-          count: await countDocuments(runelayer, collection.slug),
-        })),
-      );
-      const dashboardGlobals = runelayer.globals.map((global) => ({
-        slug: global.slug,
-        label: global.label ?? global.slug,
-      }));
-
-      return {
-        ...baseData,
-        view: "dashboard",
-        dashboardCollections,
-        dashboardGlobals,
-      };
-    }
-
-    if (route.kind === "users-list") {
-      const users = await fetchManagedUserList(event);
-      const page = Math.max(1, Math.floor(users.offset / users.limit) + 1);
-      const totalPages = Math.max(1, Math.ceil(users.total / users.limit));
-      return toSerializable({
-        ...baseData,
-        view: "users-list",
-        users: users.users,
-        totalUsers: users.total,
-        page,
-        limit: users.limit,
-        totalPages,
-        searchTerm: event.url.searchParams.get("q") ?? "",
-        roleFilter: event.url.searchParams.get("role") ?? "",
-      });
-    }
-
-    if (route.kind === "users-create") {
-      return toSerializable({
-        ...baseData,
-        view: "users-create",
-        roles: ["admin", "editor", "user"],
-      });
-    }
-
-    if (route.kind === "users-edit") {
-      const managedUser = await fetchManagedUser(event, route.id);
-      return toSerializable({
-        ...baseData,
-        view: "users-edit",
-        managedUser,
-        roles: ["admin", "editor", "user"],
-      });
-    }
-
-    if (route.kind === "collection-list") {
-      const collection = getCollectionBySlug(runelayer, route.slug);
-      const query = withRequest(event);
-
-      const page = safeInt(event.url.searchParams.get("page"), 1);
-      const limit = safeInt(event.url.searchParams.get("limit"), 20, 100);
-      const offset = (page - 1) * limit;
-      const docs = await query.find(collection, {
-        limit,
-        offset,
-      });
-      const totalDocs = await countDocuments(runelayer, collection.slug);
-      const totalPages = Math.max(1, Math.ceil(totalDocs / limit));
-
-      return toSerializable({
-        ...baseData,
-        view: "collection-list",
-        collection,
-        docs,
-        page,
-        limit,
-        totalPages,
-        totalDocs,
-      });
-    }
-
-    if (route.kind === "collection-create") {
-      const collection = getCollectionBySlug(runelayer, route.slug);
-      return toSerializable({
-        ...baseData,
-        view: "collection-create",
-        collection,
-      });
-    }
-
-    if (route.kind === "global-edit") {
-      const global = resolveGlobalBySlug(runelayer, route.slug);
-      const document = await readGlobalDocument(runelayer, global, event.request);
-
-      return toSerializable({
-        ...baseData,
-        view: "global-edit",
-        global,
-        document,
-      });
-    }
-
-    const collection = getCollectionBySlug(runelayer, route.slug);
-    const query = withRequest(event);
-    const document = await query.findOne(collection, route.id);
-
-    if (!document) {
-      throw error(404, `Document not found: ${route.id}`);
-    }
-
-    return toSerializable({
-      ...baseData,
-      view: "collection-edit",
-      collection,
-      document,
-    });
+    return dispatchLoader(loaderCtx, event, route);
   };
 
   const actions = createAdminActions({
@@ -394,27 +229,11 @@ export function createRunelayerRuntime(
       event.request.method === "GET" &&
       event.request.headers.get("accept")?.includes("application/json")
     ) {
-      let dbOk = false;
-      try {
-        await runelayer.database.client.execute("SELECT 1");
-        dbOk = true;
-      } catch {
-        // database unreachable
-      }
-      const status = dbOk ? "ok" : "degraded";
-      return new Response(
-        JSON.stringify({
-          status,
-          database: dbOk,
-          collections: runelayer.collections.length,
-          globals: runelayer.globals.length,
-          timestamp: new Date().toISOString(),
-        }),
-        {
-          status: dbOk ? 200 : 503,
-          headers: { "content-type": "application/json" },
-        },
-      );
+      const health = await buildHealthPayload(runelayer);
+      return new Response(JSON.stringify(health), {
+        status: health.database ? 200 : 503,
+        headers: { "content-type": "application/json" },
+      });
     }
 
     return (runelayer.handle as Handle)({ event, resolve });
