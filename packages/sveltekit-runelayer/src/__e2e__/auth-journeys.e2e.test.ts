@@ -135,9 +135,12 @@ async function applyBetterAuthSchemaForTests(url: string): Promise<void> {
         "id" TEXT PRIMARY KEY NOT NULL,
         "name" TEXT NOT NULL,
         "email" TEXT NOT NULL UNIQUE,
-        "emailVerified" INTEGER NOT NULL,
+        "emailVerified" INTEGER NOT NULL DEFAULT 0,
         "image" TEXT,
-        "role" TEXT,
+        "role" TEXT NOT NULL DEFAULT 'user',
+        "banned" INTEGER NOT NULL DEFAULT 0,
+        "banReason" TEXT,
+        "banExpires" TEXT,
         "createdAt" TEXT NOT NULL,
         "updatedAt" TEXT NOT NULL
       )
@@ -152,6 +155,7 @@ async function applyBetterAuthSchemaForTests(url: string): Promise<void> {
         "updatedAt" TEXT NOT NULL,
         "ipAddress" TEXT,
         "userAgent" TEXT,
+        "impersonatedBy" TEXT,
         "userId" TEXT NOT NULL,
         FOREIGN KEY ("userId") REFERENCES "user" ("id") ON DELETE CASCADE
       )

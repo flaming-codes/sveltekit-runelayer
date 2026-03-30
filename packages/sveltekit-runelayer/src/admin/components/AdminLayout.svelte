@@ -54,14 +54,12 @@
 			: currentPath,
 	);
 	let collectionSectionOpen = $derived(
-		collections.length > 0 ||
-			collections.some((collection) =>
-				normalizedCurrentPath.startsWith(`${normalizedBasePath}/collections/${collection.slug}`),
-			),
+		collections.some((collection) =>
+			normalizedCurrentPath.startsWith(`${normalizedBasePath}/collections/${collection.slug}`),
+		),
 	);
 	let globalSectionOpen = $derived(
-		globals.length > 0 ||
-			globals.some((global) => normalizedCurrentPath === `${normalizedBasePath}/globals/${global.slug}`),
+		globals.some((global) => normalizedCurrentPath === `${normalizedBasePath}/globals/${global.slug}`),
 	);
 
 	function isDashboardActive() {

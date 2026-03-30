@@ -12,7 +12,12 @@ type StoredGlobalRow = {
   updatedAt?: unknown;
 };
 
+const SAFE_IDENTIFIER = /^[a-zA-Z_][a-zA-Z0-9_-]*$/;
+
 function quoteIdent(name: string): string {
+  if (!SAFE_IDENTIFIER.test(name)) {
+    throw new Error(`Unsafe SQL identifier: ${name}`);
+  }
   return `"${name.replaceAll(`"`, `""`)}"`;
 }
 
