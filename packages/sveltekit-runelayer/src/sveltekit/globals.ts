@@ -3,6 +3,7 @@ import type { HookContext } from "../hooks/types.js";
 import type { RunelayerInstance } from "../plugin.js";
 import { checkAccess } from "../query/access.js";
 import type { GlobalConfig } from "../schema/globals.js";
+import { quoteIdent } from "../db/sql-utils.js";
 
 const GLOBALS_TABLE = "__runelayer_globals";
 const globalTableReady = new WeakSet<RunelayerInstance>();
@@ -11,15 +12,6 @@ type StoredGlobalRow = {
   data?: unknown;
   updatedAt?: unknown;
 };
-
-const SAFE_IDENTIFIER = /^[a-zA-Z_][a-zA-Z0-9_-]*$/;
-
-function quoteIdent(name: string): string {
-  if (!SAFE_IDENTIFIER.test(name)) {
-    throw new Error(`Unsafe SQL identifier: ${name}`);
-  }
-  return `"${name.replaceAll(`"`, `""`)}"`;
-}
 
 function textValue(value: unknown): string {
   if (typeof value === "string") return value;
