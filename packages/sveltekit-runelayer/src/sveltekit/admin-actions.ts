@@ -116,6 +116,12 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       });
 
       if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        if (response.status === 403) {
+          return fail(403, {
+            error: parseAuthErrorMessage(payload, "Sign-in is blocked for this account."),
+          });
+        }
         return fail(401, { error: "Invalid email or password." });
       }
 
@@ -167,12 +173,36 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
         return fail(400, { error: message });
       }
 
-      // Ensure the bootstrap account is elevated to admin, even if the auth sign-up endpoint
-      // ignores custom role input.
-      await cfg.runelayer.database.client.execute({
-        sql: `UPDATE "user" SET role = 'admin' WHERE LOWER(email) = LOWER(?)`,
-        args: [email],
+      // Promote exactly one bootstrap account to admin, even under concurrent setup requests.
+      const promotionResult = await cfg.runelayer.database.client.execute({
+        sql: `
+          UPDATE "user"
+          SET role = 'admin'
+          WHERE LOWER(email) = LOWER(?)
+            AND NOT EXISTS (
+              SELECT 1
+              FROM "user"
+              WHERE (',' || LOWER(COALESCE(role, '')) || ',') LIKE '%,admin,%'
+                AND LOWER(email) <> LOWER(?)
+            )
+        `,
+        args: [email, email],
       });
+
+      const promotedRows =
+        promotionResult &&
+        typeof promotionResult === "object" &&
+        "rowsAffected" in promotionResult &&
+        typeof (promotionResult as { rowsAffected?: unknown }).rowsAffected === "number"
+          ? (promotionResult as { rowsAffected: number }).rowsAffected
+          : null;
+
+      if (promotedRows === 0 && (await countAdminUsers(cfg.runelayer)) > 0) {
+        await event.fetch(`${cfg.authBasePath}/sign-out`, { method: "POST" }).catch(() => null);
+        return fail(409, {
+          error: "Another setup request already created the first admin. Please sign in.",
+        });
+      }
 
       throw redirect(303, cfg.adminPath);
     },
@@ -283,6 +313,22 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
         return fail(400, { error: "Name and email are required." });
       }
 
+      const currentUserParams = new URLSearchParams({ id: route.id });
+      const currentUserResponse = await event.fetch(authAdminPath("get-user", currentUserParams), {
+        method: "GET",
+      });
+      const currentUserPayload = await currentUserResponse.json().catch(() => null);
+      if (!currentUserResponse.ok) {
+        return fail(currentUserResponse.status, {
+          error: parseAuthErrorMessage(currentUserPayload, "Unable to load user."),
+        });
+      }
+
+      const currentUser = parseManagedUser(currentUserPayload);
+      if (!currentUser) {
+        return fail(500, { error: "Auth provider returned an invalid user payload." });
+      }
+
       const updateResult = await callAuthAdmin(event, "update-user", {
         method: "POST",
         body: JSON.stringify({
@@ -313,6 +359,23 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
         if (!passwordResult.ok) {
           return fail(passwordResult.status, {
             error: parseAuthErrorMessage(passwordResult.payload, "Unable to set user password."),
+          });
+        }
+      }
+
+      const roleChanged = currentUser.role !== role;
+      if (roleChanged || password.length > 0) {
+        const revokeResult = await callAuthAdmin(event, "revoke-user-sessions", {
+          method: "POST",
+          body: JSON.stringify({ userId: route.id }),
+        });
+
+        if (!revokeResult.ok) {
+          return fail(revokeResult.status, {
+            error: parseAuthErrorMessage(
+              revokeResult.payload,
+              "User updated, but existing sessions could not be revoked.",
+            ),
           });
         }
       }

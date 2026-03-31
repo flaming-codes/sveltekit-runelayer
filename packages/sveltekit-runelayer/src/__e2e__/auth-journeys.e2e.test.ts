@@ -684,4 +684,90 @@ describe.skipIf(!isDockerRunning())("Testcontainers — Auth User Journey Suite"
       await harness.cleanup();
     }
   });
+
+  it("revokes active sessions after admin changes a user's password", async () => {
+    const harness = await createAuthJourneyHarness();
+
+    try {
+      await expect(
+        harness.runAdminAction("createFirstUser", "create-first-user", {
+          method: "POST",
+          form: {
+            name: "Admin User",
+            email: "admin@example.com",
+            password: "super-secret-password",
+          },
+        }),
+      ).rejects.toMatchObject({
+        status: 303,
+        location: "/admin",
+      });
+
+      const initialSession = await harness.getSession();
+      const adminId = initialSession?.user?.id;
+      expect(typeof adminId).toBe("string");
+
+      const updateResult = await harness.runAdminAction("updateUser", `users/${adminId}`, {
+        method: "POST",
+        form: {
+          name: "Admin User",
+          email: "admin@example.com",
+          role: "admin",
+          password: "rotated-password-123",
+        },
+      });
+      expect(updateResult).toMatchObject({
+        success: true,
+      });
+
+      const sessionAfterPasswordChange = await harness.getSession();
+      expect(sessionAfterPasswordChange).toBeNull();
+
+      await expect(harness.adminLoad()).rejects.toMatchObject({
+        status: 303,
+        location: "/admin/login",
+      });
+    } finally {
+      await harness.cleanup();
+    }
+  });
+
+  it("treats newly banned users as logged out on the next admin request", async () => {
+    const harness = await createAuthJourneyHarness();
+
+    try {
+      await expect(
+        harness.runAdminAction("createFirstUser", "create-first-user", {
+          method: "POST",
+          form: {
+            name: "Admin User",
+            email: "admin@example.com",
+            password: "super-secret-password",
+          },
+        }),
+      ).rejects.toMatchObject({
+        status: 303,
+        location: "/admin",
+      });
+
+      const activeSession = await harness.getSession();
+      const adminId = activeSession?.user?.id;
+      expect(typeof adminId).toBe("string");
+
+      await harness.dbClient.execute({
+        sql: `UPDATE "user" SET "banned" = 1 WHERE "id" = ?`,
+        args: [adminId as string],
+      });
+
+      await expect(harness.adminLoad()).rejects.toMatchObject({
+        status: 303,
+        location: "/admin/login",
+      });
+
+      const sessionAfterBan = await harness.getSession();
+      expect(sessionAfterBan).toBeNull();
+    } finally {
+      await harness.cleanup();
+    }
+  });
 });

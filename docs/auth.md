@@ -17,6 +17,12 @@ const config = defineConfig({
     basePath: "/api/auth", // Optional (default: '/api/auth')
     sessionMaxAge: 60 * 60 * 24 * 7, // Optional (default: 7 days)
     requireEmailVerification: false, // Optional (default: false)
+    emailVerification: {
+      sendVerificationEmail: async ({ user, url }) => {
+        // Send verification email to user.email containing url
+      },
+      sendOnSignIn: true, // Optional. Defaults to true when requireEmailVerification=true
+    },
   },
 });
 ```
@@ -24,12 +30,24 @@ const config = defineConfig({
 ## Auth Config
 
 ```ts
+interface EmailVerificationConfig {
+  sendVerificationEmail?: (
+    payload: { user: { email: string; [key: string]: unknown }; url: string; token: string },
+    request?: Request,
+  ) => Promise<void>;
+  sendOnSignIn?: boolean;
+  sendOnSignUp?: boolean;
+  autoSignInAfterVerification?: boolean;
+  expiresIn?: number;
+}
+
 interface AuthConfig {
   secret: string; // Token signing secret
   baseURL: string; // Public app URL
   basePath?: string; // Auth API prefix (default: '/api/auth')
   sessionMaxAge?: number; // Session TTL in seconds (default: 604800)
   requireEmailVerification?: boolean; // Require email verification (default: false)
+  emailVerification?: EmailVerificationConfig;
 }
 ```
 
@@ -41,8 +59,9 @@ The `handle` hook returned by `createRunelayer()`:
 
 1. **Strips spoofed headers** — removes any incoming `x-user-id`, `x-user-role`, `x-user-email` headers
 2. **Resolves session** — calls Better Auth's `getSession()` API with the request cookies
-3. **Injects user context** — sets `x-user-id`, `x-user-role`, `x-user-email` headers and populates `event.locals.user`/`event.locals.session`
-4. **Routes auth API** — requests to `/api/auth/*` are handled by Better Auth directly
+3. **Blocks active bans** — if the resolved user is currently banned, Runelayer revokes the session and treats the request as anonymous
+4. **Injects user context** — for non-banned sessions, sets `x-user-id`, `x-user-role`, `x-user-email` headers and populates `event.locals.user`/`event.locals.session`
+5. **Routes auth API** — requests to `/api/auth/*` are handled by Better Auth directly
 
 Runelayer passes an explicit Drizzle schema map (`user`, `session`, `account`, `verification`) to
 the Better Auth Drizzle adapter, so auth works even when Drizzle is initialized without
@@ -57,6 +76,14 @@ the CMS user-management UI:
 - `POST /api/auth/admin/update-user`
 - `POST /api/auth/admin/remove-user`
 - `POST /api/auth/admin/set-user-password`
+
+When user roles or passwords are changed through Runelayer admin actions, Runelayer also calls
+`POST /api/auth/admin/revoke-user-sessions` to invalidate active sessions with stale privileges.
+
+If `auth.requireEmailVerification` is enabled, Runelayer forwards it to Better Auth's
+`emailAndPassword.requireEmailVerification` and requires
+`auth.emailVerification.sendVerificationEmail` to be configured.
+Runelayer defaults `auth.emailVerification.sendOnSignIn` to `true` in this mode.
 
 ### Auth Route Matching (Origin Sensitivity)
 
@@ -119,6 +146,7 @@ Runelayer checks whether any admin user exists in Better Auth's `user` table.
 - if at least one admin exists, `/admin/login` is shown and admin access requires admin auth
 - if no admin exists, admin routes redirect to `/admin/create-first-user`
 - the setup form posts `?/createFirstUser`, which creates the first user via Better Auth sign-up and then promotes that email to `role = "admin"`
+- concurrent setup requests are guarded so only one request can win first-admin promotion; losing requests are signed out and must use `/admin/login`
 
 ## Roles
 

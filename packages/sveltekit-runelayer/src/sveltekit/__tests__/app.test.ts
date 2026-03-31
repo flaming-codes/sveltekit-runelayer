@@ -350,6 +350,34 @@ describe("createRunelayerApp", () => {
     });
   });
 
+  it("surfaces auth-provider 403 login errors", async () => {
+    const app = await createTestApp();
+
+    const result = await (app.admin.actions.login as any)(
+      makeEvent("login", {
+        form: {
+          email: "admin@example.com",
+          password: "super-secret-password",
+        },
+        fetch: async () =>
+          new Response(
+            JSON.stringify({
+              message: "Please verify your email address before signing in.",
+            }),
+            {
+              status: 403,
+              headers: { "content-type": "application/json" },
+            },
+          ),
+      }),
+    );
+
+    expect(result).toMatchObject({
+      status: 403,
+      data: { error: "Please verify your email address before signing in." },
+    });
+  });
+
   it("does not auto-promote non-admin users — redirects to first-user setup", async () => {
     const app = await createTestApp({
       authUsers: [
@@ -553,7 +581,7 @@ describe("createRunelayerApp", () => {
 
   it("updates users and optionally rotates password via admin endpoints", async () => {
     const app = await createTestApp();
-    const calls: Array<{ url: string; body: string }> = [];
+    const calls: string[] = [];
 
     const result = await (app.admin.actions.updateUser as any)(
       adminEvent("users/u-2", {
@@ -564,13 +592,26 @@ describe("createRunelayerApp", () => {
           password: "new-password-123",
         },
         fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
-          const body = init?.body;
-          if (typeof body !== "string") {
-            throw new Error("Expected JSON body");
-          }
           const url = requestUrl(input);
-          calls.push({ url, body });
+          calls.push(url);
+          if (url.includes("/api/auth/admin/get-user")) {
+            return new Response(
+              JSON.stringify({
+                id: "u-2",
+                name: "Editor User",
+                email: "editor@example.com",
+                role: "editor",
+                emailVerified: true,
+                banned: false,
+              }),
+              { status: 200, headers: { "content-type": "application/json" } },
+            );
+          }
           if (url.endsWith("/admin/update-user")) {
+            const body = init?.body;
+            if (typeof body !== "string") {
+              throw new Error("Expected JSON body");
+            }
             return new Response(
               JSON.stringify({
                 id: "u-2",
@@ -583,6 +624,26 @@ describe("createRunelayerApp", () => {
               { status: 200, headers: { "content-type": "application/json" } },
             );
           }
+          if (url.endsWith("/admin/set-user-password")) {
+            const body = init?.body;
+            if (typeof body !== "string") {
+              throw new Error("Expected JSON body");
+            }
+            return new Response(JSON.stringify({ status: true }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            });
+          }
+          if (url.endsWith("/admin/revoke-user-sessions")) {
+            const body = init?.body;
+            if (typeof body !== "string") {
+              throw new Error("Expected JSON body");
+            }
+            return new Response(JSON.stringify({ success: true }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            });
+          }
           return new Response(JSON.stringify({ status: true }), {
             status: 200,
             headers: { "content-type": "application/json" },
@@ -592,9 +653,11 @@ describe("createRunelayerApp", () => {
     );
 
     expect(result.success).toBe(true);
-    expect(calls.map((call) => call.url)).toEqual([
+    expect(calls).toEqual([
+      "/api/auth/admin/get-user?id=u-2",
       "/api/auth/admin/update-user",
       "/api/auth/admin/set-user-password",
+      "/api/auth/admin/revoke-user-sessions",
     ]);
   });
 
