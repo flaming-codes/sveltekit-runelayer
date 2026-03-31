@@ -12,11 +12,9 @@
     AdminUserEditorPage,
     AdminUsersListPage,
   } from "../admin/index.js";
+  import type { RunelayerAdminPageProps } from "./types.js";
 
-  let { data, form }: {
-    data: Record<string, any>;
-    form?: { error?: string } | null;
-  } = $props();
+  let { data, form }: RunelayerAdminPageProps = $props();
 </script>
 
 {#if data.view === "login" || data.view === "create-first-user"}
@@ -24,7 +22,7 @@
     action="?/login"
     setupAction="?/createFirstUser"
     mode={data.view === "create-first-user" ? "create-first-user" : "login"}
-    error={form?.error ?? data.error ?? ""}
+    error={form?.error ?? ""}
     ui={data.ui}
   />
 {:else}
@@ -38,27 +36,27 @@
   >
     {#if data.view === "dashboard"}
       <AdminDashboardPage
-        collections={data.dashboardCollections ?? []}
-        globals={data.dashboardGlobals ?? []}
+        collections={data.dashboardCollections}
+        globals={data.dashboardGlobals}
         basePath={data.basePath}
       />
     {:else if data.view === "profile"}
       <AdminProfilePage user={data.user} basePath={data.basePath} />
     {:else if data.view === "users-list"}
       <AdminUsersListPage
-        users={data.users ?? []}
-        totalUsers={data.totalUsers ?? 0}
-        page={data.page ?? 1}
-        limit={data.limit ?? 20}
-        totalPages={data.totalPages ?? 1}
-        searchTerm={data.searchTerm ?? ""}
-        roleFilter={data.roleFilter ?? ""}
+        users={data.users}
+        totalUsers={data.totalUsers}
+        page={data.page}
+        limit={data.limit}
+        totalPages={data.totalPages}
+        searchTerm={data.searchTerm}
+        roleFilter={data.roleFilter}
         basePath={data.basePath}
       />
     {:else if data.view === "users-create"}
-      <AdminUserEditorPage managedUser={null} roles={data.roles ?? []} basePath={data.basePath} />
+      <AdminUserEditorPage managedUser={null} roles={data.roles} basePath={data.basePath} />
     {:else if data.view === "users-edit"}
-      <AdminUserEditorPage managedUser={data.managedUser} roles={data.roles ?? []} basePath={data.basePath} />
+      <AdminUserEditorPage managedUser={data.managedUser} roles={data.roles} basePath={data.basePath} />
     {:else if data.view === "health"}
       <AdminHealthPage health={data.health} />
     {:else if data.view === "collection-list"}

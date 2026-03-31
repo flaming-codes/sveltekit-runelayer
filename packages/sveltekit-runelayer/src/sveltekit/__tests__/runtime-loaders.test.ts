@@ -1,14 +1,20 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import { createClient } from "@libsql/client";
 import { migrateDatabaseForTests } from "../../__testutils__/migrations.js";
 import { defineCollection } from "../../schema/collections.js";
 import { text } from "../../schema/fields.js";
 import { defineConfig } from "../../config.js";
 import { createRunelayer } from "../../plugin.js";
-import type { SvelteKitUtils } from "../types.js";
+import type {
+  RunelayerAdminHealthData,
+  RunelayerAdminLoginData,
+  RunelayerAdminPageData,
+  RunelayerManagedUserRole,
+  SvelteKitUtils,
+} from "../types.js";
 import type { LoaderContext } from "../runtime-loaders.js";
 import {
   loadHealth,
@@ -148,6 +154,7 @@ describe("runtime-loaders", () => {
   it("loadHealth returns health payload with database status", async () => {
     const ctx = await createCtx();
     const result = await loadHealth(ctx, makeEvent("health"));
+    expectTypeOf(result).toMatchTypeOf<RunelayerAdminHealthData>();
     expect(result.view).toBe("health");
     expect((result.health as any).database).toBe(true);
     expect((result.health as any).status).toBe("ok");
@@ -156,6 +163,7 @@ describe("runtime-loaders", () => {
   it("loadLogin returns login view", async () => {
     const ctx = await createCtx();
     const result = loadLogin(ctx, makeEvent("login"));
+    expectTypeOf(result).toMatchTypeOf<RunelayerAdminLoginData>();
     expect(result.view).toBe("login");
     expect(result.basePath).toBe("/admin");
   });
@@ -209,6 +217,7 @@ describe("runtime-loaders", () => {
   it("loadUsersCreate returns users-create view with roles", async () => {
     const ctx = await createCtx();
     const result = loadUsersCreate(ctx, makeEvent("users/create"));
+    expectTypeOf(result.roles).toEqualTypeOf<RunelayerManagedUserRole[]>();
     expect(result.view).toBe("users-create");
     expect(result.roles).toEqual(["admin", "editor", "user"]);
   });
@@ -216,12 +225,18 @@ describe("runtime-loaders", () => {
   it("dispatchLoader routes to the correct loader by kind", async () => {
     const ctx = await createCtx();
     const result = await dispatchLoader(ctx, makeEvent("login"), { kind: "login" });
+    expectTypeOf(result).toMatchTypeOf<RunelayerAdminPageData>();
     expect(result.view).toBe("login");
 
     const healthResult = await dispatchLoader(ctx, makeEvent("health"), { kind: "health" });
     expect(healthResult.view).toBe("health");
 
     const dashResult = await dispatchLoader(ctx, makeEvent(), { kind: "dashboard" });
+    if (dashResult.view === "dashboard") {
+      expectTypeOf(dashResult.dashboardCollections).toEqualTypeOf<
+        Array<{ slug: string; label: string; count: number }>
+      >();
+    }
     expect(dashResult.view).toBe("dashboard");
   });
 });

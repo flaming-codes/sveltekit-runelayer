@@ -53,13 +53,13 @@ packages/sveltekit-runelayer/src/
 ├── admin/            # Admin Svelte components
 └── sveltekit/        # High-level app integration surface
     ├── runtime.ts           # createRunelayerRuntime() — orchestration root
-    ├── runtime-loaders.ts   # Per-route loader functions dispatched by route kind
+    ├── runtime-loaders.ts   # Per-route loaders returning typed admin view variants
     ├── health.ts            # buildHealthPayload() — shared health check logic
     ├── admin-actions.ts     # Form action handlers with resolveGuardedRoute() helper
     ├── admin-queries.ts     # Query helpers and user management utilities
     ├── admin-routing.ts     # AdminRoute type and parseAdminRoute()
     ├── globals.ts           # Global document CRUD (key-value table)
-    └── AdminPage.svelte     # View router with single AdminShell wrapper
+    └── AdminPage.svelte     # Typed view router over RunelayerAdminPageData
 ```
 
 ## Runtime Flow
@@ -121,6 +121,12 @@ libsql supports local file SQLite URLs and Turso remote URLs with one API:
 ### Header-based identity context
 
 Access control receives only `Request` data with verified auth headers, avoiding direct SvelteKit runtime coupling and improving testability.
+
+### Typed admin view contract
+
+The admin runtime uses a single discriminated union (`RunelayerAdminPageData`) shared by both server loaders (`runtime-loaders.ts`) and the client-facing `AdminPage.svelte`.
+The `view` field is the discriminant, so each loader returns an explicit variant and the page router narrows by `view` when rendering.
+This keeps runtime/UI coupling explicit in TypeScript and prevents drift between loader payloads and page branches.
 
 ## Technology Stack
 
