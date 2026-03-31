@@ -43,6 +43,27 @@ describe("createLocalStorage", () => {
     expect(result.url).toContain("documents/");
   });
 
+  it("upload sanitizes unsafe filenames", async () => {
+    const buf = Buffer.from("data");
+    const result = await storage.upload(buf, {
+      filename: "../../unsafe<>name?.pdf",
+      mimeType: "application/pdf",
+    });
+    expect(result.filename).toBe("unsafe__name_.pdf");
+    expect(result.path).not.toContain("..");
+  });
+
+  it("upload rejects invalid folder paths", async () => {
+    const buf = Buffer.from("data");
+    await expect(
+      storage.upload(buf, {
+        filename: "file.txt",
+        mimeType: "text/plain",
+        folder: "../escape",
+      }),
+    ).rejects.toThrow("Invalid folder");
+  });
+
   it("exists returns true for uploaded file", async () => {
     const buf = Buffer.from("check");
     const result = await storage.upload(buf, {
@@ -64,6 +85,10 @@ describe("createLocalStorage", () => {
     });
     await storage.delete(result.path);
     expect(await storage.exists(result.path)).toBe(false);
+  });
+
+  it("delete rejects traversal paths", async () => {
+    await expect(storage.delete("../etc/passwd")).rejects.toThrow();
   });
 
   it("getUrl returns prefixed path", () => {

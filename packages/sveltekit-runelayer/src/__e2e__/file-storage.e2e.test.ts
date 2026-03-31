@@ -150,6 +150,8 @@ describe("File Upload & Media Management — Full Journey", () => {
 
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toBe("image/png");
+    expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
+    expect(res.headers.get("Content-Disposition")).toContain("inline");
   });
 
   it("serve handler returns PDF with correct content type", async () => {
@@ -174,6 +176,39 @@ describe("File Upload & Media Management — Full Journey", () => {
     const req = new Request("http://localhost/media/../../../etc/passwd");
     const res = await serve({ request: req });
     expect(res.status).toBe(404);
+  });
+
+  it("serve handler forces attachment for SVG by default", async () => {
+    const svg = await storage.upload(
+      Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>'),
+      {
+        filename: "icon.svg",
+        mimeType: "image/svg+xml",
+      },
+    );
+
+    const serve = createServeHandler({ storage, urlPrefix: "/media" });
+    const req = new Request(`http://localhost/media/${svg.path}`);
+    const res = await serve({ request: req });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toBe("image/svg+xml");
+    expect(res.headers.get("Content-Disposition")).toContain("attachment");
+  });
+
+  it("serve handler can allow inline SVG when explicitly enabled", async () => {
+    const svg = await storage.upload(
+      Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"></svg>'),
+      {
+        filename: "inline.svg",
+        mimeType: "image/svg+xml",
+      },
+    );
+
+    const serve = createServeHandler({ storage, urlPrefix: "/media", allowInlineSvg: true });
+    const req = new Request(`http://localhost/media/${svg.path}`);
+    const res = await serve({ request: req });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Disposition")).toContain("inline");
   });
 
   // --- Phase 5: Upload handler ---
@@ -228,6 +263,18 @@ describe("File Upload & Media Management — Full Journey", () => {
       "file",
       new File(["exe-content"], "virus.exe", { type: "application/x-msdownload" }),
     );
+
+    const res = await handler({
+      request: new Request("http://localhost/upload", { method: "POST", body: formData }),
+    });
+    expect(res.status).toBe(415);
+  });
+
+  it("upload handler rejects MIME type mismatches for known signatures", async () => {
+    const handler = createUploadHandler({ storage });
+    const pngBytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+    const formData = new FormData();
+    formData.append("file", new File([pngBytes], "mismatch.png", { type: "text/plain" }));
 
     const res = await handler({
       request: new Request("http://localhost/upload", { method: "POST", body: formData }),
