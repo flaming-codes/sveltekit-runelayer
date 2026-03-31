@@ -1,5 +1,4 @@
 import type { Handle, RequestEvent } from "@sveltejs/kit";
-import type { Component } from "svelte";
 import { defineConfig } from "../config.js";
 import { createRunelayer } from "../plugin.js";
 import type { RunelayerInstance } from "../plugin.js";
@@ -18,16 +17,23 @@ import {
   parseAuthErrorMessage,
   parseManagedUser,
 } from "./admin-queries.js";
-import type { ManagedUser, ManagedUserList } from "./admin-queries.js";
 import { createAdminActions } from "./admin-actions.js";
-import type { RunelayerApp, RunelayerAppConfig, RunelayerQueryApi } from "./types.js";
+import type {
+  RunelayerAdminPageComponent,
+  RunelayerAdminPageData,
+  RunelayerApp,
+  RunelayerAppConfig,
+  RunelayerManagedUserList,
+  RunelayerManagedUser,
+  RunelayerQueryApi,
+} from "./types.js";
 import { buildHealthPayload } from "./health.js";
 import { dispatchLoader } from "./runtime-loaders.js";
 import type { LoaderContext } from "./runtime-loaders.js";
 
 export function createRunelayerRuntime(
   config: RunelayerAppConfig,
-  page: Component<any>,
+  page: RunelayerAdminPageComponent,
 ): RunelayerApp {
   const { redirect, error } = config.kit;
 
@@ -123,7 +129,7 @@ export function createRunelayerRuntime(
     return max ? Math.min(clamped, max) : clamped;
   };
 
-  const fetchManagedUserList = async (event: RequestEvent): Promise<ManagedUserList> => {
+  const fetchManagedUserList = async (event: RequestEvent): Promise<RunelayerManagedUserList> => {
     const page = safeInt(event.url.searchParams.get("page"), 1);
     const limit = safeInt(event.url.searchParams.get("limit"), 20, 100);
     const offset = (page - 1) * limit;
@@ -157,7 +163,9 @@ export function createRunelayerRuntime(
     const record =
       payload && typeof payload === "object" ? (payload as Record<string, unknown>) : {};
     const usersRaw = Array.isArray(record.users) ? record.users : [];
-    const users = usersRaw.map((entry) => parseManagedUser(entry)).filter(Boolean) as ManagedUser[];
+    const users = usersRaw
+      .map((entry) => parseManagedUser(entry))
+      .filter(Boolean) as RunelayerManagedUser[];
     const total = typeof record.total === "number" ? record.total : users.length;
     return {
       users,
@@ -167,7 +175,10 @@ export function createRunelayerRuntime(
     };
   };
 
-  const fetchManagedUser = async (event: RequestEvent, id: string): Promise<ManagedUser> => {
+  const fetchManagedUser = async (
+    event: RequestEvent,
+    id: string,
+  ): Promise<RunelayerManagedUser> => {
     const params = new URLSearchParams({ id });
     const response = await event.fetch(authAdminPath("get-user", params), { method: "GET" });
     const payload = await response.json().catch(() => null);
@@ -194,7 +205,7 @@ export function createRunelayerRuntime(
     fetchManagedUser,
   };
 
-  const load = async (event: RequestEvent): Promise<Record<string, unknown>> => {
+  const load = async (event: RequestEvent): Promise<RunelayerAdminPageData> => {
     const route = parseAdminRoute(event.params.path);
     if (!route) {
       throw error(404, "Admin route not found");

@@ -3,35 +3,50 @@ import type { RunelayerInstance } from "../plugin.js";
 import type { CollectionConfig } from "../schema/collections.js";
 import type { GlobalConfig } from "../schema/globals.js";
 import type { AdminRoute } from "./admin-routing.js";
-import type { ManagedUser, ManagedUserList } from "./admin-queries.js";
-import type { RunelayerQueryApi, SvelteKitUtils } from "./types.js";
-import type { HealthPayload } from "./health.js";
+import type {
+  RunelayerAdminBaseData,
+  RunelayerAdminCollectionCreateData,
+  RunelayerAdminCollectionEditData,
+  RunelayerAdminCollectionListData,
+  RunelayerAdminCreateFirstUserData,
+  RunelayerAdminDashboardData,
+  RunelayerAdminGlobalEditData,
+  RunelayerAdminHealthData,
+  RunelayerAdminLoginData,
+  RunelayerAdminPageData,
+  RunelayerAdminProfileData,
+  RunelayerAdminResolvedUI,
+  RunelayerAdminUsersCreateData,
+  RunelayerAdminUsersEditData,
+  RunelayerAdminUsersListData,
+  RunelayerDocument,
+  RunelayerManagedUser,
+  RunelayerManagedUserList,
+  RunelayerManagedUserRole,
+  RunelayerQueryApi,
+  SvelteKitUtils,
+} from "./types.js";
 import { countDocuments, getUser } from "./admin-queries.js";
 import { readGlobalDocument } from "./globals.js";
 import { toSerializable } from "./serializable.js";
 import { buildHealthPayload } from "./health.js";
 
-/** UI config resolved from RunelayerAppConfig. */
-export interface ResolvedUI {
-  appName: string;
-  productName: string;
-  footerText: string;
-}
+const USER_ROLES: RunelayerManagedUserRole[] = ["admin", "editor", "user"];
 
 /** Common dependencies injected into every loader. */
 export interface LoaderContext {
   runelayer: RunelayerInstance;
   adminPath: string;
-  ui: ResolvedUI;
+  ui: RunelayerAdminResolvedUI;
   kit: SvelteKitUtils;
   getCollectionBySlug: (runelayer: RunelayerInstance, slug: string) => CollectionConfig;
   resolveGlobalBySlug: (runelayer: RunelayerInstance, slug: string) => GlobalConfig;
   withRequest: (eventOrRequest: RequestEvent | Request) => RunelayerQueryApi;
-  fetchManagedUserList: (event: RequestEvent) => Promise<ManagedUserList>;
-  fetchManagedUser: (event: RequestEvent, id: string) => Promise<ManagedUser>;
+  fetchManagedUserList: (event: RequestEvent) => Promise<RunelayerManagedUserList>;
+  fetchManagedUser: (event: RequestEvent, id: string) => Promise<RunelayerManagedUser>;
 }
 
-function baseData(ctx: LoaderContext, event: RequestEvent) {
+function baseData(ctx: LoaderContext, event: RequestEvent): RunelayerAdminBaseData {
   const user = getUser(event);
   return {
     basePath: ctx.adminPath,
@@ -48,8 +63,8 @@ function baseData(ctx: LoaderContext, event: RequestEvent) {
 export async function loadHealth(
   ctx: LoaderContext,
   event: RequestEvent,
-): Promise<Record<string, unknown>> {
-  const health: HealthPayload = await buildHealthPayload(ctx.runelayer);
+): Promise<RunelayerAdminHealthData> {
+  const health = await buildHealthPayload(ctx.runelayer);
   return {
     basePath: ctx.adminPath,
     currentPath: event.url.pathname,
@@ -62,14 +77,14 @@ export async function loadHealth(
   };
 }
 
-export function loadLogin(ctx: LoaderContext, event: RequestEvent): Record<string, unknown> {
+export function loadLogin(ctx: LoaderContext, event: RequestEvent): RunelayerAdminLoginData {
   return { ...baseData(ctx, event), view: "login" };
 }
 
 export function loadCreateFirstUser(
   ctx: LoaderContext,
   event: RequestEvent,
-): Record<string, unknown> {
+): RunelayerAdminCreateFirstUserData {
   return { ...baseData(ctx, event), view: "create-first-user" };
 }
 
@@ -77,14 +92,14 @@ export function loadLogout(ctx: LoaderContext): never {
   throw ctx.kit.redirect(303, ctx.adminPath);
 }
 
-export function loadProfile(ctx: LoaderContext, event: RequestEvent): Record<string, unknown> {
+export function loadProfile(ctx: LoaderContext, event: RequestEvent): RunelayerAdminProfileData {
   return { ...baseData(ctx, event), view: "profile" };
 }
 
 export async function loadDashboard(
   ctx: LoaderContext,
   event: RequestEvent,
-): Promise<Record<string, unknown>> {
+): Promise<RunelayerAdminDashboardData> {
   const dashboardCollections = await Promise.all(
     ctx.runelayer.collections.map(async (collection) => ({
       slug: collection.slug,
@@ -102,11 +117,11 @@ export async function loadDashboard(
 export async function loadUsersList(
   ctx: LoaderContext,
   event: RequestEvent,
-): Promise<Record<string, unknown>> {
+): Promise<RunelayerAdminUsersListData> {
   const users = await ctx.fetchManagedUserList(event);
   const page = Math.max(1, Math.floor(users.offset / users.limit) + 1);
   const totalPages = Math.max(1, Math.ceil(users.total / users.limit));
-  return toSerializable({
+  return toSerializable<RunelayerAdminUsersListData>({
     ...baseData(ctx, event),
     view: "users-list",
     users: users.users,
@@ -119,11 +134,14 @@ export async function loadUsersList(
   });
 }
 
-export function loadUsersCreate(ctx: LoaderContext, event: RequestEvent): Record<string, unknown> {
-  return toSerializable({
+export function loadUsersCreate(
+  ctx: LoaderContext,
+  event: RequestEvent,
+): RunelayerAdminUsersCreateData {
+  return toSerializable<RunelayerAdminUsersCreateData>({
     ...baseData(ctx, event),
     view: "users-create",
-    roles: ["admin", "editor", "user"],
+    roles: USER_ROLES,
   });
 }
 
@@ -131,13 +149,13 @@ export async function loadUsersEdit(
   ctx: LoaderContext,
   event: RequestEvent,
   route: AdminRoute & { kind: "users-edit" },
-): Promise<Record<string, unknown>> {
+): Promise<RunelayerAdminUsersEditData> {
   const managedUser = await ctx.fetchManagedUser(event, route.id);
-  return toSerializable({
+  return toSerializable<RunelayerAdminUsersEditData>({
     ...baseData(ctx, event),
     view: "users-edit",
     managedUser,
-    roles: ["admin", "editor", "user"],
+    roles: USER_ROLES,
   });
 }
 
@@ -151,7 +169,7 @@ export async function loadCollectionList(
   ctx: LoaderContext,
   event: RequestEvent,
   route: AdminRoute & { kind: "collection-list" },
-): Promise<Record<string, unknown>> {
+): Promise<RunelayerAdminCollectionListData> {
   const collection = ctx.getCollectionBySlug(ctx.runelayer, route.slug);
   const query = ctx.withRequest(event);
   const page = safeInt(event.url.searchParams.get("page"), 1);
@@ -160,7 +178,7 @@ export async function loadCollectionList(
   const docs = await query.find(collection, { limit, offset });
   const totalDocs = await countDocuments(ctx.runelayer, collection.slug);
   const totalPages = Math.max(1, Math.ceil(totalDocs / limit));
-  return toSerializable({
+  return toSerializable<RunelayerAdminCollectionListData>({
     ...baseData(ctx, event),
     view: "collection-list",
     collection,
@@ -176,9 +194,9 @@ export function loadCollectionCreate(
   ctx: LoaderContext,
   event: RequestEvent,
   route: AdminRoute & { kind: "collection-create" },
-): Record<string, unknown> {
+): RunelayerAdminCollectionCreateData {
   const collection = ctx.getCollectionBySlug(ctx.runelayer, route.slug);
-  return toSerializable({
+  return toSerializable<RunelayerAdminCollectionCreateData>({
     ...baseData(ctx, event),
     view: "collection-create",
     collection,
@@ -189,14 +207,15 @@ export async function loadCollectionEdit(
   ctx: LoaderContext,
   event: RequestEvent,
   route: AdminRoute & { kind: "collection-edit" },
-): Promise<Record<string, unknown>> {
+): Promise<RunelayerAdminCollectionEditData> {
   const collection = ctx.getCollectionBySlug(ctx.runelayer, route.slug);
   const query = ctx.withRequest(event);
-  const document = await query.findOne(collection, route.id);
-  if (!document) {
+  const documentRaw = await query.findOne(collection, route.id);
+  if (!documentRaw || typeof documentRaw !== "object") {
     throw ctx.kit.error(404, `Document not found: ${route.id}`);
   }
-  return toSerializable({
+  const document = documentRaw as RunelayerDocument;
+  return toSerializable<RunelayerAdminCollectionEditData>({
     ...baseData(ctx, event),
     view: "collection-edit",
     collection,
@@ -208,10 +227,10 @@ export async function loadGlobalEdit(
   ctx: LoaderContext,
   event: RequestEvent,
   route: AdminRoute & { kind: "global-edit" },
-): Promise<Record<string, unknown>> {
+): Promise<RunelayerAdminGlobalEditData> {
   const global = ctx.resolveGlobalBySlug(ctx.runelayer, route.slug);
   const document = await readGlobalDocument(ctx.runelayer, global, event.request);
-  return toSerializable({
+  return toSerializable<RunelayerAdminGlobalEditData>({
     ...baseData(ctx, event),
     view: "global-edit",
     global,
@@ -226,7 +245,7 @@ export async function dispatchLoader(
   ctx: LoaderContext,
   event: RequestEvent,
   route: AdminRoute,
-): Promise<Record<string, unknown>> {
+): Promise<RunelayerAdminPageData> {
   switch (route.kind) {
     case "health":
       return loadHealth(ctx, event);

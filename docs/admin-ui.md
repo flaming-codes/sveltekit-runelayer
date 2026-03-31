@@ -66,6 +66,10 @@ Supported views under the admin mount:
 - `/admin/collections/:slug/:id` → collection edit form
 - `/admin/globals/:slug` → global singleton edit form
 
+`app.admin.load` returns `RunelayerAdminPageData`, a discriminated union keyed by `view`.
+Each `view` variant carries only the data needed by that page (for example, `users-list` includes pagination/search fields, while `collection-edit` includes `collection` and `document`).
+`AdminPage` uses the same union type, so loader output and UI rendering stay in one typed contract.
+
 Supported actions:
 
 - `?/login`
