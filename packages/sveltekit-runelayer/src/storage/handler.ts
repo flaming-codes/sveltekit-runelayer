@@ -1,4 +1,10 @@
 import { json } from "@sveltejs/kit";
+import {
+  detectMimeType,
+  normalizeMimeType,
+  normalizeRelativePath,
+  sanitizeFilename,
+} from "./security.js";
 import type { StorageAdapter } from "./types.js";
 
 export interface UploadHandlerConfig {
@@ -9,6 +15,9 @@ export interface UploadHandlerConfig {
 
 export function createUploadHandler(config: UploadHandlerConfig) {
   const { storage, maxFileSize = 10 * 1024 * 1024, allowedMimeTypes } = config;
+  const allowed = allowedMimeTypes?.map((entry) => normalizeMimeType(entry)).filter(Boolean) as
+    | string[]
+    | undefined;
 
   return async ({ request }: { request: Request }) => {
     const formData = await request.formData();
@@ -22,18 +31,36 @@ export function createUploadHandler(config: UploadHandlerConfig) {
       return json({ error: `File exceeds max size of ${maxFileSize} bytes` }, { status: 413 });
     }
 
-    if (allowedMimeTypes && !allowedMimeTypes.includes(file.type)) {
-      return json({ error: `Mime type ${file.type} not allowed` }, { status: 415 });
-    }
-
-    const folder = (formData.get("folder") as string) || undefined;
-    if (folder && (folder.includes("..") || folder.startsWith("/"))) {
+    const folderField = formData.get("folder");
+    const folderValue = typeof folderField === "string" ? folderField : undefined;
+    let folder: string | undefined;
+    try {
+      folder = normalizeRelativePath(folderValue, "folder path");
+    } catch {
       return json({ error: "Invalid folder path" }, { status: 400 });
     }
 
-    const stored = await storage.upload(file, {
-      filename: file.name,
-      mimeType: file.type,
+    const safeFilename = sanitizeFilename(file.name);
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const detectedMime = normalizeMimeType(detectMimeType(buffer, safeFilename));
+    const declaredMime = normalizeMimeType(file.type);
+
+    if (detectedMime && declaredMime && detectedMime !== declaredMime) {
+      return json(
+        { error: `Uploaded file content does not match declared MIME type ${file.type}` },
+        { status: 415 },
+      );
+    }
+
+    const effectiveMime = detectedMime ?? declaredMime ?? "application/octet-stream";
+
+    if (allowed && !allowed.includes(effectiveMime)) {
+      return json({ error: `Mime type ${effectiveMime} not allowed` }, { status: 415 });
+    }
+
+    const stored = await storage.upload(buffer, {
+      filename: safeFilename,
+      mimeType: effectiveMime,
       folder,
     });
 

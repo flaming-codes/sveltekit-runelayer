@@ -40,7 +40,7 @@ const docs = await find(ctx, {
 
 ```ts
 interface FindArgs {
-  where?: Record<string, unknown>; // Filter conditions (not yet implemented)
+  where?: Record<string, unknown>; // Allowlisted equality filters
   limit?: number;
   offset?: number;
   sort?: string; // Column name to sort by
@@ -49,6 +49,8 @@ interface FindArgs {
 ```
 
 Returns an array of document objects.
+
+`where` uses simple equality checks and only allows schema-backed fields plus core system columns (`id`, `createdAt`, `updatedAt`, and version columns when enabled). Unknown keys are rejected with a 400 error.
 
 ### findOne
 
@@ -73,6 +75,9 @@ const doc = await create(ctx, {
 
 - ID is auto-generated using `crypto.randomUUID()`
 - `createdAt` and `updatedAt` are auto-set to the current ISO timestamp
+- payload is schema-allowlisted before write (unknown and reserved keys are rejected)
+- required fields and field validators are enforced
+- field-level `access.create` rules are enforced
 - `beforeChange` hooks can modify the data before insertion
 - `afterChange` hooks run after the insert with the created document
 
@@ -89,6 +94,9 @@ const doc = await update(ctx, "document-id", {
 
 - `updatedAt` is auto-refreshed
 - The existing document is fetched and passed to hooks as `existingDoc`
+- payload is schema-allowlisted before write (unknown and reserved keys are rejected)
+- updated fields are validated against schema rules and validators
+- field-level `access.update` rules are enforced
 - `beforeChange` hooks can modify the update data
 - `afterChange` hooks run after the update
 
@@ -141,6 +149,14 @@ const created = await create(ctx, { title: "New" });
 
 The deny-by-default when no request is provided prevents accidental bypass in server-side code.
 
+### Field-level read projection
+
+On read operations (`find`, `findOne`):
+
+- field-level `access.read` rules are evaluated per field
+- denied fields are redacted from returned documents
+- collections with `auth: true` automatically redact auth-sensitive columns (`hash`, `salt`, `token`, `tokenExpiry`)
+
 ### checkAccess
 
 The access check utility is also exported for custom use:
@@ -165,6 +181,8 @@ The query layer maps between the `HookContext` used by the runner and the collec
 ## Error Handling
 
 - Access denied: throws `Error` with `.status = 403`
+- Field-level access denied: throws `Error` with `.status = 403`
+- Schema enforcement errors (unknown fields, invalid sort/where keys, validation failures): throw `Error` with `.status = 400`
 - Before-hook errors: propagate and abort the operation
 - After-hook errors: caught and logged, do not affect the response
 - Database errors: propagate from Drizzle (typically constraint violations)
