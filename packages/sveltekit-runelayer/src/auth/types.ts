@@ -23,6 +23,31 @@ export interface Session {
   userAgent?: string | null;
 }
 
+export interface EmailVerificationPayload {
+  user: {
+    email: string;
+    [key: string]: unknown;
+  };
+  url: string;
+  token: string;
+}
+
+export interface EmailVerificationConfig {
+  /**
+   * Sends an email verification link/token to the user.
+   * Required when `requireEmailVerification` is enabled.
+   */
+  sendVerificationEmail?: (payload: EmailVerificationPayload, request?: Request) => Promise<void>;
+  /** Send verification emails on credential sign-in attempts. */
+  sendOnSignIn?: boolean;
+  /** Send verification emails on sign-up. */
+  sendOnSignUp?: boolean;
+  /** Automatically sign users in after email verification. */
+  autoSignInAfterVerification?: boolean;
+  /** Email verification token lifetime in seconds. */
+  expiresIn?: number;
+}
+
 /** Configuration accepted by `createAuth`. */
 export interface AuthConfig {
   /** Auth secret used for signing tokens / cookies. */
@@ -35,6 +60,8 @@ export interface AuthConfig {
   sessionMaxAge?: number;
   /** Whether to require email verification. @default false */
   requireEmailVerification?: boolean;
+  /** Better Auth email verification options. */
+  emailVerification?: EmailVerificationConfig;
 }
 
 /** Context passed to access-control functions (matches schema AccessFn). */
