@@ -13,6 +13,15 @@ Use these paths when integrating the CMS into an app.
 - pnpm 10+
 - SvelteKit 2 + Svelte 5
 
+## Integration checklist
+
+- Define collections/globals in TypeScript and export a drizzle-kit schema.
+- Configure drizzle-kit with `defineRunelayerDrizzleConfig()`.
+- Create one `createRunelayerApp()` instance and pass SvelteKit `redirect`, `error`, and `fail`.
+- Wire `runelayer.handle` in `hooks.server.ts`.
+- Mount admin load/actions in one catch-all route.
+- Run migrations before startup.
+
 ## Install
 
 ```bash
@@ -20,7 +29,19 @@ pnpm add @flaming-codes/sveltekit-runelayer
 pnpm add -D drizzle-kit
 ```
 
-## 1. Define collections
+## 1. Add Vite alias required by Better Auth + zod v4
+
+In the host app `vite.config.ts`, add:
+
+```ts
+resolve: {
+  alias: {
+    zod: "zod/v4",
+  },
+}
+```
+
+## 2. Define collections
 
 ```ts
 // src/lib/server/schema.ts
@@ -46,7 +67,7 @@ export const Posts = defineCollection({
 });
 ```
 
-## 2. Export schema for drizzle-kit
+## 3. Export schema for drizzle-kit
 
 ```ts
 // src/lib/server/drizzle-schema.ts
@@ -56,7 +77,7 @@ import { Posts } from "./schema.js";
 export const runelayerSchema = createDrizzleKitSchema([Posts]);
 ```
 
-## 3. Use the drizzle helper config
+## 4. Use the drizzle helper config
 
 ```ts
 // drizzle.config.ts
@@ -75,9 +96,14 @@ export default defineConfig(
 );
 ```
 
-Generate and apply migrations before startup.
+Generate and apply migrations before startup:
 
-## 4. Create the app integration instance
+```bash
+npx drizzle-kit generate
+npx drizzle-kit migrate
+```
+
+## 5. Create the app integration instance
 
 ```ts
 // src/lib/server/runelayer.ts
@@ -102,7 +128,7 @@ export const runelayer = createRunelayerApp({
 });
 ```
 
-## 5. Wire the global handle hook
+## 6. Wire the global handle hook
 
 ```ts
 // src/hooks.server.ts
@@ -113,7 +139,7 @@ export const handle = runelayer.handle;
 
 No extra auth route file is required for the default integration path.
 
-## 6. Mount admin in one catch-all route
+## 7. Mount admin in one catch-all route
 
 Create an isolated admin route group:
 
@@ -164,7 +190,7 @@ Also add thin admin-only layout and error wiring:
 <AdminErrorPage {status} {error} />
 ```
 
-## 7. Query content with request-bound helpers
+## 8. Query content with request-bound helpers
 
 ```ts
 // src/routes/(site)/+page.server.ts
@@ -182,7 +208,12 @@ export async function load({ request }) {
 }
 ```
 
-For seeding/background jobs, use the explicit server context:
+Use contexts intentionally:
+
+- `runelayer.withRequest(request)` for request-bound access checks.
+- `runelayer.system` only for trusted server-side work such as seeds, internal jobs, or migrations.
+
+For trusted internal jobs:
 
 ```ts
 await runelayer.system.create(Posts, { title: "Seeded" });

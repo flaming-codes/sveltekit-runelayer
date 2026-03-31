@@ -1,0 +1,9 @@
+# Test and support files are not part of the runtime surface.
+__tests__/
+__e2e__/
+__testutils__/
+**/__tests__/
+**/__e2e__/
+**/__testutils__/
+**/*.test.ts
+**/*.spec.ts
