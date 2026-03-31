@@ -9,6 +9,9 @@ sveltekit-runelayer/
 ├── apps/demo/
 ├── packages/sveltekit-runelayer/
 ├── docs/
+├── CHANGELOG.md
+├── CONTRIBUTING.md
+├── LICENSE
 ├── .harness/
 ├── package.json
 ├── pnpm-workspace.yaml
@@ -55,6 +58,17 @@ Shared catalog includes:
   "check": "vp check"
 }
 ```
+
+## Package distribution hygiene
+
+- Published package root: `packages/sveltekit-runelayer/`
+- Runtime source is shipped from `src/**` entrypoints.
+- `src/.npmignore` excludes test/support paths from tarballs:
+  - `__tests__/`
+  - `__e2e__/`
+  - `__testutils__/`
+  - `*.test.ts` / `*.spec.ts`
+- Validate contents with `npm pack --dry-run --json` in package root.
 
 ## TypeScript
 

@@ -2,10 +2,19 @@
   "name": "@flaming-codes/sveltekit-runelayer",
   "version": "0.1.1",
   "description": "A CMS-as-a-package for SvelteKit apps — handles admin routes, storage, db, schemas, types, and auth.",
+  "keywords": [
+    "better-auth",
+    "cms",
+    "drizzle",
+    "headless-cms",
+    "svelte",
+    "sveltekit"
+  ],
   "homepage": "https://github.com/flaming-codes/sveltekit-runelayer#readme",
   "bugs": {
     "url": "https://github.com/flaming-codes/sveltekit-runelayer/issues"
   },
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/flaming-codes/sveltekit-runelayer.git"
@@ -66,5 +75,8 @@
   "peerDependencies": {
     "@sveltejs/kit": "^2.0.0",
     "svelte": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=22.18.0"
   }
 }
