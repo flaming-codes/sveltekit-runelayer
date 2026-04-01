@@ -1,8 +1,18 @@
 <script lang="ts">
-	let { name, label, value = $bindable(''), required = false }: {
-		name: string; label?: string; value: string; required?: boolean;
+	import JsonField from "./JsonField.svelte";
+
+	let { name, label, value = $bindable(), required = false }: {
+		name: string;
+		label?: string;
+		value?: unknown;
+		required?: boolean;
 	} = $props();
 </script>
-<label>{label ?? name} <span style="font-size:0.8em;color:#666">(rich text - Tiptap placeholder)</span>
-	<textarea {name} bind:value {required} rows="8"></textarea>
-</label>
+
+<JsonField
+	{name}
+	{label}
+	bind:value
+	{required}
+	helperText="Rich text JSON (Tiptap integration placeholder)"
+/>

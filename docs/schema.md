@@ -1,6 +1,6 @@
 # Schema System
 
-The schema system is the single source of truth in Runekit. Every collection, global, and field is defined once and drives the database layer, validation, query API, and admin UI rendering.
+The schema system is the single source of truth in sveltekit-runelayer. Every collection, global, and field is defined once and drives the database layer, validation, query API, and admin UI rendering.
 
 ## Defining Collections
 
@@ -151,6 +151,20 @@ Fields also accept a `validate` function specific to their value type:
 ```
 
 The validator returns `true` on success or a string error message on failure.
+
+## Runtime Enforcement
+
+The query layer enforces schema constraints at write/read time:
+
+- Writes are allowlisted to declared schema fields (plus system-managed columns handled internally)
+- Unknown or reserved/system keys are rejected
+- `required` fields are enforced on create
+- Built-in field constraints are enforced where applicable (`min`, `max`, `minLength`, `maxLength`, select option membership, array row limits)
+- Field `validate` callbacks run during create/update
+- Field `access` rules are enforced for create/update/read
+- For `auth: true` collections, auth-internal fields are redacted from query read results
+
+Group field access is inherited by nested persisted fields, and child field access is applied on top.
 
 ## Named Fields
 

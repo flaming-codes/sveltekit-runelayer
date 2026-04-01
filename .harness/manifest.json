@@ -14,6 +14,54 @@
     },
     {
       "enabled": true,
+      "id": "carbon-svelte",
+      "overrides": {
+        "claude": ".harness/src/skills/carbon-svelte/OVERRIDES.claude.yaml",
+        "codex": ".harness/src/skills/carbon-svelte/OVERRIDES.codex.yaml",
+        "copilot": ".harness/src/skills/carbon-svelte/OVERRIDES.copilot.yaml"
+      },
+      "registry": "local",
+      "sourcePath": ".harness/src/skills/carbon-svelte/SKILL.md",
+      "type": "skill"
+    },
+    {
+      "enabled": true,
+      "id": "owasp-security",
+      "overrides": {
+        "claude": ".harness/src/skills/owasp-security/OVERRIDES.claude.yaml",
+        "codex": ".harness/src/skills/owasp-security/OVERRIDES.codex.yaml",
+        "copilot": ".harness/src/skills/owasp-security/OVERRIDES.copilot.yaml"
+      },
+      "registry": "local",
+      "sourcePath": ".harness/src/skills/owasp-security/SKILL.md",
+      "type": "skill"
+    },
+    {
+      "enabled": true,
+      "id": "secure-development",
+      "overrides": {
+        "claude": ".harness/src/skills/secure-development/OVERRIDES.claude.yaml",
+        "codex": ".harness/src/skills/secure-development/OVERRIDES.codex.yaml",
+        "copilot": ".harness/src/skills/secure-development/OVERRIDES.copilot.yaml"
+      },
+      "registry": "local",
+      "sourcePath": ".harness/src/skills/secure-development/SKILL.md",
+      "type": "skill"
+    },
+    {
+      "enabled": true,
+      "id": "secure-node-typescript",
+      "overrides": {
+        "claude": ".harness/src/skills/secure-node-typescript/OVERRIDES.claude.yaml",
+        "codex": ".harness/src/skills/secure-node-typescript/OVERRIDES.codex.yaml",
+        "copilot": ".harness/src/skills/secure-node-typescript/OVERRIDES.copilot.yaml"
+      },
+      "registry": "local",
+      "sourcePath": ".harness/src/skills/secure-node-typescript/SKILL.md",
+      "type": "skill"
+    },
+    {
+      "enabled": true,
       "id": "svelte-runes",
       "overrides": {
         "claude": ".harness/src/skills/svelte-runes/OVERRIDES.claude.yaml",

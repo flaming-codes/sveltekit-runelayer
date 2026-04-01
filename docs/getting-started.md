@@ -1,47 +1,60 @@
 # Getting Started
 
-Runekit is a CMS-as-a-package for SvelteKit applications. It runs inside your app's process with SQLite, providing a complete content management system without external services.
+`sveltekit-runelayer` ships a high-level SvelteKit integration surface split into server and client entry points:
+
+- `@flaming-codes/sveltekit-runelayer/sveltekit/server` — server-only runtime (`createRunelayerApp`, `defineRunelayerDrizzleConfig`)
+- `@flaming-codes/sveltekit-runelayer/sveltekit/components` — client-safe Svelte components (`AdminPage`, `AdminErrorPage`)
+
+Use these paths when integrating the CMS into an app.
 
 ## Prerequisites
 
-- Node.js >= 22.12.0
+- Node.js >= 22.18.0
 - pnpm 10+
-- A SvelteKit 2 application with Svelte 5
+- SvelteKit 2 + Svelte 5
 
-## Installation
+## Integration checklist
+
+- Define collections/globals in TypeScript and export a drizzle-kit schema.
+- Configure drizzle-kit with `defineRunelayerDrizzleConfig()`.
+- Create one `createRunelayerApp()` instance and pass SvelteKit `redirect`, `error`, and `fail`.
+- Wire `runelayer.handle` in `hooks.server.ts`.
+- Mount admin load/actions in one catch-all route.
+- Run migrations before startup.
+
+## Install
 
 ```bash
 pnpm add @flaming-codes/sveltekit-runelayer
+pnpm add -D drizzle-kit
 ```
 
-Runekit bundles `drizzle-orm`, `better-sqlite3`, and `better-auth` as dependencies.
+## 1. Add Vite alias required by Better Auth + zod v4
 
-## Basic Setup
-
-### 1. Define Your Schema
+In the host app `vite.config.ts`, add:
 
 ```ts
-// src/lib/schema.ts
-import {
-  defineCollection,
-  text,
-  number,
-  select,
-  slug,
-  richText,
-  relationship,
-} from "@flaming-codes/sveltekit-runelayer";
+resolve: {
+  alias: {
+    zod: "zod/v4",
+  },
+}
+```
+
+## 2. Define collections
+
+```ts
+// src/lib/server/schema.ts
+import { defineCollection, text, slug, richText, select } from "@flaming-codes/sveltekit-runelayer";
 
 export const Posts = defineCollection({
   slug: "posts",
-  labels: { singular: "Post", plural: "Posts" },
   fields: [
-    { name: "title", label: "Title", ...text({ required: true }) },
-    { name: "slug", label: "Slug", ...slug({ from: "title" }) },
-    { name: "content", label: "Content", ...richText() },
+    { name: "title", ...text({ required: true }) },
+    { name: "slug", ...slug({ from: "title" }) },
+    { name: "content", ...richText() },
     {
       name: "status",
-      label: "Status",
       ...select({
         options: [
           { label: "Draft", value: "draft" },
@@ -51,114 +64,165 @@ export const Posts = defineCollection({
       }),
     },
   ],
-  admin: { useAsTitle: "title" },
-  timestamps: true,
-});
-
-export const Users = defineCollection({
-  slug: "users",
-  fields: [
-    { name: "name", label: "Name", ...text({ required: true }) },
-    { name: "email", label: "Email", ...text({ required: true }) },
-  ],
-  auth: true,
 });
 ```
 
-### 2. Initialize Runekit
+## 3. Export schema for drizzle-kit
 
 ```ts
-// src/lib/runekit.ts
-import { defineConfig, createRunekit } from "@flaming-codes/sveltekit-runelayer";
-import { Posts, Users } from "./schema.js";
+// src/lib/server/drizzle-schema.ts
+import { createDrizzleKitSchema } from "@flaming-codes/sveltekit-runelayer";
+import { Posts } from "./schema.js";
 
-const config = defineConfig({
-  collections: [Posts, Users],
-  auth: {
-    secret: process.env.AUTH_SECRET || "dev-secret-change-in-production",
-    baseURL: process.env.ORIGIN || "http://localhost:5173",
-  },
-  dbPath: "./data/runekit.db",
-});
-
-export const runekit = createRunekit(config);
+export const runelayerSchema = createDrizzleKitSchema([Posts]);
 ```
 
-### 3. Add the SvelteKit Handle Hook
+## 4. Use the drizzle helper config
+
+```ts
+// drizzle.config.ts
+import { defineConfig } from "drizzle-kit";
+import { defineRunelayerDrizzleConfig } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
+
+export default defineConfig(
+  defineRunelayerDrizzleConfig({
+    schema: "./src/lib/server/drizzle-schema.ts",
+    out: "./drizzle",
+    database: {
+      url: "file:./data/sveltekit-runelayer.db",
+      // authToken: process.env.DATABASE_AUTH_TOKEN,
+    },
+  }),
+);
+```
+
+Generate and apply migrations before startup:
+
+```bash
+npx drizzle-kit generate
+npx drizzle-kit migrate
+```
+
+## 5. Create the app integration instance
+
+```ts
+// src/lib/server/runelayer.ts
+import { redirect, error, fail } from "@sveltejs/kit";
+import { createRunelayerApp } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
+import { Posts } from "./schema.js";
+
+export const runelayer = createRunelayerApp({
+  kit: { redirect, error, fail },
+  collections: [Posts],
+  auth: {
+    secret: process.env.AUTH_SECRET ?? "dev-secret-change-in-production",
+    baseURL: process.env.ORIGIN ?? "http://localhost:5173",
+  },
+  database: {
+    url: process.env.DATABASE_URL ?? "file:./data/sveltekit-runelayer.db",
+    authToken: process.env.DATABASE_AUTH_TOKEN,
+  },
+  admin: {
+    path: "/admin",
+  },
+});
+```
+
+## 6. Wire the global handle hook
 
 ```ts
 // src/hooks.server.ts
-import { runekit } from "$lib/runekit";
+import { runelayer } from "$lib/server/runelayer";
 
-export const handle = runekit.handle;
+export const handle = runelayer.handle;
 ```
 
-### 4. Add Auth API Routes
+No extra auth route file is required for the default integration path.
+
+## 7. Mount admin in one catch-all route
+
+Create an isolated admin route group:
 
 ```ts
-// src/routes/api/auth/[...all]/+server.ts
-import { createAuthHandler } from "@flaming-codes/sveltekit-runelayer";
-import { runekit } from "$lib/runekit";
+// src/routes/(admin)/admin/[...path]/+page.server.ts
+import { runelayer } from "$lib/server/runelayer";
 
-const handler = createAuthHandler(runekit.auth);
-export const GET = handler;
-export const POST = handler;
+export const load = runelayer.admin.load;
+export const actions = runelayer.admin.actions;
 ```
 
-### 5. Use the Query API
+```svelte
+<!-- src/routes/(admin)/admin/[...path]/+page.svelte -->
+<script lang="ts">
+  import { AdminPage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
+  let { data, form } = $props();
+</script>
+
+<AdminPage {data} {form} />
+```
+
+Keep the public site in a separate route group (for example, `src/routes/(site)`), so `/admin` does not inherit frontend layouts/data-loading.
+
+First-time setup is automatic:
+
+- if an admin user already exists, unauthenticated users are sent to `/admin/login`
+- if no admin exists yet, users are sent to `/admin/create-first-user` to create the first admin account
+
+Also add thin admin-only layout and error wiring:
+
+```svelte
+<!-- src/routes/(admin)/+layout.svelte -->
+<script lang="ts">
+  import "carbon-components-svelte/css/all.css";
+  let { children } = $props();
+</script>
+
+{@render children()}
+```
+
+```svelte
+<!-- src/routes/(admin)/admin/[...path]/+error.svelte -->
+<script lang="ts">
+  import { AdminErrorPage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
+  let { status, error } = $props();
+</script>
+
+<AdminErrorPage {status} {error} />
+```
+
+## 8. Query content with request-bound helpers
 
 ```ts
-// src/routes/+page.server.ts
-import { runekit } from "$lib/runekit";
-import { find } from "@flaming-codes/sveltekit-runelayer";
-import { Posts } from "$lib/schema";
+// src/routes/(site)/+page.server.ts
+import { runelayer } from "$lib/server/runelayer";
+import { Posts } from "$lib/server/schema";
 
 export async function load({ request }) {
-  const posts = await find(
-    { db: runekit.database, collection: Posts, req: request },
-    { limit: 10, sort: "createdAt", sortOrder: "desc" },
-  );
+  const posts = await runelayer.withRequest(request).find(Posts, {
+    limit: 10,
+    sort: "createdAt",
+    sortOrder: "desc",
+  });
 
   return { posts };
 }
 ```
 
-## Configuration Reference
+Use contexts intentionally:
+
+- `runelayer.withRequest(request)` for request-bound access checks.
+- `runelayer.system` only for trusted server-side work such as seeds, internal jobs, or migrations.
+
+For trusted internal jobs:
 
 ```ts
-interface RunekitConfig {
-  collections: CollectionConfig[]; // Required
-  auth: AuthConfig; // Required
-  globals?: GlobalConfig[]; // Default: []
-  adminPath?: string; // Default: '/admin'
-  dbPath?: string; // Default: './data/runekit.db'
-  storage?: LocalStorageConfig; // Default: { directory: './uploads', urlPrefix: '/uploads' }
-}
+await runelayer.system.create(Posts, { title: "Seeded" });
 ```
 
-## Environment Variables
+## Next docs
 
-```env
-# .env
-AUTH_SECRET=your-secret-key-here-minimum-32-chars
-ORIGIN=http://localhost:5173
-```
-
-## What Happens at Startup
-
-When `createRunekit(config)` is called:
-
-1. SQLite database is opened (created if it doesn't exist) with WAL mode
-2. Drizzle table definitions are generated from your collection configs
-3. Missing tables and columns are created (`pushSchema`)
-4. Better Auth is initialized with the Drizzle adapter
-5. Local storage adapter is created
-6. A combined SvelteKit handle hook is returned
-
-## Next Steps
-
-- [Schema System](./schema.md) — field types, collections, globals
-- [Query API](./query-api.md) — CRUD operations with access control
-- [Authentication](./auth.md) — auth setup, roles, access control
-- [Admin UI](./admin-ui.md) — building the admin panel
-- [Architecture](./architecture.md) — system design and module structure
+- [Architecture](./architecture.md)
+- [Database](./database.md)
+- [Authentication](./auth.md)
+- [Admin UI](./admin-ui.md)
+- [Query API](./query-api.md)

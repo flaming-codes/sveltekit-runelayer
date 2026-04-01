@@ -1,11 +1,20 @@
 {
   "name": "@flaming-codes/sveltekit-runelayer",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A CMS-as-a-package for SvelteKit apps — handles admin routes, storage, db, schemas, types, and auth.",
+  "keywords": [
+    "better-auth",
+    "cms",
+    "drizzle",
+    "headless-cms",
+    "svelte",
+    "sveltekit"
+  ],
   "homepage": "https://github.com/flaming-codes/sveltekit-runelayer#readme",
   "bugs": {
     "url": "https://github.com/flaming-codes/sveltekit-runelayer/issues"
   },
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/flaming-codes/sveltekit-runelayer.git"
@@ -15,9 +24,27 @@
     "package.json"
   ],
   "type": "module",
+  "svelte": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./admin": "./src/admin/index.ts",
+    ".": {
+      "svelte": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./admin": {
+      "svelte": "./src/admin/index.ts",
+      "default": "./src/admin/index.ts"
+    },
+    "./sveltekit": {
+      "svelte": "./src/sveltekit/index.ts",
+      "default": "./src/sveltekit/index.ts"
+    },
+    "./sveltekit/server": {
+      "default": "./src/sveltekit/server.ts"
+    },
+    "./sveltekit/components": {
+      "svelte": "./src/sveltekit/components.ts",
+      "default": "./src/sveltekit/components.ts"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -30,13 +57,14 @@
     "check": "vp check"
   },
   "dependencies": {
+    "@libsql/client": "catalog:",
     "better-auth": "catalog:",
-    "better-sqlite3": "catalog:",
+    "carbon-components-svelte": "catalog:",
+    "carbon-icons-svelte": "catalog:",
     "drizzle-orm": "catalog:"
   },
   "devDependencies": {
     "@sveltejs/kit": "catalog:",
-    "@types/better-sqlite3": "catalog:",
     "drizzle-kit": "catalog:",
     "svelte": "catalog:",
     "testcontainers": "catalog:",
@@ -47,5 +75,8 @@
   "peerDependencies": {
     "@sveltejs/kit": "^2.0.0",
     "svelte": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=22.18.0"
   }
 }

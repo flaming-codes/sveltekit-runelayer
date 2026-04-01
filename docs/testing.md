@@ -1,179 +1,209 @@
 # Testing
 
-Runekit uses vitest (via vite-plus) for unit and integration testing. All tests run in-process with in-memory SQLite for speed and isolation.
+`sveltekit-runelayer` uses vitest (via vite-plus) for unit and E2E journeys.
 
-## Running Tests
+## Run tests
 
 ```bash
-# From monorepo root
-pnpm run test           # Alias for vp run test -r
-
-# From packages/sveltekit-runelayer
-pnpm test               # Alias for vp test
-npx vitest run           # Direct vitest invocation
-npx vitest --watch       # Watch mode
+# from repo root
+npx vitest run
+npx vitest run packages/sveltekit-runelayer/src/__e2e__
+npx vitest run -t "blog"
+npx vitest --watch
 ```
 
-## Test Structure
-
-Tests are colocated with source code in `__tests__/` directories:
+## Test structure
 
 ```
 packages/sveltekit-runelayer/src/
-├── schema/__tests__/schema.test.ts     # 6 tests
-├── db/__tests__/db.test.ts             # 10 tests
-├── auth/__tests__/access.test.ts       # 8 tests
-├── hooks/__tests__/hooks.test.ts       # 6 tests
-├── storage/__tests__/storage.test.ts   # 6 tests
-└── query/__tests__/query.test.ts       # 18 tests
+├── schema/__tests__/*.test.ts
+├── db/__tests__/*.test.ts
+├── auth/__tests__/*.test.ts
+├── hooks/__tests__/*.test.ts
+├── storage/__tests__/*.test.ts
+├── query/__tests__/*.test.ts
+├── sveltekit/__tests__/*.test.ts
+└── __e2e__/*.e2e.test.ts
 ```
 
-Total: **54 tests** across **6 test suites**.
+Container journeys are guarded by `describe.skipIf(!isDockerRunning())`.
 
-## Test Coverage by Module
+## Auth journey E2E tests
 
-### Schema Tests
+`src/__e2e__/auth-journeys.e2e.test.ts` validates full admin auth lifecycles against real
+runtime handlers with persistent cookie/session state. The suite requires Docker for a
+Mailpit container.
 
-- Field builder functions return correct `type` discriminants
-- Options are preserved through builder functions
-- `defineCollection` returns config unchanged
-- `defineGlobal` returns config unchanged
-- `defineSchema` combines collections and globals
-- `defineSchema` allows omitting globals
+### What the tests cover
 
-### Database Tests
+- **First-time setup** — bootstraps exactly one admin via the create-first-user form action,
+  verifies session creation, and confirms the setup page locks out after an admin exists
+- **Repeated login** — rotates session tokens across logout/login cycles while preserving
+  the same admin identity, and verifies wrong-password rejection
+- **Login/logout gating** — enforces redirect and 403 rules: unauthenticated users see the
+  login page, non-admin users are denied dashboard access, and admin users reach the dashboard
 
-- `generateTables` creates base columns (id, createdAt, updatedAt) plus field columns
-- Auxiliary tables for `array` fields
-- Join tables for `hasMany` relationships
-- Version columns (`_status`, `_version`) when `versions: true`
-- Auth columns (`hash`, `salt`, etc.) when `auth: true`
-- `createDatabase` + `pushSchema` creates tables in SQLite
-- `insertOne` auto-generates UUID and timestamps
-- `findById` retrieves and returns undefined for missing IDs
-- `findMany` returns all rows and respects `limit`
-- `updateOne` modifies data and refreshes `updatedAt`
-- `deleteOne` removes the document
+### Harness architecture
 
-### Auth Access Tests
+The tests do not start a real HTTP server. Instead, a `createAuthJourneyHarness()` function
+wires together the full runtime in-process:
 
-- `isLoggedIn()` returns true/false based on `x-user-id` header
-- `hasRole()` matches/rejects based on `x-user-role` header
-- `isAdmin()` delegates to `hasRole('admin')`
-
-### Hooks Tests
-
-- `runBeforeHooks` runs hooks sequentially with context threading
-- `runBeforeHooks` handles sync and async hooks
-- `runBeforeHooks` returns context unchanged for undefined/empty arrays
-- `runAfterHooks` catches errors without throwing
-- `runAfterHooks` continues running remaining hooks after an error
-
-### Storage Tests
-
-- Upload writes a file and returns correct metadata
-- Upload supports `folder` option for subdirectories
-- `exists` returns true for uploaded files, false for missing files
-- `delete` removes files from disk
-- `getUrl` returns the correct prefixed URL
-
-### Query Tests
-
-- `checkAccess` passes when accessFn is undefined
-- `checkAccess` denies when accessFn is defined but req is undefined
-- `checkAccess` passes when no accessFn even if req is undefined
-- `checkAccess` passes when accessFn returns true
-- `checkAccess` throws 403 when accessFn returns false
-- `checkAccess` error includes `status: 403` property
-- CRUD operations (create, findOne, find, update, remove) with in-memory DB
-- `beforeChange` hooks modify data during create
-- `afterChange` hooks are called after create
-
-## Testing Patterns
-
-### In-Memory SQLite
-
-Use `:memory:` for test databases:
-
-```ts
-import { createDatabase, pushSchema } from "../../db/init.js";
-
-let rdb: RunekitDatabase;
-
-beforeEach(() => {
-  rdb = createDatabase({ filename: ":memory:", collections: [collection] });
-  pushSchema(rdb);
-});
+```
+┌─────────────────────────────────────────────────────────┐
+│  Test code                                              │
+│  calls harness.runAdminAction() / harness.adminLoad()   │
+│                                                         │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  adminEvent()                                     │  │
+│  │  - builds a fake RequestEvent with URL, headers,  │  │
+│  │    form body, and resolved locals                 │  │
+│  │  - sets event.fetch = appFetch                    │  │
+│  └──────────────────────┬────────────────────────────┘  │
+│                         │                               │
+│  ┌──────────────────────▼────────────────────────────┐  │
+│  │  app.admin.actions[action](event)                 │  │
+│  │  or app.admin.load(event)                         │  │
+│  │                                                   │  │
+│  │  When an action calls event.fetch() (e.g. to hit  │  │
+│  │  /api/auth/sign-up/email), it goes to appFetch:   │  │
+│  │                                                   │  │
+│  │  ┌─────────────────────────────────────────────┐  │  │
+│  │  │  appFetch(url, init)                        │  │  │
+│  │  │  - constructs Request with CookieJar state  │  │  │
+│  │  │  - calls app.handle({ event, resolve })     │  │  │
+│  │  │  - ingests Set-Cookie from response         │  │  │
+│  │  └──────────────────┬──────────────────────────┘  │  │
+│  │                     │                             │  │
+│  │  ┌──────────────────▼──────────────────────────┐  │  │
+│  │  │  app.handle → runelayer.handle → auth.handle│  │  │
+│  │  │  - strips spoofed headers                   │  │  │
+│  │  │  - resolves session from cookies            │  │  │
+│  │  │  - routes /api/auth/* to svelteKitHandler   │  │  │
+│  │  └─────────────────────────────────────────────┘  │  │
+│  └───────────────────────────────────────────────────┘  │
+│                                                         │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  CookieJar                                        │  │
+│  │  - persists session cookies across all appFetch   │  │
+│  │    calls within one harness instance               │  │
+│  │  - applied to outgoing requests, ingested from    │  │
+│  │    Set-Cookie responses                           │  │
+│  └───────────────────────────────────────────────────┘  │
+│                                                         │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  resolveLocals(pathname)                          │  │
+│  │  - runs app.handle with a resolve callback that   │  │
+│  │    captures event.locals after auth header        │  │
+│  │    injection                                      │  │
+│  │  - used by adminEvent to populate event.locals    │  │
+│  │    with the current session user before the       │  │
+│  │    action/load handler sees it                    │  │
+│  └───────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
 ```
 
-Each test gets a fresh database. No cleanup needed — the database is garbage collected.
+### SvelteKit redirect/error conventions
 
-### Mock Requests for Access Control
+The harness supplies a `kit` object that mimics SvelteKit's `redirect()`, `error()`,
+and `fail()` functions:
 
-```ts
-const adminReq = new Request("http://test", {
-  headers: { "x-user-id": "1", "x-user-role": "admin" },
-});
+- `redirect(status, location)` throws an object with `{ status, location }` properties.
+  Tests assert these with `.rejects.toMatchObject({ status: 303, location: "..." })`.
+- `error(status, body)` throws an object with `{ status, body }` properties.
+- `fail(status, data)` returns `{ status, data }` (does not throw).
+  Tests assert these with `.resolves.toMatchObject(...)`.
 
-const publicReq = new Request("http://test");
+This means success-with-redirect (e.g. after login) looks like a rejection in tests, and
+validation errors (e.g. missing fields) look like resolutions. This is intentional and
+matches SvelteKit's real behavior where `redirect()` throws.
+
+### Critical constraint: origin matching
+
+Better Auth's `svelteKitHandler` uses an `isAuthPath()` function that checks both pathname
+prefix **and origin equality** before routing a request to the auth handler:
+
+```js
+// from better-auth/dist/integrations/svelte-kit.mjs
+function isAuthPath(url, options) {
+  const _url = new URL(url);
+  const baseURL = new URL(`${options.baseURL || _url.origin}${options.basePath || "/api/auth"}`);
+  if (_url.origin !== baseURL.origin) return false; // <-- origin check
+  if (!_url.pathname.startsWith(baseURL.pathname + "/")) return false;
+  return true;
+}
 ```
 
-### Testing Hooks
+If the request URL's origin does not match `auth.baseURL`'s origin, `isAuthPath` returns
+false, `svelteKitHandler` calls `resolve(event)` instead of `auth.handler(request)`, and
+the request falls through to the test's 404 resolve callback. The auth endpoint silently
+returns 404 with no error message.
+
+The harness must construct all URLs (in `appFetch`, `resolveLocals`, `adminEvent`) with the
+**same origin** as `auth.baseURL`. Both use `http://localhost:3000`.
+
+If you change the auth config's `baseURL`, you must update every URL construction in the
+harness to match. There is no runtime warning when origins diverge.
+
+### Database setup
+
+Each test creates a fresh harness with:
+
+1. `migrateDatabaseForTests()` — applies collection table schemas
+2. `applyBetterAuthSchemaForTests()` — manually creates Better Auth's `user`, `session`,
+   `account`, and `verification` tables with the expected column layout
+
+The manual schema creation in step 2 is necessary because Better Auth's migration system
+is not available in the test environment. The column definitions must match Better Auth's
+expected schema including the admin plugin columns (`role`, `banned`, `banReason`,
+`banExpires` on `user`; `impersonatedBy` on `session`).
+
+### Docker requirement
+
+The test suite uses Testcontainers to run a Mailpit container for email capture. Tests are
+automatically skipped via `describe.skipIf(!isDockerRunning())` when Docker is unavailable.
+The `isDockerRunning()` check is imported from `__e2e__/docker-check.ts`.
+
+## Database test pattern
+
+Runtime does not auto-migrate schema. Tests explicitly pre-apply schema before CRUD assertions.
 
 ```ts
-import { vi } from "vitest";
+import { createDatabase } from "../../db/init.js";
+import { applySchemaForTests } from "../../__testutils__/migrations.js";
 
-const tracker = vi.fn();
-const collection = {
-  ...baseCollection,
-  hooks: { afterChange: [tracker] },
-};
-
-await create(ctx, { title: "Test" });
-expect(tracker).toHaveBeenCalledOnce();
-```
-
-### Temp Directories for Storage
-
-```ts
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-
-let dir: string;
+let rdb: RunelayerDatabase;
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), "runekit-test-"));
-});
-
-afterEach(async () => {
-  await rm(dir, { recursive: true, force: true });
+  rdb = createDatabase({ url: ":memory:", collections: [collection] });
+  await applySchemaForTests(rdb);
 });
 ```
 
-## Testing Strategy
+## Query + access testing
 
-### V1 (Current)
+- pass `Request` objects with `x-user-*` headers for role checks
+- verify deny-by-default behavior when `req` is missing and access function exists
+- verify hooks are called in expected order
 
-- **Unit tests** with vitest for all core modules
-- **Integration tests** using in-memory SQLite for DB + query layer
-- **No external dependencies** — tests are fully hermetic
+## Storage testing
 
-### V2 (Planned)
+Use temporary directories (`mkdtemp`) and remove them in teardown (`rm(..., { recursive: true, force: true })`).
 
-- **E2E tests** with Testcontainers:
-  - Mailpit container for auth email flows
-  - MinIO container for S3 storage adapter tests
-  - PostgreSQL container for forward-compat adapter checks
-  - SvelteKit dev server + Playwright for browser E2E
+## Migration contract coverage
 
-- **Contract tests** for adapter interfaces:
-  - StorageAdapter contract (local FS, S3)
-  - DatabaseAdapter contract (SQLite, PostgreSQL)
-  - AuthAdapter contract
+`db/__tests__/migration-contract.test.ts` verifies:
 
-### CI Quality Gates (Planned)
+- schema helper export for host drizzle-kit integration
+- no runtime table auto-creation
+- CRUD works after pre-applied migration step
 
-- No merge with failing tests
-- Critical-path E2E required for auth, upload, and content publishing flows
-- Bundle-size and route-isolation checks
+## Quality gates
+
+Run before sign-off:
+
+```bash
+npx vp fmt
+npx vp check --fix
+npx vitest run
+pnpm build
+```

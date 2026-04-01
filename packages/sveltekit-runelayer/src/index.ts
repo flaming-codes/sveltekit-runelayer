@@ -1,10 +1,10 @@
 // Config
 export { defineConfig } from "./config.js";
-export type { RunekitConfig } from "./config.js";
+export type { RunelayerConfig } from "./config.js";
 
 // Plugin
-export { createRunekit } from "./plugin.js";
-export type { RunekitInstance } from "./plugin.js";
+export { createRunelayer } from "./plugin.js";
+export type { RunelayerInstance } from "./plugin.js";
 
 // Schema
 export {
@@ -41,7 +41,7 @@ export type {
 } from "./schema/index.js";
 
 // Auth
-export { createAuth, isAdmin, isLoggedIn, hasRole } from "./auth/index.js";
+export { createAuth, createAuthHandler, isAdmin, isLoggedIn, hasRole } from "./auth/index.js";
 export type { AuthConfig, User, Session, Role } from "./auth/index.js";
 
 // Storage
@@ -49,8 +49,8 @@ export { createLocalStorage } from "./storage/index.js";
 export type { StorageAdapter, StoredFile, UploadOptions } from "./storage/index.js";
 
 // Database
-export { createDatabase, pushSchema } from "./db/index.js";
-export type { RunekitDatabase, DatabaseConfig } from "./db/index.js";
+export { createDatabase, createDrizzleKitSchema } from "./db/index.js";
+export type { RunelayerDatabase, DatabaseConfig, DatabaseConnectionConfig } from "./db/index.js";
 
 // Hooks
 export { runBeforeHooks, runAfterHooks } from "./hooks/index.js";

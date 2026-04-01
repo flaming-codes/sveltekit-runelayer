@@ -1,7 +1,7 @@
 /** Roles available in the CMS. Extensible via string literal union. */
 export type Role = "admin" | "editor" | "user";
 
-/** Core user representation surfaced by Runekit auth. */
+/** Core user representation surfaced by Runelayer auth. */
 export interface User {
   id: string;
   email: string;
@@ -13,7 +13,7 @@ export interface User {
   updatedAt: Date;
 }
 
-/** Session returned by Better Auth, narrowed for Runekit. */
+/** Session returned by Better Auth, narrowed for Runelayer. */
 export interface Session {
   id: string;
   userId: string;
@@ -21,6 +21,31 @@ export interface Session {
   expiresAt: Date;
   ipAddress?: string | null;
   userAgent?: string | null;
+}
+
+export interface EmailVerificationPayload {
+  user: {
+    email: string;
+    [key: string]: unknown;
+  };
+  url: string;
+  token: string;
+}
+
+export interface EmailVerificationConfig {
+  /**
+   * Sends an email verification link/token to the user.
+   * Required when `requireEmailVerification` is enabled.
+   */
+  sendVerificationEmail?: (payload: EmailVerificationPayload, request?: Request) => Promise<void>;
+  /** Send verification emails on credential sign-in attempts. */
+  sendOnSignIn?: boolean;
+  /** Send verification emails on sign-up. */
+  sendOnSignUp?: boolean;
+  /** Automatically sign users in after email verification. */
+  autoSignInAfterVerification?: boolean;
+  /** Email verification token lifetime in seconds. */
+  expiresIn?: number;
 }
 
 /** Configuration accepted by `createAuth`. */
@@ -35,6 +60,8 @@ export interface AuthConfig {
   sessionMaxAge?: number;
   /** Whether to require email verification. @default false */
   requireEmailVerification?: boolean;
+  /** Better Auth email verification options. */
+  emailVerification?: EmailVerificationConfig;
 }
 
 /** Context passed to access-control functions (matches schema AccessFn). */
@@ -45,7 +72,7 @@ export interface AccessContext {
 }
 
 /** The object returned by `createAuth`. */
-export interface RunekitAuth {
+export interface RunelayerAuth {
   /** The underlying Better Auth instance. */
   auth: {
     handler: (request: Request) => Response | Promise<Response>;

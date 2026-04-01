@@ -1,226 +1,174 @@
 # Admin UI
 
-The admin UI provides a set of Svelte 5 components and SvelteKit handler factories for building a CMS admin panel. It is exported from `@flaming-codes/sveltekit-runelayer/admin` and is route-isolated to prevent bloating the public site.
+The recommended integration path uses the split entry points: `@flaming-codes/sveltekit-runelayer/sveltekit/server` for server-side runtime and `@flaming-codes/sveltekit-runelayer/sveltekit/components` for client-safe Svelte components.
 
-## Components
+## Mounting model
 
-### AdminLayout
+Use one catch-all admin route:
 
-Shell layout with sidebar navigation and top bar.
+- `src/routes/(admin)/admin/[...path]/+page.server.ts`
+- `src/routes/(admin)/admin/[...path]/+page.svelte`
+
+```ts
+import { getRunelayerApp } from "$lib/server/runelayer.js";
+
+const app = getRunelayerApp();
+
+export const load = app.admin.load;
+export const actions = app.admin.actions;
+```
 
 ```svelte
 <script lang="ts">
-  import { AdminLayout } from '@flaming-codes/sveltekit-runelayer/admin';
+  import { AdminPage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
+  let { data, form } = $props();
 </script>
 
-<AdminLayout
-  collections={schema.collections}
-  globals={schema.globals}
-  user={{ email: 'admin@example.com' }}
-  basePath="/admin"
->
-  <slot />
-</AdminLayout>
+<AdminPage {data} {form} />
 ```
 
-Props:
-
-- `collections` — `CollectionConfig[]` for sidebar nav
-- `globals` — `GlobalConfig[]` for sidebar nav
-- `user` — current user (null = not logged in)
-- `basePath` — admin route prefix (default: `/admin`)
-- `children` — Svelte 5 snippet for the content area
-
-### Dashboard
-
-Overview with collection cards showing document counts.
+Add a thin route-group layout to load Carbon styles for admin pages:
 
 ```svelte
-<Dashboard
-  collections={[
-    { slug: 'posts', label: 'Posts', count: 42 },
-    { slug: 'users', label: 'Users', count: 5 },
-  ]}
-  basePath="/admin"
-/>
+<!-- src/routes/(admin)/+layout.svelte -->
+<script lang="ts">
+  import "carbon-components-svelte/css/all.css";
+  let { children } = $props();
+</script>
+
+{@render children()}
 ```
 
-### CollectionList
-
-Sortable table with pagination for listing documents.
+Add a thin admin error route so package-owned error UI is used:
 
 ```svelte
-<CollectionList
-  collection={postsConfig}
-  documents={docs}
-  page={1}
-  totalPages={5}
-  basePath="/admin"
-/>
+<!-- src/routes/(admin)/admin/[...path]/+error.svelte -->
+<script lang="ts">
+  import { AdminErrorPage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
+  let { status, error } = $props();
+</script>
+
+<AdminErrorPage {status} {error} />
 ```
 
-Features:
+## Admin route contract
 
-- Columns from `collection.admin.defaultColumns` (or first 3 fields)
-- Client-side column sorting (click column headers)
-- Pagination controls (Prev/Next)
-- "Create New" button
-- Edit links per row
+Supported views under the admin mount:
 
-### CollectionEdit
+- `/admin` → dashboard
+- `/admin/login` → login form
+- `/admin/create-first-user` → first admin setup form (only when no admin user exists)
+- `/admin/users` → auth user list
+- `/admin/users/create` → auth user create form
+- `/admin/users/:id` → auth user edit form
+- `/admin/collections/:slug` → collection list
+- `/admin/collections/:slug/create` → collection create form
+- `/admin/collections/:slug/:id` → collection edit form
+- `/admin/globals/:slug` → global singleton edit form
 
-Form for creating and editing documents.
+`app.admin.load` returns `RunelayerAdminPageData`, a discriminated union keyed by `view`.
+Each `view` variant carries only the data needed by that page (for example, `users-list` includes pagination/search fields, while `collection-edit` includes `collection` and `document`).
+`AdminPage` uses the same union type, so loader output and UI rendering stay in one typed contract.
 
-```svelte
-<CollectionEdit
-  collection={postsConfig}
-  document={existingDoc}  {/* null for create */}
-  basePath="/admin"
-/>
-```
+Supported actions:
 
-Features:
+- `?/login`
+- `?/createFirstUser` (first admin setup)
+- `?/create` (collection create)
+- `?/update` (collection update and global update)
+- `?/delete` (collection delete)
+- `?/createUser` (auth user create)
+- `?/updateUser` (auth user update + optional password reset)
+- `?/deleteUser` (auth user delete)
+- `POST /admin/logout` (default action)
 
-- Renders fields via FieldRenderer based on field type
-- Hidden `id` field for updates
-- Save/Create button
-- Delete button (for existing documents)
-- Cancel link back to list view
-- Uses native form actions (`?/create`, `?/update`, `?/delete`)
+## Access and globals behavior
 
-### Login
+- if no admin user exists yet, requests redirect to `/admin/create-first-user`
+- unauthenticated requests redirect to `/admin/login`
+- authenticated non-admin users receive `403`
+- admin users can access all admin routes/actions
 
-Email/password login form.
+Global editing is runtime-managed in admin scope:
 
-```svelte
-<Login action="?/login" error={form?.error} />
-```
+- persisted per global `slug`
+- `read` and `update` access are enforced
+- `beforeChange` and `afterChange` hooks run on update
+- unknown global slugs return `404`
 
-### FieldRenderer
+User management is runtime-managed via Better Auth admin endpoints:
 
-Dispatches to the correct field component based on field type:
+- list and filter users in `/admin/users`
+- create users with role + password in `/admin/users/create`
+- edit identity and role in `/admin/users/:id`
+- rotate password from the user editor
+- prevent deleting your own account and prevent removing the final admin account
 
-```svelte
-<FieldRenderer field={namedField} bind:values={formValues} />
-```
+## Layout hierarchy
 
-## Field Components
+All admin pages follow a consistent layout pattern:
 
-Each field type has a corresponding Svelte component in `src/admin/components/fields/`:
+1. **Page header** — full-width band with `--cds-ui-background` background and `--cds-border-subtle` bottom border. Contains breadcrumb navigation, an uppercase eyebrow label, the page title (h1), and optional action button or status tag aligned right.
+2. **Page body** — max-width `90rem`, centered, with `--cds-spacing-06` horizontal padding. Contains the page-specific content (data tables, editor forms, cards).
 
-| Component           | Field Types       | Input Type                                 |
-| ------------------- | ----------------- | ------------------------------------------ |
-| `TextField`         | text, email, slug | `<input type="text">`                      |
-| `NumberField`       | number            | `<input type="number">`                    |
-| `CheckboxField`     | checkbox          | `<input type="checkbox">`                  |
-| `SelectField`       | select            | `<select>`                                 |
-| `TextareaField`     | textarea          | `<textarea>`                               |
-| `DateField`         | date              | `<input type="date">` or `datetime-local`  |
-| `RichTextField`     | richText          | `<textarea>` (Tiptap placeholder)          |
-| `JsonField`         | json              | `<textarea>` with JSON                     |
-| `RelationshipField` | relationship      | `<input type="text">` (search placeholder) |
+Edit pages (CollectionEdit, UserEdit, GlobalEdit) use a two-column Grid inside the page body: 11-column content tile + 5-column sidebar tile with metadata and actions.
 
-All field components use Svelte 5 runes (`$props()`, `$bindable`).
+List pages (UsersList, CollectionList) render search/filter controls above a Carbon DataTable with toolbar integration.
 
-## Server Handlers
+The Dashboard page uses a taller header variant and card grid sections for collections and globals.
 
-Handler factories create SvelteKit-compatible load functions and actions:
+All spacing uses Carbon spacing tokens (`--cds-spacing-02` through `--cds-spacing-09`). No hardcoded pixel or rem values outside the Carbon scale.
+
+Shared page-layout CSS (`.rk-page-header`, `.rk-page-header-inner`, `.rk-page-title-row`, `.rk-eyebrow`, `.rk-page-body`, and the 672px responsive breakpoint) lives in `page-layout.css` and is imported by all page components via `@import "./page-layout.css"`. Shared editor styles (`.rk-form`, `.rk-fields`, `.rk-sidebar-title`, `.rk-meta-list`, `.rk-actions`) live in `editor-layout.css` and are imported by CollectionEdit and UserEdit.
+
+Every page includes breadcrumb navigation back to the Dashboard.
+
+## Accessibility
+
+- Carbon `Button` is used for all interactive buttons, including the ErrorPage navigation. No hand-rolled button elements.
+- The user panel dropdown in AdminLayout uses `role="menu"` on its container and `role="menuitem"` on interactive items for screen reader support.
+- DataTable action links include descriptive `aria-label` attributes (e.g., `aria-label="Open {name}"`) so screen readers can distinguish between rows.
+- Delete confirmation dialogs use Carbon `Modal` (danger variant) instead of `window.confirm()` for consistent theming, keyboard navigation, and screen reader announcements.
+- Pagination uses SvelteKit `goto()` for client-side navigation instead of `window.location.assign()`, preserving client state and avoiding full page reloads.
+- `$effect` blocks that sync state from document props guard against unnecessary resets by comparing the document ID before overwriting values, preventing loss of unsaved edits.
+
+## UI configuration
+
+Package-owned admin pages render with Carbon-first primitives:
+
+- `AdminShell` uses Carbon UIShell header, menu, side nav, and content regions
+- dashboard, collection list, and editor pages use Carbon grid, data table, pagination, and form controls
+
+`createRunelayerApp` accepts package-owned admin UI config:
 
 ```ts
-import {
-  handleCollectionList,
-  handleCollectionGet,
-  handleCollectionCreate,
-  handleCollectionUpdate,
-  handleCollectionDelete,
-} from "@flaming-codes/sveltekit-runelayer/admin";
-```
-
-### QueryAdapter Interface
-
-Handlers require a `QueryAdapter` that bridges to the database:
-
-```ts
-interface QueryAdapter {
-  find(
-    collection: string,
-    opts: {
-      page?: number;
-      limit?: number;
-      sort?: string;
-      where?: Record<string, unknown>;
-    },
-  ): Promise<{
-    docs: Record<string, unknown>[];
-    totalDocs: number;
-    totalPages: number;
-    page: number;
-  }>;
-
-  findById(collection: string, id: string): Promise<Record<string, unknown> | null>;
-  create(collection: string, data: Record<string, unknown>): Promise<Record<string, unknown>>;
-  update(
-    collection: string,
-    id: string,
-    data: Record<string, unknown>,
-  ): Promise<Record<string, unknown>>;
-  deleteDoc(collection: string, id: string): Promise<void>;
-  count(collection: string): Promise<number>;
+admin: {
+  path: "/admin",
+  ui: {
+    appName: "Runelayer",
+    productName: "CMS",
+    footerText: "Powered by Runelayer",
+  },
 }
 ```
 
-### Usage in SvelteKit Routes
+Package-owned admin pages render inside a fixed Carbon `g10` theme boundary. UI config customizes labels and footer copy, but not the theme itself.
 
-```ts
-// src/routes/admin/collections/[slug]/+page.server.ts
-import { handleCollectionList } from "@flaming-codes/sveltekit-runelayer/admin";
+## `@flaming-codes/sveltekit-runelayer/admin` exports (breaking)
 
-export const load = handleCollectionList(postsCollection, queryAdapter);
-```
+The admin subpath now exposes Carbon-structured primitives:
 
-```ts
-// src/routes/admin/collections/[slug]/[id]/+page.server.ts
-import {
-  handleCollectionGet,
-  handleCollectionUpdate,
-  handleCollectionDelete,
-} from "@flaming-codes/sveltekit-runelayer/admin";
+- `AdminShell`
+- `AdminDashboardPage`
+- `AdminLoginPage`
+- `AdminCollectionListPage`
+- `AdminCollectionEditorPage`
+- `AdminGlobalEditorPage`
+- `AdminUsersListPage`
+- `AdminUserEditorPage`
+- `AdminProfilePage`
+- `AdminHealthPage`
+- `AdminErrorPage`
+- `AdminFieldRenderer`
 
-export const load = handleCollectionGet(postsCollection, queryAdapter);
-
-export const actions = {
-  update: handleCollectionUpdate(postsCollection, queryAdapter),
-  delete: handleCollectionDelete(postsCollection, queryAdapter),
-};
-```
-
-## Route Helper
-
-The `getAdminRoutes` helper tells the host app what components and routes the admin UI needs:
-
-```ts
-import { getAdminRoutes } from "@flaming-codes/sveltekit-runelayer/admin";
-
-const routes = getAdminRoutes({
-  collections: [Posts, Users, Media],
-  globals: [SiteSettings],
-});
-
-// routes.layout     -> AdminLayout component
-// routes.dashboard  -> Dashboard component
-// routes.login      -> Login component
-// routes.collections -> [{ slug, list: CollectionList, edit: CollectionEdit }, ...]
-```
-
-## Styling
-
-The admin UI uses minimal inline CSS with `.rk-` prefixed class names. No external CSS framework is required. The components are functional but intentionally minimal — they are designed to be restyled or replaced with a component library (e.g., Carbon Svelte) in a future iteration.
-
-## Svelte 5 Patterns Used
-
-- `$props()` with destructuring for component props
-- `$state()` for local reactive state
-- `$derived` and `$derived.by()` for computed values
-- `$bindable` for two-way binding on field values
-- `{@render children()}` for Svelte 5 snippets (replaces slots)
-- No stores — all state is runes-based
+Direct handler-factory and route-helper wiring is no longer the primary integration model.

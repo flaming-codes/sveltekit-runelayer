@@ -1,4 +1,4 @@
-// Shared types for the Runekit schema system
+// Shared types for the Runelayer schema system
 
 export type AccessFn = (args: {
   req: Request;

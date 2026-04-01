@@ -1,13 +1,18 @@
 <script lang="ts">
-	let { name, label, value = $bindable(''), options = [], required = false }: {
-		name: string; label?: string; value: string; options: { label: string; value: string }[]; required?: boolean;
+	import { Select, SelectItem } from "carbon-components-svelte";
+
+	let { name, label, value = $bindable(), options = [], required = false }: {
+		name: string;
+		label?: string;
+		value?: string;
+		options: { label: string; value: string }[];
+		required?: boolean;
 	} = $props();
 </script>
-<label>{label ?? name}
-	<select {name} bind:value {required}>
-		<option value="">-- Select --</option>
-		{#each options as opt}
-			<option value={opt.value}>{opt.label}</option>
-		{/each}
-	</select>
-</label>
+
+<Select id={name} {name} labelText={label ?? name} bind:selected={value} {required}>
+	<SelectItem value="" text="Select an option" />
+	{#each options as option}
+		<SelectItem value={option.value} text={option.label} />
+	{/each}
+</Select>

@@ -1,81 +1,61 @@
 # Database Layer
 
-The database layer uses Drizzle ORM with SQLite (via better-sqlite3). It converts schema definitions into Drizzle table objects and provides low-level CRUD operations.
+The `sveltekit-runelayer` database layer uses Drizzle ORM with the libsql driver (`@libsql/client`). It converts collection definitions into Drizzle tables and provides low-level async CRUD helpers.
 
 ## Initialization
 
 ```ts
-import { createDatabase, pushSchema } from "@flaming-codes/sveltekit-runelayer";
+import { createDatabase } from "@flaming-codes/sveltekit-runelayer";
 
 const database = createDatabase({
-  filename: "./data/runekit.db", // or ':memory:' for tests
+  url: "file:./data/sveltekit-runelayer.db", // or libsql://... for Turso
+  authToken: process.env.DATABASE_AUTH_TOKEN,
   collections: [Posts, Users],
 });
-
-// Create/update tables to match schema
-pushSchema(database);
 ```
 
-`createDatabase` returns a `RunekitDatabase`:
+`createDatabase` returns:
 
 ```ts
-interface RunekitDatabase {
-  db: BetterSQLite3Database; // Drizzle instance
-  tables: GeneratedTables; // Map of slug -> Drizzle table definition
-  sqlite: Database.Database; // Raw better-sqlite3 connection
+interface RunelayerDatabase {
+  db: LibSQLDatabase; // Drizzle instance
+  tables: GeneratedTables; // slug -> Drizzle table
+  client: Client; // raw @libsql/client handle
 }
 ```
 
-SQLite is configured with:
+## Schema Generation
 
-- **WAL mode** (`journal_mode = WAL`) for concurrent read/write performance
-- **Foreign keys** enabled (`foreign_keys = ON`)
+`generateTables(collections)` maps `CollectionConfig[]` to SQLite table definitions.
 
-## Schema-to-Table Generation
+### Column Mapping
 
-`generateTables(collections)` reads `CollectionConfig[]` and returns a `Record<string, SQLiteTable>`.
+| Field Type                                        | Drizzle Column                 | Notes                                  |
+| ------------------------------------------------- | ------------------------------ | -------------------------------------- |
+| text, textarea, email, slug, select, date, upload | `text()`                       | Stored as string                       |
+| number                                            | `real()`                       | Floating point                         |
+| checkbox                                          | `integer({ mode: 'boolean' })` | 0/1                                    |
+| richText, json, multiSelect                       | `text({ mode: 'json' })`       | JSON payload                           |
+| relationship (single)                             | `text()`                       | Related document ID                    |
+| relationship (hasMany)                            | —                              | Join table generated                   |
+| group                                             | —                              | Flattened with prefixed columns        |
+| array                                             | —                              | Separate child table                   |
+| row, collapsible                                  | —                              | Structural; children mapped to columns |
 
-### Column Type Mapping
+### Auto Columns
 
-| Field Type                                        | Drizzle Column                 | Notes                                   |
-| ------------------------------------------------- | ------------------------------ | --------------------------------------- |
-| text, textarea, email, slug, select, date, upload | `text()`                       | Strings stored as-is                    |
-| number                                            | `real()`                       | Floating point                          |
-| checkbox                                          | `integer({ mode: 'boolean' })` | 0/1                                     |
-| richText, json, multiSelect                       | `text({ mode: 'json' })`       | JSON serialized                         |
-| relationship (single)                             | `text()`                       | Stores the related document ID          |
-| relationship (hasMany)                            | —                              | Creates a join table instead            |
-| group                                             | —                              | Flattened into parent table with prefix |
-| array                                             | —                              | Creates a separate child table          |
-| row, collapsible                                  | —                              | Layout-only; children added to parent   |
+Every collection table includes:
 
-### Auto-Generated Columns
+- `id` (`text().primaryKey()`)
+- `createdAt` (`text().notNull()`)
+- `updatedAt` (`text().notNull()`)
 
-Every table includes:
+### Optional Columns
 
-- `id` — `text().primaryKey()`, auto-populated with `crypto.randomUUID()`
-- `createdAt` — `text().notNull()`, auto-set to ISO timestamp on insert
-- `updatedAt` — `text().notNull()`, auto-set on insert and update
+- `versions` enabled: `_status`, `_version`
+- `auth` enabled: `hash`, `salt`, `token`, `tokenExpiry`
 
-### Version Columns
-
-When `versions: true` or `versions: { drafts: true }`:
-
-- `_status` — `text()`, defaults to `'draft'`
-- `_version` — `integer()`, defaults to `1`
-
-### Auth Columns
-
-When `auth: true`:
-
-- `hash` — `text()`, password hash
-- `salt` — `text()`, password salt
-- `token` — `text()`, verification/reset token
-- `tokenExpiry` — `text()`, token expiration timestamp
-
-## CRUD Operations
-
-Low-level operations work with any Drizzle table:
+## CRUD Operations (Async)
 
 ```ts
 import {
@@ -86,69 +66,68 @@ import {
   deleteOne,
 } from "@flaming-codes/sveltekit-runelayer";
 
-// Insert — auto-generates ID and timestamps
-const doc = insertOne(db, table, { title: "Hello" });
-// { id: 'uuid...', title: 'Hello', createdAt: '2026-...', updatedAt: '2026-...' }
-
-// Find by ID
-const found = findById(db, table, doc.id);
-
-// Find many with options
-const docs = findMany(db, table, {
-  where: eq(table.status, "published"), // Drizzle SQL expression
-  limit: 10,
-  offset: 0,
-  sort: { column: "createdAt", order: "desc" },
-});
-
-// Update — auto-refreshes updatedAt
-const updated = updateOne(db, table, doc.id, { title: "Updated" });
-
-// Delete
-const deleted = deleteOne(db, table, doc.id);
+const created = await insertOne(db, table, { title: "Hello" });
+const one = await findById(db, table, created.id);
+const list = await findMany(db, table, { limit: 10, sort: { column: "createdAt", order: "desc" } });
+const updated = await updateOne(db, table, created.id, { title: "Updated" });
+const removed = await deleteOne(db, table, created.id);
 ```
 
-All mutation operations use `.returning()` to return the affected row.
+All write operations use `.returning()`.
 
-## Migrations
+## Migrations (Host-Managed)
 
-`pushSchema(database)` performs push-based migration:
+Runtime schema push is not part of `sveltekit-runelayer` startup. Hosts must generate and apply migrations before app startup.
 
-1. For each generated table, check if it exists in SQLite
-2. If not, `CREATE TABLE` with all columns
-3. If it exists, compare columns and `ALTER TABLE ADD COLUMN` for any missing ones
+The package exports `createDrizzleKitSchema(collections)` to help hosts expose schema objects to
+drizzle-kit. The generated schema includes:
 
-Limitations:
+- collection tables derived from `CollectionConfig[]`
+- Better Auth tables (`user`, `session`, `account`, `verification`)
 
-- Columns are never removed (prevents accidental data loss)
-- Column type changes are not detected
-- If a field changes type, the old column persists with the wrong type
+Example host schema export:
 
-For production use with complex migrations, use `drizzle-kit` directly against the generated schema.
+```ts
+// src/lib/server/drizzle-schema.ts
+import { createDrizzleKitSchema } from "@flaming-codes/sveltekit-runelayer";
+import { allCollections } from "./schema.js";
+
+export const runelayerSchema = createDrizzleKitSchema(allCollections);
+```
+
+Example drizzle-kit config:
+
+```ts
+// drizzle.config.ts
+import { defineConfig } from "drizzle-kit";
+import { defineRunelayerDrizzleConfig } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
+
+export default defineConfig(
+  defineRunelayerDrizzleConfig({
+    schema: "./src/lib/server/drizzle-schema.ts",
+    out: "./drizzle",
+    database: {
+      url: process.env.DATABASE_URL ?? "file:./data/sveltekit-runelayer.db",
+      authToken: process.env.DATABASE_AUTH_TOKEN,
+    },
+  }),
+);
+```
+
+Apply migrations before starting your app.
 
 ## Auxiliary Tables
 
-### Array Tables
+### Array fields
 
-For a collection `posts` with an `array` field named `tags`:
+For `posts.tags` (`array`):
 
-- Table: `posts_tags`
-- Columns: `id`, `_parentId` (FK to posts), `_order` (sort index), plus columns from the array's sub-fields
+- table `posts_tags`
+- columns: `id`, `_parentId`, `_order`, plus mapped sub-field columns
 
-### Join Tables
+### hasMany relationships
 
-For a collection `posts` with a `hasMany` relationship field named `categories`:
+For `posts.categories` (`relationship` with `hasMany: true`):
 
-- Table: `posts_rels_categories`
-- Columns: `id`, `parentId` (FK to posts), `relatedId` (FK to categories)
-
-## Testing
-
-Use `:memory:` for in-memory SQLite in tests:
-
-```ts
-const rdb = createDatabase({ filename: ":memory:", collections });
-pushSchema(rdb);
-// ... run operations ...
-// Database is automatically discarded when the connection is garbage collected
-```
+- table `posts_rels_categories`
+- columns: `id`, `parentId`, `relatedId`

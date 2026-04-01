@@ -3,6 +3,7 @@ import { createReadStream, existsSync } from "node:fs";
 import { join, extname, resolve, relative } from "node:path";
 import { Readable } from "node:stream";
 import { randomUUID } from "node:crypto";
+import { normalizeRelativePath, sanitizeFilename } from "./security.js";
 import type { StorageAdapter } from "./types.js";
 
 export interface LocalStorageConfig {
@@ -11,8 +12,9 @@ export interface LocalStorageConfig {
 }
 
 /** Resolve path within directory; throws if it escapes. */
-function safePath(directory: string, userPath: string): string {
-  const resolved = resolve(directory, userPath);
+function safePath(directory: string, userPath?: string): string {
+  const normalizedPath = normalizeRelativePath(userPath, "file path");
+  const resolved = resolve(directory, normalizedPath ?? ".");
   const rel = relative(resolve(directory), resolved);
   if (rel.startsWith("..") || (resolve(resolved) !== resolved && rel.includes(".."))) {
     throw new Error("Path traversal detected");
@@ -26,9 +28,9 @@ export function createLocalStorage(config: LocalStorageConfig = {}): StorageAdap
 
   return {
     async upload(file, opts) {
-      const folder = opts.folder ?? "";
-      if (folder.includes("..")) throw new Error("Invalid folder path");
-      const ext = extname(opts.filename);
+      const folder = normalizeRelativePath(opts.folder, "folder");
+      const safeFilename = sanitizeFilename(opts.filename);
+      const ext = extname(safeFilename);
       const uniqueName = `${randomUUID()}${ext}`;
       const dir = safePath(directory, folder);
       await mkdir(dir, { recursive: true });
@@ -40,7 +42,7 @@ export function createLocalStorage(config: LocalStorageConfig = {}): StorageAdap
       const relativePath = folder ? `${folder}/${uniqueName}` : uniqueName;
       return {
         path: relativePath,
-        filename: opts.filename,
+        filename: safeFilename,
         mimeType: opts.mimeType,
         size: buffer.byteLength,
         url: `${urlPrefix}/${relativePath}`,

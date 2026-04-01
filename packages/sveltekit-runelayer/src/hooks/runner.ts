@@ -26,7 +26,7 @@ export async function runAfterHooks(
     try {
       await hook(context);
     } catch (err) {
-      console.error("[runekit] afterHook error:", err);
+      console.error("[runelayer] afterHook error:", err);
     }
   }
 }

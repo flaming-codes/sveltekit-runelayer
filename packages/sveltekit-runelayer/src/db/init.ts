@@ -1,25 +1,31 @@
-import Database from "better-sqlite3";
-import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import { createClient, type Client } from "@libsql/client";
+import { drizzle, type LibSQLDatabase } from "drizzle-orm/libsql";
 import type { CollectionConfig } from "../schema/collections.js";
 import { generateTables, type GeneratedTables } from "./schema.js";
 
-export interface DatabaseConfig {
-  /** Path to SQLite file, or `:memory:` */
-  filename: string;
+export interface DatabaseConnectionConfig {
+  /** libsql database URL (e.g. `file:./data/sveltekit-runelayer.db`, `libsql://...`) */
+  url: string;
+  /** Turso/libsql auth token */
+  authToken?: string;
+}
+
+export interface DatabaseConfig extends DatabaseConnectionConfig {
   collections: CollectionConfig[];
 }
 
-export interface RunekitDatabase {
-  db: BetterSQLite3Database;
+export interface RunelayerDatabase {
+  db: LibSQLDatabase;
   tables: GeneratedTables;
-  sqlite: any;
+  client: Client;
 }
 
-export function createDatabase(config: DatabaseConfig): RunekitDatabase {
-  const sqlite = new Database(config.filename);
-  sqlite.pragma("journal_mode = WAL");
-  sqlite.pragma("foreign_keys = ON");
-  const db = drizzle(sqlite);
+export function createDatabase(config: DatabaseConfig): RunelayerDatabase {
+  const client = createClient({
+    url: config.url,
+    authToken: config.authToken,
+  });
+  const db = drizzle(client);
   const tables = generateTables(config.collections);
-  return { db, tables, sqlite };
+  return { db, tables, client };
 }

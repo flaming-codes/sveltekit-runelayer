@@ -1,6 +1,6 @@
 # Authentication & Access Control
 
-Runekit uses Better Auth for authentication and provides a role-based access control system that integrates with the schema and query layers.
+sveltekit-runelayer uses Better Auth for authentication and provides a role-based access control system that integrates with the schema and query layers.
 
 ## Setup
 
@@ -17,6 +17,12 @@ const config = defineConfig({
     basePath: "/api/auth", // Optional (default: '/api/auth')
     sessionMaxAge: 60 * 60 * 24 * 7, // Optional (default: 7 days)
     requireEmailVerification: false, // Optional (default: false)
+    emailVerification: {
+      sendVerificationEmail: async ({ user, url }) => {
+        // Send verification email to user.email containing url
+      },
+      sendOnSignIn: true, // Optional. Defaults to true when requireEmailVerification=true
+    },
   },
 });
 ```
@@ -24,12 +30,24 @@ const config = defineConfig({
 ## Auth Config
 
 ```ts
+interface EmailVerificationConfig {
+  sendVerificationEmail?: (
+    payload: { user: { email: string; [key: string]: unknown }; url: string; token: string },
+    request?: Request,
+  ) => Promise<void>;
+  sendOnSignIn?: boolean;
+  sendOnSignUp?: boolean;
+  autoSignInAfterVerification?: boolean;
+  expiresIn?: number;
+}
+
 interface AuthConfig {
   secret: string; // Token signing secret
   baseURL: string; // Public app URL
   basePath?: string; // Auth API prefix (default: '/api/auth')
   sessionMaxAge?: number; // Session TTL in seconds (default: 604800)
   requireEmailVerification?: boolean; // Require email verification (default: false)
+  emailVerification?: EmailVerificationConfig;
 }
 ```
 
@@ -37,33 +55,68 @@ interface AuthConfig {
 
 ### Session Management
 
-The `handle` hook returned by `createRunekit()`:
+The `handle` hook returned by `createRunelayer()`:
 
 1. **Strips spoofed headers** — removes any incoming `x-user-id`, `x-user-role`, `x-user-email` headers
 2. **Resolves session** — calls Better Auth's `getSession()` API with the request cookies
-3. **Injects user context** — sets `x-user-id`, `x-user-role`, `x-user-email` headers and populates `event.locals.user`/`event.locals.session`
-4. **Routes auth API** — requests to `/api/auth/*` are handled by Better Auth directly
+3. **Blocks active bans** — if the resolved user is currently banned, Runelayer revokes the session and treats the request as anonymous
+4. **Injects user context** — for non-banned sessions, sets `x-user-id`, `x-user-role`, `x-user-email` headers and populates `event.locals.user`/`event.locals.session`
+5. **Routes auth API** — requests to `/api/auth/*` are handled by Better Auth directly
+
+Runelayer passes an explicit Drizzle schema map (`user`, `session`, `account`, `verification`) to
+the Better Auth Drizzle adapter, so auth works even when Drizzle is initialized without
+`fullSchema` metadata.
+
+Runelayer also enables Better Auth's `admin` plugin. This provides built-in server endpoints used by
+the CMS user-management UI:
+
+- `GET /api/auth/admin/list-users`
+- `GET /api/auth/admin/get-user`
+- `POST /api/auth/admin/create-user`
+- `POST /api/auth/admin/update-user`
+- `POST /api/auth/admin/remove-user`
+- `POST /api/auth/admin/set-user-password`
+
+When user roles or passwords are changed through Runelayer admin actions, Runelayer also calls
+`POST /api/auth/admin/revoke-user-sessions` to invalidate active sessions with stale privileges.
+
+If `auth.requireEmailVerification` is enabled, Runelayer forwards it to Better Auth's
+`emailAndPassword.requireEmailVerification` and requires
+`auth.emailVerification.sendVerificationEmail` to be configured.
+Runelayer defaults `auth.emailVerification.sendOnSignIn` to `true` in this mode.
+
+### Auth Route Matching (Origin Sensitivity)
+
+Better Auth's `svelteKitHandler` determines whether a request targets the auth API by
+comparing both the pathname prefix **and the origin** of the request URL against the
+configured `baseURL` and `basePath`. If the origins do not match, the request silently
+falls through to `resolve(event)` and is not handled by auth.
+
+This means `auth.baseURL` must exactly match the origin used in requests. In production
+this is typically not an issue since the app serves on a single origin. However, it is
+critical in test harnesses and reverse-proxy setups where request URLs might be constructed
+with a different host or port than the configured `baseURL`.
+
+```
+Request URL:  http://localhost/api/auth/sign-up/email
+baseURL:      http://localhost:3000
+→ origins differ → auth does NOT handle → 404
+```
+
+There is no warning or error when origins diverge. See the testing documentation for details
+on how the E2E test harness handles this.
 
 ### SvelteKit Integration
 
 In your `src/hooks.server.ts`:
 
 ```ts
-import { runekit } from "$lib/runekit";
+import { runelayer } from "$lib/runelayer";
 
-export const handle = runekit.handle;
+export const handle = runelayer.handle;
 ```
 
-For the auth API endpoints, create `src/routes/api/auth/[...all]/+server.ts`:
-
-```ts
-import { createAuthHandler } from "@flaming-codes/sveltekit-runelayer";
-import { runekit } from "$lib/runekit";
-
-const handler = createAuthHandler(runekit.auth);
-export const GET = handler;
-export const POST = handler;
-```
+In the high-level `createRunelayerApp` integration, no separate `src/routes/api/auth/[...all]/+server.ts` route is required. The global `handle` hook routes auth requests at `auth.basePath` (default `/api/auth`).
 
 ## User Model
 
@@ -80,7 +133,20 @@ interface User {
 }
 ```
 
-Better Auth manages user storage. The `role` field is added as an additional user field with default value `'user'`.
+Better Auth manages user storage. The admin plugin schema includes:
+
+- `user.role` (default `"user"`)
+- `user.banned`, `user.banReason`, `user.banExpires`
+- `session.impersonatedBy`
+
+## First Admin Bootstrap
+
+Runelayer checks whether any admin user exists in Better Auth's `user` table.
+
+- if at least one admin exists, `/admin/login` is shown and admin access requires admin auth
+- if no admin exists, admin routes redirect to `/admin/create-first-user`
+- the setup form posts `?/createFirstUser`, which creates the first user via Better Auth sign-up and then promotes that email to `role = "admin"`
+- concurrent setup requests are guarded so only one request can win first-admin promotion; losing requests are signed out and must use `/admin/login`
 
 ## Roles
 

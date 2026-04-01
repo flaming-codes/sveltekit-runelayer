@@ -16,7 +16,7 @@ import { join } from "node:path";
 
 import {
   defineConfig,
-  createRunekit,
+  createRunelayer,
   defineCollection,
   text,
   select,
@@ -27,11 +27,12 @@ import {
   create,
   update,
   remove,
-  type RunekitInstance,
+  type RunelayerInstance,
   type QueryContext,
   type CollectionConfig,
   type AccessFn,
 } from "../index.js";
+import { migrateDatabaseForTests } from "../__testutils__/migrations.js";
 
 // --- Custom access functions ---
 
@@ -115,26 +116,29 @@ const publicReq = new Request("http://localhost"); // No auth headers
 // --- Test Suite ---
 
 describe("Role-Based Access Control — Full Journey", () => {
-  let kit: RunekitInstance;
+  let kit: RunelayerInstance;
   let tmpDir: string;
+  let dbUrl: string;
 
   function ctx(collection: CollectionConfig, req?: Request): QueryContext {
     return { db: kit.database, collection, req };
   }
 
   beforeAll(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "runekit-acl-e2e-"));
-    kit = createRunekit(
+    tmpDir = await mkdtemp(join(tmpdir(), "runelayer-acl-e2e-"));
+    dbUrl = `file:${join(tmpDir, "acl.db")}`;
+    await migrateDatabaseForTests(dbUrl, [PublicPages, InternalNotes, SecretDocs]);
+    kit = createRunelayer(
       defineConfig({
         collections: [PublicPages, InternalNotes, SecretDocs],
-        dbPath: join(tmpDir, "acl.db"),
+        database: { url: dbUrl },
         auth: { secret: "e2e-test-secret-minimum-32-chars!", baseURL: "http://localhost:3000" },
       }),
     );
   });
 
   afterAll(async () => {
-    kit.database.sqlite.close();
+    kit.database.client.close();
     await rm(tmpDir, { recursive: true, force: true });
   });
 

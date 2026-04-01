@@ -1,159 +1,104 @@
 # Security Model
 
-This document covers the security measures implemented in Runekit and known attack surfaces.
+Security measures and known limits for `sveltekit-runelayer`.
 
 ## Authentication
 
-### Session Management
+Better Auth manages sessions via HTTP-only cookies.
 
-Better Auth handles session management via HTTP-only cookies. The auth handle hook:
+The runtime `handle` hook:
 
-1. **Strips incoming auth headers** — `x-user-id`, `x-user-role`, `x-user-email` are removed from every incoming request before processing
-2. **Resolves session** — Better Auth's `getSession()` reads the session cookie and validates it
-3. **Injects verified headers** — only after successful session resolution are the `x-user-*` headers set
+1. strips inbound `x-user-id`, `x-user-role`, `x-user-email`
+2. resolves session from cookies
+3. injects verified `x-user-*` headers only after session validation
 
-This prevents header spoofing attacks where an external client sets `x-user-role: admin` to gain elevated access.
+This blocks header spoofing attempts from external clients.
 
-### Anti-Spoofing
+## Access control
 
-```
-Incoming request with x-user-role: admin (malicious)
-  → handle hook strips x-user-role header
-  → Better Auth resolves session from cookie
-  → If valid session: sets x-user-role from session data
-  → If no session: headers remain absent → access denied
-```
+### Deny-by-default
 
-### Auth Secret
+Query layer behavior:
 
-The `BETTER_AUTH_SECRET` environment variable is used for:
+- no access function: allow
+- access function + request: evaluate function result
+- access function + missing request: deny with 403
 
-- Signing session tokens/cookies
-- CSRF protection
+This protects against accidental server-side bypass.
 
-It must be set in both development (`.env`) and production environments. In SvelteKit, it must also be available at build time.
+### Request-scoped access context
 
-## Access Control
+Access functions receive only `Request` and derived values. They do not depend on SvelteKit internals.
 
-### Deny-by-Default
+### Field-level access enforcement
 
-The query layer enforces access control with a deny-by-default policy:
+Field-level access is enforced at runtime in the query layer:
 
-- **No access function** → allowed (public access)
-- **Access function + valid request** → function evaluated
-- **Access function + no request** → **denied** (prevents server-side bypass)
+- `create`/`update` checks field `access.create` and `access.update`
+- `find`/`findOne` applies field `access.read` and redacts denied fields from results
+- missing request context with a defined field access function is denied by default
 
-This means server-side code that calls query operations without passing a `Request` will be denied if the collection has access control. To bypass, use the low-level DB operations directly.
+## Schema enforcement at query boundary
 
-### Access Function Isolation
+Writes are schema-validated before persistence:
 
-Access functions receive only a `Request` object with injected headers. They do not receive the full SvelteKit `event` or `locals`, which:
+- unknown fields are rejected (allowlist-only)
+- reserved/system fields (`id`, timestamps, auth internals, version internals) are rejected
+- required fields are enforced on create
+- built-in field constraints (e.g. select options, min/max, minLength/maxLength) are enforced
+- custom field `validate` functions are executed
 
-- Prevents access functions from depending on SvelteKit-specific APIs
-- Makes them testable with plain `new Request()` objects
-- Limits the blast radius of a compromised access function
+This prevents mass-assignment style writes and keeps runtime behavior aligned with schema definitions.
 
-## Storage Security
+## Storage security
 
-### Path Traversal Protection
+### Path traversal checks
 
-All storage adapter operations validate paths using `safePath()`:
+Storage path operations resolve and validate paths to prevent escaping the configured storage root.
 
-```ts
-function safePath(directory: string, userPath: string): string {
-  const resolved = resolve(directory, userPath);
-  const rel = relative(resolve(directory), resolved);
-  if (rel.startsWith("..")) throw new Error("Path traversal detected");
-  return resolved;
-}
-```
+### Upload validation
 
-This prevents:
+Upload handler validates:
 
-- `../../etc/passwd` in `delete()`, `getStream()`, `exists()`
-- `../../../root/.ssh/id_rsa` in file reads
-- Absolute paths that escape the storage directory
+- file presence
+- max size
+- allowed MIME types
+- folder path shape (normalized relative paths only)
+- detected-vs-declared MIME consistency for known file signatures
 
-### Upload Validation
+### Safer file serving
 
-The upload handler validates:
+Serve handler now applies defensive response controls:
 
-- **File presence** — rejects requests without a `file` field (400)
-- **File size** — rejects files exceeding `maxFileSize` (413)
-- **MIME type** — rejects files not in `allowedMimeTypes` (415)
-- **Folder path** — rejects `folder` containing `..` or starting with `/` (400)
+- `X-Content-Type-Options: nosniff`
+- `Content-Disposition` is set explicitly
+- SVG files are served as attachments by default (`allowInlineSvg` must be explicitly enabled)
 
-### MIME Type Limitation
+## Database security
 
-MIME type validation checks the client-provided `Content-Type` header, which is trivially spoofable. A `.exe` file could be uploaded with `type: image/png`. For sensitive deployments, implement magic-byte validation (e.g., using `file-type` or `mmmagic`).
+### SQL injection
 
-### Serve Handler Protection
+Drizzle query builders are parameterized. User values are not interpolated into raw SQL strings in normal CRUD flow.
 
-The file serve handler:
+### Migration control
 
-- Strips the URL prefix to extract the file path
-- Rejects paths containing `..`
-- Checks file existence before streaming
-- Sets `Content-Type` based on file extension (not content inspection)
+Runtime does not mutate schema. Migrations are host-managed through drizzle-kit before startup.
 
-## Database Security
+Benefits:
 
-### SQL Injection
+- schema changes are explicit and reviewable
+- migration SQL is versioned with app code
+- startup behavior is deterministic
 
-Drizzle ORM uses parameterized queries for all operations. User input never appears in SQL strings directly. The CRUD operations (`findMany`, `insertOne`, etc.) pass data through Drizzle's builder, which handles escaping.
+## Known limitations
 
-### Migration Safety
+- no built-in global request rate limiting
+- MIME validation remains lightweight and signature-based for common formats, not full deep content scanning/sanitization
+- if inline SVG is explicitly enabled, host code remains responsible for SVG sanitization policy
 
-`pushSchema()` only creates tables and adds columns. It never:
+## Deployment checklist
 
-- Drops tables
-- Removes columns
-- Modifies column types
-- Deletes data
-
-This prevents accidental data loss from schema changes. Column removal must be done manually.
-
-## Known Limitations
-
-### Admin Routes Not Auth-Gated
-
-The admin handler factories (`handleCollectionCreate`, etc.) do not enforce authentication internally. The host application must gate admin routes with auth middleware. Typical pattern:
-
-```ts
-// src/routes/admin/+layout.server.ts
-export const load = ({ locals }) => {
-  if (!locals.user || locals.user.role !== "admin") {
-    throw redirect(303, "/login");
-  }
-};
-```
-
-### No CSRF Protection on Admin Actions
-
-Admin form actions rely on SvelteKit's built-in CSRF protection (origin checking). Better Auth adds CSRF protection for its own API routes. Custom admin actions should ensure they are protected by SvelteKit's default behavior.
-
-### No Rate Limiting
-
-There is no built-in rate limiting for:
-
-- Login attempts (Better Auth's `maxLoginAttempts` is per-user, not per-IP)
-- API requests
-- File uploads
-
-Production deployments should add rate limiting at the reverse proxy level (e.g., Nginx, Cloudflare).
-
-### Session Storage
-
-Sessions are stored in the SQLite database via Better Auth. For high-traffic deployments, consider using a session store with faster read performance (e.g., Redis adapter for Better Auth).
-
-## Security Checklist for Deployment
-
-- [ ] Set `BETTER_AUTH_SECRET` to a strong random value (32+ characters)
-- [ ] Set `BETTER_AUTH_SECRET` in both build and runtime environments
-- [ ] Gate admin routes with auth middleware in `+layout.server.ts`
-- [ ] Configure `allowedMimeTypes` for upload collections
-- [ ] Set appropriate `maxFileSize` limits
-- [ ] Add rate limiting at the reverse proxy level
-- [ ] Ensure the uploads directory is not served by the static file handler
-- [ ] Review access control functions for all collections before deployment
-- [ ] Enable HTTPS in production (session cookies require secure context)
+- set a strong `BETTER_AUTH_SECRET`
+- configure upload allowlists and size limits
+- apply drizzle-kit migrations before startup
+- run behind HTTPS and apply rate limiting at edge/proxy level

@@ -26,16 +26,17 @@ import {
   json,
   type CollectionConfig,
 } from "../schema/index.js";
-import { createDatabase, pushSchema } from "../db/index.js";
+import { createDatabase } from "../db/index.js";
 import { insertOne, findMany, updateOne } from "../db/operations.js";
+import { applySchemaForTests } from "../__testutils__/migrations.js";
 
 describe("Schema Evolution & Migration — Full Journey", () => {
   let tmpDir: string;
-  let dbPath: string;
+  let dbUrl: string;
 
   beforeAll(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "runekit-evolution-e2e-"));
-    dbPath = join(tmpDir, "evolving.db");
+    tmpDir = await mkdtemp(join(tmpdir(), "runelayer-evolution-e2e-"));
+    dbUrl = `file:${join(tmpDir, "evolving.db")}`;
   });
 
   afterAll(async () => {
@@ -44,7 +45,7 @@ describe("Schema Evolution & Migration — Full Journey", () => {
 
   // --- Phase 1: Initial simple schema ---
 
-  it("creates initial schema with basic fields", () => {
+  it("creates initial schema with basic fields", async () => {
     const ProductsV1: CollectionConfig = defineCollection({
       slug: "products",
       fields: [
@@ -53,25 +54,25 @@ describe("Schema Evolution & Migration — Full Journey", () => {
       ],
     });
 
-    const rdb = createDatabase({ filename: dbPath, collections: [ProductsV1] });
-    pushSchema(rdb);
+    const rdb = createDatabase({ url: dbUrl, collections: [ProductsV1] });
+    await applySchemaForTests(rdb);
 
     // Insert some initial data
-    insertOne(rdb.db, rdb.tables.products, { name: "Widget A", price: 9.99 });
-    insertOne(rdb.db, rdb.tables.products, { name: "Gadget B", price: 24.99 });
-    insertOne(rdb.db, rdb.tables.products, { name: "Doohickey C", price: 4.5 });
+    await insertOne(rdb.db, rdb.tables.products, { name: "Widget A", price: 9.99 });
+    await insertOne(rdb.db, rdb.tables.products, { name: "Gadget B", price: 24.99 });
+    await insertOne(rdb.db, rdb.tables.products, { name: "Doohickey C", price: 4.5 });
 
-    const products = findMany(rdb.db, rdb.tables.products);
+    const products = await findMany(rdb.db, rdb.tables.products);
     expect(products).toHaveLength(3);
     expect(products[0].name).toBeDefined();
     expect(products[0].price).toBeDefined();
 
-    rdb.sqlite.close();
+    rdb.client.close();
   });
 
   // --- Phase 2: Add new fields to existing collection ---
 
-  it("adds description, category, and inStock fields", () => {
+  it("adds description, category, and inStock fields", async () => {
     const ProductsV2: CollectionConfig = defineCollection({
       slug: "products",
       fields: [
@@ -93,11 +94,11 @@ describe("Schema Evolution & Migration — Full Journey", () => {
       ],
     });
 
-    const rdb = createDatabase({ filename: dbPath, collections: [ProductsV2] });
-    pushSchema(rdb);
+    const rdb = createDatabase({ url: dbUrl, collections: [ProductsV2] });
+    await applySchemaForTests(rdb);
 
     // Existing data should still be there
-    const products = findMany(rdb.db, rdb.tables.products);
+    const products = await findMany(rdb.db, rdb.tables.products);
     expect(products).toHaveLength(3);
 
     // Existing fields should be intact
@@ -111,7 +112,7 @@ describe("Schema Evolution & Migration — Full Journey", () => {
     expect(widget.category).toBeNull();
 
     // Can update existing documents with new fields
-    const updated = updateOne(rdb.db, rdb.tables.products, widget.id, {
+    const updated = await updateOne(rdb.db, rdb.tables.products, widget.id, {
       description: "A fantastic widget for all purposes.",
       category: "electronics",
       inStock: true,
@@ -120,7 +121,7 @@ describe("Schema Evolution & Migration — Full Journey", () => {
     expect(updated.category).toBe("electronics");
 
     // Can create new documents with all fields
-    const newProduct = insertOne(rdb.db, rdb.tables.products, {
+    const newProduct = await insertOne(rdb.db, rdb.tables.products, {
       name: "Thingamajig D",
       price: 15.0,
       description: "The latest in thingamajig technology.",
@@ -130,14 +131,14 @@ describe("Schema Evolution & Migration — Full Journey", () => {
     expect(newProduct.name).toBe("Thingamajig D");
     expect(newProduct.category).toBe("toys");
 
-    expect(findMany(rdb.db, rdb.tables.products)).toHaveLength(4);
+    expect(await findMany(rdb.db, rdb.tables.products)).toHaveLength(4);
 
-    rdb.sqlite.close();
+    rdb.client.close();
   });
 
   // --- Phase 3: Add another new collection alongside existing ones ---
 
-  it("adds a reviews collection while preserving products", () => {
+  it("adds a reviews collection while preserving products", async () => {
     const ProductsV2: CollectionConfig = defineCollection({
       slug: "products",
       fields: [
@@ -172,15 +173,15 @@ describe("Schema Evolution & Migration — Full Journey", () => {
       timestamps: true,
     });
 
-    const rdb = createDatabase({ filename: dbPath, collections: [ProductsV2, Reviews] });
-    pushSchema(rdb);
+    const rdb = createDatabase({ url: dbUrl, collections: [ProductsV2, Reviews] });
+    await applySchemaForTests(rdb);
 
     // Products still intact
-    const products = findMany(rdb.db, rdb.tables.products);
+    const products = await findMany(rdb.db, rdb.tables.products);
     expect(products).toHaveLength(4);
 
     // New collection works
-    insertOne(rdb.db, rdb.tables.reviews, {
+    await insertOne(rdb.db, rdb.tables.reviews, {
       product: "Widget A",
       reviewer: "John Doe",
       reviewerEmail: "john@example.com",
@@ -189,7 +190,7 @@ describe("Schema Evolution & Migration — Full Journey", () => {
       reviewDate: "2026-03-15",
       verified: true,
     });
-    insertOne(rdb.db, rdb.tables.reviews, {
+    await insertOne(rdb.db, rdb.tables.reviews, {
       product: "Gadget B",
       reviewer: "Jane Smith",
       rating: 3,
@@ -197,16 +198,16 @@ describe("Schema Evolution & Migration — Full Journey", () => {
       verified: false,
     });
 
-    const reviews = findMany(rdb.db, rdb.tables.reviews);
+    const reviews = await findMany(rdb.db, rdb.tables.reviews);
     expect(reviews).toHaveLength(2);
     expect((reviews[0] as any).reviewer).toBeDefined();
 
-    rdb.sqlite.close();
+    rdb.client.close();
   });
 
   // --- Phase 4: Add even more fields (third evolution) ---
 
-  it("adds metadata and tags to products in a third evolution", () => {
+  it("adds metadata and tags to products in a third evolution", async () => {
     const ProductsV3: CollectionConfig = defineCollection({
       slug: "products",
       fields: [
@@ -245,19 +246,19 @@ describe("Schema Evolution & Migration — Full Journey", () => {
       timestamps: true,
     });
 
-    const rdb = createDatabase({ filename: dbPath, collections: [ProductsV3, Reviews] });
-    pushSchema(rdb);
+    const rdb = createDatabase({ url: dbUrl, collections: [ProductsV3, Reviews] });
+    await applySchemaForTests(rdb);
 
     // All previous data preserved
-    const products = findMany(rdb.db, rdb.tables.products);
+    const products = await findMany(rdb.db, rdb.tables.products);
     expect(products).toHaveLength(4);
 
-    const reviews = findMany(rdb.db, rdb.tables.reviews);
+    const reviews = await findMany(rdb.db, rdb.tables.reviews);
     expect(reviews).toHaveLength(2);
 
     // New fields work on existing products
     const first = products[0] as any;
-    const updated = updateOne(rdb.db, rdb.tables.products, first.id, {
+    const updated = await updateOne(rdb.db, rdb.tables.products, first.id, {
       sku: "WGT-001",
       weight: 0.5,
       metadata: JSON.stringify({ tags: ["widget", "popular"], manufacturer: "Acme" }),
@@ -265,12 +266,12 @@ describe("Schema Evolution & Migration — Full Journey", () => {
     expect(updated.sku).toBe("WGT-001");
     expect(updated.weight).toBe(0.5);
 
-    rdb.sqlite.close();
+    rdb.client.close();
   });
 
   // --- Phase 5: Verify full data integrity after all migrations ---
 
-  it("all data is intact after three schema evolutions", () => {
+  it("all data is intact after three schema evolutions", async () => {
     const ProductsV3: CollectionConfig = defineCollection({
       slug: "products",
       fields: [
@@ -308,10 +309,10 @@ describe("Schema Evolution & Migration — Full Journey", () => {
       timestamps: true,
     });
 
-    const rdb = createDatabase({ filename: dbPath, collections: [ProductsV3, Reviews] });
-    pushSchema(rdb);
+    const rdb = createDatabase({ url: dbUrl, collections: [ProductsV3, Reviews] });
+    await applySchemaForTests(rdb);
 
-    const products = findMany(rdb.db, rdb.tables.products);
+    const products = await findMany(rdb.db, rdb.tables.products);
     expect(products).toHaveLength(4);
 
     // Check the original product still has all its original data
@@ -323,9 +324,9 @@ describe("Schema Evolution & Migration — Full Journey", () => {
     // Fields added in V3 should have been updated
     expect(widget.sku).toBe("WGT-001");
 
-    const reviews = findMany(rdb.db, rdb.tables.reviews);
+    const reviews = await findMany(rdb.db, rdb.tables.reviews);
     expect(reviews).toHaveLength(2);
 
-    rdb.sqlite.close();
+    rdb.client.close();
   });
 });

@@ -4,15 +4,23 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vp run web#dev",
+    "dev": "vp run demo#dev",
     "build": "vp run build -r",
     "check": "vp check",
     "ready": "vp fmt && vp lint && vp run test -r && vp run build -r",
     "prepare": "vp config"
   },
+  "dependencies": {
+    "@carbon/charts-svelte": "catalog:",
+    "carbon-components-svelte": "catalog:",
+    "carbon-icons-svelte": "catalog:",
+    "carbon-pictograms-svelte": "catalog:",
+    "carbon-preprocess-svelte": "catalog:"
+  },
   "devDependencies": {
     "@madebywild/agent-harness-framework": "^1.7.0",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=22.18.0"
@@ -20,7 +28,6 @@
   "packageManager": "pnpm@10.33.0",
   "pnpm": {
     "onlyBuiltDependencies": [
-      "better-sqlite3",
       "esbuild"
     ]
   }

@@ -1,5 +1,10 @@
 export { generateTables, type GeneratedTables } from "./schema.js";
-export { createDatabase, type DatabaseConfig, type RunekitDatabase } from "./init.js";
+export {
+  createDatabase,
+  type DatabaseConnectionConfig,
+  type DatabaseConfig,
+  type RunelayerDatabase,
+} from "./init.js";
 export {
   findMany,
   findById,
@@ -8,4 +13,4 @@ export {
   deleteOne,
   type FindManyOpts,
 } from "./operations.js";
-export { pushSchema } from "./migrate.js";
+export { createDrizzleKitSchema } from "./drizzle-kit.js";

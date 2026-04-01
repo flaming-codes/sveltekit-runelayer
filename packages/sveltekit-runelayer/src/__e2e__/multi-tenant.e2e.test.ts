@@ -15,7 +15,7 @@ import { join } from "node:path";
 
 import {
   defineConfig,
-  createRunekit,
+  createRunelayer,
   defineCollection,
   text,
   select,
@@ -23,11 +23,12 @@ import {
   create,
   update,
   remove,
-  type RunekitInstance,
+  type RunelayerInstance,
   type QueryContext,
   type CollectionConfig,
   type AccessFn,
 } from "../index.js";
+import { migrateDatabaseForTests } from "../__testutils__/migrations.js";
 
 // --- Tenant-aware access control ---
 
@@ -140,26 +141,29 @@ const globexUser1Req = tenantReq("globex", "globex-user-1");
 // --- Test Suite ---
 
 describe("Multi-Tenant CMS — Full Journey", () => {
-  let kit: RunekitInstance;
+  let kit: RunelayerInstance;
   let tmpDir: string;
+  let dbUrl: string;
 
   function ctx(collection: CollectionConfig, req: Request): QueryContext {
     return { db: kit.database, collection, req };
   }
 
   beforeAll(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), "runekit-tenant-e2e-"));
-    kit = createRunekit(
+    tmpDir = await mkdtemp(join(tmpdir(), "runelayer-tenant-e2e-"));
+    dbUrl = `file:${join(tmpDir, "tenant.db")}`;
+    await migrateDatabaseForTests(dbUrl, [Projects, Tasks]);
+    kit = createRunelayer(
       defineConfig({
         collections: [Projects, Tasks],
-        dbPath: join(tmpDir, "tenant.db"),
+        database: { url: dbUrl },
         auth: { secret: "e2e-test-secret-minimum-32-chars!", baseURL: "http://localhost:3000" },
       }),
     );
   });
 
   afterAll(async () => {
-    kit.database.sqlite.close();
+    kit.database.client.close();
     await rm(tmpDir, { recursive: true, force: true });
   });
 
@@ -262,7 +266,7 @@ describe("Multi-Tenant CMS — Full Journey", () => {
   });
 
   it("tenant users can see all content (app-level filtering needed)", async () => {
-    // Note: Runekit v1 access control returns boolean, not query constraints
+    // Note: Runelayer v1 access control returns boolean, not query constraints
     // So at the DB level, all authenticated users see all rows
     // Tenant filtering must be done at the application layer
     const acmeView = await find(ctx(Projects, acmeUser1Req));

@@ -1,6 +1,12 @@
 <script lang="ts">
-	let { name, label, value = $bindable(''), required = false }: {
-		name: string; label?: string; value: string; required?: boolean;
+	import { TextArea } from "carbon-components-svelte";
+
+	let { name, label, value = $bindable(), required = false }: {
+		name: string;
+		label?: string;
+		value?: null | string;
+		required?: boolean;
 	} = $props();
 </script>
-<label>{label ?? name} <textarea {name} bind:value {required} rows="4"></textarea></label>
+
+<TextArea id={name} {name} labelText={label ?? name} bind:value {required} rows={4} />

@@ -1,77 +1,214 @@
 <script lang="ts">
-	import type { CollectionConfig } from '../../schema/collections.js';
+	import {
+		Breadcrumb,
+		BreadcrumbItem,
+		Button,
+		DataTable,
+		Pagination,
+		Tag,
+		Toolbar,
+		ToolbarContent,
+		ToolbarSearch,
+	} from "carbon-components-svelte";
+	import { goto } from "$app/navigation";
+	import type { CollectionConfig } from "../../schema/collections.js";
 
-	let { collection, documents = [], page = 1, totalPages = 1, basePath = '/admin' }: {
+	type DataTableHeader<T = Record<string, unknown>> = {
+		key: keyof T & string;
+		value: string;
+		sort?: (a: T[keyof T], b: T[keyof T]) => number;
+		display?: (value: T[keyof T]) => string;
+		empty?: string;
+	};
+
+	type CollectionRow = {
+		id: string;
+		actions: string;
+		[key: string]: string;
+	};
+
+	let {
+		collection,
+		documents = [],
+		page = 1,
+		totalPages = 1,
+		totalDocs = 0,
+		limit = 20,
+		basePath = "/admin",
+	}: {
 		collection: CollectionConfig;
 		documents: Record<string, any>[];
 		page?: number;
 		totalPages?: number;
+		totalDocs?: number;
+		limit?: number;
 		basePath?: string;
 	} = $props();
 
+	let searchTerm = $state("");
 	let columns = $derived(
-		collection.admin?.defaultColumns ?? collection.fields.slice(0, 3).map(f => f.name)
+		collection.admin?.defaultColumns ?? collection.fields.slice(0, 3).map((field) => field.name),
 	);
-	let titleField = $derived(collection.admin?.useAsTitle ?? 'id');
-	let sortField = $state('');
-	let sortDir = $state<'asc' | 'desc'>('asc');
+	let sortField = $state("");
+	let sortDir = $state<"asc" | "desc">("asc");
+	let slug = $derived(collection.slug);
+	let label = $derived(collection.labels?.plural ?? slug);
+	let singularLabel = $derived(collection.labels?.singular ?? collection.slug);
+	let firstColumn = $derived(columns[0] ?? "id");
 
-	function toggleSort(col: string) {
-		if (sortField === col) { sortDir = sortDir === 'asc' ? 'desc' : 'asc'; }
-		else { sortField = col; sortDir = 'asc'; }
+	function formatHeading(value: string) {
+		return value
+			.replaceAll(/([a-z0-9])([A-Z])/g, "$1 $2")
+			.replaceAll(/[-_]+/g, " ")
+			.replaceAll(/\s+/g, " ")
+			.trim()
+			.replace(/^./, (char) => char.toUpperCase());
+	}
+
+	function displayValue(value: unknown): string {
+		if (value === null || value === undefined || value === "") return "-";
+		if (typeof value === "boolean") return value ? "Yes" : "No";
+		if (Array.isArray(value)) return value.map((item) => displayValue(item)).join(", ");
+		if (typeof value === "object") return JSON.stringify(value);
+		return String(value);
+	}
+
+	function buildCollectionHref(nextPage: number, nextLimit: number = limit) {
+		const params = new URLSearchParams();
+		if (nextPage > 1) params.set("page", String(nextPage));
+		if (nextLimit !== 20) params.set("limit", String(nextLimit));
+		const query = params.toString();
+		return `${basePath}/collections/${slug}${query ? `?${query}` : ""}`;
+	}
+
+	function toggleSort(column: string) {
+		if (sortField === column) {
+			sortDir = sortDir === "asc" ? "desc" : "asc";
+			return;
+		}
+		sortField = column;
+		sortDir = "asc";
 	}
 
 	let sorted = $derived.by(() => {
 		if (!sortField) return documents;
-		return [...documents].sort((a, b) => {
-			const av = a[sortField] ?? '', bv = b[sortField] ?? '';
-			const cmp = String(av).localeCompare(String(bv), undefined, { numeric: true });
-			return sortDir === 'asc' ? cmp : -cmp;
+		return [...documents].sort((left, right) => {
+			const leftValue = left[sortField] ?? "";
+			const rightValue = right[sortField] ?? "";
+			const compare = String(leftValue).localeCompare(String(rightValue), undefined, {
+				numeric: true,
+			});
+			return sortDir === "asc" ? compare : -compare;
 		});
 	});
 
-	let slug = $derived(collection.slug);
-	let label = $derived(collection.labels?.plural ?? slug);
+	let filtered = $derived.by(() => {
+		if (!searchTerm) return sorted;
+		const normalizedSearch = searchTerm.toLowerCase();
+		return sorted.filter((document) =>
+			columns.some((column) => displayValue(document[column]).toLowerCase().includes(normalizedSearch)),
+		);
+	});
+
+	let headers: DataTableHeader<CollectionRow>[] = $derived(
+		[
+			...columns.map(
+				(column) =>
+					({
+						key: column as string & {},
+						value: formatHeading(column),
+					}) satisfies DataTableHeader<CollectionRow>,
+			),
+			{ key: "actions", value: "Actions" } satisfies DataTableHeader<CollectionRow>,
+		],
+	);
+
+	let rows: CollectionRow[] = $derived(
+		filtered.map(
+			(document, index) =>
+				({
+					id: String(document.id ?? `${slug}-${index}`),
+					actions: "Edit",
+					...Object.fromEntries(
+						columns.map((column) => [column, displayValue(document[column])]),
+					),
+				}) satisfies CollectionRow,
+		),
+	);
 </script>
 
-<div class="rk-list-header">
-	<h1>{label}</h1>
-	<a href="{basePath}/collections/{slug}/create">Create New</a>
-</div>
-
-<table class="rk-table">
-	<thead>
-		<tr>
-			{#each columns as col}
-				<th><button type="button" onclick={() => toggleSort(col)}>{col} {sortField === col ? (sortDir === 'asc' ? '↑' : '↓') : ''}</button></th>
-			{/each}
-			<th></th>
-		</tr>
-	</thead>
-	<tbody>
-		{#each sorted as doc}
-			<tr>
-				{#each columns as col}
-					<td>{doc[col] ?? ''}</td>
-				{/each}
-				<td><a href="{basePath}/collections/{slug}/{doc.id}">Edit</a></td>
-			</tr>
-		{/each}
-	</tbody>
-</table>
-
-{#if totalPages > 1}
-	<div class="rk-pagination">
-		{#if page > 1}<a href="?page={page - 1}">Prev</a>{/if}
-		<span>Page {page} of {totalPages}</span>
-		{#if page < totalPages}<a href="?page={page + 1}">Next</a>{/if}
+<section class="rk-page">
+	<div class="rk-page-header">
+		<div class="rk-page-header-inner">
+			<Breadcrumb noTrailingSlash>
+				<BreadcrumbItem href={basePath}>Dashboard</BreadcrumbItem>
+				<BreadcrumbItem href={`${basePath}/collections/${slug}`} isCurrentPage>{label}</BreadcrumbItem>
+			</Breadcrumb>
+			<div class="rk-page-title-row">
+				<div>
+					<p class="rk-eyebrow">Collection</p>
+					<h1>{totalDocs} {label}</h1>
+				</div>
+				<Button href={`${basePath}/collections/${slug}/create`}>Create {singularLabel}</Button>
+			</div>
+		</div>
 	</div>
-{/if}
+
+	<div class="rk-page-body">
+		<DataTable {headers} {rows} sortable size="short">
+			<Toolbar>
+				<ToolbarContent>
+					<ToolbarSearch
+						persistent
+						value={searchTerm}
+						on:input={(event: Event) => {
+							searchTerm = (event.target as HTMLInputElement | null)?.value ?? "";
+						}}
+						on:clear={() => {
+							searchTerm = "";
+						}}
+					/>
+				</ToolbarContent>
+			</Toolbar>
+			<svelte:fragment slot="cell" let:row let:cell>
+				{#if cell.key === firstColumn}
+					<a href={`${basePath}/collections/${slug}/${row.id}`} class="rk-table-link">{cell.value}</a>
+				{:else if cell.key === "actions"}
+					<a href={`${basePath}/collections/${slug}/${row.id}`} class="rk-table-link" aria-label={`Open ${row[firstColumn] || row.id}`}>Open</a>
+				{:else if cell.value === "Yes" || cell.value === "No"}
+					<Tag size="sm" type={cell.value === "Yes" ? "green" : "gray"}>{cell.value}</Tag>
+				{:else}
+					{cell.value}
+				{/if}
+			</svelte:fragment>
+		</DataTable>
+
+		{#if totalPages > 1}
+			<Pagination
+				totalItems={totalDocs}
+				pageSize={limit}
+				page={page}
+				pageSizes={[10, 20, 50]}
+				on:change={(event: CustomEvent<{ page?: number; pageSize?: number }>) => {
+					const nextPage = event.detail.page ?? page;
+					const nextLimit = event.detail.pageSize ?? limit;
+					goto(buildCollectionHref(nextPage, nextLimit));
+				}}
+			/>
+		{/if}
+	</div>
+</section>
 
 <style>
-	.rk-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-	.rk-table { width: 100%; border-collapse: collapse; }
-	.rk-table th, .rk-table td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd; }
-	.rk-table th button { background: none; border: none; cursor: pointer; font-weight: bold; padding: 0; }
-	.rk-pagination { display: flex; gap: 1rem; align-items: center; margin-top: 1rem; }
+	@import "./page-layout.css";
+
+	.rk-table-link {
+		color: var(--cds-link-primary);
+		text-decoration: none;
+		font-weight: 600;
+	}
+
+	.rk-table-link:hover {
+		text-decoration: underline;
+	}
 </style>

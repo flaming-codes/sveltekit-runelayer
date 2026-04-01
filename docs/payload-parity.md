@@ -1,6 +1,6 @@
 # Payload CMS v3 Parity Analysis
 
-Feature-by-feature comparison of Runekit v1 against Payload CMS v3, identifying what is implemented, what is essential for v1, and what is deferred.
+Feature-by-feature comparison of sveltekit-runelayer v1 against Payload CMS v3, identifying what is implemented, what is essential for v1, and what is deferred.
 
 ## 1. Collections
 
@@ -9,7 +9,7 @@ Feature-by-feature comparison of Runekit v1 against Payload CMS v3, identifying 
 - 20+ field types across data, presentational, and virtual categories
 - Config: `slug`, `fields`, `auth`, `upload`, `versions`, `access`, `hooks`, `admin`, `timestamps`, `defaultSort`, `dbName`, `endpoints`, `labels`, `trash`, `indexes`, `graphQL`
 
-### Runekit v1 Status
+### sveltekit-runelayer v1 Status
 
 | Feature                              | Status               | Notes                                                                                                                                          |
 | ------------------------------------ | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -39,7 +39,7 @@ Feature-by-feature comparison of Runekit v1 against Payload CMS v3, identifying 
 
 ## 2. Globals
 
-### Runekit v1 Status
+### sveltekit-runelayer v1 Status
 
 - `slug`, `fields`, `label`, `admin.group` — Implemented
 - `access` (read, update) — Implemented
@@ -58,7 +58,7 @@ Feature-by-feature comparison of Runekit v1 against Payload CMS v3, identifying 
 - Strategies: cookies, JWT, API keys, custom
 - Config: `tokenExpiration`, `verify`, `maxLoginAttempts`, `lockTime`, `useAPIKey`, `useSessions`
 
-### Runekit v1 Status
+### sveltekit-runelayer v1 Status
 
 - Better Auth handles login/logout/refresh, password hashing, session management
 - Email/password auth enabled
@@ -83,7 +83,7 @@ Feature-by-feature comparison of Runekit v1 against Payload CMS v3, identifying 
 - Functions receive `{ req, id, data, siblingData }`
 - Can return boolean OR query constraint (WHERE clause)
 
-### Runekit v1 Status
+### sveltekit-runelayer v1 Status
 
 - Collection-level: create, read, update, delete — Implemented
 - Field-level: create, read, update — Implemented (schema types)
@@ -92,11 +92,11 @@ Feature-by-feature comparison of Runekit v1 against Payload CMS v3, identifying 
 
 ### Gap: Query Constraints
 
-Payload allows access functions to return WHERE clauses (e.g., "users can only read their own documents"). Runekit v1 only supports boolean returns. This is architecturally significant and should be added before v2.
+Payload allows access functions to return WHERE clauses (e.g., "users can only read their own documents"). sveltekit-runelayer v1 only supports boolean returns. This is architecturally significant and should be added before v2.
 
 ## 5. Uploads / Media
 
-### Runekit v1 Status
+### sveltekit-runelayer v1 Status
 
 - Local filesystem storage adapter — Implemented
 - StorageAdapter contract for future S3/cloud — Implemented
@@ -113,7 +113,7 @@ Payload allows access functions to return WHERE clauses (e.g., "users can only r
 
 ## 6. Versions / Drafts
 
-### Runekit v1 Status
+### sveltekit-runelayer v1 Status
 
 - `_status` (draft/published) column — Implemented
 - `_version` counter — Implemented
@@ -134,7 +134,7 @@ Payload allows access functions to return WHERE clauses (e.g., "users can only r
 
 ## 7. Localization
 
-### Runekit v1 Status
+### sveltekit-runelayer v1 Status
 
 - Field-level `localized: true` flag — Implemented (schema)
 - Top-level localization config — Not yet implemented
@@ -157,7 +157,7 @@ Payload allows access functions to return WHERE clauses (e.g., "users can only r
 
 Lexical editor with feature-based extensibility (React-bound).
 
-### Runekit v1 Approach
+### sveltekit-runelayer v1 Approach
 
 Tiptap (Svelte-native). Currently a textarea placeholder in admin UI.
 
@@ -175,21 +175,21 @@ Tiptap (Svelte-native). Currently a textarea placeholder in admin UI.
 
 Dashboard, Collection List/Edit, Version History, Account, Login, Forgot Password, Create First User, custom components, branding, nav customization.
 
-### Runekit v1 Status
+### sveltekit-runelayer v1 Status
 
 - Dashboard with collection cards — Implemented
 - Collection list with sortable table and pagination — Implemented
 - Collection edit with field rendering — Implemented
 - Login form — Implemented
+- Create first user flow — Implemented (`/admin/create-first-user` + `?/createFirstUser`)
+- User management (list/create/edit/delete/reset-password) — Implemented (`/admin/users*`)
+- Profile view — Implemented (`/admin/profile`)
 - Admin layout with sidebar — Implemented
 - 10 field renderers — Implemented
-- Route helper for host app — Implemented
-- Server handler factories — Implemented
 
 ### Deferred to v2
 
 - Version history view
-- Account/profile management
 - Forgot password view
 - Custom admin components API
 - Custom views/routes API

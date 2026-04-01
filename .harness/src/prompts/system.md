@@ -8,14 +8,14 @@ You have full autonomy. Proceed without asking for confirmation — read, write,
 
 ## Project Overview
 
-Runekit is a CMS-as-a-package for SvelteKit apps. It runs inside the host application's Node process with SQLite (Drizzle ORM), Better Auth, and local filesystem storage. The admin UI is built with Svelte 5 runes.
+sveltekit-runelayer is a CMS-as-a-package for SvelteKit apps. It runs inside the host application's Node process with libsql (Drizzle ORM), Better Auth, and local filesystem storage. The admin UI is built with Svelte 5 runes.
 
 ## Commands
 
 ### Development
 
 ```bash
-pnpm dev                          # Start web app dev server
+pnpm dev                          # Start demo app dev server
 pnpm build                        # Build all packages recursively
 pnpm check                        # Lint + type check (vp check)
 pnpm ready                        # Full quality gate: fmt → lint → test → build
@@ -58,7 +58,7 @@ npx vp check --fix                # Combined format + lint + typecheck
 ### Monorepo Structure
 
 ```
-apps/web/           → SvelteKit demo app (depends on @flaming-codes/sveltekit-runelayer workspace:*)
+apps/demo/           → SvelteKit demo app (depends on @flaming-codes/sveltekit-runelayer workspace:*)
 packages/sveltekit-runelayer/   → Core CMS library
 docs/               → Internal design documentation (14 files)
 ```
@@ -67,10 +67,10 @@ docs/               → Internal design documentation (14 files)
 
 ```
 index.ts            → Public API surface (re-exports from all modules)
-config.ts           → RunekitConfig type + defineConfig()
-plugin.ts           → createRunekit() — wires all modules, returns SvelteKit handle hook
+config.ts           → RunelayerConfig type + defineConfig()
+plugin.ts           → createRunelayer() — wires all modules, returns SvelteKit handle hook
 schema/             → Single source of truth: 16 field types, collection/global definitions
-db/                 → Drizzle ORM + SQLite: schema→table generation, CRUD, push migrations
+db/                 → Drizzle ORM + libsql: schema→table generation, async CRUD, drizzle-kit schema helper
 auth/               → Better Auth: session management, role-based access (isAdmin/isLoggedIn/hasRole)
 storage/            → Local FS adapter with path traversal protection, upload/serve handlers
 hooks/              → Sequential lifecycle runner (beforeChange/afterChange/beforeDelete/afterDelete/beforeRead/afterRead)
@@ -84,7 +84,7 @@ admin/              → Svelte 5 components (layout, dashboard, login, collectio
 - **Single package**: Despite PLAN.md mentioning separate packages, v1 keeps everything in `@flaming-codes/sveltekit-runelayer` with internal module boundaries. Extract when the second adapter materializes.
 - **Header-based auth context**: The auth handle hook injects `x-user-id`/`x-user-role`/`x-user-email` headers after session resolution. Access functions read these headers. Headers are stripped from incoming requests to prevent spoofing.
 - **Deny-by-default access**: When an access function is defined but no `Request` is provided, access is denied (403). This prevents accidental server-side bypass.
-- **Push-based migrations**: `pushSchema()` creates missing tables/columns on startup. Never drops columns.
+- **Host-managed migrations**: schema migrations are generated/applied by drizzle-kit before app startup.
 
 ### Entry Points
 
@@ -101,7 +101,8 @@ admin/              → Svelte 5 components (layout, dashboard, login, collectio
 
 - **Do NOT set `runes: true` globally** in svelte.config.js. Carbon Svelte and Superforms use `export let` internally. Svelte 5 auto-detects runes per-file.
 - **vitest is aliased** to `@voidzero-dev/vite-plus-test` via pnpm overrides. It must also be a direct devDependency for TypeScript type resolution.
-- **better-sqlite3 native module** must be rebuilt when switching Node versions: `pnpm rebuild`
+- **libsql/turso connection config**: use `database.url` and optional `database.authToken` in `defineConfig()`
+- **zod v4 + better-auth build fix**: better-auth@1.5.6 uses zod v4 native API (`.meta()`) but imports from `"zod"` which resolves to the v3-compat layer. Any app using better-auth must add `resolve: { alias: { zod: "zod/v4" } }` to `vite.config.ts` to fix production builds.
 - All `.ts` imports in source code use `.js` extensions (ESM convention).
 - `pnpm-workspace.yaml` catalog manages shared dependency versions. Use `"catalog:"` in package.json.
 

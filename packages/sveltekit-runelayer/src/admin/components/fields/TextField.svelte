@@ -1,6 +1,13 @@
 <script lang="ts">
-	let { name, label, value = $bindable(''), required = false }: {
-		name: string; label?: string; value: string; required?: boolean;
+	import { TextInput } from "carbon-components-svelte";
+
+	let { name, label, value = $bindable(), required = false, type = "text" }: {
+		name: string;
+		label?: string;
+		value?: null | number | string;
+		required?: boolean;
+		type?: "text" | "email" | "slug" | "number";
 	} = $props();
 </script>
-<label>{label ?? name} <input type="text" {name} bind:value {required} /></label>
+
+<TextInput id={name} {name} labelText={label ?? name} bind:value {type} {required} />

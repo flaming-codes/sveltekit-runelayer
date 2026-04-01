@@ -1,8 +1,30 @@
 <script lang="ts">
-	let { name, label, value = $bindable('{}'), required = false }: {
-		name: string; label?: string; value: string; required?: boolean;
+	import { TextArea } from "carbon-components-svelte";
+
+	let { name, label, value = $bindable(), required = false, helperText = "JSON payload" }: {
+		name: string;
+		label?: string;
+		value?: unknown;
+		required?: boolean;
+		helperText?: string;
 	} = $props();
+
+	function serializeValue(input: unknown) {
+		if (typeof input === "string") return input;
+		if (input === null || input === undefined) return "";
+		return JSON.stringify(input, null, 2);
+	}
 </script>
-<label>{label ?? name} <span style="font-size:0.8em;color:#666">(JSON)</span>
-	<textarea {name} bind:value {required} rows="6" style="font-family:monospace"></textarea>
-</label>
+
+<TextArea
+	id={name}
+	{name}
+	labelText={label ?? name}
+	{helperText}
+	value={serializeValue(value)}
+	rows={8}
+	{required}
+	on:input={(event: Event) => {
+		value = (event.target as HTMLTextAreaElement | null)?.value ?? "";
+	}}
+/>
