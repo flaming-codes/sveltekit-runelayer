@@ -1,6 +1,6 @@
 {
   "name": "@flaming-codes/sveltekit-runelayer",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A CMS-as-a-package for SvelteKit apps — handles admin routes, storage, db, schemas, types, and auth.",
   "keywords": [
     "better-auth",

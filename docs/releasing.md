@@ -19,8 +19,8 @@ It triggers on pushes of tags matching `v*`.
 
 Example:
 
-- package version: `0.1.1`
-- tag: `v0.1.1`
+- package version: `0.2.0`
+- tag: `v0.2.0`
 
 ## Release Checklist
 
@@ -62,8 +62,8 @@ npm pack --dry-run --json
 cd ../..
 
 # Create and push tag for the package version
-git tag v0.1.1
-git push origin v0.1.1
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
 Pushing the tag triggers npm publication and GitHub Release creation.
