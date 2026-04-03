@@ -515,7 +515,7 @@ async function enforceBlocksField(
           if (existingBlock && existingBlock.blockType !== blockType) {
             throw httpError(
               400,
-              `Block with _key "${key}": blockType cannot be changed from "${existingBlock.blockType}" to "${blockType}". Delete the block and add a new one.`,
+              `Block with _key "${key}": blockType cannot be changed from "${String(existingBlock.blockType)}" to "${blockType}". Delete the block and add a new one.`,
             );
           }
         }

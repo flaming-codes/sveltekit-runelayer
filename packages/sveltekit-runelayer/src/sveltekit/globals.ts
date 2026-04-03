@@ -314,18 +314,18 @@ async function pruneGlobalVersions(
     sql: `SELECT id, _status FROM ${quoteIdent(GLOBAL_VERSIONS_TABLE)} WHERE _globalSlug = ? ORDER BY createdAt DESC`,
     args: [globalSlug],
   });
-  const all = result.rows as Array<Record<string, unknown>>;
+  const all = result.rows as Array<Record<string, string>>;
   if (all.length <= maxPerDoc) return;
 
   const protectedIds = new Set<string>();
-  protectedIds.add(`${all[0].id ?? ""}`);
+  protectedIds.add(all[0].id ?? "");
   const latestPublished = all.find((v) => v._status === "published");
-  if (latestPublished) protectedIds.add(`${latestPublished.id ?? ""}`);
+  if (latestPublished) protectedIds.add(latestPublished.id ?? "");
 
   let keptNonProtected = 0;
   const toDelete: string[] = [];
   for (const v of all) {
-    const vid = `${v.id ?? ""}`;
+    const vid = v.id ?? "";
     if (protectedIds.has(vid)) {
       continue; // always keep, don't count against budget
     }
@@ -470,13 +470,13 @@ export async function findGlobalVersions(
 
   const result = await runelayer.database.client.execute({ sql: query, args: queryArgs });
   return result.rows.map((row) => {
-    const r = row as Record<string, unknown>;
+    const r = row as Record<string, string | number | null | undefined>;
     return {
-      id: `${r.id ?? ""}`,
+      id: String(r.id ?? ""),
       _version: Number(r._version),
       _status: (r._status === "published" ? "published" : "draft") as "draft" | "published",
-      createdAt: `${r.createdAt ?? ""}`,
-      _createdBy: r._createdBy ? `${r._createdBy}` : undefined,
+      createdAt: String(r.createdAt ?? ""),
+      _createdBy: r._createdBy != null ? String(r._createdBy) : undefined,
     };
   });
 }

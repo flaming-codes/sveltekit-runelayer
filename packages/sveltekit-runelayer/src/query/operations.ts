@@ -201,7 +201,7 @@ function hydrateDocs(
   fields: NamedField[],
   lookup: Map<string, Map<string, Record<string, unknown>>>,
 ): Record<string, unknown>[] {
-  function resolveRef(value: unknown): Record<string, unknown> | null | unknown {
+  function resolveRef(value: unknown): unknown {
     const s = parseRefSentinel(value);
     if (!s) return value;
     const collectionMap = lookup.get(s._collection);
@@ -535,7 +535,14 @@ export async function publish(ctx: QueryContext, id: string) {
   );
 
   // Full validation — required fields must be present
-  const { _status, _version, id: _id, createdAt, updatedAt, ...fieldData } = hc.data ?? docRecord;
+  const {
+    _status,
+    _version,
+    id: _id,
+    createdAt: _createdAt,
+    updatedAt: _updatedAt,
+    ...fieldData
+  } = hc.data ?? docRecord;
   await enforceWritePayload(ctx.collection, "update", fieldData, ctx.req, docRecord, id);
 
   const newVersion = ((docRecord._version as number) ?? 0) + 1;
@@ -690,7 +697,14 @@ export async function restoreVersion(ctx: QueryContext, id: string, versionId: s
 
   const snapshot = vRecord._snapshot as Record<string, unknown>;
   // Strip system fields from snapshot — only restore user field data
-  const { id: _id, createdAt, updatedAt, _status, _version, ...fieldData } = snapshot;
+  const {
+    id: _id,
+    createdAt: _createdAt,
+    updatedAt: _updatedAt,
+    _status,
+    _version,
+    ...fieldData
+  } = snapshot;
 
   let hc = await runBeforeHooks(
     ctx.collection.hooks?.beforeChange as any,

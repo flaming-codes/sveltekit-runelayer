@@ -7,7 +7,7 @@ import { blocks, defineBlock, relationship, text, textarea } from "../../schema/
 import type { CollectionConfig } from "../../schema/collections.js";
 import { createDatabase } from "../../db/init.js";
 import { applySchemaForTests } from "../../__testutils__/migrations.js";
-import { find, findOne, create, update } from "../operations.js";
+import { findOne, create } from "../operations.js";
 import type { QueryContext } from "../types.js";
 
 // ---------------------------------------------------------------------------
