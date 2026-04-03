@@ -23,9 +23,14 @@
 	let collections = $derived(Array.isArray(relationTo) ? relationTo : [relationTo]);
 
 	// For polymorphic fields: track which collection is selected
-	let selectedCollection = $state(
-		Array.isArray(relationTo) ? (relationTo[0] ?? "") : (relationTo as string),
-	);
+	let selectedCollection = $state("");
+
+	// Reset selectedCollection when relationTo changes (avoids stale closure)
+	$effect(() => {
+		selectedCollection = Array.isArray(relationTo)
+			? (relationTo[0] ?? "")
+			: (relationTo as string);
+	});
 
 	// Options fetched from the API
 	type DocOption = { id: string; label: string };
@@ -55,14 +60,15 @@
 		isPolymorphic ? selectedCollection : (relationTo as string),
 	);
 
-	// Fetch options whenever activeCollection changes
+	// Fetch options whenever activeCollection changes (with cleanup to prevent race conditions)
 	$effect(() => {
 		const slug = activeCollection;
 		if (!slug) return;
+		const controller = new AbortController();
 		loading = true;
 		fetchError = "";
 		options = [];
-		fetch(`/runelayer/api/${encodeURIComponent(slug)}?limit=100`)
+		fetch(`/runelayer/api/${encodeURIComponent(slug)}?limit=100`, { signal: controller.signal })
 			.then((res) => {
 				if (!res.ok) throw new Error(`HTTP ${res.status}`);
 				return res.json() as Promise<{ docs: Record<string, unknown>[]; useAsTitle?: string }>;
@@ -71,21 +77,23 @@
 				const titleKey = data.useAsTitle;
 				options = (data.docs ?? []).map((doc) => {
 					const id = typeof doc.id === "string" ? doc.id : String(doc.id ?? "");
-					let labelText: string;
+					let text: string;
 					if (titleKey && typeof doc[titleKey] === "string" && (doc[titleKey] as string).length > 0) {
-						labelText = doc[titleKey] as string;
+						text = doc[titleKey] as string;
 					} else {
-						labelText = id;
+						text = id;
 					}
-					return { id, label: labelText };
+					return { id, label: text };
 				});
 			})
 			.catch((err: unknown) => {
+				if (err instanceof DOMException && err.name === "AbortError") return;
 				fetchError = err instanceof Error ? err.message : "Failed to load options";
 			})
 			.finally(() => {
 				loading = false;
 			});
+		return () => controller.abort();
 	});
 
 	// Items for ComboBox and MultiSelect: { id, text }
@@ -143,7 +151,7 @@
 	{:else if hasMany}
 		<MultiSelect
 			id={name}
-			titleText={isPolymorphic ? undefined : (label ?? name)}
+			labelText={isPolymorphic ? "" : (label ?? name)}
 			label="Select documents"
 			items={docItems}
 			{selectedIds}
@@ -153,7 +161,7 @@
 	{:else}
 		<ComboBox
 			id={name}
-			titleText={isPolymorphic ? undefined : (label ?? name)}
+			labelText={isPolymorphic ? "" : (label ?? name)}
 			placeholder="Select a document"
 			items={docItems}
 			{selectedId}

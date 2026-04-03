@@ -16,6 +16,7 @@ interface QueryContext {
   db: RunelayerDatabase; // Database instance from createDatabase()
   collection: CollectionConfig; // Collection definition
   req?: Request; // Request for access control (optional)
+  collections?: CollectionConfig[]; // All registered collections (for ref population with read projection)
 }
 ```
 
@@ -76,6 +77,7 @@ Population behavior:
 - `depth: 0` (default): relationship fields return `RefSentinel` objects (`{ _ref: string, _collection: string }`)
 - `depth: 1`: relationship fields are replaced with the full referenced document fetched from the database, or `null` if the referenced document was deleted or does not exist
 - Population uses one batch query per distinct referenced collection — no N+1 queries
+- Populated sub-documents go through `enforceReadProjection` using the referenced collection's config, so field-level access rules on referenced collections are enforced. When `collections` is provided in the `QueryContext`, the referenced collection's config is looked up from that list; otherwise populated docs are returned without field-level projection.
 - `depth > 1` is not supported; references within populated documents are returned as-is (sentinel objects)
 - Population walks `group` and `blocks` fields recursively, resolving any relationship fields nested within them
 

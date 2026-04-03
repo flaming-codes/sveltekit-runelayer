@@ -272,11 +272,12 @@ export function createRunelayerRuntime(
           : 100,
         200,
       );
-      const docs = await system.find(collection, { limit });
+      const api = withRequest(event);
+      const docs = await api.find(collection, { limit });
       const useAsTitle = collection.admin?.useAsTitle;
       return new Response(JSON.stringify({ docs, useAsTitle }), {
         status: 200,
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", "cache-control": "private, no-store" },
       });
     }
 

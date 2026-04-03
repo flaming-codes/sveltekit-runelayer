@@ -2,9 +2,18 @@ import { runAfterHooks, runBeforeHooks } from "../hooks/runner.js";
 import type { HookContext } from "../hooks/types.js";
 import type { RunelayerInstance } from "../plugin.js";
 import { checkAccess } from "../query/access.js";
+import { enforceWritePayload, enforceReadProjection } from "../query/enforcement.js";
 import type { GlobalConfig } from "../schema/globals.js";
 import { quoteIdent } from "../db/sql-utils.js";
 import { normalizeVersionConfig } from "../versions/config.js";
+
+/** Thin adapter so enforcement functions can treat a GlobalConfig like a CollectionConfig. */
+function globalAsCollection(global: GlobalConfig) {
+  return {
+    slug: global.slug,
+    fields: global.fields,
+  } as import("../schema/collections.js").CollectionConfig;
+}
 
 const GLOBALS_TABLE = "__runelayer_globals";
 const GLOBAL_VERSIONS_TABLE = "__runelayer_global_versions";
@@ -172,7 +181,8 @@ export async function readGlobalDocument(
   const row = await readStoredGlobal(runelayer, global.slug);
   const doc = materializeGlobalDoc(global, row);
   await runAfterHooks(afterRead, { ...hc, doc });
-  return doc;
+  const projected = await enforceReadProjection(globalAsCollection(global), req, doc);
+  return projected ?? doc;
 }
 
 export async function updateGlobalDocument(
@@ -195,7 +205,16 @@ export async function updateGlobalDocument(
       existingDoc: previousDoc,
     }),
   );
-  const nextData = sanitizeData((hc.data as Record<string, unknown> | undefined) ?? incoming);
+  const rawNextData = sanitizeData((hc.data as Record<string, unknown> | undefined) ?? incoming);
+  const nextData = await enforceWritePayload(
+    globalAsCollection(global),
+    "update",
+    rawNextData,
+    req,
+    previousDoc,
+    global.slug,
+    { relaxRequired: true },
+  );
   const updatedAt = new Date().toISOString();
 
   const vc = normalizeVersionConfig(global.versions);

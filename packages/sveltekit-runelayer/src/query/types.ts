@@ -5,6 +5,8 @@ export interface QueryContext {
   db: RunelayerDatabase;
   collection: CollectionConfig;
   req?: Request;
+  /** All registered collections — needed for ref population with read projection. */
+  collections?: CollectionConfig[];
 }
 
 export interface FindArgs {

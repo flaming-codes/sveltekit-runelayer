@@ -276,7 +276,9 @@ type InferFieldValue<F extends Field, D extends 0 | 1> = F extends
                     : Record<string, unknown> | null
                 : F extends GroupField
                   ? InferFieldsData<F["fields"], D>
-                  : never;
+                  : F extends BlocksField
+                    ? BlocksValue<F["blocks"], D>
+                    : never;
 
 // Infer object shape from a named field array
 type InferFieldsData<Fields extends NamedField[], D extends 0 | 1> = {
@@ -328,7 +330,9 @@ Block validation runs through `enforceWritePayload()` in `query/enforcement.ts`.
 4. **`blockType` immutability**: `blockType` cannot be set by the user payload on updates — it is set at creation and preserved. (An update that changes `blockType` is an illegal operation; delete the block and add a new one.)
 5. **`_key` lifecycle**: If an incoming block has no `_key`, one is generated (UUID). Existing `_key` values are preserved. `_key` cannot be set to an empty string.
 6. **Sub-field enforcement**: For each block, the matching `BlockConfig.fields` are used to enforce sub-field values — required checks, type coercion, min/max, select option membership, custom `validate` functions — using the same `enforceField()` logic as top-level fields.
-7. **Relationship sentinels**: Relationship fields inside blocks (and at top level) are normalized to sentinel objects. A bare ID string is accepted and automatically wrapped: `"user-abc"` → `{ _ref: "user-abc", _collection: "users" }`. A sentinel with an unknown `_collection` (not a configured collection slug in the schema) is rejected. The referenced document's existence is **not** checked at write time — this follows Keystone's approach. Missing references return `null` at population time.
+7. **Relationship sentinels**: Relationship fields inside blocks (and at top level) are normalized to sentinel objects. A bare ID string is accepted and automatically wrapped: `"user-abc"` → `{ _ref: "user-abc", _collection: "users" }`. A sentinel with an unknown `_collection` (not a configured collection slug in the schema) is rejected. For polymorphic relationships (`relationTo: string[]`), the sentinel's `_collection` value is validated against the `relationTo` allowlist. The referenced document's existence is **not** checked at write time — this follows Keystone's approach. Missing references return `null` at population time.
+8. **`required` enforcement**: When `required: true` is set on a `BlocksField`, the field must contain a non-empty array on `create` operations. This is enforced alongside other required-field checks.
+9. **Field-level `validate`**: The `BlocksField.validate` function, if present, runs after sub-field enforcement completes. It receives the fully enforced blocks array and the document data context, matching the pattern used by all other field types.
 
 ### Sub-field constraint: no nested blocks
 

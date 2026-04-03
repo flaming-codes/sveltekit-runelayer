@@ -157,6 +157,12 @@ function normalizeRelationshipValue(
             `Field "${key}" polymorphic relationship requires sentinel object { _ref, _collection }`,
           );
         }
+        if (!relationTo.includes(item._collection)) {
+          throw httpError(
+            400,
+            `"${key}": _collection "${item._collection}" is not allowed. Must be one of: ${relationTo.join(", ")}`,
+          );
+        }
         return item;
       }
       return normalize(item, relationTo as string);
@@ -167,6 +173,12 @@ function normalizeRelationshipValue(
         throw httpError(
           400,
           `Field "${key}" polymorphic relationship requires sentinel object { _ref, _collection }`,
+        );
+      }
+      if (!relationTo.includes(rawValue._collection)) {
+        throw httpError(
+          400,
+          `"${key}": _collection "${rawValue._collection}" is not allowed. Must be one of: ${relationTo.join(", ")}`,
         );
       }
       return rawValue;
@@ -568,6 +580,17 @@ export async function enforceWritePayload(
         existingDoc,
       );
       output[key] = enforced;
+
+      // Run field-level custom validate if present
+      if (blocksField.validate) {
+        const result = blocksField.validate(enforced as unknown as unknown[], { data: output });
+        if (result !== true) {
+          throw httpError(
+            400,
+            typeof result === "string" ? result : `Validation failed for "${key}"`,
+          );
+        }
+      }
       continue;
     }
 
@@ -603,6 +626,15 @@ export async function enforceWritePayload(
 
     validateBuiltIn(rule.field, key, value);
     runCustomValidator(rule, value, validationData);
+  }
+
+  // Also check required blocks fields
+  if (operation === "create" && !options?.relaxRequired) {
+    for (const [key, blocksField] of blocksFieldMap.entries()) {
+      if (blocksField.required && !hasValue(output[key])) {
+        throw httpError(400, `Field "${key}" is required`);
+      }
+    }
   }
 
   for (const [key] of Object.entries(output)) {

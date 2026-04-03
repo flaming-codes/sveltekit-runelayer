@@ -210,7 +210,9 @@ type InferFieldValue<F extends Field, D extends 0 | 1> = F extends
                     : Record<string, unknown> | null
                 : F extends GroupField
                   ? InferFieldsData<F["fields"], D>
-                  : never;
+                  : F extends BlocksField
+                    ? BlocksValue<F["blocks"], D>
+                    : never;
 
 // Infer an object from a named field array
 export type InferFieldsData<Fields extends NamedField[], D extends 0 | 1 = 0> = {

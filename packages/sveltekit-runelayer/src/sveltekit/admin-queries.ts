@@ -92,6 +92,7 @@ export function createQueryApi(
         {
           db: runelayer.database,
           collection,
+          collections: runelayer.collections,
           req: requestFactory(),
         },
         args,
@@ -100,38 +101,92 @@ export function createQueryApi(
 
     async findOne(collectionInput: CollectionInput, id: string) {
       const collection = resolveCollection(runelayer.collections, collectionInput);
-      return await findOne({ db: runelayer.database, collection, req: requestFactory() }, id);
+      return await findOne(
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
+        id,
+      );
     },
 
     async create(collectionInput: CollectionInput, data: Record<string, unknown>) {
       const collection = resolveCollection(runelayer.collections, collectionInput);
-      return await create({ db: runelayer.database, collection, req: requestFactory() }, data);
+      return await create(
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
+        data,
+      );
     },
 
     async update(collectionInput: CollectionInput, id: string, data: Record<string, unknown>) {
       const collection = resolveCollection(runelayer.collections, collectionInput);
-      return await update({ db: runelayer.database, collection, req: requestFactory() }, id, data);
+      return await update(
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
+        id,
+        data,
+      );
     },
 
     async remove(collectionInput: CollectionInput, id: string) {
       const collection = resolveCollection(runelayer.collections, collectionInput);
-      return await remove({ db: runelayer.database, collection, req: requestFactory() }, id);
+      return await remove(
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
+        id,
+      );
     },
 
     async publish(collectionInput: CollectionInput, id: string) {
       const collection = resolveCollection(runelayer.collections, collectionInput);
-      return await publish({ db: runelayer.database, collection, req: requestFactory() }, id);
+      return await publish(
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
+        id,
+      );
     },
 
     async unpublish(collectionInput: CollectionInput, id: string) {
       const collection = resolveCollection(runelayer.collections, collectionInput);
-      return await unpublish({ db: runelayer.database, collection, req: requestFactory() }, id);
+      return await unpublish(
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
+        id,
+      );
     },
 
     async saveDraft(collectionInput: CollectionInput, id: string, data: Record<string, unknown>) {
       const collection = resolveCollection(runelayer.collections, collectionInput);
       return await saveDraft(
-        { db: runelayer.database, collection, req: requestFactory() },
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
         id,
         data,
       );
@@ -144,7 +199,12 @@ export function createQueryApi(
     ) {
       const collection = resolveCollection(runelayer.collections, collectionInput);
       return await findVersionHistory(
-        { db: runelayer.database, collection, req: requestFactory() },
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
         id,
         opts,
       );
@@ -153,7 +213,12 @@ export function createQueryApi(
     async restoreVersion(collectionInput: CollectionInput, id: string, versionId: string) {
       const collection = resolveCollection(runelayer.collections, collectionInput);
       return await restoreVersion(
-        { db: runelayer.database, collection, req: requestFactory() },
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
         id,
         versionId,
       );

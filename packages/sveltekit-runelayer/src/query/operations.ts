@@ -20,6 +20,7 @@ import type { QueryContext, FindArgs, FindOneOpts } from "./types.js";
 import { normalizeVersionConfig } from "../versions/config.js";
 import type { BlockConfig, NamedField, RefSentinel } from "../schema/fields.js";
 import type { GeneratedTables } from "../db/schema.js";
+import type { CollectionConfig } from "../schema/collections.js";
 
 function table(ctx: QueryContext) {
   return ctx.db.tables[ctx.collection.slug];
@@ -164,6 +165,9 @@ function collectSentinels(
           doc,
           field.fields.map((f) => ({ ...f, name: `${field.name}_${f.name}` })),
         );
+      } else if (field.type === "row" || field.type === "collapsible") {
+        // Layout wrappers — children stored flat at the same level, no prefix
+        walkFields(doc, field.fields);
       } else if (field.type === "blocks") {
         if (Array.isArray(value)) {
           for (const block of value) {
@@ -228,6 +232,8 @@ function hydrateDocs(
           out,
           field.fields.map((f) => ({ ...f, name: `${field.name}_${f.name}` })),
         );
+      } else if (field.type === "row" || field.type === "collapsible") {
+        hydrateFields(out, field.fields);
       } else if (field.type === "blocks") {
         if (Array.isArray(value)) {
           out[field.name] = value.map((block) => {
@@ -259,6 +265,8 @@ async function populateRefs(
   fields: NamedField[],
   db: LibSQLDatabase,
   tables: GeneratedTables,
+  collections: CollectionConfig[],
+  req: Request | undefined,
 ): Promise<Record<string, unknown>[]> {
   if (docs.length === 0) return docs;
 
@@ -273,6 +281,8 @@ async function populateRefs(
     const refTable = tables[collectionSlug];
     if (!refTable) continue; // unknown collection — refs will resolve to null
 
+    const refCollectionConfig = collections.find((c) => c.slug === collectionSlug);
+
     const idList = Array.from(ids);
     const rows = await db.select().from(refTable).where(inArray(refTable.id, idList)).all();
 
@@ -280,7 +290,15 @@ async function populateRefs(
     for (const row of rows) {
       const rowRecord = row as Record<string, unknown>;
       if (typeof rowRecord.id === "string") {
-        idMap.set(rowRecord.id, rowRecord);
+        if (refCollectionConfig) {
+          const projected = await enforceReadProjection(refCollectionConfig, req, rowRecord);
+          if (projected) {
+            idMap.set(rowRecord.id, projected);
+          }
+        } else {
+          // No config available — return raw row without field-level projection
+          idMap.set(rowRecord.id, rowRecord);
+        }
       }
     }
     lookup.set(collectionSlug, idMap);
@@ -345,7 +363,14 @@ export async function find(ctx: QueryContext, args: FindArgs = {}) {
   ).filter((doc): doc is Record<string, unknown> => doc !== undefined);
 
   if (args.depth === 1) {
-    return populateRefs(projected, ctx.collection.fields, ctx.db.db, ctx.db.tables);
+    return populateRefs(
+      projected,
+      ctx.collection.fields,
+      ctx.db.db,
+      ctx.db.tables,
+      ctx.collections ?? [ctx.collection],
+      ctx.req,
+    );
   }
   return projected;
 }
@@ -371,6 +396,8 @@ export async function findOne(ctx: QueryContext, id: string, opts: FindOneOpts =
       ctx.collection.fields,
       ctx.db.db,
       ctx.db.tables,
+      ctx.collections ?? [ctx.collection],
+      ctx.req,
     );
     return populated;
   }
