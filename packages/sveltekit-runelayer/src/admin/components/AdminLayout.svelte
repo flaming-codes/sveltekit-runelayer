@@ -284,8 +284,32 @@
 		align-items: stretch;
 	}
 
-:global(.rk-shell .bx--header-panel) {
+	:global(.rk-shell .bx--header-panel) {
 		width: auto;
+	}
+
+	/*
+	 * Pre-establish the sidebar offset so the content never renders under the
+	 * sidebar on desktop. Carbon normally applies this via JS (adds a class after
+	 * mount), which causes a visible x-axis layout shift on initial load.
+	 * Applying it statically via a media query eliminates the shift.
+	 * 16rem = Carbon's standard SideNav width (256px).
+	 * 66rem = Carbon's lg breakpoint where the SideNav stops overlaying.
+	 */
+	@media (min-width: 66rem) {
+		:global(.rk-shell .bx--content) {
+			margin-left: 16rem;
+		}
+	}
+
+	/*
+	 * Ensure the OverflowMenu dropdown (absolute-positioned, z-index 9100 in
+	 * Carbon) always appears above the SideNav (z-index 8000). This matters
+	 * when any ancestor of the content area creates a new stacking context,
+	 * which would otherwise cap the dropdown's effective z-index below 8000.
+	 */
+	:global(.rk-shell .bx--overflow-menu-options) {
+		z-index: 9200;
 	}
 
 </style>

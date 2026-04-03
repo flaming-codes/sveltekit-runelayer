@@ -16,6 +16,30 @@ CREATE TABLE `account` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `account_provider_account_idx` ON `account` (`providerId`,`accountId`);--> statement-breakpoint
+CREATE TABLE `articles` (
+	`id` text PRIMARY KEY NOT NULL,
+	`createdAt` text NOT NULL,
+	`updatedAt` text NOT NULL,
+	`title` text,
+	`slug` text,
+	`summary` text,
+	`featured` integer,
+	`readingTime` real,
+	`content` text,
+	`_status` text,
+	`_version` integer
+);
+--> statement-breakpoint
+CREATE TABLE `articles_versions` (
+	`id` text PRIMARY KEY NOT NULL,
+	`_parentId` text NOT NULL,
+	`_version` integer NOT NULL,
+	`_status` text NOT NULL,
+	`_snapshot` text,
+	`_createdBy` text,
+	`createdAt` text NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `pages` (
 	`id` text PRIMARY KEY NOT NULL,
 	`createdAt` text NOT NULL,
@@ -23,21 +47,20 @@ CREATE TABLE `pages` (
 	`title` text,
 	`slug` text,
 	`description` text,
-	`published` integer
+	`published` integer,
+	`blocks` text,
+	`_status` text,
+	`_version` integer
 );
 --> statement-breakpoint
-CREATE TABLE `pages_blocks` (
+CREATE TABLE `pages_versions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`_parentId` text NOT NULL,
-	`_order` integer NOT NULL,
-	`blockType` text,
-	`heading` text,
-	`body` text,
-	`cta_label` text,
-	`cta_url` text,
-	`imageUrl` text,
-	`imageAlt` text,
-	`order` real
+	`_version` integer NOT NULL,
+	`_status` text NOT NULL,
+	`_snapshot` text,
+	`_createdBy` text,
+	`createdAt` text NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `session` (

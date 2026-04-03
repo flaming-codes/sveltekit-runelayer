@@ -229,14 +229,14 @@ describe("createRunelayerApp", () => {
   it("dispatches create/update/delete admin actions", async () => {
     const app = await createTestApp();
 
-    const created = await (app.admin.actions.create as any)(
+    const createRedirect = await (app.admin.actions.create as any)(
       adminEvent("collections/posts/create", {
         form: { title: "Draft" },
       }),
-    );
+    ).catch((e: unknown) => e);
 
-    expect(created.success).toBe(true);
-    const id = created.document.id as string;
+    expect(createRedirect).toMatchObject({ status: 303 });
+    const id = (createRedirect as { location: string }).location.split("/").pop() as string;
 
     const updated = await (app.admin.actions.update as any)(
       adminEvent(`collections/posts/${id}`, {

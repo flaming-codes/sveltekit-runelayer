@@ -221,10 +221,8 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       const data = Object.fromEntries(formData.entries()) as Record<string, unknown>;
       const document = await query.create(collection, data);
 
-      return {
-        success: true,
-        document: toSerializable(document),
-      };
+      const newId = (document as Record<string, string>).id;
+      throw redirect(303, `${cfg.adminPath}/collections/${route.slug}/${newId}`);
     },
 
     update: async (event) => {

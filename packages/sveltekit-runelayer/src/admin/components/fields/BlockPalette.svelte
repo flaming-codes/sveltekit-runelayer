@@ -17,7 +17,6 @@
 	<OverflowMenu
 		id="{name}-block-palette"
 		iconDescription="Add block"
-		flipped
 	>
 		{#each blocks as block}
 			<OverflowMenuItem
