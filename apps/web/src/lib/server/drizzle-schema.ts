@@ -2,21 +2,7 @@ import { createDrizzleKitSchema } from "@flaming-codes/sveltekit-runelayer/drizz
 import { allCollections } from "./schema.js";
 
 // drizzle-kit discovers Drizzle table instances from top-level named exports.
-// Destructure and re-export each table individually.
+// Spread the generated schema so each table is individually exported.
 const _schema = createDrizzleKitSchema(allCollections);
-export const {
-  authors,
-  authors_socialLinks,
-  categories,
-  posts,
-  media,
-  pages,
-  pages_sections,
-  products,
-  site_settings,
-  navigation,
-  user,
-  session,
-  account,
-  verification,
-} = _schema;
+const { pages, pages_blocks, user, session, account, verification } = _schema;
+export { pages, pages_blocks, user, session, account, verification };

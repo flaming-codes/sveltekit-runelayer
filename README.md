@@ -53,18 +53,22 @@ export const Posts = defineCollection({
 
 ### 2. Export schema for drizzle-kit
 
+drizzle-kit discovers Drizzle table instances from **top-level named exports** only.
+Destructure and re-export each table individually:
+
 ```ts
 // src/lib/server/drizzle-schema.ts
-import { createDrizzleKitSchema } from "@flaming-codes/sveltekit-runelayer";
+import { createDrizzleKitSchema } from "@flaming-codes/sveltekit-runelayer/drizzle";
 import { Posts } from "./schema.js";
 
-export const runelayerSchema = createDrizzleKitSchema([Posts]);
+const _schema = createDrizzleKitSchema([Posts]);
+export const { posts, user, session, account, verification } = _schema;
 ```
 
 ```ts
 // drizzle.config.ts
 import { defineConfig } from "drizzle-kit";
-import { defineRunelayerDrizzleConfig } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
+import { defineRunelayerDrizzleConfig } from "@flaming-codes/sveltekit-runelayer/sveltekit/drizzle";
 
 export default defineConfig(
   defineRunelayerDrizzleConfig({

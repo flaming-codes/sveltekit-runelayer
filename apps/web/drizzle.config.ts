@@ -6,7 +6,7 @@ export default defineConfig(
     schema: "./src/lib/server/drizzle-schema.ts",
     out: "./drizzle",
     database: {
-      url: "file:./data/demo.db",
+      url: "file:./data/web.db",
     },
   }),
 );

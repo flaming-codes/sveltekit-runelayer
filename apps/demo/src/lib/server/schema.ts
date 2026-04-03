@@ -20,7 +20,7 @@ import {
   isAdmin,
   isLoggedIn,
   hasRole,
-} from "@flaming-codes/sveltekit-runelayer";
+} from "@flaming-codes/sveltekit-runelayer/schema";
 
 // ─── Collections ───────────────────────────────────────────────
 

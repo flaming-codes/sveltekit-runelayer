@@ -87,12 +87,18 @@ drizzle-kit. The generated schema includes:
 
 Example host schema export:
 
+drizzle-kit discovers Drizzle table instances from **top-level named exports** only.
+Destructure and re-export each table individually:
+
 ```ts
 // src/lib/server/drizzle-schema.ts
-import { createDrizzleKitSchema } from "@flaming-codes/sveltekit-runelayer";
+import { createDrizzleKitSchema } from "@flaming-codes/sveltekit-runelayer/drizzle";
 import { allCollections } from "./schema.js";
 
-export const runelayerSchema = createDrizzleKitSchema(allCollections);
+const _schema = createDrizzleKitSchema(allCollections);
+// Export each table — drizzle-kit requires top-level named exports.
+// Use listTableNames(allCollections) to see the full list of keys.
+export const { posts, user, session, account, verification } = _schema;
 ```
 
 Example drizzle-kit config:
@@ -100,7 +106,7 @@ Example drizzle-kit config:
 ```ts
 // drizzle.config.ts
 import { defineConfig } from "drizzle-kit";
-import { defineRunelayerDrizzleConfig } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
+import { defineRunelayerDrizzleConfig } from "@flaming-codes/sveltekit-runelayer/sveltekit/drizzle";
 
 export default defineConfig(
   defineRunelayerDrizzleConfig({

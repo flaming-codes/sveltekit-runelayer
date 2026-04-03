@@ -80,3 +80,6 @@ export interface SchemaConfig {
 export function defineSchema(config: SchemaConfig): SchemaConfig {
   return config;
 }
+
+// Auth access helpers — lightweight re-exports for schema definitions
+export { isAdmin, isLoggedIn, hasRole } from "./access.js";
