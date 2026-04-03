@@ -57,5 +57,20 @@ export { runBeforeHooks, runAfterHooks } from "./hooks/index.js";
 export type { HookContext, CollectionHooks, GlobalHooks } from "./hooks/index.js";
 
 // Query API
-export { find, findOne, create, update, remove } from "./query/index.js";
+export {
+  find,
+  findOne,
+  create,
+  update,
+  remove,
+  publish,
+  unpublish,
+  saveDraft,
+  findVersionHistory,
+  restoreVersion,
+} from "./query/index.js";
 export type { QueryContext, FindArgs } from "./query/index.js";
+
+// Versions
+export { normalizeVersionConfig } from "./versions/config.js";
+export type { NormalizedVersionConfig } from "./versions/config.js";

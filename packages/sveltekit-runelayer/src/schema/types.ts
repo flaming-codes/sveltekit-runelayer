@@ -11,6 +11,7 @@ export type AccessControl = {
   read?: AccessFn;
   update?: AccessFn;
   delete?: AccessFn;
+  publish?: AccessFn;
 };
 
 export type FieldAccess = {
@@ -43,6 +44,13 @@ export type AfterReadHook = (
   args: Omit<HookArgs, "data"> & { doc: Record<string, unknown> },
 ) => void | Promise<void>;
 
+export type BeforePublishHook = (
+  args: HookArgs & { previousStatus: string },
+) => Record<string, unknown> | Promise<Record<string, unknown>>;
+export type AfterPublishHook = (
+  args: HookArgs & { previousStatus: string },
+) => void | Promise<void>;
+
 export type Hooks = {
   beforeChange?: BeforeChangeHook[];
   afterChange?: AfterChangeHook[];
@@ -50,6 +58,8 @@ export type Hooks = {
   afterDelete?: AfterDeleteHook[];
   beforeRead?: BeforeReadHook[];
   afterRead?: AfterReadHook[];
+  beforePublish?: BeforePublishHook[];
+  afterPublish?: AfterPublishHook[];
 };
 
 export type CollectionAuthConfig = {

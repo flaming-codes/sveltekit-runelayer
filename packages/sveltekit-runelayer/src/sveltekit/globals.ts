@@ -4,13 +4,18 @@ import type { RunelayerInstance } from "../plugin.js";
 import { checkAccess } from "../query/access.js";
 import type { GlobalConfig } from "../schema/globals.js";
 import { quoteIdent } from "../db/sql-utils.js";
+import { normalizeVersionConfig } from "../versions/config.js";
 
 const GLOBALS_TABLE = "__runelayer_globals";
+const GLOBAL_VERSIONS_TABLE = "__runelayer_global_versions";
 const globalTableReady = new WeakSet<RunelayerInstance>();
+const globalVersionsTableReady = new WeakSet<RunelayerInstance>();
 
 type StoredGlobalRow = {
   data?: unknown;
   updatedAt?: unknown;
+  _status?: unknown;
+  _version?: unknown;
 };
 
 function textValue(value: unknown): string {
@@ -62,16 +67,53 @@ function hookContext(
   };
 }
 
+function getUserId(req: Request): string | undefined {
+  return req.headers.get("x-user-id") ?? undefined;
+}
+
 async function ensureGlobalTable(runelayer: RunelayerInstance): Promise<void> {
   if (globalTableReady.has(runelayer)) return;
   await runelayer.database.client.execute(`
     CREATE TABLE IF NOT EXISTS ${quoteIdent(GLOBALS_TABLE)} (
       slug TEXT PRIMARY KEY NOT NULL,
       data TEXT NOT NULL,
-      updatedAt TEXT NOT NULL
+      updatedAt TEXT NOT NULL,
+      _status TEXT DEFAULT 'draft',
+      _version INTEGER DEFAULT 1
     )
   `);
+  // Add columns if table already existed without them
+  try {
+    await runelayer.database.client.execute(
+      `ALTER TABLE ${quoteIdent(GLOBALS_TABLE)} ADD COLUMN _status TEXT DEFAULT 'draft'`,
+    );
+  } catch {
+    // Column already exists
+  }
+  try {
+    await runelayer.database.client.execute(
+      `ALTER TABLE ${quoteIdent(GLOBALS_TABLE)} ADD COLUMN _version INTEGER DEFAULT 1`,
+    );
+  } catch {
+    // Column already exists
+  }
   globalTableReady.add(runelayer);
+}
+
+async function ensureGlobalVersionsTable(runelayer: RunelayerInstance): Promise<void> {
+  if (globalVersionsTableReady.has(runelayer)) return;
+  await runelayer.database.client.execute(`
+    CREATE TABLE IF NOT EXISTS ${quoteIdent(GLOBAL_VERSIONS_TABLE)} (
+      id TEXT PRIMARY KEY NOT NULL,
+      _globalSlug TEXT NOT NULL,
+      _version INTEGER NOT NULL,
+      _status TEXT NOT NULL,
+      _snapshot TEXT NOT NULL,
+      _createdBy TEXT,
+      createdAt TEXT NOT NULL
+    )
+  `);
+  globalVersionsTableReady.add(runelayer);
 }
 
 async function readStoredGlobal(
@@ -80,7 +122,7 @@ async function readStoredGlobal(
 ): Promise<StoredGlobalRow | null> {
   await ensureGlobalTable(runelayer);
   const result = await runelayer.database.client.execute({
-    sql: `SELECT data, updatedAt FROM ${quoteIdent(GLOBALS_TABLE)} WHERE slug = ? LIMIT 1`,
+    sql: `SELECT data, updatedAt, _status, _version FROM ${quoteIdent(GLOBALS_TABLE)} WHERE slug = ? LIMIT 1`,
     args: [slug],
   });
   const row = result.rows[0] as StoredGlobalRow | undefined;
@@ -99,6 +141,10 @@ function materializeGlobalDoc(
   };
   if (updatedAt) {
     doc.updatedAt = updatedAt;
+  }
+  if (normalizeVersionConfig(global.versions)) {
+    doc._status = textValue(row?._status) || "draft";
+    doc._version = row?._version ?? 1;
   }
   return doc;
 }
@@ -134,6 +180,7 @@ export async function updateGlobalDocument(
   global: GlobalConfig,
   req: Request,
   data: Record<string, unknown>,
+  opts?: { forceDraft?: boolean },
 ): Promise<Record<string, unknown>> {
   const incoming = sanitizeData(data);
   await checkAccess(global.access?.update, req, incoming, global.slug);
@@ -151,25 +198,328 @@ export async function updateGlobalDocument(
   const nextData = sanitizeData((hc.data as Record<string, unknown> | undefined) ?? incoming);
   const updatedAt = new Date().toISOString();
 
+  const vc = normalizeVersionConfig(global.versions);
+  const currentVersion = (previousRow?._version as number) ?? 0;
+  const newVersion = vc ? currentVersion + 1 : currentVersion;
+  const currentStatus = opts?.forceDraft
+    ? "draft"
+    : vc
+      ? textValue(previousRow?._status) || "draft"
+      : "draft";
+
   await ensureGlobalTable(runelayer);
   await runelayer.database.client.execute({
     sql: `
-      INSERT INTO ${quoteIdent(GLOBALS_TABLE)} (slug, data, updatedAt)
-      VALUES (?, ?, ?)
+      INSERT INTO ${quoteIdent(GLOBALS_TABLE)} (slug, data, updatedAt, _status, _version)
+      VALUES (?, ?, ?, ?, ?)
       ON CONFLICT(slug)
-      DO UPDATE SET data = excluded.data, updatedAt = excluded.updatedAt
+      DO UPDATE SET data = excluded.data, updatedAt = excluded.updatedAt, _version = excluded._version, _status = excluded._status
     `,
-    args: [global.slug, JSON.stringify(nextData), updatedAt],
+    args: [global.slug, JSON.stringify(nextData), updatedAt, currentStatus, newVersion],
   });
 
-  const doc = {
+  const doc: Record<string, unknown> = {
     id: global.slug,
     ...nextData,
     updatedAt,
   };
+  if (vc) {
+    doc._status = currentStatus;
+    doc._version = newVersion;
+  }
+
+  // Create version snapshot for versioned globals
+  if (vc) {
+    await createGlobalVersionSnapshot(
+      runelayer,
+      global.slug,
+      newVersion,
+      currentStatus,
+      doc,
+      getUserId(req),
+    );
+    if (vc.maxPerDoc > 0) {
+      await pruneGlobalVersions(runelayer, global.slug, vc.maxPerDoc);
+    }
+  }
+
   await runAfterHooks(global.hooks?.afterChange as Array<(ctx: unknown) => void> | undefined, {
     ...hc,
     doc,
   });
+  return doc;
+}
+
+// ---------------------------------------------------------------------------
+// Global version helpers
+// ---------------------------------------------------------------------------
+
+async function createGlobalVersionSnapshot(
+  runelayer: RunelayerInstance,
+  globalSlug: string,
+  version: number,
+  status: string,
+  snapshot: Record<string, unknown>,
+  createdBy?: string,
+): Promise<void> {
+  await ensureGlobalVersionsTable(runelayer);
+  const now = new Date().toISOString();
+  await runelayer.database.client.execute({
+    sql: `INSERT INTO ${quoteIdent(GLOBAL_VERSIONS_TABLE)} (id, _globalSlug, _version, _status, _snapshot, _createdBy, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      crypto.randomUUID(),
+      globalSlug,
+      version,
+      status,
+      JSON.stringify(snapshot),
+      createdBy ?? null,
+      now,
+    ],
+  });
+}
+
+async function pruneGlobalVersions(
+  runelayer: RunelayerInstance,
+  globalSlug: string,
+  maxPerDoc: number,
+): Promise<void> {
+  if (maxPerDoc <= 0) return;
+  await ensureGlobalVersionsTable(runelayer);
+  const result = await runelayer.database.client.execute({
+    sql: `SELECT id, _status FROM ${quoteIdent(GLOBAL_VERSIONS_TABLE)} WHERE _globalSlug = ? ORDER BY createdAt DESC`,
+    args: [globalSlug],
+  });
+  const all = result.rows as Array<Record<string, unknown>>;
+  if (all.length <= maxPerDoc) return;
+
+  const protectedIds = new Set<string>();
+  protectedIds.add(`${all[0].id ?? ""}`);
+  const latestPublished = all.find((v) => v._status === "published");
+  if (latestPublished) protectedIds.add(`${latestPublished.id ?? ""}`);
+
+  let keptNonProtected = 0;
+  const toDelete: string[] = [];
+  for (const v of all) {
+    const vid = `${v.id ?? ""}`;
+    if (protectedIds.has(vid)) {
+      continue; // always keep, don't count against budget
+    }
+    if (keptNonProtected < maxPerDoc) {
+      keptNonProtected++;
+      continue;
+    }
+    toDelete.push(vid);
+  }
+
+  if (toDelete.length === 0) return;
+  const placeholders = toDelete.map(() => "?").join(", ");
+  await runelayer.database.client.execute({
+    sql: `DELETE FROM ${quoteIdent(GLOBAL_VERSIONS_TABLE)} WHERE id IN (${placeholders})`,
+    args: toDelete,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Global versioning operations
+// ---------------------------------------------------------------------------
+
+export async function publishGlobal(
+  runelayer: RunelayerInstance,
+  global: GlobalConfig,
+  req: Request,
+): Promise<Record<string, unknown>> {
+  const vc = normalizeVersionConfig(global.versions);
+  if (!vc) throw Object.assign(new Error("Versioning is not enabled"), { status: 400 });
+
+  await checkAccess(global.access?.publish ?? global.access?.update, req, undefined, global.slug);
+
+  const row = await readStoredGlobal(runelayer, global.slug);
+  const doc = materializeGlobalDoc(global, row);
+  const currentVersion = (doc._version as number) ?? 0;
+  const newVersion = currentVersion + 1;
+
+  const { id: _id, updatedAt: _ua, _status: _st, _version: _v, ...docFieldData } = doc;
+  const updatedAt = new Date().toISOString();
+
+  await ensureGlobalTable(runelayer);
+  await runelayer.database.client.execute({
+    sql: `
+      INSERT INTO ${quoteIdent(GLOBALS_TABLE)} (slug, data, updatedAt, _status, _version)
+      VALUES (?, ?, ?, 'published', ?)
+      ON CONFLICT(slug) DO UPDATE SET _status = 'published', _version = excluded._version, updatedAt = excluded.updatedAt
+    `,
+    args: [global.slug, JSON.stringify(docFieldData), updatedAt, newVersion],
+  });
+
+  doc._status = "published";
+  doc._version = newVersion;
+  doc.updatedAt = updatedAt;
+
+  await createGlobalVersionSnapshot(
+    runelayer,
+    global.slug,
+    newVersion,
+    "published",
+    doc,
+    getUserId(req),
+  );
+  if (vc.maxPerDoc > 0) {
+    await pruneGlobalVersions(runelayer, global.slug, vc.maxPerDoc);
+  }
+
+  return doc;
+}
+
+export async function unpublishGlobal(
+  runelayer: RunelayerInstance,
+  global: GlobalConfig,
+  req: Request,
+): Promise<Record<string, unknown>> {
+  const vc = normalizeVersionConfig(global.versions);
+  if (!vc) throw Object.assign(new Error("Versioning is not enabled"), { status: 400 });
+
+  await checkAccess(global.access?.publish ?? global.access?.update, req, undefined, global.slug);
+
+  const row = await readStoredGlobal(runelayer, global.slug);
+  const doc = materializeGlobalDoc(global, row);
+  const newVersion = ((doc._version as number) ?? 0) + 1;
+
+  const { id: _id, updatedAt: _ua, _status: _st, _version: _v, ...docFieldData } = doc;
+  const updatedAt = new Date().toISOString();
+
+  await ensureGlobalTable(runelayer);
+  await runelayer.database.client.execute({
+    sql: `
+      INSERT INTO ${quoteIdent(GLOBALS_TABLE)} (slug, data, updatedAt, _status, _version)
+      VALUES (?, ?, ?, 'draft', ?)
+      ON CONFLICT(slug) DO UPDATE SET _status = 'draft', _version = excluded._version, updatedAt = excluded.updatedAt
+    `,
+    args: [global.slug, JSON.stringify(docFieldData), updatedAt, newVersion],
+  });
+
+  doc._status = "draft";
+  doc._version = newVersion;
+  doc.updatedAt = updatedAt;
+
+  await createGlobalVersionSnapshot(
+    runelayer,
+    global.slug,
+    newVersion,
+    "draft",
+    doc,
+    getUserId(req),
+  );
+  if (vc.maxPerDoc > 0) {
+    await pruneGlobalVersions(runelayer, global.slug, vc.maxPerDoc);
+  }
+
+  return doc;
+}
+
+export async function findGlobalVersions(
+  runelayer: RunelayerInstance,
+  global: GlobalConfig,
+  req: Request,
+  opts?: { limit?: number; offset?: number },
+): Promise<
+  Array<{
+    id: string;
+    _version: number;
+    _status: "draft" | "published";
+    createdAt: string;
+    _createdBy?: string;
+  }>
+> {
+  const vc = normalizeVersionConfig(global.versions);
+  if (!vc) throw Object.assign(new Error("Versioning is not enabled"), { status: 400 });
+
+  await checkAccess(global.access?.read, req, undefined, global.slug);
+  await ensureGlobalVersionsTable(runelayer);
+
+  let query = `SELECT id, _version, _status, createdAt, _createdBy FROM ${quoteIdent(GLOBAL_VERSIONS_TABLE)} WHERE _globalSlug = ? ORDER BY createdAt DESC`;
+  const queryArgs: Array<string | number> = [global.slug];
+  if (opts?.limit) {
+    query += ` LIMIT ?`;
+    queryArgs.push(opts.limit);
+  }
+  if (opts?.offset) {
+    query += ` OFFSET ?`;
+    queryArgs.push(opts.offset);
+  }
+
+  const result = await runelayer.database.client.execute({ sql: query, args: queryArgs });
+  return result.rows.map((row) => {
+    const r = row as Record<string, unknown>;
+    return {
+      id: `${r.id ?? ""}`,
+      _version: Number(r._version),
+      _status: (r._status === "published" ? "published" : "draft") as "draft" | "published",
+      createdAt: `${r.createdAt ?? ""}`,
+      _createdBy: r._createdBy ? `${r._createdBy}` : undefined,
+    };
+  });
+}
+
+export async function restoreGlobalVersion(
+  runelayer: RunelayerInstance,
+  global: GlobalConfig,
+  req: Request,
+  versionId: string,
+): Promise<Record<string, unknown>> {
+  const vc = normalizeVersionConfig(global.versions);
+  if (!vc) throw Object.assign(new Error("Versioning is not enabled"), { status: 400 });
+
+  await checkAccess(global.access?.update, req, undefined, global.slug);
+  await ensureGlobalVersionsTable(runelayer);
+
+  const result = await runelayer.database.client.execute({
+    sql: `SELECT _snapshot, _globalSlug FROM ${quoteIdent(GLOBAL_VERSIONS_TABLE)} WHERE id = ? LIMIT 1`,
+    args: [versionId],
+  });
+  const versionRow = result.rows[0] as Record<string, unknown> | undefined;
+  if (!versionRow) throw Object.assign(new Error("Version not found"), { status: 404 });
+  if (textValue(versionRow._globalSlug) !== global.slug) {
+    throw Object.assign(new Error("Version does not belong to this global"), { status: 400 });
+  }
+
+  const snapshot = parseGlobalData(versionRow._snapshot);
+  // Strip system fields — only restore user data
+  const { id: _id, updatedAt: _ua, _status, _version, ...fieldData } = snapshot;
+
+  const row = await readStoredGlobal(runelayer, global.slug);
+  const currentVersion = (row?._version as number) ?? 0;
+  const newVersion = currentVersion + 1;
+  const updatedAt = new Date().toISOString();
+
+  await ensureGlobalTable(runelayer);
+  await runelayer.database.client.execute({
+    sql: `
+      INSERT INTO ${quoteIdent(GLOBALS_TABLE)} (slug, data, updatedAt, _status, _version)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(slug) DO UPDATE SET data = excluded.data, updatedAt = excluded.updatedAt, _status = excluded._status, _version = excluded._version
+    `,
+    args: [global.slug, JSON.stringify(fieldData), updatedAt, "draft", newVersion],
+  });
+
+  const doc: Record<string, unknown> = {
+    id: global.slug,
+    ...fieldData,
+    updatedAt,
+    _status: "draft",
+    _version: newVersion,
+  };
+
+  await createGlobalVersionSnapshot(
+    runelayer,
+    global.slug,
+    newVersion,
+    "draft",
+    doc,
+    getUserId(req),
+  );
+  if (vc.maxPerDoc > 0) {
+    await pruneGlobalVersions(runelayer, global.slug, vc.maxPerDoc);
+  }
+
   return doc;
 }

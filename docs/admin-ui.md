@@ -77,6 +77,14 @@ Supported actions:
 - `?/create` (collection create)
 - `?/update` (collection update and global update)
 - `?/delete` (collection delete)
+- `?/publish` (publish versioned collection document)
+- `?/unpublish` (unpublish versioned collection document)
+- `?/saveDraft` (save versioned collection document as draft)
+- `?/restoreVersion` (restore a previous version of a collection document)
+- `?/publishGlobal` (publish versioned global)
+- `?/unpublishGlobal` (unpublish versioned global)
+- `?/saveDraftGlobal` (save versioned global as draft)
+- `?/restoreGlobalVersion` (restore a previous version of a global)
 - `?/createUser` (auth user create)
 - `?/updateUser` (auth user update + optional password reset)
 - `?/deleteUser` (auth user delete)
@@ -170,5 +178,38 @@ The admin subpath now exposes Carbon-structured primitives:
 - `AdminHealthPage`
 - `AdminErrorPage`
 - `AdminFieldRenderer`
+- `AdminVersionHistory`
 
 Direct handler-factory and route-helper wiring is no longer the primary integration model.
+
+## Versioning UI
+
+For collections and globals with `versions` enabled, the admin UI provides:
+
+**CollectionEdit** changes:
+
+- Status badge (Draft/Published) in the header and sidebar metadata
+- Version number display (e.g., "v5")
+- Context-dependent action buttons: "Publish" + "Save draft" for drafts, "Save as draft" + "Unpublish" for published documents
+- All version action buttons use the HTML `formaction` attribute on the shared form, so field data is submitted with every action
+- Inline warning notification when editing a published document: "Saving as draft will unpublish this document"
+- Collapsible version history panel (Accordion + StructuredList) showing version number, status tag, timestamp, and "Restore" button per entry
+- Restore confirmation modal (follows the same pattern as the delete modal)
+
+**CollectionList** changes:
+
+- Status column with green "published" / teal "draft" Tag badges for versioned collections
+- Admin list shows all documents (drafts included) via `draft: true` in the query
+
+**GlobalEdit** changes:
+
+- Same publish/unpublish/save-draft buttons in the header area
+- Version history panel below the form tile
+- Restore confirmation modal
+
+**VersionHistory component** (`AdminVersionHistory`):
+
+- Reusable component exported from `@flaming-codes/sveltekit-runelayer/admin`
+- Uses Carbon Accordion for collapse, StructuredList for entries
+- Progressive loading with "Show more" button (starts with 5 entries)
+- Current version marked with "Current" badge instead of Restore button

@@ -55,6 +55,7 @@
 	let label = $derived(collection.labels?.plural ?? slug);
 	let singularLabel = $derived(collection.labels?.singular ?? collection.slug);
 	let firstColumn = $derived(columns[0] ?? "id");
+	let hasVersions = $derived(!!collection.versions);
 
 	function formatHeading(value: string) {
 		return value
@@ -106,22 +107,25 @@
 		if (!searchTerm) return sorted;
 		const normalizedSearch = searchTerm.toLowerCase();
 		return sorted.filter((document) =>
-			columns.some((column) => displayValue(document[column]).toLowerCase().includes(normalizedSearch)),
+			columns.some((column) =>
+				displayValue(document[column]).toLowerCase().includes(normalizedSearch),
+			),
 		);
 	});
 
-	let headers: DataTableHeader<CollectionRow>[] = $derived(
-		[
-			...columns.map(
-				(column) =>
-					({
-						key: column as string & {},
-						value: formatHeading(column),
-					}) satisfies DataTableHeader<CollectionRow>,
-			),
-			{ key: "actions", value: "Actions" } satisfies DataTableHeader<CollectionRow>,
-		],
-	);
+	let headers: DataTableHeader<CollectionRow>[] = $derived([
+		...columns.map(
+			(column) =>
+				({
+					key: column as string & {},
+					value: formatHeading(column),
+				}) satisfies DataTableHeader<CollectionRow>,
+		),
+		...(hasVersions
+			? [{ key: "_status", value: "Status" } satisfies DataTableHeader<CollectionRow>]
+			: []),
+		{ key: "actions", value: "Actions" } satisfies DataTableHeader<CollectionRow>,
+	]);
 
 	let rows: CollectionRow[] = $derived(
 		filtered.map(
@@ -129,9 +133,8 @@
 				({
 					id: String(document.id ?? `${slug}-${index}`),
 					actions: "Edit",
-					...Object.fromEntries(
-						columns.map((column) => [column, displayValue(document[column])]),
-					),
+					...Object.fromEntries(columns.map((column) => [column, displayValue(document[column])])),
+					...(hasVersions ? { _status: (document._status as string) ?? "draft" } : {}),
 				}) satisfies CollectionRow,
 		),
 	);
@@ -142,7 +145,9 @@
 		<div class="rk-page-header-inner">
 			<Breadcrumb noTrailingSlash>
 				<BreadcrumbItem href={basePath}>Dashboard</BreadcrumbItem>
-				<BreadcrumbItem href={`${basePath}/collections/${slug}`} isCurrentPage>{label}</BreadcrumbItem>
+				<BreadcrumbItem href={`${basePath}/collections/${slug}`} isCurrentPage>
+					{label}
+				</BreadcrumbItem>
 			</Breadcrumb>
 			<div class="rk-page-title-row">
 				<div>
@@ -172,9 +177,19 @@
 			</Toolbar>
 			<svelte:fragment slot="cell" let:row let:cell>
 				{#if cell.key === firstColumn}
-					<a href={`${basePath}/collections/${slug}/${row.id}`} class="rk-table-link">{cell.value}</a>
+					<a href={`${basePath}/collections/${slug}/${row.id}`} class="rk-table-link">
+						{cell.value}
+					</a>
 				{:else if cell.key === "actions"}
-					<a href={`${basePath}/collections/${slug}/${row.id}`} class="rk-table-link" aria-label={`Open ${row[firstColumn] || row.id}`}>Open</a>
+					<a
+						href={`${basePath}/collections/${slug}/${row.id}`}
+						class="rk-table-link"
+						aria-label={`Open ${row[firstColumn] || row.id}`}
+					>
+						Open
+					</a>
+				{:else if cell.key === "_status"}
+					<Tag size="sm" type={cell.value === "published" ? "green" : "teal"}>{cell.value}</Tag>
 				{:else if cell.value === "Yes" || cell.value === "No"}
 					<Tag size="sm" type={cell.value === "Yes" ? "green" : "gray"}>{cell.value}</Tag>
 				{:else}
@@ -187,7 +202,7 @@
 			<Pagination
 				totalItems={totalDocs}
 				pageSize={limit}
-				page={page}
+				{page}
 				pageSizes={[10, 20, 50]}
 				on:change={(event: CustomEvent<{ page?: number; pageSize?: number }>) => {
 					const nextPage = event.detail.page ?? page;

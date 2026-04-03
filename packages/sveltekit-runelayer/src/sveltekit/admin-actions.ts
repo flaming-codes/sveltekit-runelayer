@@ -2,7 +2,12 @@ import type { Actions, RequestEvent } from "@sveltejs/kit";
 import type { RunelayerInstance } from "../plugin.js";
 import type { CollectionConfig } from "../schema/collections.js";
 import type { GlobalConfig } from "../schema/globals.js";
-import { updateGlobalDocument } from "./globals.js";
+import {
+  updateGlobalDocument,
+  publishGlobal,
+  unpublishGlobal,
+  restoreGlobalVersion,
+} from "./globals.js";
 import { toSerializable } from "./serializable.js";
 import type { AdminRoute } from "./admin-routing.js";
 import { parseAdminRoute } from "./admin-routing.js";
@@ -426,6 +431,127 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       }
 
       throw redirect(303, `${cfg.adminPath}/users`);
+    },
+
+    publish: async (event) => {
+      const route = await resolveGuardedRoute(event, "collection-edit", cfg);
+      const collection = cfg.getCollectionBySlug(cfg.runelayer, route.slug);
+      const query = cfg.withRequest(event);
+
+      const formData = await event.request.formData();
+      const id = formField(formData, "id") || route.id;
+      const document = await query.publish(collection, id);
+
+      return {
+        success: true,
+        document: toSerializable(document),
+      };
+    },
+
+    unpublish: async (event) => {
+      const route = await resolveGuardedRoute(event, "collection-edit", cfg);
+      const collection = cfg.getCollectionBySlug(cfg.runelayer, route.slug);
+      const query = cfg.withRequest(event);
+
+      const formData = await event.request.formData();
+      const id = formField(formData, "id") || route.id;
+      const document = await query.unpublish(collection, id);
+
+      return {
+        success: true,
+        document: toSerializable(document),
+      };
+    },
+
+    saveDraft: async (event) => {
+      const route = await resolveGuardedRoute(event, "collection-edit", cfg);
+      const collection = cfg.getCollectionBySlug(cfg.runelayer, route.slug);
+      const query = cfg.withRequest(event);
+
+      const formData = await event.request.formData();
+      const data = Object.fromEntries(formData.entries()) as Record<string, unknown>;
+      const id = typeof data.id === "string" ? data.id : route.id;
+      delete data.id;
+      const document = await query.saveDraft(collection, id, data);
+
+      return {
+        success: true,
+        document: toSerializable(document),
+      };
+    },
+
+    restoreVersion: async (event) => {
+      const route = await resolveGuardedRoute(event, "collection-edit", cfg);
+      const collection = cfg.getCollectionBySlug(cfg.runelayer, route.slug);
+      const query = cfg.withRequest(event);
+
+      const formData = await event.request.formData();
+      const id = formField(formData, "id") || route.id;
+      const versionId = formField(formData, "versionId");
+      if (!versionId) {
+        return fail(400, { error: "Version ID is required." });
+      }
+      const document = await query.restoreVersion(collection, id, versionId);
+
+      return {
+        success: true,
+        document: toSerializable(document),
+      };
+    },
+
+    publishGlobal: async (event) => {
+      const route = await resolveGuardedRoute(event, "global-edit", cfg);
+      const global = cfg.resolveGlobalBySlug(cfg.runelayer, route.slug);
+      const document = await publishGlobal(cfg.runelayer, global, event.request);
+
+      return {
+        success: true,
+        document: toSerializable(document),
+      };
+    },
+
+    unpublishGlobal: async (event) => {
+      const route = await resolveGuardedRoute(event, "global-edit", cfg);
+      const global = cfg.resolveGlobalBySlug(cfg.runelayer, route.slug);
+      const document = await unpublishGlobal(cfg.runelayer, global, event.request);
+
+      return {
+        success: true,
+        document: toSerializable(document),
+      };
+    },
+
+    saveDraftGlobal: async (event) => {
+      const route = await resolveGuardedRoute(event, "global-edit", cfg);
+      const global = cfg.resolveGlobalBySlug(cfg.runelayer, route.slug);
+
+      const formData = await event.request.formData();
+      const data = Object.fromEntries(formData.entries()) as Record<string, unknown>;
+      const document = await updateGlobalDocument(cfg.runelayer, global, event.request, data, {
+        forceDraft: true,
+      });
+
+      return {
+        success: true,
+        document: toSerializable(document),
+      };
+    },
+
+    restoreGlobalVersion: async (event) => {
+      const route = await resolveGuardedRoute(event, "global-edit", cfg);
+      const global = cfg.resolveGlobalBySlug(cfg.runelayer, route.slug);
+
+      const formData = await event.request.formData();
+      const versionId = formField(formData, "versionId");
+      if (!versionId) {
+        return fail(400, { error: "Version ID is required." });
+      }
+      const document = await restoreGlobalVersion(cfg.runelayer, global, event.request, versionId);
+
+      return {
+        success: true,
+        document: toSerializable(document),
+      };
     },
 
     logout: async (event) => {

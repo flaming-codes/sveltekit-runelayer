@@ -318,6 +318,7 @@ export async function enforceWritePayload(
   req: Request | undefined,
   existingDoc?: Record<string, unknown>,
   id?: string,
+  options?: { relaxRequired?: boolean },
 ): Promise<Record<string, unknown>> {
   const payload = toRecord(input);
   const fields = runtimeFieldMap(collection);
@@ -347,7 +348,12 @@ export async function enforceWritePayload(
     if (!rule) continue;
     const value = validationData[key];
 
-    if ("required" in rule.field && rule.field.required && !hasValue(value)) {
+    if (
+      "required" in rule.field &&
+      rule.field.required &&
+      !hasValue(value) &&
+      !options?.relaxRequired
+    ) {
       throw httpError(400, `Field "${key}" is required`);
     }
     if (value === undefined || value === null) continue;

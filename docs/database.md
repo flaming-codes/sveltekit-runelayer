@@ -122,6 +122,42 @@ export default defineConfig(
 
 Apply migrations before starting your app.
 
+## Version History Tables
+
+When `versions` is enabled on a collection, `generateTables` also creates a `{slug}_versions` table:
+
+| Column       | Type             | Notes                                      |
+| ------------ | ---------------- | ------------------------------------------ |
+| `id`         | TEXT PK          | UUID                                       |
+| `_parentId`  | TEXT NOT NULL    | FK to main table `id`                      |
+| `_version`   | INTEGER NOT NULL | Monotonically increasing per document      |
+| `_status`    | TEXT NOT NULL    | "draft" or "published" at time of snapshot |
+| `_snapshot`  | TEXT (JSON mode) | Full document field data as JSON           |
+| `_createdBy` | TEXT             | User ID who triggered this version         |
+| `createdAt`  | TEXT NOT NULL    | ISO timestamp                              |
+
+For globals, a shared `__runelayer_global_versions` table uses `_globalSlug` instead of `_parentId`.
+
+### Version DB Operations
+
+```ts
+import {
+  createVersionSnapshot,
+  findVersions,
+  findVersionById,
+  getLatestVersionNumber,
+  deleteVersionsByParent,
+  pruneVersions,
+} from "@flaming-codes/sveltekit-runelayer";
+```
+
+- `createVersionSnapshot(db, versionsTable, parentId, version, status, snapshot, createdBy?)` — stores a full document snapshot
+- `findVersions(db, versionsTable, parentId, opts?)` — ordered by `createdAt DESC`
+- `findVersionById(db, versionsTable, versionId)` — fetch single version
+- `getLatestVersionNumber(db, versionsTable, parentId)` — returns `MAX(_version)` or 0
+- `deleteVersionsByParent(db, versionsTable, parentId)` — cascade cleanup
+- `pruneVersions(db, versionsTable, parentId, maxPerDoc)` — deletes oldest versions beyond limit, always protecting the most recent version and the latest published version
+
 ## Auxiliary Tables
 
 ### Array fields

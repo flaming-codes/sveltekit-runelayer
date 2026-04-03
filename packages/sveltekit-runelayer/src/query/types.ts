@@ -13,4 +13,6 @@ export interface FindArgs {
   offset?: number;
   sort?: string;
   sortOrder?: "asc" | "desc";
+  /** Include draft documents. Defaults to false for versioned collections. */
+  draft?: boolean;
 }

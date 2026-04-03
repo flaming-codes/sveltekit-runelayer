@@ -1,10 +1,11 @@
 export interface HookContext {
   collection: string;
-  operation: "create" | "read" | "update" | "delete";
+  operation: "create" | "read" | "update" | "delete" | "publish";
   req?: Request;
   data?: Record<string, unknown>;
   id?: string;
   existingDoc?: Record<string, unknown>;
+  previousStatus?: string;
 }
 
 export type BeforeChangeHook = (ctx: HookContext) => Promise<HookContext> | HookContext;
@@ -18,6 +19,11 @@ export type AfterReadHook = (
   ctx: HookContext & { doc: Record<string, unknown> },
 ) => Promise<Record<string, unknown>>;
 
+export type BeforePublishHook = (ctx: HookContext) => Promise<HookContext> | HookContext;
+export type AfterPublishHook = (
+  ctx: HookContext & { doc: Record<string, unknown> },
+) => Promise<void> | void;
+
 export interface CollectionHooks {
   beforeChange?: BeforeChangeHook[];
   afterChange?: AfterChangeHook[];
@@ -25,6 +31,8 @@ export interface CollectionHooks {
   afterDelete?: AfterDeleteHook[];
   beforeRead?: BeforeReadHook[];
   afterRead?: AfterReadHook[];
+  beforePublish?: BeforePublishHook[];
+  afterPublish?: AfterPublishHook[];
 }
 
 export interface GlobalHooks {

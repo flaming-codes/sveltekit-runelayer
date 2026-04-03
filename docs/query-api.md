@@ -45,12 +45,15 @@ interface FindArgs {
   offset?: number;
   sort?: string; // Column name to sort by
   sortOrder?: "asc" | "desc";
+  draft?: boolean; // Include draft documents (default: false for versioned collections)
 }
 ```
 
 Returns an array of document objects.
 
 `where` uses simple equality checks and only allows schema-backed fields plus core system columns (`id`, `createdAt`, `updatedAt`, and version columns when enabled). Unknown keys are rejected with a 400 error.
+
+For versioned collections, `find()` automatically filters to `_status = 'published'` unless `draft: true` is passed. This ensures public APIs only return published content by default.
 
 ### findOne
 
@@ -111,6 +114,83 @@ const doc = await remove(ctx, "document-id");
 
 - `beforeDelete` hooks can throw to abort deletion
 - `afterDelete` hooks run after the delete
+
+## Version Operations
+
+These operations are available for collections with `versions` enabled.
+
+### publish
+
+Promote a document from draft to published. Enforces full validation (required fields must be present).
+
+```ts
+import { publish } from "@flaming-codes/sveltekit-runelayer";
+
+const doc = await publish(ctx, "document-id");
+// Sets _status = "published", increments _version, creates snapshot
+```
+
+- Checks `access.publish` (falls back to `access.update`)
+- Runs `beforePublish` / `afterPublish` hooks
+- Enforces all required field validation
+- Creates a version snapshot
+
+### unpublish
+
+Revert a published document to draft.
+
+```ts
+import { unpublish } from "@flaming-codes/sveltekit-runelayer";
+
+const doc = await unpublish(ctx, "document-id");
+// Sets _status = "draft", increments _version, creates snapshot
+```
+
+### saveDraft
+
+Save document data with relaxed validation (required fields are not enforced). Sets `_status` to "draft".
+
+```ts
+import { saveDraft } from "@flaming-codes/sveltekit-runelayer";
+
+const doc = await saveDraft(ctx, "document-id", { title: "Work in progress" });
+// Allows incomplete data, sets _status = "draft"
+```
+
+Saving a published document as draft will unpublish it (no longer returned by default `find()` calls).
+
+### findVersionHistory
+
+Retrieve the version history for a document.
+
+```ts
+import { findVersionHistory } from "@flaming-codes/sveltekit-runelayer";
+
+const versions = await findVersionHistory(ctx, "document-id", { limit: 20 });
+// Returns array of { id, _version, _status, createdAt, _createdBy }
+```
+
+### restoreVersion
+
+Copy an old version's content forward as a new draft. History is never mutated — the restore creates a new version record.
+
+```ts
+import { restoreVersion } from "@flaming-codes/sveltekit-runelayer";
+
+const doc = await restoreVersion(ctx, "document-id", "version-id");
+// Copies snapshot, sets _status = "draft", increments _version
+```
+
+### Versioned Collection Behavior
+
+When `versions` is enabled:
+
+- `create()` sets `_status = "draft"` and `_version = 1`, creates initial snapshot
+- `update()` increments `_version`, creates snapshot
+- `remove()` cascade-deletes all version records
+- Pruning runs automatically based on `maxPerDoc` config
+
+Calling version operations on a non-versioned collection throws a 400 error.
 
 ## Access Control Integration
 

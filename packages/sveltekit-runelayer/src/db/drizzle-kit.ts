@@ -29,8 +29,5 @@ export function createDrizzleKitSchema(collections: CollectionConfig[]): Generat
  * for the given collections. Useful for generating the destructured export statement.
  */
 export function listTableNames(collections: CollectionConfig[]): string[] {
-  return [
-    ...Object.keys(generateTables(collections)),
-    ...Object.keys(betterAuthSchema),
-  ];
+  return [...Object.keys(generateTables(collections)), ...Object.keys(betterAuthSchema)];
 }

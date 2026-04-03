@@ -1,6 +1,17 @@
 import type { RequestEvent } from "@sveltejs/kit";
 import type { RunelayerInstance } from "../plugin.js";
-import { create, find, findOne, remove, update } from "../query/index.js";
+import {
+  create,
+  find,
+  findOne,
+  remove,
+  update,
+  publish,
+  unpublish,
+  saveDraft,
+  findVersionHistory,
+  restoreVersion,
+} from "../query/index.js";
 import type { CollectionConfig } from "../schema/collections.js";
 import type { FindArgs } from "../query/types.js";
 import type { CollectionInput, RunelayerQueryApi } from "./types.js";
@@ -105,6 +116,47 @@ export function createQueryApi(
     async remove(collectionInput: CollectionInput, id: string) {
       const collection = resolveCollection(runelayer.collections, collectionInput);
       return await remove({ db: runelayer.database, collection, req: requestFactory() }, id);
+    },
+
+    async publish(collectionInput: CollectionInput, id: string) {
+      const collection = resolveCollection(runelayer.collections, collectionInput);
+      return await publish({ db: runelayer.database, collection, req: requestFactory() }, id);
+    },
+
+    async unpublish(collectionInput: CollectionInput, id: string) {
+      const collection = resolveCollection(runelayer.collections, collectionInput);
+      return await unpublish({ db: runelayer.database, collection, req: requestFactory() }, id);
+    },
+
+    async saveDraft(collectionInput: CollectionInput, id: string, data: Record<string, unknown>) {
+      const collection = resolveCollection(runelayer.collections, collectionInput);
+      return await saveDraft(
+        { db: runelayer.database, collection, req: requestFactory() },
+        id,
+        data,
+      );
+    },
+
+    async findVersionHistory(
+      collectionInput: CollectionInput,
+      id: string,
+      opts?: { limit?: number; offset?: number },
+    ) {
+      const collection = resolveCollection(runelayer.collections, collectionInput);
+      return await findVersionHistory(
+        { db: runelayer.database, collection, req: requestFactory() },
+        id,
+        opts,
+      );
+    },
+
+    async restoreVersion(collectionInput: CollectionInput, id: string, versionId: string) {
+      const collection = resolveCollection(runelayer.collections, collectionInput);
+      return await restoreVersion(
+        { db: runelayer.database, collection, req: requestFactory() },
+        id,
+        versionId,
+      );
     },
   };
 }

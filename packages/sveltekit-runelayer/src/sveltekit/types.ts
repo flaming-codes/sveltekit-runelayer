@@ -55,6 +55,14 @@ export interface RunelayerAppConfig extends Omit<RunelayerConfig, "adminPath"> {
 }
 
 export type RunelayerDocument = Record<string, unknown>;
+
+export interface VersionEntry {
+  id: string;
+  _version: number;
+  _status: "draft" | "published";
+  createdAt: string;
+  _createdBy?: string;
+}
 export type RunelayerManagedUserRole = "admin" | "editor" | "user";
 
 export interface RunelayerAdminUser {
@@ -166,12 +174,14 @@ export interface RunelayerAdminCollectionEditData extends RunelayerAdminBaseData
   view: "collection-edit";
   collection: CollectionConfig;
   document: RunelayerDocument;
+  versions?: VersionEntry[];
 }
 
 export interface RunelayerAdminGlobalEditData extends RunelayerAdminBaseData {
   view: "global-edit";
   global: GlobalConfig;
   document: RunelayerDocument;
+  versions?: VersionEntry[];
 }
 
 export type RunelayerAdminPageData =
@@ -205,6 +215,15 @@ export interface RunelayerQueryApi {
   create(collection: CollectionInput, data: RunelayerDocument): Promise<any>;
   update(collection: CollectionInput, id: string, data: RunelayerDocument): Promise<any>;
   remove(collection: CollectionInput, id: string): Promise<any>;
+  publish(collection: CollectionInput, id: string): Promise<any>;
+  unpublish(collection: CollectionInput, id: string): Promise<any>;
+  saveDraft(collection: CollectionInput, id: string, data: RunelayerDocument): Promise<any>;
+  findVersionHistory(
+    collection: CollectionInput,
+    id: string,
+    opts?: { limit?: number; offset?: number },
+  ): Promise<any>;
+  restoreVersion(collection: CollectionInput, id: string, versionId: string): Promise<any>;
 }
 
 export interface RunelayerAdminRuntime {

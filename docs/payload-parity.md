@@ -11,17 +11,17 @@ Feature-by-feature comparison of sveltekit-runelayer v1 against Payload CMS v3, 
 
 ### sveltekit-runelayer v1 Status
 
-| Feature                              | Status               | Notes                                                                                                                                          |
-| ------------------------------------ | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `slug`, `fields`, `labels`           | Implemented          | Core collection config                                                                                                                         |
-| `access` (CRUD)                      | Implemented          | Per-operation access functions                                                                                                                 |
-| `hooks` (6 lifecycle types)          | Implemented          | beforeChange, afterChange, beforeDelete, afterDelete, beforeRead, afterRead                                                                    |
-| `timestamps`                         | Implemented          | Auto createdAt/updatedAt                                                                                                                       |
-| `versions` / `drafts`                | Implemented (schema) | \_status/\_version columns; publish workflow not yet wired                                                                                     |
-| `admin` (useAsTitle, defaultColumns) | Implemented          | Basic admin config                                                                                                                             |
-| `auth` flag                          | Implemented          | Adds auth columns to collection                                                                                                                |
-| `upload` flag                        | Implemented          | Upload config with mimeTypes, maxSize, imageSizes                                                                                              |
-| 16 field types                       | Implemented          | text, textarea, number, email, select, multiSelect, checkbox, date, relationship, upload, richText, json, slug, group, array, row, collapsible |
+| Feature                              | Status      | Notes                                                                                                                                          |
+| ------------------------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slug`, `fields`, `labels`           | Implemented | Core collection config                                                                                                                         |
+| `access` (CRUD)                      | Implemented | Per-operation access functions                                                                                                                 |
+| `hooks` (6 lifecycle types)          | Implemented | beforeChange, afterChange, beforeDelete, afterDelete, beforeRead, afterRead                                                                    |
+| `timestamps`                         | Implemented | Auto createdAt/updatedAt                                                                                                                       |
+| `versions` / `drafts`                | Implemented | Full version history, publish/unpublish/saveDraft/restore, per-collection versions table, admin UI with history panel                          |
+| `admin` (useAsTitle, defaultColumns) | Implemented | Basic admin config                                                                                                                             |
+| `auth` flag                          | Implemented | Adds auth columns to collection                                                                                                                |
+| `upload` flag                        | Implemented | Upload config with mimeTypes, maxSize, imageSizes                                                                                              |
+| 16 field types                       | Implemented | text, textarea, number, email, select, multiSelect, checkbox, date, relationship, upload, richText, json, slug, group, array, row, collapsible |
 
 ### Deferred to v2
 
@@ -44,7 +44,7 @@ Feature-by-feature comparison of sveltekit-runelayer v1 against Payload CMS v3, 
 - `slug`, `fields`, `label`, `admin.group` — Implemented
 - `access` (read, update) — Implemented
 - `hooks` (beforeChange, afterChange) — Implemented
-- `versions` — Implemented (schema level)
+- `versions` — Implemented (full: publish/unpublish/history/restore)
 
 ### Deferred to v2
 

@@ -89,6 +89,20 @@ export function generateTables(collections: CollectionConfig[]): GeneratedTables
 
     tables[slug] = sqliteTable(slug, { ...baseColumns(), ...fieldCols, ...extras });
 
+    // Create version history table for versioned collections
+    if (versions) {
+      const versionsSlug = `${slug}_versions`;
+      tables[versionsSlug] = sqliteTable(versionsSlug, {
+        id: text("id").primaryKey(),
+        _parentId: text("_parentId").notNull(),
+        _version: integer("_version").notNull(),
+        _status: text("_status").notNull(),
+        _snapshot: text("_snapshot", { mode: "json" }),
+        _createdBy: text("_createdBy"),
+        createdAt: text("createdAt").notNull(),
+      });
+    }
+
     // Create auxiliary tables for array fields and hasMany relationships
     for (const f of fields) {
       if (f.type === "array") {

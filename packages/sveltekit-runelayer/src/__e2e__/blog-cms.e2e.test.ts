@@ -291,23 +291,23 @@ describe("Blog CMS Platform — Full User Journey", () => {
   // --- Phase 3: Query content ---
 
   it("finds all posts (5 total)", async () => {
-    const allPosts = await find(postCtx);
+    const allPosts = await find(postCtx, { draft: true });
     expect(allPosts).toHaveLength(5);
   });
 
   it("finds posts with pagination", async () => {
-    const page1 = await find(postCtx, { limit: 2 });
+    const page1 = await find(postCtx, { limit: 2, draft: true });
     expect(page1).toHaveLength(2);
 
-    const page2 = await find(postCtx, { limit: 2, offset: 2 });
+    const page2 = await find(postCtx, { limit: 2, offset: 2, draft: true });
     expect(page2).toHaveLength(2);
 
-    const page3 = await find(postCtx, { limit: 2, offset: 4 });
+    const page3 = await find(postCtx, { limit: 2, offset: 4, draft: true });
     expect(page3).toHaveLength(1);
   });
 
   it("finds posts sorted by title", async () => {
-    const sorted = await find(postCtx, { sort: "title", sortOrder: "asc" });
+    const sorted = await find(postCtx, { sort: "title", sortOrder: "asc", draft: true });
     const titles = sorted.map((p: any) => p.title);
     expect(titles[0]).toBe("Figma to Code Workflows");
     expect(titles[4]).toBe("Why Rust for Web Tooling");
@@ -356,14 +356,14 @@ describe("Blog CMS Platform — Full User Journey", () => {
   });
 
   it("now has 4 posts after deletion", async () => {
-    const allPosts = await find(postCtx);
+    const allPosts = await find(postCtx, { draft: true });
     expect(allPosts).toHaveLength(4);
   });
 
   // --- Phase 6: Cross-collection relationship integrity ---
 
   it("posts reference valid author IDs", async () => {
-    const posts = await find(postCtx);
+    const posts = await find(postCtx, { draft: true });
     for (const post of posts) {
       const p = post as Record<string, unknown>;
       if (p.author) {
@@ -374,7 +374,7 @@ describe("Blog CMS Platform — Full User Journey", () => {
   });
 
   it("posts reference valid category IDs", async () => {
-    const posts = await find(postCtx);
+    const posts = await find(postCtx, { draft: true });
     for (const post of posts) {
       const p = post as Record<string, unknown>;
       if (p.category) {
@@ -387,7 +387,7 @@ describe("Blog CMS Platform — Full User Journey", () => {
   // --- Phase 7: Verify timestamps and metadata ---
 
   it("all documents have valid timestamps", async () => {
-    const posts = await find(postCtx);
+    const posts = await find(postCtx, { draft: true });
     for (const post of posts) {
       const p = post as Record<string, unknown>;
       expect(p.createdAt).toBeDefined();
