@@ -54,6 +54,12 @@
       "svelte": "./src/sveltekit/components.ts",
       "default": "./src/sveltekit/components.ts"
     },
+    "./admin/styles/carbon-all.css": "./src/admin/styles/carbon-all.css",
+    "./admin/styles/carbon-white.css": "./src/admin/styles/carbon-white.css",
+    "./admin/styles/carbon-g10.css": "./src/admin/styles/carbon-g10.css",
+    "./admin/styles/carbon-g80.css": "./src/admin/styles/carbon-g80.css",
+    "./admin/styles/carbon-g90.css": "./src/admin/styles/carbon-g90.css",
+    "./admin/styles/carbon-g100.css": "./src/admin/styles/carbon-g100.css",
     "./package.json": "./package.json"
   },
   "publishConfig": {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import "carbon-components-svelte/css/g10.css";
+  import "@flaming-codes/sveltekit-runelayer/admin/styles/carbon-g10.css";
   import {
     Header,
     HeaderNav,

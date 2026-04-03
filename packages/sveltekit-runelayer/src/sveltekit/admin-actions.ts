@@ -1,6 +1,7 @@
 import type { Actions, RequestEvent } from "@sveltejs/kit";
 import type { RunelayerInstance } from "../plugin.js";
 import type { CollectionConfig } from "../schema/collections.js";
+import type { NamedField } from "../schema/fields.js";
 import type { GlobalConfig } from "../schema/globals.js";
 import {
   updateGlobalDocument,
@@ -20,6 +21,67 @@ import {
   parseAuthErrorMessage,
   parseManagedUser,
 } from "./admin-queries.js";
+
+function flattenAdminPayload(
+  fields: NamedField[],
+  source: Record<string, unknown>,
+  prefix = "",
+): Record<string, unknown> {
+  const output: Record<string, unknown> = {};
+
+  for (const field of fields) {
+    const key = `${prefix}${field.name}`;
+
+    if (field.type === "group") {
+      const nested = source[field.name];
+      if (nested === undefined || nested === null) continue;
+      if (typeof nested !== "object" || Array.isArray(nested)) {
+        output[key] = nested;
+        continue;
+      }
+      Object.assign(
+        output,
+        flattenAdminPayload(field.fields, nested as Record<string, unknown>, `${key}_`),
+      );
+      continue;
+    }
+
+    if (field.type === "row" || field.type === "collapsible") {
+      Object.assign(output, flattenAdminPayload(field.fields, source, prefix));
+      continue;
+    }
+
+    if (source[field.name] !== undefined) {
+      output[key] = source[field.name];
+    }
+  }
+
+  return output;
+}
+
+function parseDocumentPayload(
+  formData: FormData,
+  fields: NamedField[],
+  kit: Pick<SvelteKitUtils, "error">,
+): Record<string, unknown> {
+  const payload = formField(formData, "payload");
+  if (!payload) {
+    throw kit.error(400, "Admin form payload is missing.");
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(payload);
+  } catch {
+    throw kit.error(400, "Admin form payload must be valid JSON.");
+  }
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw kit.error(400, "Admin form payload must be an object.");
+  }
+
+  return flattenAdminPayload(fields, parsed as Record<string, unknown>);
+}
 
 export interface AdminActionsConfig {
   kit: SvelteKitUtils;
@@ -218,7 +280,7 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       const query = cfg.withRequest(event);
 
       const formData = await event.request.formData();
-      const data = Object.fromEntries(formData.entries()) as Record<string, unknown>;
+      const data = parseDocumentPayload(formData, collection.fields, cfg.kit);
       const document = await query.create(collection, data);
 
       const newId = (document as Record<string, string>).id;
@@ -228,14 +290,15 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
     update: async (event) => {
       const route = await resolveGuardedRoute(event, ["collection-edit", "global-edit"], cfg);
       const formData = await event.request.formData();
-      const data = Object.fromEntries(formData.entries()) as Record<string, unknown>;
 
       let document: unknown;
       if (route.kind === "global-edit") {
         const global = cfg.resolveGlobalBySlug(cfg.runelayer, route.slug);
+        const data = parseDocumentPayload(formData, global.fields, cfg.kit);
         document = await updateGlobalDocument(cfg.runelayer, global, event.request, data);
       } else {
         const collection = cfg.getCollectionBySlug(cfg.runelayer, route.slug);
+        const data = parseDocumentPayload(formData, collection.fields, cfg.kit);
         const query = cfg.withRequest(event);
         const id = typeof data.id === "string" ? data.id : route.id;
         delete data.id;
@@ -467,7 +530,7 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       const query = cfg.withRequest(event);
 
       const formData = await event.request.formData();
-      const data = Object.fromEntries(formData.entries()) as Record<string, unknown>;
+      const data = parseDocumentPayload(formData, collection.fields, cfg.kit);
       const id = typeof data.id === "string" ? data.id : route.id;
       delete data.id;
       const document = await query.saveDraft(collection, id, data);
@@ -524,7 +587,7 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       const global = cfg.resolveGlobalBySlug(cfg.runelayer, route.slug);
 
       const formData = await event.request.formData();
-      const data = Object.fromEntries(formData.entries()) as Record<string, unknown>;
+      const data = parseDocumentPayload(formData, global.fields, cfg.kit);
       const document = await updateGlobalDocument(cfg.runelayer, global, event.request, data, {
         forceDraft: true,
       });

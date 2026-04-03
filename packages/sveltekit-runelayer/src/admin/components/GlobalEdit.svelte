@@ -121,6 +121,7 @@
 
 		<form id={formId} method="POST" action="?/update" class="rk-form">
 			<input type="hidden" name="id" value={document?.id ?? global.slug} />
+			<input type="hidden" name="payload" value={JSON.stringify(values)} />
 
 			<Tabs bind:selected={activeTab}>
 				<Tab label="Configuration" />

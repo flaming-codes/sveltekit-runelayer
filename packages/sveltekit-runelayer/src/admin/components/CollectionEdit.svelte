@@ -150,6 +150,7 @@
 			{#if !isNew}
 				<input type="hidden" name="id" value={document?.id} />
 			{/if}
+			<input type="hidden" name="payload" value={JSON.stringify(values)} />
 
 			<Tabs bind:selected={activeTab}>
 				<Tab label="Content" />

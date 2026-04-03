@@ -1,5 +1,5 @@
 <script lang="ts">
-  import "carbon-components-svelte/css/all.css";
+  import "@flaming-codes/sveltekit-runelayer/admin/styles/carbon-all.css";
 
   let { children } = $props();
 </script>

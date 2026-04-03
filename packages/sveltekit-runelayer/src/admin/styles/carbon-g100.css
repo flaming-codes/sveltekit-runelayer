@@ -1,0 +1,9 @@
+/*
+ * Carbon Design System — gray 100 theme (dark).
+ * Wrapped in @layer to prevent Carbon's global reset from overriding
+ * consumer styles. Unlayered consumer CSS always wins over layered CSS.
+ *
+ * Usage (in your admin layout):
+ *   import "@flaming-codes/sveltekit-runelayer/admin/styles/carbon-g100.css";
+ */
+@import "carbon-components-svelte/css/g100.css" layer(carbon);
