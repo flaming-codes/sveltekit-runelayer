@@ -87,8 +87,8 @@
 								Save draft
 							</Button>
 						{:else}
-							<Button type="submit" form={formId} formaction="?/saveDraftGlobal">
-								Save as draft
+							<Button kind="secondary" type="submit" form={formId} formaction="?/saveDraftGlobal">
+								Save as new draft
 							</Button>
 							<Button
 								kind="tertiary"
@@ -113,51 +113,97 @@
 			<InlineNotification
 				kind="info"
 				title="Currently published"
-				subtitle="Saving as draft will unpublish this global. It will no longer be visible in public queries."
+				subtitle="Saving changes will create a new draft version. Use Publish to update the live document."
 				hideCloseButton
 				lowContrast
 			/>
 		{/if}
 
-		{#if hasVersions && versions.length > 0}
+		<form id={formId} method="POST" action="?/update" class="rk-form">
+			<input type="hidden" name="id" value={document?.id ?? global.slug} />
+
 			<Tabs bind:selected={activeTab}>
 				<Tab label="Configuration" />
-				<Tab label="Version history ({versions.length})" />
+				<Tab label="Info" />
+				{#if hasVersions}
+					<Tab label="Versions ({versions.length})" disabled={versions.length === 0} />
+				{/if}
 				<svelte:fragment slot="content">
+					<!-- Configuration tab -->
 					<TabContent>
-						<form id={formId} method="POST" action="?/update" class="rk-form">
-							<input type="hidden" name="id" value={document?.id ?? global.slug} />
+						<div class="rk-tab-panel">
 							<div class="rk-fields-section">
 								{#each global.fields as field}
 									<FieldRenderer {field} bind:values />
 								{/each}
 							</div>
-						</form>
-					</TabContent>
-					<TabContent>
-						<div class="rk-version-tab">
-							<VersionHistory
-								{versions}
-								currentVersion={document?._version ?? 1}
-								onRestore={(versionId) => {
-									restoreVersionId = versionId;
-									restoreModalOpen = true;
-								}}
-							/>
 						</div>
 					</TabContent>
+
+					<!-- Info tab -->
+					<TabContent>
+						<div class="rk-tab-panel">
+							<dl class="rk-meta-list">
+								<div>
+									<dt>Global</dt>
+									<dd>{label}</dd>
+								</div>
+								<div>
+									<dt>Slug</dt>
+									<dd class="rk-mono">{global.slug}</dd>
+								</div>
+								{#if hasVersions}
+									<div>
+										<dt>Status</dt>
+										<dd>
+											<Tag size="sm" type={isPublished ? "green" : "teal"}>
+												{isPublished ? "Published" : "Draft"}
+											</Tag>
+										</dd>
+									</div>
+									<div>
+										<dt>Version</dt>
+										<dd>{document?._version ?? 1}</dd>
+									</div>
+								{/if}
+								{#if document?.createdAt}
+									<div>
+										<dt>Created</dt>
+										<dd>{new Date(document.createdAt as string).toLocaleString()}</dd>
+									</div>
+								{/if}
+								{#if document?.updatedAt}
+									<div>
+										<dt>Last saved</dt>
+										<dd>{new Date(document.updatedAt as string).toLocaleString()}</dd>
+									</div>
+								{/if}
+							</dl>
+						</div>
+					</TabContent>
+
+					<!-- Versions tab -->
+					{#if hasVersions}
+						<TabContent>
+							<div class="rk-tab-panel">
+								{#if versions.length > 0}
+									<VersionHistory
+										{versions}
+										currentVersion={document?._version ?? 1}
+										onRestore={(versionId) => {
+											restoreVersionId = versionId;
+											restoreModalOpen = true;
+										}}
+									/>
+								{:else}
+									<p class="rk-empty-state">No version history yet.</p>
+								{/if}
+							</div>
+						</TabContent>
+					{/if}
 				</svelte:fragment>
 			</Tabs>
-		{:else}
-			<form id={formId} method="POST" action="?/update" class="rk-form">
-				<input type="hidden" name="id" value={document?.id ?? global.slug} />
-				<div class="rk-fields-section">
-					{#each global.fields as field}
-						<FieldRenderer {field} bind:values />
-					{/each}
-				</div>
-			</form>
-		{/if}
+		</form>
 
 		{#if hasVersions}
 			<form id={restoreFormId} method="POST" action="?/restoreGlobalVersion">
@@ -177,8 +223,8 @@
 				}}
 			>
 				<p>
-					This will restore the selected version as a new draft. The current content will be
-					preserved in the version history.
+					Restoring will create a new draft with the content from this version.
+					The current state is preserved in the version history.
 				</p>
 			</Modal>
 		{/if}
@@ -189,7 +235,7 @@
 	@import "./page-layout.css";
 
 	.rk-form {
-		max-width: 48rem;
+		width: 100%;
 	}
 
 	.rk-title-with-status {
@@ -227,18 +273,51 @@
 		border-top: 1px solid var(--cds-border-subtle);
 	}
 
+	.rk-page-title-row {
+		margin-top: var(--cds-spacing-04);
+	}
+
+	.rk-tab-panel {
+		padding: var(--cds-spacing-06) 0;
+		max-width: 48rem;
+	}
+
 	.rk-fields-section {
 		display: grid;
 		gap: var(--cds-spacing-05);
-		padding: var(--cds-spacing-05) 0;
 	}
 
-	.rk-version-tab {
-		padding: var(--cds-spacing-05) 0;
+	.rk-meta-list {
+		display: grid;
+		gap: var(--cds-spacing-04);
 	}
 
-	.rk-page-title-row {
-		margin-top: var(--cds-spacing-04);
+	.rk-meta-list div {
+		padding-top: var(--cds-spacing-04);
+		border-top: 1px solid var(--cds-border-subtle);
+	}
+
+	.rk-meta-list dt {
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.32px;
+		color: var(--cds-text-secondary);
+	}
+
+	.rk-meta-list dd {
+		margin: var(--cds-spacing-02) 0 0;
+		word-break: break-word;
+	}
+
+	.rk-mono {
+		font-family: var(--cds-code-01-font-family, monospace);
+		font-size: 0.75rem;
+		word-break: break-all;
+	}
+
+	.rk-empty-state {
+		color: var(--cds-text-secondary);
+		font-size: 0.875rem;
 	}
 
 	.rk-page-body :global(.bx--inline-notification) {

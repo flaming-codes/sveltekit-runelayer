@@ -4,16 +4,12 @@
 		BreadcrumbItem,
 		Button,
 		ButtonSet,
-		Column,
-		Grid,
 		InlineNotification,
 		Modal,
-		Row,
 		Tab,
 		TabContent,
 		Tabs,
 		Tag,
-		Tile,
 	} from "carbon-components-svelte";
 	import type { CollectionConfig } from "../../schema/collections.js";
 	import type { VersionEntry } from "../../sveltekit/types.js";
@@ -95,14 +91,16 @@
 				<ButtonSet>
 					{#if hasVersions}
 						{#if isNew}
-							<Button type="submit" form={formId}>Create as draft</Button>
+							<Button type="submit" form={formId}>Create draft</Button>
 						{:else if isDraft}
 							<Button type="submit" form={formId} formaction="?/publish">Publish</Button>
 							<Button kind="secondary" type="submit" form={formId} formaction="?/saveDraft">
 								Save draft
 							</Button>
 						{:else}
-							<Button type="submit" form={formId} formaction="?/saveDraft">Save as draft</Button>
+							<Button kind="secondary" type="submit" form={formId} formaction="?/saveDraft">
+								Save as new draft
+							</Button>
 							<Button
 								kind="tertiary"
 								type="submit"
@@ -118,7 +116,7 @@
 						</Button>
 					{/if}
 				</ButtonSet>
-				<div class="rk-action-bar-secondary">
+				<div class="rk-action-bar-end">
 					{#if !isNew}
 						<Button
 							kind="danger-ghost"
@@ -141,118 +139,102 @@
 			<InlineNotification
 				kind="info"
 				title="Currently published"
-				subtitle="Saving as draft will unpublish this document. It will no longer be visible in public queries."
+				subtitle="Saving changes will create a new draft version. Use Publish to update the live document."
 				hideCloseButton
 				lowContrast
 			/>
 		{/if}
 
-		{#if hasVersions && !isNew && versions.length > 0}
+		<!-- Shared form wraps everything so all tabs submit field data -->
+		<form id={formId} method="POST" action={isNew ? "?/create" : "?/update"} class="rk-form">
+			{#if !isNew}
+				<input type="hidden" name="id" value={document?.id} />
+			{/if}
+
 			<Tabs bind:selected={activeTab}>
 				<Tab label="Content" />
-				<Tab label="Version history ({versions.length})" />
-				<svelte:fragment slot="content">
-					<TabContent>
-						<form id={formId} method="POST" action={isNew ? "?/create" : "?/update"} class="rk-form">
-							{#if !isNew}
-								<input type="hidden" name="id" value={document?.id} />
-							{/if}
-							<Grid fullWidth>
-								<Row>
-									<Column sm={4} md={8} lg={12}>
-										<div class="rk-fields-section">
-											{#each collection.fields as field}
-												<FieldRenderer {field} bind:values />
-											{/each}
-										</div>
-									</Column>
-									<Column sm={4} md={8} lg={4}>
-										<Tile class="rk-meta-tile">
-											<h3 class="rk-meta-heading">Document info</h3>
-											<dl class="rk-meta-list">
-												<div>
-													<dt>Collection</dt>
-													<dd>{pluralLabel}</dd>
-												</div>
-												<div>
-													<dt>ID</dt>
-													<dd class="rk-mono">{document?.id}</dd>
-												</div>
-												{#if document?.updatedAt}
-													<div>
-														<dt>Last saved</dt>
-														<dd>{new Date(document.updatedAt as string).toLocaleString()}</dd>
-													</div>
-												{/if}
-												{#if document?.createdAt}
-													<div>
-														<dt>Created</dt>
-														<dd>{new Date(document.createdAt as string).toLocaleString()}</dd>
-													</div>
-												{/if}
-											</dl>
-										</Tile>
-									</Column>
-								</Row>
-							</Grid>
-						</form>
-					</TabContent>
-					<TabContent>
-						<div class="rk-version-tab">
-							<VersionHistory
-								{versions}
-								currentVersion={document?._version ?? 1}
-								onRestore={(versionId) => {
-									restoreVersionId = versionId;
-									restoreModalOpen = true;
-								}}
-							/>
-						</div>
-					</TabContent>
-				</svelte:fragment>
-			</Tabs>
-		{:else}
-			<!-- No versioning or new document: just the form -->
-			<form id={formId} method="POST" action={isNew ? "?/create" : "?/update"} class="rk-form">
-				{#if !isNew}
-					<input type="hidden" name="id" value={document?.id} />
+				<Tab label="Info" disabled={isNew} />
+				{#if hasVersions}
+					<Tab label="Versions ({versions.length})" disabled={isNew || versions.length === 0} />
 				{/if}
-				<Grid fullWidth>
-					<Row>
-						<Column sm={4} md={8} lg={12}>
+				<svelte:fragment slot="content">
+					<!-- Content tab -->
+					<TabContent>
+						<div class="rk-tab-panel">
 							<div class="rk-fields-section">
 								{#each collection.fields as field}
 									<FieldRenderer {field} bind:values />
 								{/each}
 							</div>
-						</Column>
-						{#if !isNew}
-							<Column sm={4} md={8} lg={4}>
-								<Tile class="rk-meta-tile">
-									<h3 class="rk-meta-heading">Document info</h3>
-									<dl class="rk-meta-list">
+						</div>
+					</TabContent>
+
+					<!-- Info tab -->
+					<TabContent>
+						<div class="rk-tab-panel">
+							<div class="rk-info-grid">
+								<dl class="rk-meta-list">
+									<div>
+										<dt>Collection</dt>
+										<dd>{pluralLabel}</dd>
+									</div>
+									<div>
+										<dt>ID</dt>
+										<dd class="rk-mono">{document?.id}</dd>
+									</div>
+									{#if hasVersions}
 										<div>
-											<dt>Collection</dt>
-											<dd>{pluralLabel}</dd>
+											<dt>Status</dt>
+											<dd>
+												<Tag size="sm" type={isPublished ? "green" : "teal"}>
+													{isPublished ? "Published" : "Draft"}
+												</Tag>
+											</dd>
 										</div>
 										<div>
-											<dt>ID</dt>
-											<dd class="rk-mono">{document?.id}</dd>
+											<dt>Version</dt>
+											<dd>{document?._version ?? 1}</dd>
 										</div>
-										{#if document?.updatedAt}
-											<div>
-												<dt>Last saved</dt>
-												<dd>{new Date(document.updatedAt as string).toLocaleString()}</dd>
-											</div>
-										{/if}
-									</dl>
-								</Tile>
-							</Column>
-						{/if}
-					</Row>
-				</Grid>
-			</form>
-		{/if}
+									{/if}
+									{#if document?.createdAt}
+										<div>
+											<dt>Created</dt>
+											<dd>{new Date(document.createdAt as string).toLocaleString()}</dd>
+										</div>
+									{/if}
+									{#if document?.updatedAt}
+										<div>
+											<dt>Last saved</dt>
+											<dd>{new Date(document.updatedAt as string).toLocaleString()}</dd>
+										</div>
+									{/if}
+								</dl>
+							</div>
+						</div>
+					</TabContent>
+
+					<!-- Versions tab -->
+					{#if hasVersions}
+						<TabContent>
+							<div class="rk-tab-panel">
+								{#if versions.length > 0}
+									<VersionHistory
+										{versions}
+										currentVersion={document?._version ?? 1}
+										onRestore={(versionId) => {
+											restoreVersionId = versionId;
+											restoreModalOpen = true;
+										}}
+									/>
+								{:else}
+									<p class="rk-empty-state">No version history yet.</p>
+								{/if}
+							</div>
+						</TabContent>
+					{/if}
+				</svelte:fragment>
+			</Tabs>
+		</form>
 	</div>
 
 	<!-- Delete modal -->
@@ -298,8 +280,8 @@
 			}}
 		>
 			<p>
-				This will restore the selected version as a new draft. The current content will be
-				preserved in the version history.
+				Restoring will create a new draft with the content from this version.
+				The current state is preserved in the version history.
 			</p>
 		</Modal>
 	{/if}
@@ -347,32 +329,30 @@
 		border-top: 1px solid var(--cds-border-subtle);
 	}
 
-	.rk-action-bar-secondary {
+	.rk-action-bar-end {
 		display: flex;
 		gap: var(--cds-spacing-03);
 	}
 
-	/* Remove the title-row default h1 margin since we handle it inline */
 	.rk-page-title-row {
 		margin-top: var(--cds-spacing-04);
+	}
+
+	/* Tab panels */
+	.rk-tab-panel {
+		padding: var(--cds-spacing-06) 0;
+		max-width: 48rem;
 	}
 
 	/* Fields section */
 	.rk-fields-section {
 		display: grid;
 		gap: var(--cds-spacing-05);
-		padding: var(--cds-spacing-05) 0;
 	}
 
-	/* Meta tile */
-	:global(.rk-meta-tile) {
-		height: fit-content;
-	}
-
-	.rk-meta-heading {
-		margin: 0;
-		font-size: 0.875rem;
-		font-weight: 600;
+	/* Info grid */
+	.rk-info-grid {
+		max-width: 36rem;
 	}
 
 	.rk-mono {
@@ -381,9 +361,9 @@
 		word-break: break-all;
 	}
 
-	/* Version tab content */
-	.rk-version-tab {
-		padding: var(--cds-spacing-05) 0;
+	.rk-empty-state {
+		color: var(--cds-text-secondary);
+		font-size: 0.875rem;
 	}
 
 	/* Notification spacing */
@@ -391,7 +371,7 @@
 		margin-bottom: var(--cds-spacing-05);
 	}
 
-	/* Tabs override for full-width content */
+	/* Tab content padding reset */
 	.rk-page-body :global(.bx--tab-content) {
 		padding: 0;
 	}
