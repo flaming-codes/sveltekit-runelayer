@@ -31,9 +31,10 @@ export async function insertOne(
   db: LibSQLDatabase,
   table: AnyTable,
   data: Record<string, unknown>,
+  id?: string,
 ) {
   const now = new Date().toISOString();
-  const row = { id: crypto.randomUUID(), createdAt: now, updatedAt: now, ...data };
+  const row = { id: id ?? crypto.randomUUID(), createdAt: now, updatedAt: now, ...data };
   return await db.insert(table).values(row).returning().get();
 }
 

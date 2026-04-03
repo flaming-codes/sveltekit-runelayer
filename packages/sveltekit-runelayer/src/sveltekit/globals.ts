@@ -207,17 +207,6 @@ export async function updateGlobalDocument(
       ? textValue(previousRow?._status) || "draft"
       : "draft";
 
-  await ensureGlobalTable(runelayer);
-  await runelayer.database.client.execute({
-    sql: `
-      INSERT INTO ${quoteIdent(GLOBALS_TABLE)} (slug, data, updatedAt, _status, _version)
-      VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(slug)
-      DO UPDATE SET data = excluded.data, updatedAt = excluded.updatedAt, _version = excluded._version, _status = excluded._status
-    `,
-    args: [global.slug, JSON.stringify(nextData), updatedAt, currentStatus, newVersion],
-  });
-
   const doc: Record<string, unknown> = {
     id: global.slug,
     ...nextData,
@@ -228,19 +217,38 @@ export async function updateGlobalDocument(
     doc._version = newVersion;
   }
 
-  // Create version snapshot for versioned globals
+  await ensureGlobalTable(runelayer);
   if (vc) {
-    await createGlobalVersionSnapshot(
-      runelayer,
-      global.slug,
-      newVersion,
-      currentStatus,
-      doc,
-      getUserId(req),
+    // Atomically write the global doc and version snapshot in a single batch transaction
+    await ensureGlobalVersionsTable(runelayer);
+    await runelayer.database.client.batch(
+      [
+        {
+          sql: `
+            INSERT INTO ${quoteIdent(GLOBALS_TABLE)} (slug, data, updatedAt, _status, _version)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(slug)
+            DO UPDATE SET data = excluded.data, updatedAt = excluded.updatedAt, _version = excluded._version, _status = excluded._status
+          `,
+          args: [global.slug, JSON.stringify(nextData), updatedAt, currentStatus, newVersion],
+        },
+        buildSnapshotStatement(global.slug, newVersion, currentStatus, doc, getUserId(req)),
+      ],
+      "write",
     );
     if (vc.maxPerDoc > 0) {
       await pruneGlobalVersions(runelayer, global.slug, vc.maxPerDoc);
     }
+  } else {
+    await runelayer.database.client.execute({
+      sql: `
+        INSERT INTO ${quoteIdent(GLOBALS_TABLE)} (slug, data, updatedAt, _status, _version)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(slug)
+        DO UPDATE SET data = excluded.data, updatedAt = excluded.updatedAt, _version = excluded._version, _status = excluded._status
+      `,
+      args: [global.slug, JSON.stringify(nextData), updatedAt, currentStatus, newVersion],
+    });
   }
 
   await runAfterHooks(global.hooks?.afterChange as Array<(ctx: unknown) => void> | undefined, {
@@ -254,17 +262,15 @@ export async function updateGlobalDocument(
 // Global version helpers
 // ---------------------------------------------------------------------------
 
-async function createGlobalVersionSnapshot(
-  runelayer: RunelayerInstance,
+/** Builds the INSERT statement for a version snapshot without executing it — for use in batch calls. */
+function buildSnapshotStatement(
   globalSlug: string,
   version: number,
   status: string,
   snapshot: Record<string, unknown>,
-  createdBy?: string,
-): Promise<void> {
-  await ensureGlobalVersionsTable(runelayer);
-  const now = new Date().toISOString();
-  await runelayer.database.client.execute({
+  createdBy: string | undefined,
+): { sql: string; args: (string | number | null)[] } {
+  return {
     sql: `INSERT INTO ${quoteIdent(GLOBAL_VERSIONS_TABLE)} (id, _globalSlug, _version, _status, _snapshot, _createdBy, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     args: [
       crypto.randomUUID(),
@@ -273,9 +279,9 @@ async function createGlobalVersionSnapshot(
       status,
       JSON.stringify(snapshot),
       createdBy ?? null,
-      now,
+      new Date().toISOString(),
     ],
-  });
+  };
 }
 
 async function pruneGlobalVersions(
@@ -341,27 +347,25 @@ export async function publishGlobal(
   const { id: _id, updatedAt: _ua, _status: _st, _version: _v, ...docFieldData } = doc;
   const updatedAt = new Date().toISOString();
 
-  await ensureGlobalTable(runelayer);
-  await runelayer.database.client.execute({
-    sql: `
-      INSERT INTO ${quoteIdent(GLOBALS_TABLE)} (slug, data, updatedAt, _status, _version)
-      VALUES (?, ?, ?, 'published', ?)
-      ON CONFLICT(slug) DO UPDATE SET _status = 'published', _version = excluded._version, updatedAt = excluded.updatedAt
-    `,
-    args: [global.slug, JSON.stringify(docFieldData), updatedAt, newVersion],
-  });
-
   doc._status = "published";
   doc._version = newVersion;
   doc.updatedAt = updatedAt;
 
-  await createGlobalVersionSnapshot(
-    runelayer,
-    global.slug,
-    newVersion,
-    "published",
-    doc,
-    getUserId(req),
+  await ensureGlobalTable(runelayer);
+  await ensureGlobalVersionsTable(runelayer);
+  await runelayer.database.client.batch(
+    [
+      {
+        sql: `
+          INSERT INTO ${quoteIdent(GLOBALS_TABLE)} (slug, data, updatedAt, _status, _version)
+          VALUES (?, ?, ?, 'published', ?)
+          ON CONFLICT(slug) DO UPDATE SET _status = 'published', _version = excluded._version, updatedAt = excluded.updatedAt
+        `,
+        args: [global.slug, JSON.stringify(docFieldData), updatedAt, newVersion],
+      },
+      buildSnapshotStatement(global.slug, newVersion, "published", doc, getUserId(req)),
+    ],
+    "write",
   );
   if (vc.maxPerDoc > 0) {
     await pruneGlobalVersions(runelayer, global.slug, vc.maxPerDoc);
@@ -387,27 +391,25 @@ export async function unpublishGlobal(
   const { id: _id, updatedAt: _ua, _status: _st, _version: _v, ...docFieldData } = doc;
   const updatedAt = new Date().toISOString();
 
-  await ensureGlobalTable(runelayer);
-  await runelayer.database.client.execute({
-    sql: `
-      INSERT INTO ${quoteIdent(GLOBALS_TABLE)} (slug, data, updatedAt, _status, _version)
-      VALUES (?, ?, ?, 'draft', ?)
-      ON CONFLICT(slug) DO UPDATE SET _status = 'draft', _version = excluded._version, updatedAt = excluded.updatedAt
-    `,
-    args: [global.slug, JSON.stringify(docFieldData), updatedAt, newVersion],
-  });
-
   doc._status = "draft";
   doc._version = newVersion;
   doc.updatedAt = updatedAt;
 
-  await createGlobalVersionSnapshot(
-    runelayer,
-    global.slug,
-    newVersion,
-    "draft",
-    doc,
-    getUserId(req),
+  await ensureGlobalTable(runelayer);
+  await ensureGlobalVersionsTable(runelayer);
+  await runelayer.database.client.batch(
+    [
+      {
+        sql: `
+          INSERT INTO ${quoteIdent(GLOBALS_TABLE)} (slug, data, updatedAt, _status, _version)
+          VALUES (?, ?, ?, 'draft', ?)
+          ON CONFLICT(slug) DO UPDATE SET _status = 'draft', _version = excluded._version, updatedAt = excluded.updatedAt
+        `,
+        args: [global.slug, JSON.stringify(docFieldData), updatedAt, newVersion],
+      },
+      buildSnapshotStatement(global.slug, newVersion, "draft", doc, getUserId(req)),
+    ],
+    "write",
   );
   if (vc.maxPerDoc > 0) {
     await pruneGlobalVersions(runelayer, global.slug, vc.maxPerDoc);
@@ -491,16 +493,6 @@ export async function restoreGlobalVersion(
   const newVersion = currentVersion + 1;
   const updatedAt = new Date().toISOString();
 
-  await ensureGlobalTable(runelayer);
-  await runelayer.database.client.execute({
-    sql: `
-      INSERT INTO ${quoteIdent(GLOBALS_TABLE)} (slug, data, updatedAt, _status, _version)
-      VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(slug) DO UPDATE SET data = excluded.data, updatedAt = excluded.updatedAt, _status = excluded._status, _version = excluded._version
-    `,
-    args: [global.slug, JSON.stringify(fieldData), updatedAt, "draft", newVersion],
-  });
-
   const doc: Record<string, unknown> = {
     id: global.slug,
     ...fieldData,
@@ -509,13 +501,21 @@ export async function restoreGlobalVersion(
     _version: newVersion,
   };
 
-  await createGlobalVersionSnapshot(
-    runelayer,
-    global.slug,
-    newVersion,
-    "draft",
-    doc,
-    getUserId(req),
+  await ensureGlobalTable(runelayer);
+  await ensureGlobalVersionsTable(runelayer);
+  await runelayer.database.client.batch(
+    [
+      {
+        sql: `
+          INSERT INTO ${quoteIdent(GLOBALS_TABLE)} (slug, data, updatedAt, _status, _version)
+          VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT(slug) DO UPDATE SET data = excluded.data, updatedAt = excluded.updatedAt, _status = excluded._status, _version = excluded._version
+        `,
+        args: [global.slug, JSON.stringify(fieldData), updatedAt, "draft", newVersion],
+      },
+      buildSnapshotStatement(global.slug, newVersion, "draft", doc, getUserId(req)),
+    ],
+    "write",
   );
   if (vc.maxPerDoc > 0) {
     await pruneGlobalVersions(runelayer, global.slug, vc.maxPerDoc);

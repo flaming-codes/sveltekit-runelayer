@@ -11,6 +11,7 @@ import {
   pruneVersions,
 } from "../db/operations.js";
 import { and, eq, type SQL } from "drizzle-orm";
+import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { runBeforeHooks, runAfterHooks } from "../hooks/runner.js";
 import type { HookContext } from "../hooks/types.js";
 import { checkAccess } from "./access.js";
@@ -46,27 +47,44 @@ function versionConfig(ctx: QueryContext) {
   return normalizeVersionConfig(ctx.collection.versions);
 }
 
-async function snapshotAndPrune(
+/**
+ * Executes a document write and version snapshot atomically in a single Drizzle transaction.
+ * Pruning runs after the transaction as a best-effort operation (non-critical, no data loss if it fails).
+ * For non-versioned collections, `writeOp` runs directly without a transaction.
+ */
+async function atomicWriteAndSnapshot(
   ctx: QueryContext,
   parentId: string,
   version: number,
   status: string,
-  snapshot: Record<string, unknown>,
-) {
+  writeOp: (db: LibSQLDatabase) => Promise<Record<string, unknown>>,
+): Promise<Record<string, unknown>> {
   const vc = versionConfig(ctx);
-  if (!vc) return;
-  await createVersionSnapshot(
-    ctx.db.db,
-    versionsTable(ctx),
-    parentId,
-    version,
-    status,
-    snapshot,
-    getUserId(ctx.req),
-  );
+  if (!vc) {
+    return writeOp(ctx.db.db);
+  }
+
+  let finalDoc!: Record<string, unknown>;
+  await ctx.db.db.transaction(async (tx) => {
+    // tx implements the same interface as LibSQLDatabase at runtime
+    const txDb = tx as unknown as LibSQLDatabase;
+    finalDoc = await writeOp(txDb);
+    await createVersionSnapshot(
+      txDb,
+      versionsTable(ctx),
+      parentId,
+      version,
+      status,
+      finalDoc,
+      getUserId(ctx.req),
+    );
+  });
+
   if (vc.maxPerDoc > 0) {
     await pruneVersions(ctx.db.db, versionsTable(ctx), parentId, vc.maxPerDoc);
   }
+
+  return finalDoc;
 }
 
 export async function find(ctx: QueryContext, args: FindArgs = {}) {
@@ -152,20 +170,19 @@ export async function create(ctx: QueryContext, data: Record<string, unknown>) {
   // Inject version fields for versioned collections
   const insertData = vc ? { ...hookData, _status: "draft", _version: 1 } : hookData;
 
-  const doc = await insertOne(ctx.db.db, table(ctx), insertData);
+  // Pre-generate the ID so it can be used as the snapshot parentId before insert returns
+  const newId = vc ? crypto.randomUUID() : undefined;
+  const doc = await atomicWriteAndSnapshot(
+    ctx,
+    newId ?? "",
+    1,
+    "draft",
+    (db) => insertOne(db, table(ctx), insertData, newId) as Promise<Record<string, unknown>>,
+  );
+
   await runAfterHooks(ctx.collection.hooks?.afterChange as any, { ...hc, doc });
 
-  // Create initial version snapshot
-  if (vc) {
-    const docRecord = doc as Record<string, unknown>;
-    await snapshotAndPrune(ctx, docRecord.id as string, 1, "draft", docRecord);
-  }
-
-  return (await enforceReadProjection(
-    ctx.collection,
-    ctx.req,
-    doc as Record<string, unknown>,
-  )) as Record<string, unknown>;
+  return (await enforceReadProjection(ctx.collection, ctx.req, doc)) as Record<string, unknown>;
 }
 
 export async function update(ctx: QueryContext, id: string, data: Record<string, unknown>) {
@@ -195,32 +212,22 @@ export async function update(ctx: QueryContext, id: string, data: Record<string,
   await checkAccess(ctx.collection.access?.update, ctx.req, hookData, id);
 
   // Increment version for versioned collections
-  let updateData = hookData;
-  if (vc) {
-    const currentVersion = (existingDoc as any)?._version ?? 0;
-    updateData = { ...hookData, _version: currentVersion + 1 };
-  }
+  const currentVersion = (existingDoc as any)?._version ?? 0;
+  const newVersion = vc ? currentVersion + 1 : currentVersion;
+  const currentStatus = (existingDoc as any)?._status ?? "draft";
+  const updateData = vc ? { ...hookData, _version: newVersion } : hookData;
 
-  const doc = await updateOne(ctx.db.db, table(ctx), id, updateData);
+  const doc = await atomicWriteAndSnapshot(
+    ctx,
+    id,
+    newVersion,
+    currentStatus,
+    (db) => updateOne(db, table(ctx), id, updateData) as Promise<Record<string, unknown>>,
+  );
+
   await runAfterHooks(ctx.collection.hooks?.afterChange as any, { ...hc, doc });
 
-  // Create version snapshot
-  if (vc) {
-    const docRecord = doc as Record<string, unknown>;
-    await snapshotAndPrune(
-      ctx,
-      id,
-      docRecord._version as number,
-      (docRecord._status as string) ?? "draft",
-      docRecord,
-    );
-  }
-
-  return (await enforceReadProjection(
-    ctx.collection,
-    ctx.req,
-    doc as Record<string, unknown>,
-  )) as Record<string, unknown>;
+  return (await enforceReadProjection(ctx.collection, ctx.req, doc)) as Record<string, unknown>;
 }
 
 export async function remove(ctx: QueryContext, id: string) {
@@ -279,14 +286,18 @@ export async function publish(ctx: QueryContext, id: string) {
   await enforceWritePayload(ctx.collection, "update", fieldData, ctx.req, docRecord, id);
 
   const newVersion = ((docRecord._version as number) ?? 0) + 1;
-  const doc = await updateOne(ctx.db.db, table(ctx), id, {
-    ...fieldData,
-    _status: "published",
-    _version: newVersion,
-  });
-
-  const finalDoc = doc as Record<string, unknown>;
-  await snapshotAndPrune(ctx, id, newVersion, "published", finalDoc);
+  const finalDoc = await atomicWriteAndSnapshot(
+    ctx,
+    id,
+    newVersion,
+    "published",
+    (db) =>
+      updateOne(db, table(ctx), id, {
+        ...fieldData,
+        _status: "published",
+        _version: newVersion,
+      }) as Promise<Record<string, unknown>>,
+  );
 
   await runAfterHooks(ctx.collection.hooks?.afterPublish as any, {
     ...hc,
@@ -316,13 +327,17 @@ export async function unpublish(ctx: QueryContext, id: string) {
   );
 
   const newVersion = ((docRecord._version as number) ?? 0) + 1;
-  const doc = await updateOne(ctx.db.db, table(ctx), id, {
-    _status: "draft",
-    _version: newVersion,
-  });
-
-  const finalDoc = doc as Record<string, unknown>;
-  await snapshotAndPrune(ctx, id, newVersion, "draft", finalDoc);
+  const finalDoc = await atomicWriteAndSnapshot(
+    ctx,
+    id,
+    newVersion,
+    "draft",
+    (db) =>
+      updateOne(db, table(ctx), id, {
+        _status: "draft",
+        _version: newVersion,
+      }) as Promise<Record<string, unknown>>,
+  );
 
   return (await enforceReadProjection(ctx.collection, ctx.req, finalDoc)) as Record<
     string,
@@ -365,14 +380,18 @@ export async function saveDraft(ctx: QueryContext, id: string, data: Record<stri
   );
 
   const newVersion = ((docRecord._version as number) ?? 0) + 1;
-  const doc = await updateOne(ctx.db.db, table(ctx), id, {
-    ...hookData,
-    _status: "draft",
-    _version: newVersion,
-  });
-
-  const finalDoc = doc as Record<string, unknown>;
-  await snapshotAndPrune(ctx, id, newVersion, "draft", finalDoc);
+  const finalDoc = await atomicWriteAndSnapshot(
+    ctx,
+    id,
+    newVersion,
+    "draft",
+    (db) =>
+      updateOne(db, table(ctx), id, {
+        ...hookData,
+        _status: "draft",
+        _version: newVersion,
+      }) as Promise<Record<string, unknown>>,
+  );
 
   await runAfterHooks(ctx.collection.hooks?.afterChange as any, { ...hc, doc: finalDoc });
 
@@ -425,15 +444,20 @@ export async function restoreVersion(ctx: QueryContext, id: string, versionId: s
     hookCtx(ctx, "update", { data: fieldData, id, existingDoc: existingDoc as any }),
   );
 
-  const currentVersion = ((existingDoc as any)?._version ?? 0) + 1;
-  const doc = await updateOne(ctx.db.db, table(ctx), id, {
-    ...(hc.data ?? fieldData),
-    _status: "draft",
-    _version: currentVersion,
-  });
-
-  const finalDoc = doc as Record<string, unknown>;
-  await snapshotAndPrune(ctx, id, currentVersion, "draft", finalDoc);
+  const newVersion = ((existingDoc as any)?._version ?? 0) + 1;
+  const restoreData = hc.data ?? fieldData;
+  const finalDoc = await atomicWriteAndSnapshot(
+    ctx,
+    id,
+    newVersion,
+    "draft",
+    (db) =>
+      updateOne(db, table(ctx), id, {
+        ...restoreData,
+        _status: "draft",
+        _version: newVersion,
+      }) as Promise<Record<string, unknown>>,
+  );
 
   await runAfterHooks(ctx.collection.hooks?.afterChange as any, { ...hc, doc: finalDoc });
 
