@@ -149,6 +149,8 @@ function normalizeValue(field: Field, key: string, rawValue: unknown): unknown {
         if (rawValue === 0) return false;
       }
       if (typeof rawValue === "string") {
+        // HTML form checkboxes submit "" or "on" when checked; presence alone means true
+        if (rawValue === "") return true;
         const normalized = rawValue.trim().toLowerCase();
         if (TRUE_STRINGS.has(normalized)) return true;
         if (FALSE_STRINGS.has(normalized)) return false;

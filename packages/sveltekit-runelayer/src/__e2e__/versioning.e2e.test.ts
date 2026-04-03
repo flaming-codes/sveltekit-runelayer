@@ -23,7 +23,10 @@ import {
   text,
   isAdmin,
   find,
+  findOne,
   create,
+  update,
+  remove,
   publish,
   unpublish,
   saveDraft,
@@ -293,9 +296,6 @@ describe("Collection Versioning — E2E Journey", () => {
     });
 
     it("restoreVersion() creates a new version snapshot after restore", async () => {
-      const historyBefore = await findVersionHistory(ctx(Articles), docId);
-      const countBefore = historyBefore.length;
-
       // Create another article and restore — ensures snapshot count increases
       const doc2 = await create(ctx(Articles), { title: "Doc2", body: "b" });
       const h2 = await findVersionHistory(ctx(Articles), doc2.id as string);
@@ -372,6 +372,103 @@ describe("Collection Versioning — E2E Journey", () => {
       });
       expect(doc._status).toBe("draft");
       expect(doc.title).toBe("Admin Draft Update");
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // update() on versioned collections
+  // -------------------------------------------------------------------------
+
+  describe("update() creates version snapshots", () => {
+    let docId: string;
+
+    beforeAll(async () => {
+      const doc = await create(ctx(Articles), { title: "Update Test", body: "Initial." });
+      docId = doc.id as string;
+    });
+
+    it("update() increments _version", async () => {
+      const before = await findOne(ctx(Articles), docId);
+      const versionBefore = (before as Record<string, unknown>)._version as number;
+
+      const updated = await update(ctx(Articles), docId, { body: "Updated via update()." });
+
+      expect(updated._version as number).toBe(versionBefore + 1);
+    });
+
+    it("update() preserves the current _status", async () => {
+      // Doc was created as draft and never published — status should remain 'draft'
+      const updated = await update(ctx(Articles), docId, { body: "Another update." });
+      expect(updated._status).toBe("draft");
+
+      // Now publish, then update — status should remain 'published'
+      await publish(ctx(Articles), docId);
+      const updatedAfterPublish = await update(ctx(Articles), docId, {
+        body: "Update while published.",
+      });
+      expect(updatedAfterPublish._status).toBe("published");
+    });
+
+    it("update() creates a version snapshot in history", async () => {
+      const historyBefore = await findVersionHistory(ctx(Articles), docId);
+      const countBefore = historyBefore.length;
+
+      await update(ctx(Articles), docId, { body: "Snapshot check." });
+
+      const historyAfter = await findVersionHistory(ctx(Articles), docId);
+      expect(historyAfter.length).toBe(countBefore + 1);
+    });
+
+    it("update() snapshot captures the correct status at time of write", async () => {
+      // Doc is currently published from the test above
+      await update(ctx(Articles), docId, { body: "Published snapshot." });
+
+      const history = await findVersionHistory(ctx(Articles), docId);
+      // Newest snapshot should reflect the 'published' status
+      expect(history[0]._status).toBe("published");
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // remove() cascade-deletes version snapshots
+  // -------------------------------------------------------------------------
+
+  describe("remove() cascade-deletes versions", () => {
+    it("deleting a versioned document removes all its version snapshots", async () => {
+      // Create a document and build up version history
+      const doc = await create(ctx(Articles), { title: "Doomed Doc", body: "Will be deleted." });
+      const docId = doc.id as string;
+      await publish(ctx(Articles), docId);
+      await saveDraft(ctx(Articles), docId, { body: "Draft update." });
+
+      // Verify versions exist before removal
+      const historyBefore = await findVersionHistory(ctx(Articles), docId);
+      expect(historyBefore.length).toBeGreaterThanOrEqual(3);
+
+      // Remove the document
+      await remove(ctx(Articles), docId);
+
+      // The document itself should be gone
+      const found = await findOne(ctx(Articles), docId);
+      expect(found).toBeUndefined();
+
+      // All version snapshots should be gone too (no orphans)
+      const historyAfter = await findVersionHistory(ctx(Articles), docId);
+      expect(historyAfter).toHaveLength(0);
+    });
+
+    it("deleting one document does not affect another document's versions", async () => {
+      const keepDoc = await create(ctx(Articles), { title: "Keeper" });
+      const deleteDoc = await create(ctx(Articles), { title: "Deleter" });
+      await publish(ctx(Articles), keepDoc.id as string);
+      await publish(ctx(Articles), deleteDoc.id as string);
+
+      const keepHistoryBefore = await findVersionHistory(ctx(Articles), keepDoc.id as string);
+
+      await remove(ctx(Articles), deleteDoc.id as string);
+
+      const keepHistoryAfter = await findVersionHistory(ctx(Articles), keepDoc.id as string);
+      expect(keepHistoryAfter.length).toBe(keepHistoryBefore.length);
     });
   });
 });

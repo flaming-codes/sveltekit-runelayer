@@ -8,6 +8,8 @@
 	import DateField from "./DateField.svelte";
 	import JsonField from "./JsonField.svelte";
 	import RelationshipField from "./RelationshipField.svelte";
+	import ArrayField from "./ArrayField.svelte";
+	import GroupField from "./GroupField.svelte";
 
 	let { field, values = $bindable({}) }: {
 		field: NamedField;
@@ -56,6 +58,22 @@
 		relationTo={field.relationTo}
 		required={req}
 	/>
+{:else if field.type === "array"}
+	<ArrayField
+		name={field.name}
+		{label}
+		fields={field.fields}
+		bind:values
+		minRows={field.minRows}
+		maxRows={field.maxRows}
+	/>
+{:else if field.type === "group"}
+	<GroupField
+		name={field.name}
+		{label}
+		fields={field.fields}
+		bind:values
+	/>
 {:else}
-	<p class="rk-field-help">Unsupported field type: {field.type}</p>
+	<p class="rk-field-unsupported">Unsupported field type: {field.type}</p>
 {/if}

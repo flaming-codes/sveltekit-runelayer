@@ -116,10 +116,14 @@ User management is runtime-managed via Better Auth admin endpoints:
 
 All admin pages follow a consistent layout pattern:
 
-1. **Page header** — full-width band with `--cds-ui-background` background and `--cds-border-subtle` bottom border. Contains breadcrumb navigation, an uppercase eyebrow label, the page title (h1), and optional action button or status tag aligned right.
+1. **Page header** — full-width band with `--cds-ui-background` background and `--cds-border-subtle` bottom border. Contains breadcrumb navigation, the page title (h1) with inline status badges for versioned content, and a horizontal action bar with `ButtonSet` for primary actions separated from secondary actions (e.g., Delete) by a border-top divider.
 2. **Page body** — max-width `90rem`, centered, with `--cds-spacing-06` horizontal padding. Contains the page-specific content (data tables, editor forms, cards).
 
-Edit pages (CollectionEdit, UserEdit, GlobalEdit) use a two-column Grid inside the page body: 11-column content tile + 5-column sidebar tile with metadata and actions.
+Edit pages (CollectionEdit, GlobalEdit) use Carbon `Tabs` to switch between content editing and version history when versioning is enabled. The content tab uses a responsive `Grid` with a 12-column content area and a 4-column metadata tile for document info (collection, ID, timestamps). The action bar sits in the page header as a horizontal `ButtonSet` with context-dependent buttons.
+
+For new documents and non-versioned collections, the layout renders a simple form without tabs.
+
+UserEdit uses a two-column Grid: content form + sidebar tile with metadata and actions.
 
 List pages (UsersList, CollectionList) render search/filter controls above a Carbon DataTable with toolbar integration.
 
@@ -130,6 +134,24 @@ All spacing uses Carbon spacing tokens (`--cds-spacing-02` through `--cds-spacin
 Shared page-layout CSS (`.rk-page-header`, `.rk-page-header-inner`, `.rk-page-title-row`, `.rk-eyebrow`, `.rk-page-body`, and the 672px responsive breakpoint) lives in `page-layout.css` and is imported by all page components via `@import "./page-layout.css"`. Shared editor styles (`.rk-form`, `.rk-fields`, `.rk-sidebar-title`, `.rk-meta-list`, `.rk-actions`) live in `editor-layout.css` and are imported by CollectionEdit and UserEdit.
 
 Every page includes breadcrumb navigation back to the Dashboard.
+
+## Field renderers
+
+The `FieldRenderer` component dispatches rendering based on field type. Supported types:
+
+- `text`, `slug`, `email` → `TextField` (Carbon `TextInput`)
+- `number` → `NumberField` (Carbon `NumberInput`)
+- `checkbox` → `CheckboxField` (Carbon `Checkbox`)
+- `select` → `SelectField` (Carbon `Select`)
+- `textarea` → `TextareaField` (Carbon `TextArea`)
+- `date` → `DateField` (Carbon `TextInput` with `type="date"` or `type="datetime-local"`)
+- `richText` → `JsonField` (placeholder for Tiptap integration)
+- `json` → `JsonField` (Carbon `TextArea` with JSON serialization)
+- `relationship` → `RelationshipField` (Carbon `TextInput` with document ID)
+- `array` → `ArrayField` — repeatable list of field groups with add/remove/reorder controls. Each row renders as a Carbon `Tile` with `ChevronUp`/`ChevronDown`/`TrashCan` icon buttons and recursively renders nested fields via `FieldRenderer`. Respects `minRows`/`maxRows` constraints.
+- `group` → `GroupField` — renders nested fields inline within a Carbon `FormGroup` with a left border accent. Stores values as a nested object keyed by the group name.
+
+Unsupported field types render a fallback message.
 
 ## Accessibility
 
@@ -188,12 +210,10 @@ For collections and globals with `versions` enabled, the admin UI provides:
 
 **CollectionEdit** changes:
 
-- Status badge (Draft/Published) in the header and sidebar metadata
-- Version number display (e.g., "v5")
-- Context-dependent action buttons: "Publish" + "Save draft" for drafts, "Save as draft" + "Unpublish" for published documents
-- All version action buttons use the HTML `formaction` attribute on the shared form, so field data is submitted with every action
-- Inline warning notification when editing a published document: "Saving as draft will unpublish this document"
-- Collapsible version history panel (Accordion + StructuredList) showing version number, status tag, timestamp, and "Restore" button per entry
+- Status badge (Draft/Published) and version number displayed inline with the page title
+- Horizontal action bar with `ButtonSet`: "Publish" + "Save draft" for drafts, "Save as draft" + "Unpublish" for published documents, and a secondary "Delete" button (danger-ghost) aligned right
+- Inline info notification when editing a published document: "Saving as draft will unpublish this document"
+- `Tabs` component with "Content" and "Version history" tabs, giving version history equal prominence with the content editor
 - Restore confirmation modal (follows the same pattern as the delete modal)
 
 **CollectionList** changes:
@@ -203,13 +223,13 @@ For collections and globals with `versions` enabled, the admin UI provides:
 
 **GlobalEdit** changes:
 
-- Same publish/unpublish/save-draft buttons in the header area
-- Version history panel below the form tile
+- Same inline status badges and horizontal `ButtonSet` action bar as CollectionEdit
+- `Tabs` with "Configuration" and "Version history" tabs
 - Restore confirmation modal
 
 **VersionHistory component** (`AdminVersionHistory`):
 
 - Reusable component exported from `@flaming-codes/sveltekit-runelayer/admin`
-- Uses Carbon Accordion for collapse, StructuredList for entries
-- Progressive loading with "Show more" button (starts with 5 entries)
-- Current version marked with "Current" badge instead of Restore button
+- Uses Carbon `DataTable` with columns: Version (monospace v-number), Status (Tag), Author, Date, and Actions (Restore button or "Current" Tag)
+- Progressive loading with "Show more" button (starts with 10 entries, loads 20 more per click)
+- Current version marked with outline "Current" tag instead of Restore button
