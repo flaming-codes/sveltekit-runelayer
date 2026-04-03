@@ -8,12 +8,19 @@
 	import DateField from "./DateField.svelte";
 	import JsonField from "./JsonField.svelte";
 	import RelationshipField from "./RelationshipField.svelte";
-	import ArrayField from "./ArrayField.svelte";
+	import BlocksField from "./BlocksField.svelte";
 	import GroupField from "./GroupField.svelte";
 
-	let { field, values = $bindable({}) }: {
+	let {
+		field,
+		values = $bindable({}),
+		errors = {},
+		disabled = false,
+	}: {
 		field: NamedField;
 		values: Record<string, any>;
+		errors: Record<string, string[]>;
+		disabled: boolean;
 	} = $props();
 
 	let label = $derived(field.label ?? field.name);
@@ -56,16 +63,15 @@
 		{label}
 		bind:value={values[field.name]}
 		relationTo={field.relationTo}
+		hasMany={field.hasMany}
 		required={req}
 	/>
-{:else if field.type === "array"}
-	<ArrayField
-		name={field.name}
-		{label}
-		fields={field.fields}
+{:else if field.type === "blocks"}
+	<BlocksField
+		{field}
 		bind:values
-		minRows={field.minRows}
-		maxRows={field.maxRows}
+		{errors}
+		{disabled}
 	/>
 {:else if field.type === "group"}
 	<GroupField

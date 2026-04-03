@@ -282,8 +282,9 @@ describe("Blog CMS Platform — Full User Journey", () => {
     });
 
     expect(postSvelte.title).toBe("Getting Started with Svelte 5");
-    expect(postSvelte.author).toBe(authorAlice.id);
-    expect(postSvelte.category).toBe(catTech.id);
+    // Relationship fields are now stored as RefSentinel objects
+    expect((postSvelte.author as { _ref: string })._ref).toBe(authorAlice.id);
+    expect((postSvelte.category as { _ref: string })._ref).toBe(catTech.id);
     expect(postSvelte.featured).toBe(true);
     expect(postFigma.status).toBe("draft");
   });
@@ -317,7 +318,7 @@ describe("Blog CMS Platform — Full User Journey", () => {
     const found = await findOne(postCtx, postSvelte.id as string);
     expect(found).toBeDefined();
     expect(found!.title).toBe("Getting Started with Svelte 5");
-    expect(found!.author).toBe(authorAlice.id);
+    expect((found!.author as { _ref: string })._ref).toBe(authorAlice.id);
   });
 
   it("finds all authors (2 total)", async () => {
@@ -367,7 +368,8 @@ describe("Blog CMS Platform — Full User Journey", () => {
     for (const post of posts) {
       const p = post as Record<string, unknown>;
       if (p.author) {
-        const author = await findOne(authorCtx, p.author as string);
+        const ref = (p.author as { _ref: string })._ref;
+        const author = await findOne(authorCtx, ref);
         expect(author).toBeDefined();
       }
     }
@@ -378,7 +380,8 @@ describe("Blog CMS Platform — Full User Journey", () => {
     for (const post of posts) {
       const p = post as Record<string, unknown>;
       if (p.category) {
-        const cat = await findOne(categoryCtx, p.category as string);
+        const ref = (p.category as { _ref: string })._ref;
+        const cat = await findOne(categoryCtx, ref);
         expect(cat).toBeDefined();
       }
     }

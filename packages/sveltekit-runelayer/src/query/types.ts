@@ -15,4 +15,11 @@ export interface FindArgs {
   sortOrder?: "asc" | "desc";
   /** Include draft documents. Defaults to false for versioned collections. */
   draft?: boolean;
+  /** Population depth. 0 (default) returns raw RefSentinel objects; 1 replaces sentinels with full documents (or null if missing). */
+  depth?: 0 | 1;
+}
+
+export interface FindOneOpts {
+  /** Population depth. 0 (default) returns raw RefSentinel objects; 1 replaces sentinels with full documents (or null if missing). */
+  depth?: 0 | 1;
 }

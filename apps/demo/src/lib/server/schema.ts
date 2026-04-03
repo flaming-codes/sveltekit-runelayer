@@ -14,7 +14,8 @@ import {
   slug,
   email,
   group,
-  array,
+  blocks,
+  defineBlock,
   row,
   collapsible,
   isAdmin,
@@ -48,21 +49,27 @@ export const Authors = defineCollection({
     {
       name: "socialLinks",
       label: "Social Links",
-      ...array({
-        fields: [
-          {
-            name: "platform",
-            label: "Platform",
-            ...select({
-              options: [
-                { label: "Twitter / X", value: "twitter" },
-                { label: "GitHub", value: "github" },
-                { label: "LinkedIn", value: "linkedin" },
-                { label: "Website", value: "website" },
-              ],
-            }),
-          },
-          { name: "url", label: "URL", ...text({ required: true }) },
+      ...blocks({
+        blocks: [
+          defineBlock({
+            slug: "socialLink",
+            label: "Social Link",
+            fields: [
+              {
+                name: "platform",
+                label: "Platform",
+                ...select({
+                  options: [
+                    { label: "Twitter / X", value: "twitter" },
+                    { label: "GitHub", value: "github" },
+                    { label: "LinkedIn", value: "linkedin" },
+                    { label: "Website", value: "website" },
+                  ],
+                }),
+              },
+              { name: "url", label: "URL", ...text({ required: true }) },
+            ],
+          }),
         ],
       }),
     },
@@ -240,14 +247,20 @@ export const Pages = defineCollection({
     {
       name: "sections",
       label: "Content Sections",
-      ...array({
-        fields: [
-          { name: "title", label: "Section Title", ...text({ required: true }) },
-          { name: "body", label: "Section Body", ...richText() },
-          { name: "order", label: "Order", ...number({ min: 0 }) },
+      ...blocks({
+        blocks: [
+          defineBlock({
+            slug: "section",
+            label: "Section",
+            fields: [
+              { name: "title", label: "Section Title", ...text({ required: true }) },
+              { name: "body", label: "Section Body", ...richText() },
+              { name: "order", label: "Order", ...number({ min: 0 }) },
+            ],
+          }),
         ],
-        minRows: 0,
-        maxRows: 20,
+        minBlocks: 0,
+        maxBlocks: 20,
       }),
     },
     {

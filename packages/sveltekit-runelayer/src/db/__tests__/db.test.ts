@@ -2,7 +2,15 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { generateTables } from "../schema.js";
 import { createDatabase, type RunelayerDatabase } from "../init.js";
 import { insertOne, findById, findMany, updateOne, deleteOne } from "../operations.js";
-import { text, number, checkbox, json, array, relationship } from "../../schema/fields.js";
+import {
+  text,
+  number,
+  checkbox,
+  json,
+  blocks,
+  defineBlock,
+  relationship,
+} from "../../schema/fields.js";
 import type { CollectionConfig } from "../../schema/collections.js";
 import { applySchemaForTests } from "../../__testutils__/migrations.js";
 
@@ -22,26 +30,34 @@ describe("generateTables", () => {
     expect(tables).toHaveProperty("posts");
   });
 
-  it("creates auxiliary tables for array fields", () => {
+  it("creates a JSON column for blocks fields (no auxiliary tables)", () => {
+    const ContentBlock = defineBlock({
+      slug: "content",
+      label: "Content",
+      fields: [{ name: "body", ...text() }],
+    });
     const col: CollectionConfig = {
       slug: "pages",
       fields: [
         { name: "title", ...text() },
-        { name: "blocks", ...array({ fields: [{ name: "content", ...text() }] }) },
+        { name: "layout", ...blocks({ blocks: [ContentBlock] }) },
       ],
     };
     const tables = generateTables([col]);
     expect(tables).toHaveProperty("pages");
-    expect(tables).toHaveProperty("pages_blocks");
+    // No auxiliary table — blocks stored as JSON column in main table
+    expect(tables).not.toHaveProperty("pages_layout");
   });
 
-  it("creates join tables for hasMany relationships", () => {
+  it("creates a JSON column for hasMany relationships (no join tables)", () => {
     const col: CollectionConfig = {
       slug: "articles",
       fields: [{ name: "tags", ...relationship({ relationTo: "tags", hasMany: true }) }],
     };
     const tables = generateTables([col]);
-    expect(tables).toHaveProperty("articles_rels_tags");
+    expect(tables).toHaveProperty("articles");
+    // No join table — hasMany stored as RefSentinel[] JSON column in main table
+    expect(tables).not.toHaveProperty("articles_rels_tags");
   });
 
   it("adds version columns when versions is enabled", () => {

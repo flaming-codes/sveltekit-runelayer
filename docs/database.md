@@ -30,17 +30,16 @@ interface RunelayerDatabase {
 
 ### Column Mapping
 
-| Field Type                                        | Drizzle Column                 | Notes                                  |
-| ------------------------------------------------- | ------------------------------ | -------------------------------------- |
-| text, textarea, email, slug, select, date, upload | `text()`                       | Stored as string                       |
-| number                                            | `real()`                       | Floating point                         |
-| checkbox                                          | `integer({ mode: 'boolean' })` | 0/1                                    |
-| richText, json, multiSelect                       | `text({ mode: 'json' })`       | JSON payload                           |
-| relationship (single)                             | `text()`                       | Related document ID                    |
-| relationship (hasMany)                            | —                              | Join table generated                   |
-| group                                             | —                              | Flattened with prefixed columns        |
-| array                                             | —                              | Separate child table                   |
-| row, collapsible                                  | —                              | Structural; children mapped to columns |
+| Field Type                                        | Drizzle Column                 | Notes                                                |
+| ------------------------------------------------- | ------------------------------ | ---------------------------------------------------- |
+| text, textarea, email, slug, select, date, upload | `text()`                       | Stored as string                                     |
+| number                                            | `real()`                       | Floating point                                       |
+| checkbox                                          | `integer({ mode: 'boolean' })` | 0/1                                                  |
+| richText, json, multiSelect                       | `text({ mode: 'json' })`       | JSON payload                                         |
+| relationship (single and hasMany)                 | `text({ mode: 'json' })`       | Sentinel object or array of sentinels; no join table |
+| blocks                                            | `text({ mode: 'json' })`       | Array of typed block instances; no auxiliary table   |
+| group                                             | —                              | Flattened with prefixed columns                      |
+| row, collapsible                                  | —                              | Structural; children mapped to columns               |
 
 ### Auto Columns
 
@@ -158,18 +157,23 @@ import {
 - `deleteVersionsByParent(db, versionsTable, parentId)` — cascade cleanup
 - `pruneVersions(db, versionsTable, parentId, maxPerDoc)` — deletes oldest versions beyond limit, always protecting the most recent version and the latest published version
 
-## Auxiliary Tables
+## Relationship Sentinel Format
 
-### Array fields
+Relationship fields do not use join tables. Both single and hasMany relationships are stored as JSON in the main table.
 
-For `posts.tags` (`array`):
+A single relationship value:
 
-- table `posts_tags`
-- columns: `id`, `_parentId`, `_order`, plus mapped sub-field columns
+```json
+{ "_ref": "abc123", "_collection": "users" }
+```
 
-### hasMany relationships
+A hasMany relationship value:
 
-For `posts.categories` (`relationship` with `hasMany: true`):
+```json
+[
+  { "_ref": "abc123", "_collection": "tags" },
+  { "_ref": "def456", "_collection": "tags" }
+]
+```
 
-- table `posts_rels_categories`
-- columns: `id`, `parentId`, `relatedId`
+The `_collection` field is stored alongside every reference to support polymorphic relationships (where `relationTo` lists multiple collections). The query layer uses this to route population queries at `depth: 1` to the correct table.

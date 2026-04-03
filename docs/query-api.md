@@ -46,6 +46,7 @@ interface FindArgs {
   sort?: string; // Column name to sort by
   sortOrder?: "asc" | "desc";
   draft?: boolean; // Include draft documents (default: false for versioned collections)
+  depth?: 0 | 1; // Relationship population depth (default: 0)
 }
 ```
 
@@ -54,6 +55,37 @@ Returns an array of document objects.
 `where` uses simple equality checks and only allows schema-backed fields plus core system columns (`id`, `createdAt`, `updatedAt`, and version columns when enabled). Unknown keys are rejected with a 400 error.
 
 For versioned collections, `find()` automatically filters to `_status = 'published'` unless `draft: true` is passed. This ensures public APIs only return published content by default.
+
+### Relationship Population (depth)
+
+Both `find()` and `findOne()` accept a `depth` option that controls how relationship fields are returned.
+
+```ts
+// depth: 0 (default) — relationship fields return sentinel objects
+const docs = await find(ctx, { depth: 0 });
+// doc.author === { _ref: "abc123", _collection: "users" }
+
+// depth: 1 — relationship fields are replaced with the full referenced document
+const docs = await find(ctx, { depth: 1 });
+// doc.author === { id: "abc123", name: "Alice", ... }
+// doc.author === null  // if the referenced document was deleted
+```
+
+Population behavior:
+
+- `depth: 0` (default): relationship fields return `RefSentinel` objects (`{ _ref: string, _collection: string }`)
+- `depth: 1`: relationship fields are replaced with the full referenced document fetched from the database, or `null` if the referenced document was deleted or does not exist
+- Population uses one batch query per distinct referenced collection — no N+1 queries
+- `depth > 1` is not supported; references within populated documents are returned as-is (sentinel objects)
+- Population walks `group` and `blocks` fields recursively, resolving any relationship fields nested within them
+
+```ts
+interface FindOneOpts {
+  depth?: 0 | 1;
+}
+
+const doc = await findOne(ctx, "document-id", { depth: 1 });
+```
 
 ### findOne
 

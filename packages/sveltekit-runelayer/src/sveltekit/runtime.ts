@@ -232,6 +232,7 @@ export function createRunelayerRuntime(
   });
 
   const healthPath = `${adminPath}/health`;
+  const apiBase = `/runelayer/api/`;
 
   const handle: Handle = async ({ event, resolve }) => {
     // Intercept /admin/health for JSON API consumers (CI/CD, monitoring).
@@ -243,6 +244,38 @@ export function createRunelayerRuntime(
       const health = await buildHealthPayload(runelayer);
       return new Response(JSON.stringify(health), {
         status: health.database ? 200 : 503,
+        headers: { "content-type": "application/json" },
+      });
+    }
+
+    // Intercept /runelayer/api/{collectionSlug} for admin relationship field options.
+    if (event.url.pathname.startsWith(apiBase) && event.request.method === "GET") {
+      const user = getUser(event);
+      if (!user || user.role !== "admin") {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      const slug = event.url.pathname.slice(apiBase.length).split("/")[0];
+      const collection = runelayer.collections.find((c) => c.slug === slug);
+      if (!collection || !slug) {
+        return new Response(JSON.stringify({ error: "Unknown collection" }), {
+          status: 404,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      const limitParam = event.url.searchParams.get("limit");
+      const limit = Math.min(
+        Number.isFinite(Number.parseInt(limitParam ?? "", 10))
+          ? Number.parseInt(limitParam!, 10)
+          : 100,
+        200,
+      );
+      const docs = await system.find(collection, { limit });
+      const useAsTitle = collection.admin?.useAsTitle;
+      return new Response(JSON.stringify({ docs, useAsTitle }), {
+        status: 200,
         headers: { "content-type": "application/json" },
       });
     }

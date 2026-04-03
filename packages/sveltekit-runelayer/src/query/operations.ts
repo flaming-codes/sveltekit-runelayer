@@ -10,14 +10,16 @@ import {
   deleteVersionsByParent,
   pruneVersions,
 } from "../db/operations.js";
-import { and, eq, type SQL } from "drizzle-orm";
+import { and, eq, inArray, type SQL } from "drizzle-orm";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { runBeforeHooks, runAfterHooks } from "../hooks/runner.js";
 import type { HookContext } from "../hooks/types.js";
 import { checkAccess } from "./access.js";
 import { allowedQueryColumns, enforceReadProjection, enforceWritePayload } from "./enforcement.js";
-import type { QueryContext, FindArgs } from "./types.js";
+import type { QueryContext, FindArgs, FindOneOpts } from "./types.js";
 import { normalizeVersionConfig } from "../versions/config.js";
+import type { BlockConfig, NamedField, RefSentinel } from "../schema/fields.js";
+import type { GeneratedTables } from "../db/schema.js";
 
 function table(ctx: QueryContext) {
   return ctx.db.tables[ctx.collection.slug];
@@ -87,6 +89,207 @@ async function atomicWriteAndSnapshot(
   return finalDoc;
 }
 
+// ---------------------------------------------------------------------------
+// Ref population helpers (depth=1)
+// ---------------------------------------------------------------------------
+
+function parseRefSentinel(value: unknown): RefSentinel | null {
+  if (value === null || value === undefined) return null;
+  // JSON mode columns (hasMany: true) return objects; plain text columns return strings.
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      if (
+        parsed &&
+        typeof parsed === "object" &&
+        typeof (parsed as any)._ref === "string" &&
+        typeof (parsed as any)._collection === "string"
+      ) {
+        return parsed as RefSentinel;
+      }
+    } catch {
+      // not a JSON sentinel string
+    }
+    return null;
+  }
+  if (
+    typeof value === "object" &&
+    typeof (value as any)._ref === "string" &&
+    typeof (value as any)._collection === "string"
+  ) {
+    return value as RefSentinel;
+  }
+  return null;
+}
+
+/**
+ * Walk docs and collect all RefSentinel values, grouped by collection slug.
+ * Uses the field config to know which fields are relationship/group/blocks.
+ */
+function collectSentinels(
+  docs: Record<string, unknown>[],
+  fields: NamedField[],
+): Map<string, Set<string>> {
+  const result = new Map<string, Set<string>>();
+
+  function addSentinel(sentinel: RefSentinel): void {
+    if (!result.has(sentinel._collection)) {
+      result.set(sentinel._collection, new Set());
+    }
+    result.get(sentinel._collection)!.add(sentinel._ref);
+  }
+
+  function walkFields(doc: Record<string, unknown>, namedFields: NamedField[]): void {
+    for (const field of namedFields) {
+      const value = doc[field.name];
+      if (value === undefined || value === null) continue;
+
+      if (field.type === "relationship") {
+        if (field.hasMany) {
+          // hasMany: stored as RefSentinel[] in JSON mode — value is already an array
+          if (Array.isArray(value)) {
+            for (const item of value) {
+              const s = parseRefSentinel(item);
+              if (s) addSentinel(s);
+            }
+          }
+        } else {
+          const s = parseRefSentinel(value);
+          if (s) addSentinel(s);
+        }
+      } else if (field.type === "group") {
+        // Group fields are stored flat in the DB row (address_street, address_city).
+        // Always walk with prefixed names — the inner loop skips absent keys safely.
+        walkFields(
+          doc,
+          field.fields.map((f) => ({ ...f, name: `${field.name}_${f.name}` })),
+        );
+      } else if (field.type === "blocks") {
+        if (Array.isArray(value)) {
+          for (const block of value) {
+            if (!block || typeof block !== "object") continue;
+            const blockRecord = block as Record<string, unknown>;
+            const blockType = blockRecord.blockType;
+            const blockConfig: BlockConfig | undefined = field.blocks.find(
+              (b) => b.slug === blockType,
+            );
+            if (blockConfig) {
+              walkFields(blockRecord, blockConfig.fields);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  for (const doc of docs) {
+    walkFields(doc, fields);
+  }
+
+  return result;
+}
+
+/**
+ * Walk docs again and replace each sentinel with the fetched document (or null).
+ */
+function hydrateDocs(
+  docs: Record<string, unknown>[],
+  fields: NamedField[],
+  lookup: Map<string, Map<string, Record<string, unknown>>>,
+): Record<string, unknown>[] {
+  function resolveRef(value: unknown): Record<string, unknown> | null | unknown {
+    const s = parseRefSentinel(value);
+    if (!s) return value;
+    const collectionMap = lookup.get(s._collection);
+    if (!collectionMap) return null;
+    return collectionMap.get(s._ref) ?? null;
+  }
+
+  function hydrateFields(
+    doc: Record<string, unknown>,
+    namedFields: NamedField[],
+  ): Record<string, unknown> {
+    const out = { ...doc };
+
+    for (const field of namedFields) {
+      const value = out[field.name];
+      if (value === undefined || value === null) continue;
+
+      if (field.type === "relationship") {
+        if (field.hasMany) {
+          if (Array.isArray(value)) {
+            out[field.name] = value.map((item) => resolveRef(item));
+          }
+        } else {
+          out[field.name] = resolveRef(value);
+        }
+      } else if (field.type === "group") {
+        hydrateFields(
+          out,
+          field.fields.map((f) => ({ ...f, name: `${field.name}_${f.name}` })),
+        );
+      } else if (field.type === "blocks") {
+        if (Array.isArray(value)) {
+          out[field.name] = value.map((block) => {
+            if (!block || typeof block !== "object") return block;
+            const blockRecord = block as Record<string, unknown>;
+            const blockType = blockRecord.blockType;
+            const blockConfig: BlockConfig | undefined = field.blocks.find(
+              (b) => b.slug === blockType,
+            );
+            if (!blockConfig) return blockRecord;
+            return hydrateFields(blockRecord, blockConfig.fields);
+          });
+        }
+      }
+    }
+
+    return out;
+  }
+
+  return docs.map((doc) => hydrateFields(doc, fields));
+}
+
+/**
+ * Populate RefSentinel values in docs with full documents fetched from the DB.
+ * Returns new doc objects (input docs are not mutated).
+ */
+async function populateRefs(
+  docs: Record<string, unknown>[],
+  fields: NamedField[],
+  db: LibSQLDatabase,
+  tables: GeneratedTables,
+): Promise<Record<string, unknown>[]> {
+  if (docs.length === 0) return docs;
+
+  // Step 1: collect sentinels grouped by collection
+  const sentinelsByCollection = collectSentinels(docs, fields);
+  if (sentinelsByCollection.size === 0) return docs;
+
+  // Step 2: batch-fetch one query per distinct referenced collection
+  const lookup = new Map<string, Map<string, Record<string, unknown>>>();
+
+  for (const [collectionSlug, ids] of sentinelsByCollection.entries()) {
+    const refTable = tables[collectionSlug];
+    if (!refTable) continue; // unknown collection — refs will resolve to null
+
+    const idList = Array.from(ids);
+    const rows = await db.select().from(refTable).where(inArray(refTable.id, idList)).all();
+
+    const idMap = new Map<string, Record<string, unknown>>();
+    for (const row of rows) {
+      const rowRecord = row as Record<string, unknown>;
+      if (typeof rowRecord.id === "string") {
+        idMap.set(rowRecord.id, rowRecord);
+      }
+    }
+    lookup.set(collectionSlug, idMap);
+  }
+
+  // Step 3: hydrate — replace sentinels with fetched docs (or null)
+  return hydrateDocs(docs, fields, lookup);
+}
+
 export async function find(ctx: QueryContext, args: FindArgs = {}) {
   await checkAccess(ctx.collection.access?.read, ctx.req);
   let hc = await runBeforeHooks(ctx.collection.hooks?.beforeRead as any, hookCtx(ctx, "read"));
@@ -133,14 +336,21 @@ export async function find(ctx: QueryContext, args: FindArgs = {}) {
     sort: args.sort ? { column: args.sort, order: args.sortOrder } : undefined,
   });
   await runAfterHooks(ctx.collection.hooks?.afterRead as any, { ...hc, docs });
-  return await Promise.all(
-    docs.map((doc) =>
-      enforceReadProjection(ctx.collection, ctx.req, doc as Record<string, unknown>),
-    ),
-  );
+  const projected = (
+    await Promise.all(
+      docs.map((doc) =>
+        enforceReadProjection(ctx.collection, ctx.req, doc as Record<string, unknown>),
+      ),
+    )
+  ).filter((doc): doc is Record<string, unknown> => doc !== undefined);
+
+  if (args.depth === 1) {
+    return populateRefs(projected, ctx.collection.fields, ctx.db.db, ctx.db.tables);
+  }
+  return projected;
 }
 
-export async function findOne(ctx: QueryContext, id: string) {
+export async function findOne(ctx: QueryContext, id: string, opts: FindOneOpts = {}) {
   await checkAccess(ctx.collection.access?.read, ctx.req, undefined, id);
   let hc = await runBeforeHooks(
     ctx.collection.hooks?.beforeRead as any,
@@ -148,7 +358,23 @@ export async function findOne(ctx: QueryContext, id: string) {
   );
   const doc = await findById(ctx.db.db, table(ctx), id);
   await runAfterHooks(ctx.collection.hooks?.afterRead as any, { ...hc, doc });
-  return await enforceReadProjection(ctx.collection, ctx.req, doc as Record<string, unknown>);
+  const projected = await enforceReadProjection(
+    ctx.collection,
+    ctx.req,
+    doc as Record<string, unknown>,
+  );
+  if (!projected) return projected;
+
+  if (opts.depth === 1) {
+    const [populated] = await populateRefs(
+      [projected],
+      ctx.collection.fields,
+      ctx.db.db,
+      ctx.db.tables,
+    );
+    return populated;
+  }
+  return projected;
 }
 
 export async function create(ctx: QueryContext, data: Record<string, unknown>) {

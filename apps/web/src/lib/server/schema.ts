@@ -3,11 +3,11 @@ import {
   text,
   textarea,
   richText,
-  select,
   slug,
   checkbox,
   number,
-  array,
+  blocks,
+  defineBlock,
   group,
 } from "@flaming-codes/sveltekit-runelayer/schema";
 
@@ -22,36 +22,46 @@ export const Pages = defineCollection({
     {
       name: "blocks",
       label: "Blocks",
-      ...array({
-        fields: [
-          {
-            name: "blockType",
-            label: "Block Type",
-            ...select({
-              required: true,
-              options: [
-                { label: "Hero", value: "hero" },
-                { label: "Rich Text", value: "richtext" },
-                { label: "Call to Action", value: "cta" },
-                { label: "Image", value: "image" },
-              ],
-            }),
-          },
-          { name: "heading", label: "Heading", ...text() },
-          { name: "body", label: "Body", ...richText() },
-          {
-            name: "cta",
-            label: "CTA",
-            ...group({
-              fields: [
-                { name: "label", label: "Button Label", ...text() },
-                { name: "url", label: "Button URL", ...text() },
-              ],
-            }),
-          },
-          { name: "imageUrl", label: "Image URL", ...text() },
-          { name: "imageAlt", label: "Image Alt", ...text() },
-          { name: "order", label: "Order", ...number({ min: 0 }) },
+      ...blocks({
+        blocks: [
+          defineBlock({
+            slug: "hero",
+            label: "Hero",
+            fields: [
+              { name: "heading", label: "Heading", ...text() },
+              { name: "body", label: "Body", ...richText() },
+            ],
+          }),
+          defineBlock({
+            slug: "richtext",
+            label: "Rich Text",
+            fields: [{ name: "body", label: "Body", ...richText() }],
+          }),
+          defineBlock({
+            slug: "cta",
+            label: "Call to Action",
+            fields: [
+              {
+                name: "cta",
+                label: "CTA",
+                ...group({
+                  fields: [
+                    { name: "label", label: "Button Label", ...text() },
+                    { name: "url", label: "Button URL", ...text() },
+                  ],
+                }),
+              },
+            ],
+          }),
+          defineBlock({
+            slug: "image",
+            label: "Image",
+            fields: [
+              { name: "imageUrl", label: "Image URL", ...text() },
+              { name: "imageAlt", label: "Image Alt", ...text() },
+              { name: "order", label: "Order", ...number({ min: 0 }) },
+            ],
+          }),
         ],
       }),
     },

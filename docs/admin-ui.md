@@ -145,10 +145,10 @@ The `FieldRenderer` component dispatches rendering based on field type. Supporte
 - `select` → `SelectField` (Carbon `Select`)
 - `textarea` → `TextareaField` (Carbon `TextArea`)
 - `date` → `DateField` (Carbon `TextInput` with `type="date"` or `type="datetime-local"`)
-- `richText` → `JsonField` (placeholder for Tiptap integration)
+- `richText` → `RichTextField` (placeholder for Tiptap integration)
 - `json` → `JsonField` (Carbon `TextArea` with JSON serialization)
-- `relationship` → `RelationshipField` (Carbon `TextInput` with document ID)
-- `array` → `ArrayField` — repeatable list of field groups with add/remove/reorder controls. Each row renders as a Carbon `Tile` with `ChevronUp`/`ChevronDown`/`TrashCan` icon buttons and recursively renders nested fields via `FieldRenderer`. Respects `minRows`/`maxRows` constraints.
+- `relationship` → `RelationshipField` — Carbon `ComboBox` (single) or `MultiSelect` (hasMany) with live document fetching from the `/runelayer/api/{collectionSlug}` admin API endpoint. Stores `RefSentinel` objects (`{ _ref, _collection }`) rather than bare ID strings.
+- `blocks` → `BlocksField` — renders a polymorphic block list. Each block instance is displayed as a Carbon `Tile` with `ChevronUp`/`ChevronDown`/`TrashCan` icon buttons for reorder and delete. Block fields are rendered recursively via `FieldRenderer`. A `BlockPalette` overflow menu lists available block types by label and appends a new block instance when selected. Respects `minBlocks`/`maxBlocks` constraints.
 - `group` → `GroupField` — renders nested fields inline within a Carbon `FormGroup` with a left border accent. Stores values as a nested object keyed by the group name.
 
 Unsupported field types render a fallback message.

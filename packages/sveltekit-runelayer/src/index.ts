@@ -25,7 +25,8 @@ export {
   slug,
   email,
   group,
-  array,
+  blocks,
+  defineBlock,
   row,
   collapsible,
 } from "./schema/index.js";
@@ -38,6 +39,12 @@ export type {
   AccessFn,
   AccessControl,
   ValidationFn,
+  BlocksField,
+  BlockConfig,
+  RefSentinel,
+  BlocksValue,
+  InferBlockData,
+  InferFieldsData,
 } from "./schema/index.js";
 
 // Auth

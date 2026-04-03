@@ -33,14 +33,14 @@ function mapField(field: NamedField, prefix = ""): Record<string, ColumnDef> {
       return { [col]: text(col, { mode: "json" }) };
 
     case "relationship":
-      if (field.hasMany) return {}; // handled via join table
-      return { [col]: text(col) };
+      // Both single and hasMany stored as RefSentinel / RefSentinel[] JSON
+      return { [col]: text(col, { mode: "json" }) };
 
     case "group":
       return fieldsToColumns(field.fields, prefix + field.name + "_");
 
-    case "array":
-      return {}; // handled via separate table
+    case "blocks":
+      return { [col]: text(col, { mode: "json" }) };
 
     case "row":
     case "collapsible":
@@ -101,28 +101,6 @@ export function generateTables(collections: CollectionConfig[]): GeneratedTables
         _createdBy: text("_createdBy"),
         createdAt: text("createdAt").notNull(),
       });
-    }
-
-    // Create auxiliary tables for array fields and hasMany relationships
-    for (const f of fields) {
-      if (f.type === "array") {
-        const arraySlug = `${slug}_${f.name}`;
-        const arrayCols = fieldsToColumns(f.fields);
-        tables[arraySlug] = sqliteTable(arraySlug, {
-          id: text("id").primaryKey(),
-          _parentId: text("_parentId").notNull(),
-          _order: integer("_order").notNull(),
-          ...arrayCols,
-        });
-      }
-      if (f.type === "relationship" && f.hasMany) {
-        const joinSlug = `${slug}_rels_${f.name}`;
-        tables[joinSlug] = sqliteTable(joinSlug, {
-          id: text("id").primaryKey(),
-          parentId: text("parentId").notNull(),
-          relatedId: text("relatedId").notNull(),
-        });
-      }
     }
   }
 
