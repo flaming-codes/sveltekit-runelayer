@@ -3,13 +3,16 @@
 		Breadcrumb,
 		BreadcrumbItem,
 		Button,
-		ButtonSet,
+		Heading,
 		InlineNotification,
 		Modal,
+		Section,
 		Tab,
 		TabContent,
 		Tabs,
 		Tag,
+		Toolbar,
+		ToolbarContent,
 	} from "carbon-components-svelte";
 	import type { GlobalConfig } from "../../schema/globals.js";
 	import type { VersionEntry } from "../../sveltekit/types.js";
@@ -53,8 +56,8 @@
 </script>
 
 <section class="rk-page">
-	<!-- Header -->
-	<div class="rk-page-header">
+	<!-- Header (sticky) -->
+	<div class="rk-page-header rk-page-header--sticky">
 		<div class="rk-page-header-inner">
 			<Breadcrumb noTrailingSlash>
 				<BreadcrumbItem href={basePath}>Dashboard</BreadcrumbItem>
@@ -65,7 +68,9 @@
 
 			<div class="rk-page-title-row">
 				<div class="rk-title-with-status">
-					<h1>{label}</h1>
+					<Section>
+						<Heading>{label}</Heading>
+					</Section>
 					{#if hasVersions}
 						<div class="rk-status-badges">
 							<Tag type={isPublished ? "green" : "teal"}>
@@ -77,32 +82,34 @@
 				</div>
 			</div>
 
-			<!-- Action bar -->
-			<div class="rk-action-bar">
-				<ButtonSet>
-					{#if hasVersions}
-						{#if isDraft}
-							<Button type="submit" form={formId} formaction="?/publishGlobal">Publish</Button>
-							<Button kind="secondary" type="submit" form={formId} formaction="?/saveDraftGlobal">
-								Save draft
-							</Button>
+			<!-- Action toolbar -->
+			<div class="rk-toolbar-row">
+				<Toolbar>
+					<ToolbarContent>
+						{#if hasVersions}
+							{#if isDraft}
+								<Button type="submit" form={formId} formaction="?/publishGlobal">Publish</Button>
+								<Button kind="secondary" type="submit" form={formId} formaction="?/saveDraftGlobal">
+									Save draft
+								</Button>
+							{:else}
+								<Button kind="secondary" type="submit" form={formId} formaction="?/saveDraftGlobal">
+									Save as new draft
+								</Button>
+								<Button
+									kind="tertiary"
+									type="submit"
+									form={formId}
+									formaction="?/unpublishGlobal"
+								>
+									Unpublish
+								</Button>
+							{/if}
 						{:else}
-							<Button kind="secondary" type="submit" form={formId} formaction="?/saveDraftGlobal">
-								Save as new draft
-							</Button>
-							<Button
-								kind="tertiary"
-								type="submit"
-								form={formId}
-								formaction="?/unpublishGlobal"
-							>
-								Unpublish
-							</Button>
+							<Button type="submit" form={formId}>Save</Button>
 						{/if}
-					{:else}
-						<Button type="submit" form={formId}>Save</Button>
-					{/if}
-				</ButtonSet>
+					</ToolbarContent>
+				</Toolbar>
 			</div>
 		</div>
 	</div>
@@ -235,6 +242,13 @@
 <style>
 	@import "./page-layout.css";
 
+	/* Sticky header */
+	.rk-page-header--sticky {
+		position: sticky;
+		top: 0;
+		z-index: 200;
+	}
+
 	.rk-form {
 		width: 100%;
 	}
@@ -246,7 +260,8 @@
 		flex-wrap: wrap;
 	}
 
-	.rk-title-with-status h1 {
+	/* Carbon Heading inside title row */
+	.rk-title-with-status :global(h1) {
 		margin: 0;
 		font-size: 1.75rem;
 		font-weight: 300;
@@ -265,13 +280,19 @@
 		color: var(--cds-text-secondary);
 	}
 
-	.rk-action-bar {
-		display: flex;
-		align-items: center;
-		gap: var(--cds-spacing-05);
-		margin-top: var(--cds-spacing-05);
-		padding-top: var(--cds-spacing-04);
+	/* Toolbar row */
+	.rk-toolbar-row {
+		margin-top: var(--cds-spacing-04);
 		border-top: 1px solid var(--cds-border-subtle);
+	}
+
+	.rk-toolbar-row :global(.bx--table-toolbar) {
+		background: transparent;
+		min-height: 3rem;
+	}
+
+	.rk-toolbar-row :global(.bx--toolbar-content) {
+		padding: var(--cds-spacing-03) 0;
 	}
 
 	.rk-page-title-row {

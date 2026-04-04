@@ -3,13 +3,16 @@
 		Breadcrumb,
 		BreadcrumbItem,
 		Button,
-		ButtonSet,
+		Heading,
 		InlineNotification,
 		Modal,
+		Section,
 		Tab,
 		TabContent,
 		Tabs,
 		Tag,
+		Toolbar,
+		ToolbarContent,
 	} from "carbon-components-svelte";
 	import type { CollectionConfig } from "../../schema/collections.js";
 	import type { VersionEntry } from "../../sveltekit/types.js";
@@ -58,8 +61,8 @@
 </script>
 
 <section class="rk-page">
-	<!-- Header -->
-	<div class="rk-page-header">
+	<!-- Header (sticky) -->
+	<div class="rk-page-header rk-page-header--sticky">
 		<div class="rk-page-header-inner">
 			<Breadcrumb noTrailingSlash>
 				<BreadcrumbItem href={basePath}>Dashboard</BreadcrumbItem>
@@ -74,7 +77,9 @@
 
 			<div class="rk-page-title-row">
 				<div class="rk-title-with-status">
-					<h1>{isNew ? `New ${label}` : `Edit ${label}`}</h1>
+					<Section>
+						<Heading>{isNew ? `New ${label}` : `Edit ${label}`}</Heading>
+					</Section>
 					{#if hasVersions && !isNew}
 						<div class="rk-status-badges">
 							<Tag type={isPublished ? "green" : "teal"}>
@@ -86,49 +91,49 @@
 				</div>
 			</div>
 
-			<!-- Action bar -->
-			<div class="rk-action-bar">
-				<ButtonSet>
-					{#if hasVersions}
-						{#if isNew}
-							<Button type="submit" form={formId}>Create draft</Button>
-						{:else if isDraft}
-							<Button type="submit" form={formId} formaction="?/publish">Publish</Button>
-							<Button kind="secondary" type="submit" form={formId} formaction="?/saveDraft">
-								Save draft
-							</Button>
+			<!-- Action toolbar -->
+			<div class="rk-toolbar-row">
+				<Toolbar>
+					<ToolbarContent>
+						{#if hasVersions}
+							{#if isNew}
+								<Button type="submit" form={formId}>Create draft</Button>
+							{:else if isDraft}
+								<Button type="submit" form={formId} formaction="?/publish">Publish</Button>
+								<Button kind="secondary" type="submit" form={formId} formaction="?/saveDraft">
+									Save draft
+								</Button>
+							{:else}
+								<Button kind="secondary" type="submit" form={formId} formaction="?/saveDraft">
+									Save as new draft
+								</Button>
+								<Button
+									kind="tertiary"
+									type="submit"
+									form={formId}
+									formaction="?/unpublish"
+								>
+									Unpublish
+								</Button>
+							{/if}
 						{:else}
-							<Button kind="secondary" type="submit" form={formId} formaction="?/saveDraft">
-								Save as new draft
-							</Button>
-							<Button
-								kind="tertiary"
-								type="submit"
-								form={formId}
-								formaction="?/unpublish"
-							>
-								Unpublish
+							<Button type="submit" form={formId}>
+								{isNew ? "Create" : "Save changes"}
 							</Button>
 						{/if}
-					{:else}
-						<Button type="submit" form={formId}>
-							{isNew ? "Create" : "Save changes"}
-						</Button>
-					{/if}
-				</ButtonSet>
-				<div class="rk-action-bar-end">
-					{#if !isNew}
-						<Button
-							kind="danger-ghost"
-							size="small"
-							on:click={() => {
-								deleteModalOpen = true;
-							}}
-						>
-							Delete
-						</Button>
-					{/if}
-				</div>
+						{#if !isNew}
+							<div class="rk-toolbar-spacer" />
+							<Button
+								kind="danger-ghost"
+								on:click={() => {
+									deleteModalOpen = true;
+								}}
+							>
+								Delete
+							</Button>
+						{/if}
+					</ToolbarContent>
+				</Toolbar>
 			</div>
 		</div>
 	</div>
@@ -292,6 +297,13 @@
 	@import "./page-layout.css";
 	@import "./editor-layout.css";
 
+	/* Sticky header */
+	.rk-page-header--sticky {
+		position: sticky;
+		top: 0;
+		z-index: 200;
+	}
+
 	/* Title + status badges inline */
 	.rk-title-with-status {
 		display: flex;
@@ -300,7 +312,8 @@
 		flex-wrap: wrap;
 	}
 
-	.rk-title-with-status h1 {
+	/* Carbon Heading inside title row */
+	.rk-title-with-status :global(h1) {
 		margin: 0;
 		font-size: 1.75rem;
 		font-weight: 300;
@@ -319,20 +332,25 @@
 		color: var(--cds-text-secondary);
 	}
 
-	/* Action bar */
-	.rk-action-bar {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--cds-spacing-05);
-		margin-top: var(--cds-spacing-05);
-		padding-top: var(--cds-spacing-04);
+	/* Toolbar row */
+	.rk-toolbar-row {
+		margin-top: var(--cds-spacing-04);
 		border-top: 1px solid var(--cds-border-subtle);
 	}
 
-	.rk-action-bar-end {
-		display: flex;
-		gap: var(--cds-spacing-03);
+	/* Flush Toolbar background so it blends with the header */
+	.rk-toolbar-row :global(.bx--table-toolbar) {
+		background: transparent;
+		min-height: 3rem;
+	}
+
+	.rk-toolbar-row :global(.bx--toolbar-content) {
+		padding: var(--cds-spacing-03) 0;
+	}
+
+	/* Spacer pushes delete to the right */
+	.rk-toolbar-spacer {
+		flex: 1;
 	}
 
 	.rk-page-title-row {
