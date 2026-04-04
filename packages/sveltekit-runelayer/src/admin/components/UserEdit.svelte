@@ -5,13 +5,17 @@
 		Button,
 		Column,
 		Grid,
+		Heading,
 		Modal,
 		Row,
+		Section,
 		Select,
 		SelectItem,
 		Tag,
 		TextInput,
 		Tile,
+		Toolbar,
+		ToolbarContent,
 	} from "carbon-components-svelte";
 
 	type ManagedUser = {
@@ -39,6 +43,7 @@
 	let isNew = $derived(!managedUser?.id);
 	let title = $derived(isNew ? "Create user" : "Edit user");
 	let actionName = $derived(isNew ? "?/createUser" : "?/updateUser");
+	let formId = "user-edit-form";
 	let role = $state("user");
 	let lastUserId = $state<string | undefined>(undefined);
 	let deleteModalOpen = $state(false);
@@ -53,27 +58,51 @@
 </script>
 
 <section class="rk-page">
-	<div class="rk-page-header">
+	<!-- Header (sticky) -->
+	<div class="rk-page-header rk-page-header--sticky">
 		<div class="rk-page-header-inner">
 			<Breadcrumb noTrailingSlash>
 				<BreadcrumbItem href={basePath}>Dashboard</BreadcrumbItem>
 				<BreadcrumbItem href={`${basePath}/users`}>Users</BreadcrumbItem>
-				<BreadcrumbItem href={isNew ? `${basePath}/users/create` : `${basePath}/users/${managedUser?.id}`} isCurrentPage>
+				<BreadcrumbItem
+					href={isNew ? `${basePath}/users/create` : `${basePath}/users/${managedUser?.id}`}
+					isCurrentPage
+				>
 					{title}
 				</BreadcrumbItem>
 			</Breadcrumb>
+
 			<div class="rk-page-title-row">
-				<div>
-					<p class="rk-eyebrow">Access</p>
-					<h1>{title}</h1>
+				<div class="rk-title-with-status">
+					<Section>
+						<Heading>{title}</Heading>
+					</Section>
+					<Tag type={isNew ? "blue" : "green"}>{isNew ? "New" : "Existing"}</Tag>
 				</div>
-				<Tag type={isNew ? "blue" : "green"}>{isNew ? "New" : "Existing"}</Tag>
+			</div>
+
+			<!-- Action toolbar -->
+			<div class="rk-toolbar-row">
+				<Toolbar>
+					<ToolbarContent>
+						<Button type="submit" form={formId}>
+							{isNew ? "Create user" : "Save changes"}
+						</Button>
+						<Button kind="secondary" href={`${basePath}/users`}>Back to users</Button>
+						{#if !isNew}
+							<div class="rk-toolbar-spacer"></div>
+							<Button kind="danger-ghost" on:click={() => { deleteModalOpen = true; }}>
+								Delete user
+							</Button>
+						{/if}
+					</ToolbarContent>
+				</Toolbar>
 			</div>
 		</div>
 	</div>
 
 	<div class="rk-page-body">
-		<form method="POST" action={actionName} class="rk-form">
+		<form id={formId} method="POST" action={actionName} class="rk-form">
 			<Grid fullWidth condensed>
 				<Row>
 					<Column sm={4} md={8} lg={11}>
@@ -126,16 +155,6 @@
 									<dd>{role}</dd>
 								</div>
 							</dl>
-							<div class="rk-actions">
-								<Button type="submit">{isNew ? "Create user" : "Save changes"}</Button>
-								<Button kind="secondary" href={`${basePath}/users`}>Back to users</Button>
-								{#if !isNew}
-									<Button
-										kind="danger"
-										on:click={() => { deleteModalOpen = true; }}
-									>Delete user</Button>
-								{/if}
-							</div>
 						</Tile>
 					</Column>
 				</Row>
@@ -167,6 +186,47 @@
 <style>
 	@import "./page-layout.css";
 	@import "./editor-layout.css";
+
+	/* Sticky header */
+	.rk-page-header--sticky {
+		position: sticky;
+		top: 0;
+		z-index: 200;
+	}
+
+	.rk-title-with-status {
+		display: flex;
+		align-items: center;
+		gap: var(--cds-spacing-05);
+		flex-wrap: wrap;
+	}
+
+	.rk-title-with-status :global(h1) {
+		margin: 0;
+		font-size: 1.75rem;
+		font-weight: 300;
+		line-height: 1.2;
+	}
+
+	/* Toolbar row */
+	.rk-toolbar-row {
+		margin-top: var(--cds-spacing-04);
+		border-top: 1px solid var(--cds-border-subtle);
+	}
+
+	.rk-toolbar-row :global(.bx--table-toolbar) {
+		background: transparent;
+		min-height: 3rem;
+	}
+
+	.rk-toolbar-row :global(.bx--toolbar-content) {
+		padding: var(--cds-spacing-03) 0;
+	}
+
+	/* Spacer pushes delete to the right */
+	.rk-toolbar-spacer {
+		flex: 1;
+	}
 
 	:global(.rk-editor-tile),
 	:global(.rk-sidebar-tile) {
