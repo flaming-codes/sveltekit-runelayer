@@ -120,12 +120,19 @@ const schema = defineSchema({
 
 ### Structural Fields
 
-| Builder         | Type String   | DB Impact             | Purpose                                                      |
-| --------------- | ------------- | --------------------- | ------------------------------------------------------------ |
-| `group()`       | `group`       | Flattened with prefix | Nests fields under a namespace (e.g., `address_street`)      |
-| `blocks()`      | `blocks`      | JSON column           | Polymorphic repeating blocks, each with its own field schema |
-| `row()`         | `row`         | None (layout only)    | Horizontal field layout in admin UI                          |
-| `collapsible()` | `collapsible` | None (layout only)    | Collapsible section in admin UI                              |
+| Builder         | Type String   | DB Impact                                 | Purpose                                                      |
+| --------------- | ------------- | ----------------------------------------- | ------------------------------------------------------------ |
+| `group()`       | `group`       | Nested in documents; flattened in storage | Nests fields under a namespace (e.g., `address.street`)      |
+| `blocks()`      | `blocks`      | JSON column                               | Polymorphic repeating blocks, each with its own field schema |
+| `row()`         | `row`         | None (layout only)                        | Horizontal field layout in admin UI                          |
+| `collapsible()` | `collapsible` | None (layout only)                        | Collapsible section in admin UI                              |
+
+Group fields expose a single public document contract everywhere above the storage layer.
+
+- Query payloads and query results use nested objects such as `{ address: { street: "Main" } }`.
+- Admin loaders, admin actions, hooks, globals, and version restores use the same nested object shape.
+- Persistence still flattens grouped leaf fields to prefixed storage keys such as `address_street`.
+- Query filters and sorts address grouped leaves with dot paths such as `address.street`.
 
 ### defineBlock
 
@@ -212,7 +219,7 @@ All fields in a collection must have a `name` and optional `label`:
 { name: 'firstName', label: 'First Name', ...text({ required: true }) }
 ```
 
-The `name` becomes the database column name and the key in document objects. The `label` is used in the admin UI (defaults to `name` if omitted).
+For leaf fields, the `name` becomes the document key and the storage column name. Group field names become document namespaces and prefix the flattened storage keys for their nested leaves. The `label` is used in the admin UI (defaults to `name` if omitted).
 
 ## Type System
 
@@ -298,7 +305,7 @@ The schema-to-database mapping is handled automatically by `generateTables()`:
 - All tables get `id` (text primary key), `createdAt` (text), `updatedAt` (text)
 - `versions: true` adds `_status` (text) and `_version` (integer) columns
 - `auth: true` adds `hash`, `salt`, `token`, `tokenExpiry` columns
-- `group` fields are flattened: `{ name: 'address', fields: [{ name: 'street' }] }` becomes column `address_street`
+- `group` fields stay nested in runtime documents and flatten only in storage: `{ address: { street: "Main" } }` persists under `address_street`
 - `relationship` fields (single and hasMany) → JSON column in the main table; no join tables
 - `blocks` fields → JSON column in the main table; no auxiliary table
 - `row` and `collapsible` fields pass through their children with no column prefix

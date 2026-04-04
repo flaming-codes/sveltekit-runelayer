@@ -123,7 +123,8 @@ export async function seed(app: RunelayerApp) {
       tags: JSON.stringify(["photo"]),
     }),
   ]);
-  const [_heroBanner, svelteLogo, codeEditor, teamMeeting] = mediaItems as any[];
+  const [_heroBanner, svelteLogo, codeEditor, teamMeeting] =
+    mediaItems as any[];
 
   // ─── Posts ─────────────────────────────────────────────────
   await Promise.all([
@@ -144,7 +145,8 @@ export async function seed(app: RunelayerApp) {
           { type: "heading", content: "Installation" },
           {
             type: "paragraph",
-            content: "Install the package with pnpm: pnpm add @flaming-codes/sveltekit-runelayer",
+            content:
+              "Install the package with pnpm: pnpm add @flaming-codes/sveltekit-runelayer",
           },
           { type: "heading", content: "Configuration" },
           {
@@ -160,10 +162,14 @@ export async function seed(app: RunelayerApp) {
       publishedAt: "2025-12-01T10:00:00.000Z",
       featured: true,
       readTime: 5,
-      metadata: JSON.stringify({ keywords: ["runelayer", "cms", "sveltekit", "tutorial"] }),
-      seo_metaTitle: "Getting Started with Runelayer CMS | Tutorial",
-      seo_metaDescription:
-        "A step-by-step guide to integrating Runelayer CMS into your SvelteKit project.",
+      metadata: JSON.stringify({
+        keywords: ["runelayer", "cms", "sveltekit", "tutorial"],
+      }),
+      seo: {
+        metaTitle: "Getting Started with Runelayer CMS | Tutorial",
+        metaDescription:
+          "A step-by-step guide to integrating Runelayer CMS into your SvelteKit project.",
+      },
     }),
     api.create(Posts, {
       title: "Building Design Systems with Carbon and Svelte 5",
@@ -192,10 +198,14 @@ export async function seed(app: RunelayerApp) {
       publishedAt: "2025-12-15T14:30:00.000Z",
       featured: true,
       readTime: 8,
-      metadata: JSON.stringify({ keywords: ["carbon", "design-system", "svelte-5", "ui"] }),
-      seo_metaTitle: "Carbon Design Systems with Svelte 5",
-      seo_metaDescription:
-        "Integrate Carbon Components Svelte into your Svelte 5 application for a consistent design system.",
+      metadata: JSON.stringify({
+        keywords: ["carbon", "design-system", "svelte-5", "ui"],
+      }),
+      seo: {
+        metaTitle: "Carbon Design Systems with Svelte 5",
+        metaDescription:
+          "Integrate Carbon Components Svelte into your Svelte 5 application for a consistent design system.",
+      },
     }),
     api.create(Posts, {
       title: "Schema-Driven Development: A New Paradigm",
@@ -225,9 +235,11 @@ export async function seed(app: RunelayerApp) {
       featured: false,
       readTime: 6,
       metadata: JSON.stringify({ keywords: ["schema", "architecture", "cms"] }),
-      seo_metaTitle: "Schema-Driven Development",
-      seo_metaDescription:
-        "How schema-first CMS design improves developer experience and content safety.",
+      seo: {
+        metaTitle: "Schema-Driven Development",
+        metaDescription:
+          "How schema-first CMS design improves developer experience and content safety.",
+      },
     }),
     api.create(Posts, {
       title: "SQLite as Your CMS Database: Why It Works",
@@ -256,10 +268,14 @@ export async function seed(app: RunelayerApp) {
       publishedAt: "2026-01-20T11:00:00.000Z",
       featured: false,
       readTime: 7,
-      metadata: JSON.stringify({ keywords: ["sqlite", "database", "performance"] }),
-      seo_metaTitle: "SQLite for CMS: Why It Works",
-      seo_metaDescription:
-        "Discover why SQLite with WAL mode is an excellent choice for content management systems.",
+      metadata: JSON.stringify({
+        keywords: ["sqlite", "database", "performance"],
+      }),
+      seo: {
+        metaTitle: "SQLite for CMS: Why It Works",
+        metaDescription:
+          "Discover why SQLite with WAL mode is an excellent choice for content management systems.",
+      },
     }),
     api.create(Posts, {
       title: "Access Control Patterns in Modern CMS",
@@ -288,10 +304,14 @@ export async function seed(app: RunelayerApp) {
       publishedAt: "2026-02-01T08:00:00.000Z",
       featured: true,
       readTime: 10,
-      metadata: JSON.stringify({ keywords: ["access-control", "rbac", "security"] }),
-      seo_metaTitle: "Access Control Patterns in CMS",
-      seo_metaDescription:
-        "Learn how to implement role-based access control in your content management system.",
+      metadata: JSON.stringify({
+        keywords: ["access-control", "rbac", "security"],
+      }),
+      seo: {
+        metaTitle: "Access Control Patterns in CMS",
+        metaDescription:
+          "Learn how to implement role-based access control in your content management system.",
+      },
     }),
     api.create(Posts, {
       title: "The Power of Lifecycle Hooks in Content Management",
@@ -314,15 +334,20 @@ export async function seed(app: RunelayerApp) {
       publishedAt: "2026-02-10T16:00:00.000Z",
       featured: false,
       readTime: 5,
-      metadata: JSON.stringify({ keywords: ["hooks", "lifecycle", "automation"] }),
-      seo_metaTitle: "CMS Lifecycle Hooks",
-      seo_metaDescription:
-        "How to use beforeChange, afterChange, and other lifecycle hooks for content automation.",
+      metadata: JSON.stringify({
+        keywords: ["hooks", "lifecycle", "automation"],
+      }),
+      seo: {
+        metaTitle: "CMS Lifecycle Hooks",
+        metaDescription:
+          "How to use beforeChange, afterChange, and other lifecycle hooks for content automation.",
+      },
     }),
     api.create(Posts, {
       title: "Responsive Layouts with Carbon Grid System",
       slug: "carbon-grid-responsive",
-      excerpt: "Master Carbon's 16-column grid system for building responsive, content-rich pages.",
+      excerpt:
+        "Master Carbon's 16-column grid system for building responsive, content-rich pages.",
       content: JSON.stringify({
         type: "doc",
         content: [
@@ -338,9 +363,14 @@ export async function seed(app: RunelayerApp) {
       status: "draft",
       featured: false,
       readTime: 4,
-      metadata: JSON.stringify({ keywords: ["carbon", "grid", "responsive", "layout"] }),
-      seo_metaTitle: "Carbon Grid System Guide",
-      seo_metaDescription: "Build responsive layouts using Carbon Design System's 16-column grid.",
+      metadata: JSON.stringify({
+        keywords: ["carbon", "grid", "responsive", "layout"],
+      }),
+      seo: {
+        metaTitle: "Carbon Grid System Guide",
+        metaDescription:
+          "Build responsive layouts using Carbon Design System's 16-column grid.",
+      },
     }),
     api.create(Posts, {
       title: "Migrating from Payload CMS to Runelayer",
@@ -363,15 +393,20 @@ export async function seed(app: RunelayerApp) {
       publishedAt: "2026-02-20T12:00:00.000Z",
       featured: false,
       readTime: 12,
-      metadata: JSON.stringify({ keywords: ["migration", "payload", "comparison"] }),
-      seo_metaTitle: "Migrating from Payload CMS to Runelayer",
-      seo_metaDescription:
-        "A step-by-step migration guide from Payload CMS to Runelayer for SvelteKit apps.",
+      metadata: JSON.stringify({
+        keywords: ["migration", "payload", "comparison"],
+      }),
+      seo: {
+        metaTitle: "Migrating from Payload CMS to Runelayer",
+        metaDescription:
+          "A step-by-step migration guide from Payload CMS to Runelayer for SvelteKit apps.",
+      },
     }),
     api.create(Posts, {
       title: "File Uploads and Media Management",
       slug: "file-uploads-media",
-      excerpt: "Handling file uploads with path traversal protection and streaming delivery.",
+      excerpt:
+        "Handling file uploads with path traversal protection and streaming delivery.",
       content: JSON.stringify({
         type: "doc",
         content: [
@@ -388,15 +423,20 @@ export async function seed(app: RunelayerApp) {
       publishedAt: "2026-03-01T10:00:00.000Z",
       featured: false,
       readTime: 6,
-      metadata: JSON.stringify({ keywords: ["uploads", "storage", "media", "security"] }),
-      seo_metaTitle: "File Uploads in Runelayer CMS",
-      seo_metaDescription:
-        "Learn how to handle file uploads securely with Runelayer's storage system.",
+      metadata: JSON.stringify({
+        keywords: ["uploads", "storage", "media", "security"],
+      }),
+      seo: {
+        metaTitle: "File Uploads in Runelayer CMS",
+        metaDescription:
+          "Learn how to handle file uploads securely with Runelayer's storage system.",
+      },
     }),
     api.create(Posts, {
       title: "The Future of Embedded CMS",
       slug: "future-embedded-cms",
-      excerpt: "Why CMS-as-a-package is gaining traction and what it means for the Jamstack.",
+      excerpt:
+        "Why CMS-as-a-package is gaining traction and what it means for the Jamstack.",
       content: JSON.stringify({
         type: "doc",
         content: [
@@ -414,9 +454,11 @@ export async function seed(app: RunelayerApp) {
       featured: false,
       readTime: 3,
       metadata: JSON.stringify({ keywords: ["cms", "jamstack", "future"] }),
-      seo_metaTitle: "The Future of Embedded CMS",
-      seo_metaDescription:
-        "Exploring the trend of CMS-as-a-package solutions in modern web development.",
+      seo: {
+        metaTitle: "The Future of Embedded CMS",
+        metaDescription:
+          "Exploring the trend of CMS-as-a-package solutions in modern web development.",
+      },
     }),
   ]);
 
@@ -463,7 +505,13 @@ export async function seed(app: RunelayerApp) {
           },
         ],
       }),
-      features: JSON.stringify(["self-hosted", "cloud", "api", "themes", "analytics"]),
+      features: JSON.stringify([
+        "self-hosted",
+        "cloud",
+        "api",
+        "themes",
+        "analytics",
+      ]),
       specs: JSON.stringify({
         database: "SQLite / PostgreSQL",
         auth: "Better Auth + SSO",
@@ -519,10 +567,12 @@ export async function seed(app: RunelayerApp) {
       title: "About Runelayer",
       slug: "about",
       layout: "default",
-      hero_heading: "Built for SvelteKit Developers",
-      hero_subheading:
-        "Runelayer is a CMS-as-a-package that runs inside your SvelteKit application. No separate server. No external database. Just your app with content management built in.",
-      hero_showCta: true,
+      hero: {
+        heading: "Built for SvelteKit Developers",
+        subheading:
+          "Runelayer is a CMS-as-a-package that runs inside your SvelteKit application. No separate server. No external database. Just your app with content management built in.",
+        showCta: true,
+      },
       showRecent: true,
       showCategories: true,
       email: "hello@runelayer.dev",
@@ -532,9 +582,12 @@ export async function seed(app: RunelayerApp) {
       title: "Contact Us",
       slug: "contact",
       layout: "sidebar",
-      hero_heading: "Get in Touch",
-      hero_subheading: "Have questions about Runelayer? We would love to hear from you.",
-      hero_showCta: false,
+      hero: {
+        heading: "Get in Touch",
+        subheading:
+          "Have questions about Runelayer? We would love to hear from you.",
+        showCta: false,
+      },
       showRecent: false,
       showCategories: true,
       customHtml: "<p>Office hours: Mon-Fri 9am-5pm PST</p>",
@@ -549,7 +602,8 @@ export async function seed(app: RunelayerApp) {
     tagline: "CMS-as-a-Package for SvelteKit",
     description:
       "This demo application showcases the features of Runelayer CMS integrated with Carbon Design System. It demonstrates collections, field types, access control, hooks, and more.",
-    footerText: "Built with Runelayer CMS, SvelteKit, and Carbon Design System.",
+    footerText:
+      "Built with Runelayer CMS, SvelteKit, and Carbon Design System.",
   });
 
   // ─── Navigation (singleton) ────────────────────────────────

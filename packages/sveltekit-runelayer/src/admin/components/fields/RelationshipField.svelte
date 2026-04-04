@@ -55,6 +55,15 @@
 		return toSentinel(v, collectionSlug);
 	}
 
+	function resolvePath(document: Record<string, unknown>, path: string): unknown {
+		return path
+			.split(".")
+			.reduce<unknown>(
+				(value, segment) => (value as Record<string, unknown> | undefined)?.[segment],
+				document,
+			);
+	}
+
 	// Derived: the currently active collection slug (for mono-collection fields)
 	let activeCollection = $derived(
 		isPolymorphic ? selectedCollection : (relationTo as string),
@@ -78,8 +87,9 @@
 				options = (data.docs ?? []).map((doc) => {
 					const id = typeof doc.id === "string" ? doc.id : String(doc.id ?? "");
 					let text: string;
-					if (titleKey && typeof doc[titleKey] === "string" && (doc[titleKey] as string).length > 0) {
-						text = doc[titleKey] as string;
+					const titleValue = titleKey ? resolvePath(doc, titleKey) : undefined;
+					if (typeof titleValue === "string" && titleValue.length > 0) {
+						text = titleValue;
 					} else {
 						text = id;
 					}

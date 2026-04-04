@@ -1,5 +1,21 @@
 import type { CollectionConfig } from "../schema/collections.js";
-import type { BlockConfig, BlocksField, Field, NamedField, RefSentinel } from "../schema/fields.js";
+import type {
+  BlockConfig,
+  Field,
+  NamedField,
+  RefSentinel,
+} from "../schema/fields.js";
+import {
+  deleteValueAtPath,
+  DocumentShapeError,
+  flattenDocumentFields,
+  getFieldLayout,
+  getValueAtPath,
+  inflateDocumentFields,
+  mergeDocumentData,
+  type BlocksFieldRule,
+  type FieldRule,
+} from "../schema/document-shape.js";
 import type { AccessFn, FieldAccess } from "../schema/types.js";
 import { checkAccess } from "./access.js";
 
@@ -9,7 +25,12 @@ type AccessMode = "create" | "read" | "update";
 const TRUE_STRINGS = new Set(["true", "1", "on", "yes"]);
 const FALSE_STRINGS = new Set(["false", "0", "off", "no"]);
 
-export const AUTH_SENSITIVE_FIELDS = ["hash", "salt", "token", "tokenExpiry"] as const;
+export const AUTH_SENSITIVE_FIELDS = [
+  "hash",
+  "salt",
+  "token",
+  "tokenExpiry",
+] as const;
 export const RESERVED_WRITE_FIELDS = new Set<string>([
   "id",
   "createdAt",
@@ -19,13 +40,10 @@ export const RESERVED_WRITE_FIELDS = new Set<string>([
   ...AUTH_SENSITIVE_FIELDS,
 ]);
 
-interface RuntimeFieldRule {
-  key: string;
-  field: NamedField;
-  accessChain: FieldAccess[];
-}
-
-function httpError(status: number, message: string): Error & { status: number } {
+function httpError(
+  status: number,
+  message: string,
+): Error & { status: number } {
   return Object.assign(new Error(message), { status });
 }
 
@@ -34,51 +52,6 @@ function toRecord(value: unknown): Record<string, unknown> {
     throw httpError(400, "Expected an object payload");
   }
   return value as Record<string, unknown>;
-}
-
-function withAccessChain(accessChain: FieldAccess[], field: Field): FieldAccess[] {
-  if ("access" in field && field.access) {
-    return [...accessChain, field.access];
-  }
-  return accessChain;
-}
-
-function collectRuntimeFieldRules(
-  fields: NamedField[],
-  prefix = "",
-  accessChain: FieldAccess[] = [],
-): RuntimeFieldRule[] {
-  const rules: RuntimeFieldRule[] = [];
-
-  for (const field of fields) {
-    const nextAccessChain = withAccessChain(accessChain, field);
-    const key = `${prefix}${field.name}`;
-
-    switch (field.type) {
-      case "group":
-        rules.push(...collectRuntimeFieldRules(field.fields, `${key}_`, nextAccessChain));
-        break;
-      case "row":
-      case "collapsible":
-        rules.push(...collectRuntimeFieldRules(field.fields, prefix, nextAccessChain));
-        break;
-      case "blocks":
-        break;
-      case "relationship":
-        rules.push({ key, field, accessChain: nextAccessChain });
-        break;
-      default:
-        rules.push({ key, field, accessChain: nextAccessChain });
-        break;
-    }
-  }
-
-  return rules;
-}
-
-function runtimeFieldMap(collection: CollectionConfig): Map<string, RuntimeFieldRule> {
-  const rules = collectRuntimeFieldRules(collection.fields);
-  return new Map(rules.map((rule) => [rule.key, rule]));
 }
 
 function hasValue(value: unknown): boolean {
@@ -241,7 +214,12 @@ function normalizeValue(field: Field, key: string, rawValue: unknown): unknown {
       return normalizeArray(rawValue, key);
 
     case "relationship":
-      return normalizeRelationshipValue(rawValue, key, field.relationTo, field.hasMany);
+      return normalizeRelationshipValue(
+        rawValue,
+        key,
+        field.relationTo,
+        field.hasMany,
+      );
 
     default:
       return rawValue;
@@ -256,10 +234,16 @@ function validateBuiltIn(field: Field, key: string, value: unknown): void {
     case "textarea": {
       if (typeof value !== "string") break;
       if (field.minLength !== undefined && value.length < field.minLength) {
-        throw httpError(400, `Field "${key}" must be at least ${field.minLength} characters`);
+        throw httpError(
+          400,
+          `Field "${key}" must be at least ${field.minLength} characters`,
+        );
       }
       if (field.maxLength !== undefined && value.length > field.maxLength) {
-        throw httpError(400, `Field "${key}" must be at most ${field.maxLength} characters`);
+        throw httpError(
+          400,
+          `Field "${key}" must be at most ${field.maxLength} characters`,
+        );
       }
       break;
     }
@@ -308,7 +292,7 @@ function getAccessFns(chain: FieldAccess[], mode: AccessMode): AccessFn[] {
 }
 
 async function assertWritableFieldAccess(
-  rule: RuntimeFieldRule,
+  rule: Pick<FieldRule | BlocksFieldRule, "documentPath" | "accessChain">,
   operation: WriteOperation,
   req: Request | undefined,
   data: Record<string, unknown>,
@@ -320,8 +304,13 @@ async function assertWritableFieldAccess(
     try {
       await checkAccess(fn, req, data, id);
     } catch (error) {
-      if (error && typeof error === "object" && "status" in error && error.status === 403) {
-        throw httpError(403, `Forbidden field "${rule.key}"`);
+      if (
+        error &&
+        typeof error === "object" &&
+        "status" in error &&
+        error.status === 403
+      ) {
+        throw httpError(403, `Forbidden field "${rule.documentPath}"`);
       }
       throw error;
     }
@@ -329,7 +318,7 @@ async function assertWritableFieldAccess(
 }
 
 async function canReadField(
-  rule: RuntimeFieldRule,
+  rule: Pick<FieldRule | BlocksFieldRule, "accessChain">,
   req: Request | undefined,
   doc: Record<string, unknown>,
 ): Promise<boolean> {
@@ -339,7 +328,12 @@ async function canReadField(
     try {
       await checkAccess(fn, req, doc, id);
     } catch (error) {
-      if (error && typeof error === "object" && "status" in error && error.status === 403) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "status" in error &&
+        error.status === 403
+      ) {
         return false;
       }
       throw error;
@@ -349,11 +343,14 @@ async function canReadField(
 }
 
 function runCustomValidator(
-  rule: RuntimeFieldRule,
+  rule: FieldRule,
   value: unknown,
   data: Record<string, unknown>,
 ): void {
-  if (!("validate" in rule.field) || typeof rule.field.validate !== "function") {
+  if (
+    !("validate" in rule.field) ||
+    typeof rule.field.validate !== "function"
+  ) {
     return;
   }
   const result = rule.field.validate(value as never, { data });
@@ -362,116 +359,142 @@ function runCustomValidator(
   }
 }
 
-/**
- * Enforce per-field normalization and built-in validation for a list of named fields.
- * Used for both top-level collection fields (via enforceWritePayload) and block sub-fields.
- * Does NOT apply required-field checks, access control, or reserved-field guards —
- * those are handled at the top-level enforceWritePayload layer only.
- */
-async function enforceSubFields(
+async function enforceFieldSet(
   fields: NamedField[],
   data: Record<string, unknown>,
   operation: WriteOperation,
   req: Request | undefined,
   existingDoc: Record<string, unknown> | undefined,
+  id?: string,
+  options?: { relaxRequired?: boolean },
 ): Promise<Record<string, unknown>> {
-  const allowedKeys = new Set<string>();
-  // Collect top-level keys from the block's field config (no prefix for sub-fields)
-  for (const field of fields) {
-    if (field.type !== "group" && field.type !== "row" && field.type !== "collapsible") {
-      allowedKeys.add(field.name);
-    } else if (field.type === "group") {
-      // group fields are prefixed — for sub-field enforcement flatten them
-      for (const subField of field.fields) {
-        allowedKeys.add(`${field.name}_${subField.name}`);
-      }
-    } else {
-      // row/collapsible: inline fields
-      for (const subField of field.fields) {
-        allowedKeys.add(subField.name);
-      }
+  const layout = getFieldLayout(fields);
+
+  let flattenedInput: Record<string, unknown>;
+  try {
+    flattenedInput = flattenDocumentFields(fields, data);
+  } catch (error) {
+    if (error instanceof DocumentShapeError) {
+      throw httpError(400, error.message);
     }
+    throw error;
   }
 
   const output: Record<string, unknown> = {};
 
-  // Build a flat map of field name → NamedField for lookup
-  const fieldMap = new Map<string, NamedField>();
-  function populateFieldMap(namedFields: NamedField[], prefix = ""): void {
-    for (const f of namedFields) {
-      if (f.type === "group") {
-        populateFieldMap(f.fields, `${prefix}${f.name}_`);
-      } else if (f.type === "row" || f.type === "collapsible") {
-        populateFieldMap(f.fields, prefix);
-      } else {
-        fieldMap.set(`${prefix}${f.name}`, f);
-      }
-    }
-  }
-  populateFieldMap(fields);
-
-  for (const [key, rawValue] of Object.entries(data)) {
-    if (!fieldMap.has(key)) {
-      // Skip unknown sub-field keys silently (or throw — match top-level behavior)
-      throw httpError(400, `Unknown field "${key}" in block`);
-    }
-    const field = fieldMap.get(key)!;
-
-    if (field.type === "blocks") {
-      // Nested blocks are not supported; this guard is belt-and-suspenders
-      throw httpError(400, `Nested blocks fields are not supported`);
+  for (const [storageKey, rawValue] of Object.entries(flattenedInput)) {
+    const blocksRule = layout.blocksByStorageKey.get(storageKey);
+    if (blocksRule) {
+      output[storageKey] = await enforceBlocksField(
+        blocksRule,
+        rawValue,
+        operation,
+        req,
+        existingDoc,
+      );
+      continue;
     }
 
-    const normalized = normalizeValue(field, key, rawValue);
+    const rule = layout.byStorageKey.get(storageKey);
+    if (!rule) {
+      throw httpError(400, `Unknown field "${storageKey}"`);
+    }
+
+    const normalized = normalizeValue(rule.field, rule.documentPath, rawValue);
     if (normalized !== undefined) {
-      output[key] = normalized;
+      output[storageKey] = normalized;
     }
   }
 
-  // Validate values that are present
-  const validationData = existingDoc ? { ...existingDoc, ...output } : { ...output };
+  const nextDocument = inflateDocumentFields(fields, output);
+  const validationData = mergeDocumentData(existingDoc, nextDocument);
+  const keysToValidate =
+    operation === "create"
+      ? new Set(layout.byStorageKey.keys())
+      : new Set(Object.keys(output));
 
-  for (const [key, value] of Object.entries(output)) {
-    const field = fieldMap.get(key);
-    if (!field) continue;
+  for (const storageKey of keysToValidate) {
+    const rule = layout.byStorageKey.get(storageKey);
+    if (!rule) continue;
+
+    const value = getValueAtPath(validationData, rule.pathSegments);
+    if (
+      "required" in rule.field &&
+      rule.field.required &&
+      !hasValue(value) &&
+      !options?.relaxRequired
+    ) {
+      throw httpError(400, `Field "${rule.documentPath}" is required`);
+    }
+
     if (value === undefined || value === null) continue;
 
-    validateBuiltIn(field, key, value);
+    validateBuiltIn(rule.field, rule.documentPath, value);
+    runCustomValidator(rule, value, validationData);
+  }
 
-    // Run custom validator if present
-    if ("validate" in field && typeof field.validate === "function") {
-      const result = (
-        field.validate as (v: unknown, ctx: { data: Record<string, unknown> }) => true | string
-      )(value as never, { data: validationData });
-      if (result !== true) {
-        throw httpError(400, result);
+  if (operation === "create" && !options?.relaxRequired) {
+    for (const rule of layout.blocksRules) {
+      if (
+        rule.field.required &&
+        !hasValue(getValueAtPath(validationData, rule.pathSegments))
+      ) {
+        throw httpError(400, `Field "${rule.documentPath}" is required`);
       }
     }
   }
 
-  // Required field checks for block sub-fields on create
-  if (operation === "create") {
-    for (const [key, field] of fieldMap.entries()) {
-      if ("required" in field && field.required && !hasValue(output[key])) {
-        throw httpError(400, `Field "${key}" is required`);
+  for (const [storageKey, value] of Object.entries(output)) {
+    const blocksRule = layout.blocksByStorageKey.get(storageKey);
+    if (blocksRule) {
+      if (blocksRule.field.validate) {
+        const result = blocksRule.field.validate(value as unknown[], {
+          data: validationData,
+        });
+        if (result !== true) {
+          throw httpError(
+            400,
+            typeof result === "string"
+              ? result
+              : `Validation failed for "${blocksRule.documentPath}"`,
+          );
+        }
       }
+
+      await assertWritableFieldAccess(
+        blocksRule,
+        operation,
+        req,
+        validationData,
+        id,
+      );
+      continue;
     }
+
+    const rule = layout.byStorageKey.get(storageKey);
+    if (!rule) continue;
+    await assertWritableFieldAccess(rule, operation, req, validationData, id);
   }
 
   return output;
 }
 
 async function enforceBlocksField(
-  field: BlocksField,
-  fieldKey: string,
+  rule: BlocksFieldRule,
   value: unknown,
   operation: WriteOperation,
   req: Request | undefined,
   existingDoc: Record<string, unknown> | undefined,
-): Promise<Record<string, unknown>[]> {
+): Promise<Record<string, unknown>[] | null> {
+  const field = rule.field;
+
+  if (value === null) {
+    return null;
+  }
+
   // 1. Must be an array
   if (!Array.isArray(value)) {
-    throw httpError(400, `${fieldKey}: must be an array`);
+    throw httpError(400, `${rule.documentPath}: must be an array`);
   }
 
   // 2. minBlocks / maxBlocks
@@ -494,7 +517,9 @@ async function enforceBlocksField(
       if (typeof blockType !== "string") {
         throw httpError(400, `Block at index ${idx}: missing blockType`);
       }
-      const blockConfig: BlockConfig | undefined = field.blocks.find((b) => b.slug === blockType);
+      const blockConfig: BlockConfig | undefined = field.blocks.find(
+        (b) => b.slug === blockType,
+      );
       if (!blockConfig) {
         throw httpError(
           400,
@@ -503,13 +528,17 @@ async function enforceBlocksField(
       }
 
       // 3b. _key: preserve existing, generate if absent
-      const key = typeof _key === "string" && _key.length > 0 ? _key : crypto.randomUUID();
+      const key =
+        typeof _key === "string" && _key.length > 0
+          ? _key
+          : crypto.randomUUID();
 
       // 3c. blockType immutability: on update, reject if blockType changed for an existing block
+      let existingBlock: Record<string, unknown> | undefined;
       if (operation === "update" && existingDoc) {
-        const existingBlocks = existingDoc[fieldKey];
+        const existingBlocks = getValueAtPath(existingDoc, rule.pathSegments);
         if (Array.isArray(existingBlocks)) {
-          const existingBlock = (existingBlocks as Record<string, unknown>[]).find(
+          existingBlock = (existingBlocks as Record<string, unknown>[]).find(
             (b) => b._key === key,
           );
           if (existingBlock && existingBlock.blockType !== blockType) {
@@ -522,12 +551,16 @@ async function enforceBlocksField(
       }
 
       // 3d. Enforce block's sub-fields
-      const enforced = await enforceSubFields(
+      const nestedBlockData = inflateDocumentFields(
         blockConfig.fields,
-        blockData,
+        blockData as Record<string, unknown>,
+      );
+      const enforced = await enforceFieldSet(
+        blockConfig.fields,
+        nestedBlockData,
         operation,
         req,
-        existingDoc,
+        existingBlock,
       );
 
       return { blockType, _key: key, ...enforced };
@@ -545,105 +578,21 @@ export async function enforceWritePayload(
   options?: { relaxRequired?: boolean },
 ): Promise<Record<string, unknown>> {
   const payload = toRecord(input);
-  const fields = runtimeFieldMap(collection);
-  const output: Record<string, unknown> = {};
-
-  // Build a map of blocks fields for direct lookup
-  const blocksFieldMap = new Map<string, BlocksField>();
-  function collectBlocksFields(namedFields: NamedField[], prefix = ""): void {
-    for (const f of namedFields) {
-      if (f.type === "blocks") {
-        blocksFieldMap.set(`${prefix}${f.name}`, f as BlocksField);
-      } else if (f.type === "group") {
-        collectBlocksFields(f.fields, `${prefix}${f.name}_`);
-      } else if (f.type === "row" || f.type === "collapsible") {
-        collectBlocksFields(f.fields, prefix);
-      }
-    }
-  }
-  collectBlocksFields(collection.fields);
-
-  for (const [key, rawValue] of Object.entries(payload)) {
+  for (const key of Object.keys(payload)) {
     if (RESERVED_WRITE_FIELDS.has(key)) {
       throw httpError(400, `Field "${key}" is reserved and cannot be written`);
     }
-
-    // Handle blocks fields separately
-    const blocksField = blocksFieldMap.get(key);
-    if (blocksField) {
-      const enforced = await enforceBlocksField(
-        blocksField,
-        key,
-        rawValue,
-        operation,
-        req,
-        existingDoc,
-      );
-      output[key] = enforced;
-
-      // Run field-level custom validate if present
-      if (blocksField.validate) {
-        const result = blocksField.validate(enforced as unknown as unknown[], { data: output });
-        if (result !== true) {
-          throw httpError(
-            400,
-            typeof result === "string" ? result : `Validation failed for "${key}"`,
-          );
-        }
-      }
-      continue;
-    }
-
-    const rule = fields.get(key);
-    if (!rule) {
-      throw httpError(400, `Unknown field "${key}"`);
-    }
-
-    const normalized = normalizeValue(rule.field, key, rawValue);
-    if (normalized !== undefined) {
-      output[key] = normalized;
-    }
   }
 
-  const validationData = existingDoc ? { ...existingDoc, ...output } : { ...output };
-  const keysToValidate =
-    operation === "create" ? new Set(fields.keys()) : new Set(Object.keys(output));
-
-  for (const key of keysToValidate) {
-    const rule = fields.get(key);
-    if (!rule) continue;
-    const value = validationData[key];
-
-    if (
-      "required" in rule.field &&
-      rule.field.required &&
-      !hasValue(value) &&
-      !options?.relaxRequired
-    ) {
-      throw httpError(400, `Field "${key}" is required`);
-    }
-    if (value === undefined || value === null) continue;
-
-    validateBuiltIn(rule.field, key, value);
-    runCustomValidator(rule, value, validationData);
-  }
-
-  // Also check required blocks fields
-  if (operation === "create" && !options?.relaxRequired) {
-    for (const [key, blocksField] of blocksFieldMap.entries()) {
-      if (blocksField.required && !hasValue(output[key])) {
-        throw httpError(400, `Field "${key}" is required`);
-      }
-    }
-  }
-
-  for (const [key] of Object.entries(output)) {
-    const rule = fields.get(key);
-    if (!rule) continue;
-    await assertWritableFieldAccess(rule, operation, req, validationData, id);
-  }
-
-  return output;
+  return enforceFieldSet(
+    collection.fields,
+    payload,
+    operation,
+    req,
+    existingDoc,
+    id,
+    options,
+  );
 }
 
 export async function enforceReadProjection(
@@ -653,7 +602,7 @@ export async function enforceReadProjection(
 ): Promise<Record<string, unknown> | undefined> {
   if (!doc) return undefined;
 
-  const projected: Record<string, unknown> = { ...doc };
+  const projected = structuredClone(doc) as Record<string, unknown>;
 
   if (collection.auth) {
     for (const key of AUTH_SENSITIVE_FIELDS) {
@@ -661,12 +610,20 @@ export async function enforceReadProjection(
     }
   }
 
-  const fields = runtimeFieldMap(collection);
-  for (const [key, rule] of fields.entries()) {
-    if (!(key in projected)) continue;
+  const layout = getFieldLayout(collection.fields);
+  for (const rule of layout.leafRules) {
+    if (getValueAtPath(doc, rule.pathSegments) === undefined) continue;
     const allowed = await canReadField(rule, req, doc);
     if (!allowed) {
-      delete projected[key];
+      deleteValueAtPath(projected, rule.pathSegments);
+    }
+  }
+
+  for (const rule of layout.blocksRules) {
+    if (getValueAtPath(doc, rule.pathSegments) === undefined) continue;
+    const allowed = await canReadField(rule, req, doc);
+    if (!allowed) {
+      deleteValueAtPath(projected, rule.pathSegments);
     }
   }
 
@@ -674,8 +631,13 @@ export async function enforceReadProjection(
 }
 
 export function allowedQueryColumns(collection: CollectionConfig): Set<string> {
-  const fields = runtimeFieldMap(collection);
-  const allowed = new Set<string>(["id", "createdAt", "updatedAt", ...fields.keys()]);
+  const layout = getFieldLayout(collection.fields);
+  const allowed = new Set<string>([
+    "id",
+    "createdAt",
+    "updatedAt",
+    ...layout.leafRules.map((rule) => rule.documentPath),
+  ]);
   if (collection.versions) {
     allowed.add("_status");
     allowed.add("_version");

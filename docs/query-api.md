@@ -41,19 +41,28 @@ const docs = await find(ctx, {
 
 ```ts
 interface FindArgs {
-  where?: Record<string, unknown>; // Allowlisted equality filters
+  where?: Record<string, unknown>; // Allowlisted equality filters using public field names or group dot paths
   limit?: number;
   offset?: number;
-  sort?: string; // Column name to sort by
+  sort?: string; // Field name or group dot path to sort by
   sortOrder?: "asc" | "desc";
   draft?: boolean; // Include draft documents (default: false for versioned collections)
   depth?: 0 | 1; // Relationship population depth (default: 0)
 }
 ```
 
-Returns an array of document objects.
+Returns an array of document objects using the public nested field shape.
 
 `where` uses simple equality checks and only allows schema-backed fields plus core system columns (`id`, `createdAt`, `updatedAt`, and version columns when enabled). Unknown keys are rejected with a 400 error.
+
+Group fields always use nested objects in payloads and returned documents. To address a grouped leaf in filters or sorting, use a dot path that matches the public document shape.
+
+```ts
+const docs = await find(ctx, {
+  where: { "seo.metaTitle": "Launch post" },
+  sort: "seo.metaTitle",
+});
+```
 
 For versioned collections, `find()` automatically filters to `_status = 'published'` unless `draft: true` is passed. This ensures public APIs only return published content by default.
 
@@ -105,13 +114,16 @@ Create a new document.
 ```ts
 const doc = await create(ctx, {
   title: "New Post",
-  status: "draft",
+  seo: {
+    metaTitle: "Launch post",
+  },
 });
 // Returns the created document with auto-generated id and timestamps
 ```
 
 - ID is auto-generated using `crypto.randomUUID()`
 - `createdAt` and `updatedAt` are auto-set to the current ISO timestamp
+- group fields are written as nested objects in the payload and returned as nested objects in the created document
 - payload is schema-allowlisted before write (unknown and reserved keys are rejected)
 - required fields and field validators are enforced
 - field-level `access.create` rules are enforced
@@ -124,13 +136,16 @@ Update an existing document.
 
 ```ts
 const doc = await update(ctx, "document-id", {
-  title: "Updated Title",
+  seo: {
+    metaTitle: "Updated title",
+  },
 });
 // Returns the updated document
 ```
 
 - `updatedAt` is auto-refreshed
 - The existing document is fetched and passed to hooks as `existingDoc`
+- grouped updates use nested objects and merge against the existing document by field path
 - payload is schema-allowlisted before write (unknown and reserved keys are rejected)
 - updated fields are validated against schema rules and validators
 - field-level `access.update` rules are enforced
@@ -214,6 +229,8 @@ import { restoreVersion } from "@flaming-codes/sveltekit-runelayer";
 const doc = await restoreVersion(ctx, "document-id", "version-id");
 // Copies snapshot, sets _status = "draft", increments _version
 ```
+
+New snapshots store the public nested document shape. Restore also accepts legacy flat snapshots, inflating grouped fields back to nested objects before validation and hooks run.
 
 ### Versioned Collection Behavior
 

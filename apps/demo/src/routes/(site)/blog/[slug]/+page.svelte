@@ -18,9 +18,9 @@
 </script>
 
 <svelte:head>
-  <title>{data.post.seo_metaTitle ?? data.post.title} | Runelayer Demo</title>
-  {#if data.post.seo_metaDescription}
-    <meta name="description" content={data.post.seo_metaDescription} />
+  <title>{data.post.seo?.metaTitle ?? data.post.title} | Runelayer Demo</title>
+  {#if data.post.seo?.metaDescription}
+    <meta name="description" content={data.post.seo.metaDescription} />
   {/if}
 </svelte:head>
 

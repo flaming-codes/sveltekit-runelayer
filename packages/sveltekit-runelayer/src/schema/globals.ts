@@ -7,7 +7,10 @@ export interface GlobalConfig {
   label?: string;
   admin?: { group?: string };
   access?: Omit<AccessControl, "create" | "delete">;
-  hooks?: Pick<Hooks, "beforeChange" | "afterChange">;
+  hooks?: Pick<
+    Hooks,
+    "beforeChange" | "afterChange" | "beforeRead" | "afterRead"
+  >;
   versions?: boolean | { drafts?: boolean; maxPerDoc?: number };
 }
 

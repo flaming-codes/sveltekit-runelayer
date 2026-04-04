@@ -37,6 +37,8 @@ type AfterReadHook = (
 ) => void | Promise<void>;
 ```
 
+Hook payloads use the public document contract. Group fields appear as nested objects in `data`, `originalDoc`, and `doc`, even though persistence uses flattened storage keys internally.
+
 ### Hooks Runner (Internal)
 
 The hooks runner module uses a broader `HookContext` type:
@@ -66,14 +68,11 @@ const Posts = defineCollection({
       (args) => {
         if (args.data.title && !args.data.slug) {
           return {
-            ...args,
-            data: {
-              ...args.data,
-              slug: args.data.title.toString().toLowerCase().replace(/\s+/g, "-"),
-            },
+            ...args.data,
+            slug: args.data.title.toString().toLowerCase().replace(/\s+/g, "-"),
           };
         }
-        return args;
+        return args.data;
       },
     ],
 

@@ -3,6 +3,7 @@ import type { SQLiteTableWithColumns } from "drizzle-orm/sqlite-core";
 import type { SQLiteColumnBuilderBase } from "drizzle-orm/sqlite-core/columns/common";
 import type { CollectionConfig } from "../schema/collections.js";
 import type { NamedField } from "../schema/fields.js";
+import { getFieldLayout } from "../schema/document-shape.js";
 
 type AnyTable = SQLiteTableWithColumns<any>;
 type ColumnDef = SQLiteColumnBuilderBase;
@@ -51,7 +52,10 @@ function mapField(field: NamedField, prefix = ""): Record<string, ColumnDef> {
   }
 }
 
-function fieldsToColumns(fields: NamedField[], prefix = ""): Record<string, ColumnDef> {
+function fieldsToColumns(
+  fields: NamedField[],
+  prefix = "",
+): Record<string, ColumnDef> {
   let cols: Record<string, ColumnDef> = {};
   for (const f of fields) Object.assign(cols, mapField(f, prefix));
   return cols;
@@ -68,11 +72,14 @@ function baseColumns() {
 export type GeneratedTables = Record<string, AnyTable>;
 
 /** Generate all Drizzle tables from an array of CollectionConfigs. */
-export function generateTables(collections: CollectionConfig[]): GeneratedTables {
+export function generateTables(
+  collections: CollectionConfig[],
+): GeneratedTables {
   const tables: GeneratedTables = {};
 
   for (const collection of collections) {
     const { slug, fields, versions, auth } = collection;
+    getFieldLayout(fields);
     const fieldCols = fieldsToColumns(fields);
 
     const extras: Record<string, ColumnDef> = {};
@@ -87,7 +94,11 @@ export function generateTables(collections: CollectionConfig[]): GeneratedTables
       extras.tokenExpiry = text("tokenExpiry");
     }
 
-    tables[slug] = sqliteTable(slug, { ...baseColumns(), ...fieldCols, ...extras });
+    tables[slug] = sqliteTable(slug, {
+      ...baseColumns(),
+      ...fieldCols,
+      ...extras,
+    });
 
     // Create version history table for versioned collections
     if (versions) {

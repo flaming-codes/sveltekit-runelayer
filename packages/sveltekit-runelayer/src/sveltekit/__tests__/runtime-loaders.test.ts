@@ -4,8 +4,11 @@ import { join } from "node:path";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { createClient } from "@libsql/client";
 import { migrateDatabaseForTests } from "../../__testutils__/migrations.js";
+import type { CollectionConfig } from "../../schema/collections.js";
 import { defineCollection } from "../../schema/collections.js";
-import { text } from "../../schema/fields.js";
+import type { GlobalConfig } from "../../schema/globals.js";
+import { defineGlobal } from "../../schema/globals.js";
+import { group, text } from "../../schema/fields.js";
 import { defineConfig } from "../../config.js";
 import { createRunelayer } from "../../plugin.js";
 import type {
@@ -24,17 +27,21 @@ import {
   loadDashboard,
   loadCollectionList,
   loadCollectionCreate,
+  loadCollectionEdit,
+  loadGlobalEdit,
   loadUsersCreate,
   dispatchLoader,
 } from "../runtime-loaders.js";
 import { createQueryApi, systemRequest } from "../admin-queries.js";
+import { updateGlobalDocument } from "../globals.js";
 
 const kit: SvelteKitUtils = {
   redirect(status: number, location: string | URL): never {
     throw Object.assign(new Error(), { status, location: location.toString() });
   },
   error(status: number, body?: string | { message: string }): never {
-    const message = typeof body === "string" ? body : (body?.message ?? "Error");
+    const message =
+      typeof body === "string" ? body : (body?.message ?? "Error");
     throw Object.assign(new Error(message), {
       status,
       body: typeof body === "object" ? body : { message },
@@ -48,6 +55,37 @@ const kit: SvelteKitUtils = {
 const Posts = defineCollection({
   slug: "posts",
   fields: [{ name: "title", ...text({ required: true }) }],
+});
+
+const GroupedPosts = defineCollection({
+  slug: "grouped_posts",
+  fields: [
+    { name: "title", ...text({ required: true }) },
+    {
+      name: "seo",
+      ...group({
+        fields: [
+          { name: "metaTitle", ...text() },
+          { name: "metaDescription", ...text() },
+        ],
+      }),
+    },
+  ],
+});
+
+const SiteSettings = defineGlobal({
+  slug: "site-settings",
+  fields: [
+    {
+      name: "seo",
+      ...group({
+        fields: [
+          { name: "title", ...text() },
+          { name: "description", ...text() },
+        ],
+      }),
+    },
+  ],
 });
 
 async function applyAuthSchemaForTests(url: string) {
@@ -78,16 +116,21 @@ async function applyAuthSchemaForTests(url: string) {
   }
 }
 
-async function createCtx(): Promise<LoaderContext> {
+async function createCtx(opts?: {
+  collections?: CollectionConfig[];
+  globals?: GlobalConfig[];
+}): Promise<LoaderContext> {
   const tempDir = mkdtempSync(join(tmpdir(), "runelayer-loaders-"));
   const dbUrl = `file:${join(tempDir, "test.db")}`;
-  await migrateDatabaseForTests(dbUrl, [Posts]);
+  const collections = opts?.collections ?? [Posts];
+  const globals = opts?.globals ?? [];
+  await migrateDatabaseForTests(dbUrl, collections);
   await applyAuthSchemaForTests(dbUrl);
 
   const runelayer = createRunelayer(
     defineConfig({
-      collections: [Posts],
-      globals: [],
+      collections,
+      globals,
       auth: {
         secret: "test-secret-minimum-32-chars-long",
         baseURL: "http://localhost:5173",
@@ -97,7 +140,10 @@ async function createCtx(): Promise<LoaderContext> {
   );
 
   const withRequest = (eventOrRequest: any) => {
-    const req = eventOrRequest instanceof Request ? eventOrRequest : eventOrRequest.request;
+    const req =
+      eventOrRequest instanceof Request
+        ? eventOrRequest
+        : eventOrRequest.request;
     return createQueryApi(runelayer, () => req);
   };
 
@@ -117,7 +163,12 @@ async function createCtx(): Promise<LoaderContext> {
       return g;
     },
     withRequest,
-    fetchManagedUserList: async () => ({ users: [], total: 0, limit: 20, offset: 0 }),
+    fetchManagedUserList: async () => ({
+      users: [],
+      total: 0,
+      limit: 20,
+      offset: 0,
+    }),
     fetchManagedUser: async () => ({
       id: "u1",
       email: "u@b.c",
@@ -144,7 +195,12 @@ function makeEvent(path?: string, locals: Record<string, unknown> = {}) {
     request,
     url,
     locals: {
-      user: { id: "admin-1", email: "admin@example.com", role: "admin", name: "Admin" },
+      user: {
+        id: "admin-1",
+        email: "admin@example.com",
+        role: "admin",
+        name: "Admin",
+      },
       ...locals,
     },
   } as any;
@@ -195,10 +251,14 @@ describe("runtime-loaders", () => {
     const sys = createQueryApi(ctx.runelayer, () => systemRequest("/admin"));
     await sys.create(Posts, { title: "Test post" });
 
-    const result = await loadCollectionList(ctx, makeEvent("collections/posts"), {
-      kind: "collection-list",
-      slug: "posts",
-    });
+    const result = await loadCollectionList(
+      ctx,
+      makeEvent("collections/posts"),
+      {
+        kind: "collection-list",
+        slug: "posts",
+      },
+    );
     expect(result.view).toBe("collection-list");
     expect((result.docs as any[]).length).toBe(1);
     expect(result.page).toBe(1);
@@ -206,12 +266,77 @@ describe("runtime-loaders", () => {
 
   it("loadCollectionCreate returns create view with collection config", async () => {
     const ctx = await createCtx();
-    const result = loadCollectionCreate(ctx, makeEvent("collections/posts/create"), {
-      kind: "collection-create",
-      slug: "posts",
-    });
+    const result = loadCollectionCreate(
+      ctx,
+      makeEvent("collections/posts/create"),
+      {
+        kind: "collection-create",
+        slug: "posts",
+      },
+    );
     expect(result.view).toBe("collection-create");
     expect((result.collection as any).slug).toBe("posts");
+  });
+
+  it("loadCollectionEdit returns nested grouped data", async () => {
+    const ctx = await createCtx({ collections: [GroupedPosts] });
+    const sys = createQueryApi(ctx.runelayer, () => systemRequest("/admin"));
+    const created = await sys.create(GroupedPosts, {
+      title: "Nested post",
+      seo: {
+        metaTitle: "Meta title",
+        metaDescription: "Meta description",
+      },
+    });
+
+    const result = await loadCollectionEdit(
+      ctx,
+      makeEvent(`collections/grouped_posts/${created.id}`),
+      {
+        kind: "collection-edit",
+        slug: "grouped_posts",
+        id: created.id as string,
+      },
+    );
+
+    expect(result.document).toMatchObject({
+      title: "Nested post",
+      seo: {
+        metaTitle: "Meta title",
+        metaDescription: "Meta description",
+      },
+    });
+  });
+
+  it("loadGlobalEdit returns nested grouped data", async () => {
+    const ctx = await createCtx({ collections: [], globals: [SiteSettings] });
+    await updateGlobalDocument(
+      ctx.runelayer,
+      SiteSettings,
+      systemRequest("/admin"),
+      {
+        seo: {
+          title: "Site title",
+          description: "Site description",
+        },
+      },
+    );
+
+    const result = await loadGlobalEdit(
+      ctx,
+      makeEvent("globals/site-settings"),
+      {
+        kind: "global-edit",
+        slug: "site-settings",
+      },
+    );
+
+    expect(result.document).toMatchObject({
+      seo: {
+        title: "Site title",
+        description: "Site description",
+      },
+    });
   });
 
   it("loadUsersCreate returns users-create view with roles", async () => {
@@ -224,14 +349,20 @@ describe("runtime-loaders", () => {
 
   it("dispatchLoader routes to the correct loader by kind", async () => {
     const ctx = await createCtx();
-    const result = await dispatchLoader(ctx, makeEvent("login"), { kind: "login" });
+    const result = await dispatchLoader(ctx, makeEvent("login"), {
+      kind: "login",
+    });
     expectTypeOf(result).toMatchTypeOf<RunelayerAdminPageData>();
     expect(result.view).toBe("login");
 
-    const healthResult = await dispatchLoader(ctx, makeEvent("health"), { kind: "health" });
+    const healthResult = await dispatchLoader(ctx, makeEvent("health"), {
+      kind: "health",
+    });
     expect(healthResult.view).toBe("health");
 
-    const dashResult = await dispatchLoader(ctx, makeEvent(), { kind: "dashboard" });
+    const dashResult = await dispatchLoader(ctx, makeEvent(), {
+      kind: "dashboard",
+    });
     if (dashResult.view === "dashboard") {
       expectTypeOf(dashResult.dashboardCollections).toEqualTypeOf<
         Array<{ slug: string; label: string; count: number }>

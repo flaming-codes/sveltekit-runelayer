@@ -19,10 +19,11 @@
 		disabled: boolean;
 	} = $props();
 
-	// Ensure blocks array is initialized
-	if (!Array.isArray(values[field.name])) {
-		values[field.name] = [];
-	}
+	$effect(() => {
+		if (!Array.isArray(values[field.name])) {
+			values[field.name] = [];
+		}
+	});
 
 	let blocks = $derived<Record<string, any>[]>(values[field.name] ?? []);
 

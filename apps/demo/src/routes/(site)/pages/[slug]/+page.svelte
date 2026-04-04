@@ -27,16 +27,16 @@
 
   <Row>
     <Column lg={12} md={6} sm={4}>
-      <!-- Hero section (group fields with prefix notation) -->
-      {#if page.hero_heading}
+      <!-- Hero section -->
+      {#if page.hero?.heading}
         <section style="margin-bottom: 2rem; padding: 2rem 0;">
-          <h1 style="font-size: 2.5rem;">{page.hero_heading}</h1>
-          {#if page.hero_subheading}
+          <h1 style="font-size: 2.5rem;">{page.hero.heading}</h1>
+          {#if page.hero?.subheading}
             <p style="font-size: 1.25rem; color: var(--cds-text-secondary); margin: 1rem 0;">
-              {page.hero_subheading}
+              {page.hero.subheading}
             </p>
           {/if}
-          {#if page.hero_showCta}
+          {#if page.hero?.showCta}
             <Button>Get Started</Button>
           {/if}
         </section>

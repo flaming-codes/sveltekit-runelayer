@@ -17,7 +17,8 @@ const kit: SvelteKitUtils = {
     throw Object.assign(new Error(), { status, location: location.toString() });
   },
   error(status: number, body?: string | { message: string }): never {
-    const message = typeof body === "string" ? body : (body?.message ?? "Error");
+    const message =
+      typeof body === "string" ? body : (body?.message ?? "Error");
     throw Object.assign(new Error(message), {
       status,
       body: typeof body === "object" ? body : { message },
@@ -53,7 +54,10 @@ const SiteSettings = defineGlobal({
         ...ctx,
         data: {
           ...ctx.data,
-          siteName: typeof ctx.data.siteName === "string" ? ctx.data.siteName.trim() : "",
+          siteName:
+            typeof ctx.data.siteName === "string"
+              ? ctx.data.siteName.trim()
+              : "",
         },
       }),
     ],
@@ -89,7 +93,10 @@ const ADMIN_HEADERS = {
   "x-user-email": "admin@example.com",
 };
 
-async function applyAuthSchemaForTests(url: string, users: TestAuthUser[] = []) {
+async function applyAuthSchemaForTests(
+  url: string,
+  users: TestAuthUser[] = [],
+) {
   const client = createClient({ url });
   const now = new Date().toISOString();
 
@@ -128,7 +135,10 @@ async function createTestApp(options?: { authUsers?: TestAuthUser[] }) {
   const tempDir = mkdtempSync(join(tmpdir(), "runelayer-sveltekit-"));
   const dbUrl = `file:${join(tempDir, "test.db")}`;
   await migrateDatabaseForTests(dbUrl, [Posts]);
-  await applyAuthSchemaForTests(dbUrl, options?.authUsers ?? [DEFAULT_ADMIN_USER]);
+  await applyAuthSchemaForTests(
+    dbUrl,
+    options?.authUsers ?? [DEFAULT_ADMIN_USER],
+  );
 
   return createRunelayerRuntime(
     {
@@ -204,7 +214,9 @@ function requestUrl(input: RequestInfo | URL): string {
 describe("createRunelayerApp", () => {
   it("resolves admin paths and returns serializable payloads", async () => {
     const app = await createTestApp();
-    const created = (await app.system.create(Posts, { title: "Hello" })) as { id: string };
+    const created = (await app.system.create(Posts, { title: "Hello" })) as {
+      id: string;
+    };
 
     const dashboard = await app.admin.load(adminEvent());
     expect(dashboard.view).toBe("dashboard");
@@ -215,15 +227,23 @@ describe("createRunelayerApp", () => {
     expect(() => JSON.stringify(list)).not.toThrow();
     expect((list.collection as Record<string, unknown>).access).toEqual({});
 
-    const createView = await app.admin.load(adminEvent("collections/posts/create"));
+    const createView = await app.admin.load(
+      adminEvent("collections/posts/create"),
+    );
     expect(createView.view).toBe("collection-create");
 
-    const editView = await app.admin.load(adminEvent(`collections/posts/${created.id}`));
+    const editView = await app.admin.load(
+      adminEvent(`collections/posts/${created.id}`),
+    );
     expect(editView.view).toBe("collection-edit");
 
-    const globalView = await app.admin.load(adminEvent("globals/site-settings"));
+    const globalView = await app.admin.load(
+      adminEvent("globals/site-settings"),
+    );
     expect(globalView.view).toBe("global-edit");
-    expect((globalView.global as Record<string, unknown>).slug).toBe("site-settings");
+    expect((globalView.global as Record<string, unknown>).slug).toBe(
+      "site-settings",
+    );
   });
 
   it("dispatches create/update/delete admin actions", async () => {
@@ -231,18 +251,19 @@ describe("createRunelayerApp", () => {
 
     const createRedirect = await (app.admin.actions.create as any)(
       adminEvent("collections/posts/create", {
-        form: { title: "Draft" },
+        form: { payload: JSON.stringify({ title: "Draft" }) },
       }),
     ).catch((e: unknown) => e);
 
     expect(createRedirect).toMatchObject({ status: 303 });
-    const id = (createRedirect as { location: string }).location.split("/").pop() as string;
+    const id = (createRedirect as { location: string }).location
+      .split("/")
+      .pop() as string;
 
     const updated = await (app.admin.actions.update as any)(
       adminEvent(`collections/posts/${id}`, {
         form: {
-          id,
-          title: "Published",
+          payload: JSON.stringify({ title: "Published" }),
         },
       }),
     );
@@ -267,7 +288,7 @@ describe("createRunelayerApp", () => {
     const updated = await (app.admin.actions.update as any)(
       adminEvent("globals/site-settings", {
         form: {
-          siteName: "  Runelayer CMS  ",
+          payload: JSON.stringify({ siteName: "  Runelayer CMS  " }),
         },
       }),
     );
@@ -276,7 +297,9 @@ describe("createRunelayerApp", () => {
     expect(updated.document.id).toBe("site-settings");
     expect(updated.document.siteName).toBe("Runelayer CMS");
 
-    const globalView = await app.admin.load(adminEvent("globals/site-settings"));
+    const globalView = await app.admin.load(
+      adminEvent("globals/site-settings"),
+    );
     expect(globalView.document).toMatchObject({
       id: "site-settings",
       siteName: "Runelayer CMS",
@@ -285,14 +308,18 @@ describe("createRunelayerApp", () => {
 
   it("throws 404 for unknown collections in admin routes", async () => {
     const app = await createTestApp();
-    await expect(app.admin.load(adminEvent("collections/missing"))).rejects.toMatchObject({
+    await expect(
+      app.admin.load(adminEvent("collections/missing")),
+    ).rejects.toMatchObject({
       status: 404,
     });
   });
 
   it("throws 404 for unknown globals in admin routes", async () => {
     const app = await createTestApp();
-    await expect(app.admin.load(adminEvent("globals/missing"))).rejects.toMatchObject({
+    await expect(
+      app.admin.load(adminEvent("globals/missing")),
+    ).rejects.toMatchObject({
       status: 404,
     });
   });
@@ -308,7 +335,13 @@ describe("createRunelayerApp", () => {
     await expect(
       app.admin.load(
         makeEvent(undefined, {
-          locals: { user: { id: "editor-1", email: "editor@example.com", role: "editor" } },
+          locals: {
+            user: {
+              id: "editor-1",
+              email: "editor@example.com",
+              role: "editor",
+            },
+          },
         }),
       ),
     ).rejects.toMatchObject({
@@ -500,7 +533,9 @@ describe("createRunelayerApp", () => {
     );
 
     expect(usersView.view).toBe("users-list");
-    expect((usersView.users as Array<Record<string, unknown>>)[0]?.email).toBe("ada@example.com");
+    expect((usersView.users as Array<Record<string, unknown>>)[0]?.email).toBe(
+      "ada@example.com",
+    );
 
     const userEditView = await app.admin.load(
       adminEvent("users/u-1", {
@@ -526,7 +561,9 @@ describe("createRunelayerApp", () => {
     );
 
     expect(userEditView.view).toBe("users-edit");
-    expect((userEditView.managedUser as Record<string, unknown>).id).toBe("u-1");
+    expect((userEditView.managedUser as Record<string, unknown>).id).toBe(
+      "u-1",
+    );
   });
 
   it("creates users through the admin create-user endpoint", async () => {
@@ -704,7 +741,9 @@ describe("createRunelayerApp", () => {
     const app = await createTestApp();
 
     await expect(
-      app.withRequest(new Request("http://localhost")).create(Posts, { title: "Nope" }),
+      app
+        .withRequest(new Request("http://localhost"))
+        .create(Posts, { title: "Nope" }),
     ).rejects.toThrow("Forbidden");
 
     const authed = await app

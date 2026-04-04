@@ -22,46 +22,9 @@ import {
   parseManagedUser,
 } from "./admin-queries.js";
 
-function flattenAdminPayload(
-  fields: NamedField[],
-  source: Record<string, unknown>,
-  prefix = "",
-): Record<string, unknown> {
-  const output: Record<string, unknown> = {};
-
-  for (const field of fields) {
-    const key = `${prefix}${field.name}`;
-
-    if (field.type === "group") {
-      const nested = source[field.name];
-      if (nested === undefined || nested === null) continue;
-      if (typeof nested !== "object" || Array.isArray(nested)) {
-        output[key] = nested;
-        continue;
-      }
-      Object.assign(
-        output,
-        flattenAdminPayload(field.fields, nested as Record<string, unknown>, `${key}_`),
-      );
-      continue;
-    }
-
-    if (field.type === "row" || field.type === "collapsible") {
-      Object.assign(output, flattenAdminPayload(field.fields, source, prefix));
-      continue;
-    }
-
-    if (source[field.name] !== undefined) {
-      output[key] = source[field.name];
-    }
-  }
-
-  return output;
-}
-
 function parseDocumentPayload(
   formData: FormData,
-  fields: NamedField[],
+  _fields: NamedField[],
   kit: Pick<SvelteKitUtils, "error">,
 ): Record<string, unknown> {
   const payload = formField(formData, "payload");
@@ -80,7 +43,9 @@ function parseDocumentPayload(
     throw kit.error(400, "Admin form payload must be an object.");
   }
 
-  return flattenAdminPayload(fields, parsed as Record<string, unknown>);
+  const document = { ...(parsed as Record<string, unknown>) };
+  delete document.id;
+  return document;
 }
 
 export interface AdminActionsConfig {
@@ -88,8 +53,14 @@ export interface AdminActionsConfig {
   runelayer: RunelayerInstance;
   adminPath: string;
   authBasePath: string;
-  getCollectionBySlug: (runelayer: RunelayerInstance, slug: string) => CollectionConfig;
-  resolveGlobalBySlug: (runelayer: RunelayerInstance, slug: string) => GlobalConfig;
+  getCollectionBySlug: (
+    runelayer: RunelayerInstance,
+    slug: string,
+  ) => CollectionConfig;
+  resolveGlobalBySlug: (
+    runelayer: RunelayerInstance,
+    slug: string,
+  ) => GlobalConfig;
   guardAdminRoute: (
     event: RequestEvent,
     route: AdminRoute,
@@ -112,7 +83,10 @@ export async function resolveGuardedRoute<K extends AdminRoute["kind"]>(
   const route = parseAdminRoute(event.params.path);
   const kinds = Array.isArray(expectedKind) ? expectedKind : [expectedKind];
   if (!route || !kinds.includes(route.kind as K)) {
-    throw cfg.kit.error(404, `Action is only valid on ${kinds.join("/")} routes`);
+    throw cfg.kit.error(
+      404,
+      `Action is only valid on ${kinds.join("/")} routes`,
+    );
   }
   const adminExists = (await countAdminUsers(cfg.runelayer)) > 0;
   await cfg.guardAdminRoute(event, route, cfg.adminPath, adminExists);
@@ -122,7 +96,10 @@ export async function resolveGuardedRoute<K extends AdminRoute["kind"]>(
 export function createAdminActions(cfg: AdminActionsConfig): Actions {
   const { redirect, error, fail } = cfg.kit;
 
-  const authAdminPath = (suffix: string, searchParams?: URLSearchParams): string => {
+  const authAdminPath = (
+    suffix: string,
+    searchParams?: URLSearchParams,
+  ): string => {
     const query = searchParams?.toString();
     const path = `${cfg.authBasePath}/admin/${suffix}`;
     return query && query.length > 0 ? `${path}?${query}` : path;
@@ -186,7 +163,10 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
         const payload = await response.json().catch(() => null);
         if (response.status === 403) {
           return fail(403, {
-            error: parseAuthErrorMessage(payload, "Sign-in is blocked for this account."),
+            error: parseAuthErrorMessage(
+              payload,
+              "Sign-in is blocked for this account.",
+            ),
           });
         }
         return fail(401, { error: "Invalid email or password." });
@@ -198,7 +178,10 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
     createFirstUser: async (event) => {
       const route = parseAdminRoute(event.params.path);
       if (!route || route.kind !== "create-first-user") {
-        throw error(404, "Create-first-user action is only valid on /admin/create-first-user");
+        throw error(
+          404,
+          "Create-first-user action is only valid on /admin/create-first-user",
+        );
       }
 
       if ((await countAdminUsers(cfg.runelayer)) > 0) {
@@ -260,14 +243,18 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
         promotionResult &&
         typeof promotionResult === "object" &&
         "rowsAffected" in promotionResult &&
-        typeof (promotionResult as { rowsAffected?: unknown }).rowsAffected === "number"
+        typeof (promotionResult as { rowsAffected?: unknown }).rowsAffected ===
+          "number"
           ? (promotionResult as { rowsAffected: number }).rowsAffected
           : null;
 
       if (promotedRows === 0 && (await countAdminUsers(cfg.runelayer)) > 0) {
-        await event.fetch(`${cfg.authBasePath}/sign-out`, { method: "POST" }).catch(() => null);
+        await event
+          .fetch(`${cfg.authBasePath}/sign-out`, { method: "POST" })
+          .catch(() => null);
         return fail(409, {
-          error: "Another setup request already created the first admin. Please sign in.",
+          error:
+            "Another setup request already created the first admin. Please sign in.",
         });
       }
 
@@ -284,18 +271,30 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       const document = await query.create(collection, data);
 
       const newId = (document as Record<string, string>).id;
-      throw redirect(303, `${cfg.adminPath}/collections/${route.slug}/${newId}`);
+      throw redirect(
+        303,
+        `${cfg.adminPath}/collections/${route.slug}/${newId}`,
+      );
     },
 
     update: async (event) => {
-      const route = await resolveGuardedRoute(event, ["collection-edit", "global-edit"], cfg);
+      const route = await resolveGuardedRoute(
+        event,
+        ["collection-edit", "global-edit"],
+        cfg,
+      );
       const formData = await event.request.formData();
 
       let document: unknown;
       if (route.kind === "global-edit") {
         const global = cfg.resolveGlobalBySlug(cfg.runelayer, route.slug);
         const data = parseDocumentPayload(formData, global.fields, cfg.kit);
-        document = await updateGlobalDocument(cfg.runelayer, global, event.request, data);
+        document = await updateGlobalDocument(
+          cfg.runelayer,
+          global,
+          event.request,
+          data,
+        );
       } else {
         const collection = cfg.getCollectionBySlug(cfg.runelayer, route.slug);
         const data = parseDocumentPayload(formData, collection.fields, cfg.kit);
@@ -318,7 +317,8 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
 
       const formData = await event.request.formData();
       const formId = formData.get("id");
-      const id = typeof formId === "string" && formId.length > 0 ? formId : route.id;
+      const id =
+        typeof formId === "string" && formId.length > 0 ? formId : route.id;
       const document = await query.remove(collection, id);
 
       return {
@@ -351,7 +351,10 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
 
       if (!result.ok) {
         return fail(result.status, {
-          error: parseAuthErrorMessage(result.payload, "Unable to create user."),
+          error: parseAuthErrorMessage(
+            result.payload,
+            "Unable to create user.",
+          ),
         });
       }
 
@@ -361,7 +364,9 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
           : null;
       const createdUser = parseManagedUser(payloadRecord?.user);
       if (!createdUser) {
-        return fail(500, { error: "Auth provider returned an invalid user payload." });
+        return fail(500, {
+          error: "Auth provider returned an invalid user payload.",
+        });
       }
 
       throw redirect(303, `${cfg.adminPath}/users/${createdUser.id}`);
@@ -380,19 +385,29 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       }
 
       const currentUserParams = new URLSearchParams({ id: route.id });
-      const currentUserResponse = await event.fetch(authAdminPath("get-user", currentUserParams), {
-        method: "GET",
-      });
-      const currentUserPayload = await currentUserResponse.json().catch(() => null);
+      const currentUserResponse = await event.fetch(
+        authAdminPath("get-user", currentUserParams),
+        {
+          method: "GET",
+        },
+      );
+      const currentUserPayload = await currentUserResponse
+        .json()
+        .catch(() => null);
       if (!currentUserResponse.ok) {
         return fail(currentUserResponse.status, {
-          error: parseAuthErrorMessage(currentUserPayload, "Unable to load user."),
+          error: parseAuthErrorMessage(
+            currentUserPayload,
+            "Unable to load user.",
+          ),
         });
       }
 
       const currentUser = parseManagedUser(currentUserPayload);
       if (!currentUser) {
-        return fail(500, { error: "Auth provider returned an invalid user payload." });
+        return fail(500, {
+          error: "Auth provider returned an invalid user payload.",
+        });
       }
 
       const updateResult = await callAuthAdmin(event, "update-user", {
@@ -409,7 +424,10 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
 
       if (!updateResult.ok) {
         return fail(updateResult.status, {
-          error: parseAuthErrorMessage(updateResult.payload, "Unable to update user."),
+          error: parseAuthErrorMessage(
+            updateResult.payload,
+            "Unable to update user.",
+          ),
         });
       }
 
@@ -424,17 +442,24 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
 
         if (!passwordResult.ok) {
           return fail(passwordResult.status, {
-            error: parseAuthErrorMessage(passwordResult.payload, "Unable to set user password."),
+            error: parseAuthErrorMessage(
+              passwordResult.payload,
+              "Unable to set user password.",
+            ),
           });
         }
       }
 
       const roleChanged = currentUser.role !== role;
       if (roleChanged || password.length > 0) {
-        const revokeResult = await callAuthAdmin(event, "revoke-user-sessions", {
-          method: "POST",
-          body: JSON.stringify({ userId: route.id }),
-        });
+        const revokeResult = await callAuthAdmin(
+          event,
+          "revoke-user-sessions",
+          {
+            method: "POST",
+            body: JSON.stringify({ userId: route.id }),
+          },
+        );
 
         if (!revokeResult.ok) {
           return fail(revokeResult.status, {
@@ -461,9 +486,12 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       }
 
       const fetchUserParams = new URLSearchParams({ id: route.id });
-      const fetchUserResponse = await event.fetch(authAdminPath("get-user", fetchUserParams), {
-        method: "GET",
-      });
+      const fetchUserResponse = await event.fetch(
+        authAdminPath("get-user", fetchUserParams),
+        {
+          method: "GET",
+        },
+      );
       const fetchUserPayload = await fetchUserResponse.json().catch(() => null);
       if (!fetchUserResponse.ok) {
         throw error(
@@ -476,7 +504,10 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
         throw error(500, "Auth provider returned an invalid user payload.");
       }
 
-      if (targetUser.role === "admin" && (await countAdminUsers(cfg.runelayer)) <= 1) {
+      if (
+        targetUser.role === "admin" &&
+        (await countAdminUsers(cfg.runelayer)) <= 1
+      ) {
         return fail(400, { error: "At least one admin account must remain." });
       }
 
@@ -487,7 +518,10 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
 
       if (!removeResult.ok) {
         return fail(removeResult.status, {
-          error: parseAuthErrorMessage(removeResult.payload, "Unable to delete user."),
+          error: parseAuthErrorMessage(
+            removeResult.payload,
+            "Unable to delete user.",
+          ),
         });
       }
 
@@ -563,7 +597,11 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
     publishGlobal: async (event) => {
       const route = await resolveGuardedRoute(event, "global-edit", cfg);
       const global = cfg.resolveGlobalBySlug(cfg.runelayer, route.slug);
-      const document = await publishGlobal(cfg.runelayer, global, event.request);
+      const document = await publishGlobal(
+        cfg.runelayer,
+        global,
+        event.request,
+      );
 
       return {
         success: true,
@@ -574,7 +612,11 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
     unpublishGlobal: async (event) => {
       const route = await resolveGuardedRoute(event, "global-edit", cfg);
       const global = cfg.resolveGlobalBySlug(cfg.runelayer, route.slug);
-      const document = await unpublishGlobal(cfg.runelayer, global, event.request);
+      const document = await unpublishGlobal(
+        cfg.runelayer,
+        global,
+        event.request,
+      );
 
       return {
         success: true,
@@ -588,9 +630,15 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
 
       const formData = await event.request.formData();
       const data = parseDocumentPayload(formData, global.fields, cfg.kit);
-      const document = await updateGlobalDocument(cfg.runelayer, global, event.request, data, {
-        forceDraft: true,
-      });
+      const document = await updateGlobalDocument(
+        cfg.runelayer,
+        global,
+        event.request,
+        data,
+        {
+          forceDraft: true,
+        },
+      );
 
       return {
         success: true,
@@ -607,7 +655,12 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       if (!versionId) {
         return fail(400, { error: "Version ID is required." });
       }
-      const document = await restoreGlobalVersion(cfg.runelayer, global, event.request, versionId);
+      const document = await restoreGlobalVersion(
+        cfg.runelayer,
+        global,
+        event.request,
+        versionId,
+      );
 
       return {
         success: true,
@@ -622,7 +675,9 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       }
 
       if (getUser(event)) {
-        await event.fetch(`${cfg.authBasePath}/sign-out`, { method: "POST" }).catch(() => null);
+        await event
+          .fetch(`${cfg.authBasePath}/sign-out`, { method: "POST" })
+          .catch(() => null);
       }
 
       throw redirect(303, `${cfg.adminPath}/login`);

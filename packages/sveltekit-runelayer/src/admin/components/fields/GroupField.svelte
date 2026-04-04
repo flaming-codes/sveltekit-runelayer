@@ -15,10 +15,11 @@
 		values: Record<string, any>;
 	} = $props();
 
-	// Group fields are stored as a nested object under the group name
-	if (!values[name] || typeof values[name] !== "object") {
-		values[name] = {};
-	}
+	$effect(() => {
+		if (!values[name] || typeof values[name] !== "object" || Array.isArray(values[name])) {
+			values[name] = {};
+		}
+	});
 </script>
 
 <FormGroup legendText={label ?? name}>

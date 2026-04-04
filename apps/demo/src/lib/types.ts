@@ -13,8 +13,10 @@ export interface PostRow {
   featured?: boolean;
   readTime?: number;
   metadata?: string;
-  seo_metaTitle?: string;
-  seo_metaDescription?: string;
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+  };
   createdAt?: string;
   updatedAt?: string;
 }
@@ -82,9 +84,11 @@ export interface PageRow {
   title: string;
   slug: string;
   layout?: "default" | "wide" | "sidebar";
-  hero_heading?: string;
-  hero_subheading?: string;
-  hero_showCta?: boolean;
+  hero?: {
+    heading?: string;
+    subheading?: string;
+    showCta?: boolean;
+  };
   showRecent?: boolean;
   showCategories?: boolean;
   customHtml?: string;

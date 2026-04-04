@@ -74,6 +74,15 @@
 		return String(value);
 	}
 
+	function resolvePath(document: Record<string, any>, path: string): unknown {
+		return path
+			.split(".")
+			.reduce<unknown>(
+				(value, segment) => (value as Record<string, unknown> | undefined)?.[segment],
+				document,
+			);
+	}
+
 	function buildCollectionHref(nextPage: number, nextLimit: number = limit) {
 		const params = new URLSearchParams();
 		if (nextPage > 1) params.set("page", String(nextPage));
@@ -94,8 +103,8 @@
 	let sorted = $derived.by(() => {
 		if (!sortField) return documents;
 		return [...documents].sort((left, right) => {
-			const leftValue = left[sortField] ?? "";
-			const rightValue = right[sortField] ?? "";
+			const leftValue = resolvePath(left, sortField) ?? "";
+			const rightValue = resolvePath(right, sortField) ?? "";
 			const compare = String(leftValue).localeCompare(String(rightValue), undefined, {
 				numeric: true,
 			});
@@ -108,7 +117,7 @@
 		const normalizedSearch = searchTerm.toLowerCase();
 		return sorted.filter((document) =>
 			columns.some((column) =>
-				displayValue(document[column]).toLowerCase().includes(normalizedSearch),
+				displayValue(resolvePath(document, column)).toLowerCase().includes(normalizedSearch),
 			),
 		);
 	});
@@ -133,7 +142,9 @@
 				({
 					id: String(document.id ?? `${slug}-${index}`),
 					actions: "Edit",
-					...Object.fromEntries(columns.map((column) => [column, displayValue(document[column])])),
+					...Object.fromEntries(
+						columns.map((column) => [column, displayValue(resolvePath(document, column))]),
+					),
 					...(hasVersions ? { _status: (document._status as string) ?? "draft" } : {}),
 				}) satisfies CollectionRow,
 		),

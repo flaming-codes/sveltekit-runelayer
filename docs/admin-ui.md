@@ -70,6 +70,8 @@ Supported views under the admin mount:
 Each `view` variant carries only the data needed by that page (for example, `users-list` includes pagination/search fields, while `collection-edit` includes `collection` and `document`).
 `AdminPage` uses the same union type, so loader output and UI rendering stay in one typed contract.
 
+Collection and global edit loaders return documents in the same public nested field shape used by the query API. Group fields stay nested in loader data and form payloads; admin routes do not expose flattened storage keys.
+
 Supported actions:
 
 - `?/login`
