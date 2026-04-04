@@ -40,8 +40,7 @@ const kit: SvelteKitUtils = {
     throw Object.assign(new Error(), { status, location: location.toString() });
   },
   error(status: number, body?: string | { message: string }): never {
-    const message =
-      typeof body === "string" ? body : (body?.message ?? "Error");
+    const message = typeof body === "string" ? body : (body?.message ?? "Error");
     throw Object.assign(new Error(message), {
       status,
       body: typeof body === "object" ? body : { message },
@@ -140,10 +139,7 @@ async function createCtx(opts?: {
   );
 
   const withRequest = (eventOrRequest: any) => {
-    const req =
-      eventOrRequest instanceof Request
-        ? eventOrRequest
-        : eventOrRequest.request;
+    const req = eventOrRequest instanceof Request ? eventOrRequest : eventOrRequest.request;
     return createQueryApi(runelayer, () => req);
   };
 
@@ -251,14 +247,10 @@ describe("runtime-loaders", () => {
     const sys = createQueryApi(ctx.runelayer, () => systemRequest("/admin"));
     await sys.create(Posts, { title: "Test post" });
 
-    const result = await loadCollectionList(
-      ctx,
-      makeEvent("collections/posts"),
-      {
-        kind: "collection-list",
-        slug: "posts",
-      },
-    );
+    const result = await loadCollectionList(ctx, makeEvent("collections/posts"), {
+      kind: "collection-list",
+      slug: "posts",
+    });
     expect(result.view).toBe("collection-list");
     expect((result.docs as any[]).length).toBe(1);
     expect(result.page).toBe(1);
@@ -266,14 +258,10 @@ describe("runtime-loaders", () => {
 
   it("loadCollectionCreate returns create view with collection config", async () => {
     const ctx = await createCtx();
-    const result = loadCollectionCreate(
-      ctx,
-      makeEvent("collections/posts/create"),
-      {
-        kind: "collection-create",
-        slug: "posts",
-      },
-    );
+    const result = loadCollectionCreate(ctx, makeEvent("collections/posts/create"), {
+      kind: "collection-create",
+      slug: "posts",
+    });
     expect(result.view).toBe("collection-create");
     expect((result.collection as any).slug).toBe("posts");
   });
@@ -310,26 +298,17 @@ describe("runtime-loaders", () => {
 
   it("loadGlobalEdit returns nested grouped data", async () => {
     const ctx = await createCtx({ collections: [], globals: [SiteSettings] });
-    await updateGlobalDocument(
-      ctx.runelayer,
-      SiteSettings,
-      systemRequest("/admin"),
-      {
-        seo: {
-          title: "Site title",
-          description: "Site description",
-        },
+    await updateGlobalDocument(ctx.runelayer, SiteSettings, systemRequest("/admin"), {
+      seo: {
+        title: "Site title",
+        description: "Site description",
       },
-    );
+    });
 
-    const result = await loadGlobalEdit(
-      ctx,
-      makeEvent("globals/site-settings"),
-      {
-        kind: "global-edit",
-        slug: "site-settings",
-      },
-    );
+    const result = await loadGlobalEdit(ctx, makeEvent("globals/site-settings"), {
+      kind: "global-edit",
+      slug: "site-settings",
+    });
 
     expect(result.document).toMatchObject({
       seo: {

@@ -15,11 +15,7 @@ import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { runBeforeHooks, runAfterHooks } from "../hooks/runner.js";
 import type { HookContext } from "../hooks/types.js";
 import { checkAccess } from "./access.js";
-import {
-  allowedQueryColumns,
-  enforceReadProjection,
-  enforceWritePayload,
-} from "./enforcement.js";
+import { allowedQueryColumns, enforceReadProjection, enforceWritePayload } from "./enforcement.js";
 import type { QueryContext, FindArgs, FindOneOpts } from "./types.js";
 import { normalizeVersionConfig } from "../versions/config.js";
 import type { BlockConfig, NamedField, RefSentinel } from "../schema/fields.js";
@@ -50,10 +46,7 @@ function getUserId(req?: Request): string | undefined {
   return req?.headers.get("x-user-id") ?? undefined;
 }
 
-function httpError(
-  status: number,
-  message: string,
-): Error & { status: number } {
+function httpError(status: number, message: string): Error & { status: number } {
   return Object.assign(new Error(message), { status });
 }
 
@@ -73,9 +66,7 @@ function materializeStoredDocument(
   return inflateDocumentFields(collection.fields, doc);
 }
 
-function stripSystemFields(
-  doc: Record<string, unknown>,
-): Record<string, unknown> {
+function stripSystemFields(doc: Record<string, unknown>): Record<string, unknown> {
   const {
     id: _id,
     createdAt: _createdAt,
@@ -109,8 +100,7 @@ async function atomicWriteAndSnapshot(
     // tx implements the same interface as LibSQLDatabase at runtime
     const txDb = tx as unknown as LibSQLDatabase;
     finalDoc = await writeOp(txDb);
-    const snapshotDoc =
-      materializeStoredDocument(ctx.collection, finalDoc) ?? finalDoc;
+    const snapshotDoc = materializeStoredDocument(ctx.collection, finalDoc) ?? finalDoc;
     await createVersionSnapshot(
       txDb,
       versionsTable(ctx),
@@ -179,10 +169,7 @@ function collectSentinels(
     result.get(sentinel._collection)!.add(sentinel._ref);
   }
 
-  function walkFields(
-    doc: Record<string, unknown>,
-    namedFields: NamedField[],
-  ): void {
+  function walkFields(doc: Record<string, unknown>, namedFields: NamedField[]): void {
     for (const field of namedFields) {
       const value = doc[field.name];
       if (value === undefined || value === null) continue;
@@ -319,16 +306,10 @@ async function populateRefs(
     const refTable = tables[collectionSlug];
     if (!refTable) continue; // unknown collection — refs will resolve to null
 
-    const refCollectionConfig = collections.find(
-      (c) => c.slug === collectionSlug,
-    );
+    const refCollectionConfig = collections.find((c) => c.slug === collectionSlug);
 
     const idList = Array.from(ids);
-    const rows = await db
-      .select()
-      .from(refTable)
-      .where(inArray(refTable.id, idList))
-      .all();
+    const rows = await db.select().from(refTable).where(inArray(refTable.id, idList)).all();
 
     const idMap = new Map<string, Record<string, unknown>>();
     for (const row of rows) {
@@ -336,13 +317,8 @@ async function populateRefs(
       if (typeof rowRecord.id === "string") {
         if (refCollectionConfig) {
           const materialized =
-            materializeStoredDocument(refCollectionConfig, rowRecord) ??
-            rowRecord;
-          const projected = await enforceReadProjection(
-            refCollectionConfig,
-            req,
-            materialized,
-          );
+            materializeStoredDocument(refCollectionConfig, rowRecord) ?? rowRecord;
+          const projected = await enforceReadProjection(refCollectionConfig, req, materialized);
           if (projected) {
             idMap.set(rowRecord.id, projected);
           }
@@ -361,10 +337,7 @@ async function populateRefs(
 
 export async function find(ctx: QueryContext, args: FindArgs = {}) {
   await checkAccess(ctx.collection.access?.read, ctx.req);
-  const hc = await runBeforeHooks(
-    ctx.collection.hooks?.beforeRead as any,
-    hookCtx(ctx, "read"),
-  );
+  const hc = await runBeforeHooks(ctx.collection.hooks?.beforeRead as any, hookCtx(ctx, "read"));
   const allowedColumns = allowedQueryColumns(ctx.collection);
   if (args.sort && !allowedColumns.has(args.sort)) {
     throw Object.assign(new Error(`Invalid sort column "${args.sort}"`), {
@@ -373,8 +346,7 @@ export async function find(ctx: QueryContext, args: FindArgs = {}) {
   }
 
   const sortColumn = args.sort
-    ? (translateDocumentPathToStorageKey(ctx.collection.fields, args.sort) ??
-      args.sort)
+    ? (translateDocumentPathToStorageKey(ctx.collection.fields, args.sort) ?? args.sort)
     : undefined;
 
   const conditions: SQL[] = [];
@@ -395,9 +367,7 @@ export async function find(ctx: QueryContext, args: FindArgs = {}) {
           status: 400,
         });
       }
-      const storageKey =
-        translateDocumentPathToStorageKey(ctx.collection.fields, column) ??
-        column;
+      const storageKey = translateDocumentPathToStorageKey(ctx.collection.fields, column) ?? column;
       const tableColumn = (table(ctx) as Record<string, unknown>)[storageKey];
       if (!tableColumn) {
         throw Object.assign(new Error(`Invalid where field "${column}"`), {
@@ -419,15 +389,11 @@ export async function find(ctx: QueryContext, args: FindArgs = {}) {
     where: whereClause,
     limit: args.limit,
     offset: args.offset,
-    sort: sortColumn
-      ? { column: sortColumn, order: args.sortOrder }
-      : undefined,
+    sort: sortColumn ? { column: sortColumn, order: args.sortOrder } : undefined,
   });
 
   const materializedDocs = docs
-    .map((doc) =>
-      materializeStoredDocument(ctx.collection, doc as Record<string, unknown>),
-    )
+    .map((doc) => materializeStoredDocument(ctx.collection, doc as Record<string, unknown>))
     .filter((doc): doc is Record<string, unknown> => doc !== undefined);
 
   for (const doc of materializedDocs) {
@@ -436,9 +402,7 @@ export async function find(ctx: QueryContext, args: FindArgs = {}) {
 
   const projected = (
     await Promise.all(
-      materializedDocs.map((doc) =>
-        enforceReadProjection(ctx.collection, ctx.req, doc),
-      ),
+      materializedDocs.map((doc) => enforceReadProjection(ctx.collection, ctx.req, doc)),
     )
   ).filter((doc): doc is Record<string, unknown> => doc !== undefined);
 
@@ -455,11 +419,7 @@ export async function find(ctx: QueryContext, args: FindArgs = {}) {
   return projected;
 }
 
-export async function findOne(
-  ctx: QueryContext,
-  id: string,
-  opts: FindOneOpts = {},
-) {
+export async function findOne(ctx: QueryContext, id: string, opts: FindOneOpts = {}) {
   await checkAccess(ctx.collection.access?.read, ctx.req, undefined, id);
   const hc = await runBeforeHooks(
     ctx.collection.hooks?.beforeRead as any,
@@ -492,14 +452,8 @@ export async function findOne(
 
 export async function create(ctx: QueryContext, data: Record<string, unknown>) {
   const vc = versionConfig(ctx);
-  const enforced = await enforceWritePayload(
-    ctx.collection,
-    "create",
-    data,
-    ctx.req,
-  );
-  const enforcedDoc =
-    materializeStoredDocument(ctx.collection, enforced) ?? enforced;
+  const enforced = await enforceWritePayload(ctx.collection, "create", data, ctx.req);
+  const enforcedDoc = materializeStoredDocument(ctx.collection, enforced) ?? enforced;
   await checkAccess(ctx.collection.access?.create, ctx.req, enforcedDoc);
   const hc = await runBeforeHooks(
     ctx.collection.hooks?.beforeChange as any,
@@ -511,14 +465,11 @@ export async function create(ctx: QueryContext, data: Record<string, unknown>) {
     hc.data ?? enforcedDoc,
     ctx.req,
   );
-  const hookDoc =
-    materializeStoredDocument(ctx.collection, hookData) ?? hookData;
+  const hookDoc = materializeStoredDocument(ctx.collection, hookData) ?? hookData;
   await checkAccess(ctx.collection.access?.create, ctx.req, hookDoc);
 
   // Inject version fields for versioned collections
-  const insertData = vc
-    ? { ...hookData, _status: "draft", _version: 1 }
-    : hookData;
+  const insertData = vc ? { ...hookData, _status: "draft", _version: 1 } : hookData;
 
   // Pre-generate the ID so it can be used as the snapshot parentId before insert returns
   const newId = vc ? crypto.randomUUID() : undefined;
@@ -527,10 +478,7 @@ export async function create(ctx: QueryContext, data: Record<string, unknown>) {
     newId ?? "",
     1,
     "draft",
-    (db) =>
-      insertOne(db, table(ctx), insertData, newId) as Promise<
-        Record<string, unknown>
-      >,
+    (db) => insertOne(db, table(ctx), insertData, newId) as Promise<Record<string, unknown>>,
   );
 
   const finalDoc = materializeStoredDocument(ctx.collection, doc) ?? doc;
@@ -541,18 +489,13 @@ export async function create(ctx: QueryContext, data: Record<string, unknown>) {
     doc: finalDoc,
   });
 
-  return (await enforceReadProjection(
-    ctx.collection,
-    ctx.req,
-    finalDoc,
-  )) as Record<string, unknown>;
+  return (await enforceReadProjection(ctx.collection, ctx.req, finalDoc)) as Record<
+    string,
+    unknown
+  >;
 }
 
-export async function update(
-  ctx: QueryContext,
-  id: string,
-  data: Record<string, unknown>,
-) {
+export async function update(ctx: QueryContext, id: string, data: Record<string, unknown>) {
   const vc = versionConfig(ctx);
   const existingDocRow = await findById(ctx.db.db, table(ctx), id);
   const existingDoc = materializeStoredDocument(
@@ -567,8 +510,7 @@ export async function update(
     existingDoc,
     id,
   );
-  const enforcedDoc =
-    materializeStoredDocument(ctx.collection, enforced) ?? enforced;
+  const enforcedDoc = materializeStoredDocument(ctx.collection, enforced) ?? enforced;
   await checkAccess(ctx.collection.access?.update, ctx.req, enforcedDoc, id);
   const hc = await runBeforeHooks(
     ctx.collection.hooks?.beforeChange as any,
@@ -586,8 +528,7 @@ export async function update(
     existingDoc,
     id,
   );
-  const hookDoc =
-    materializeStoredDocument(ctx.collection, hookData) ?? hookData;
+  const hookDoc = materializeStoredDocument(ctx.collection, hookData) ?? hookData;
   await checkAccess(ctx.collection.access?.update, ctx.req, hookDoc, id);
 
   // Increment version for versioned collections
@@ -601,10 +542,7 @@ export async function update(
     id,
     newVersion,
     currentStatus,
-    (db) =>
-      updateOne(db, table(ctx), id, updateData) as Promise<
-        Record<string, unknown>
-      >,
+    (db) => updateOne(db, table(ctx), id, updateData) as Promise<Record<string, unknown>>,
   );
 
   const finalDoc = materializeStoredDocument(ctx.collection, doc) ?? doc;
@@ -615,11 +553,10 @@ export async function update(
     doc: finalDoc,
   });
 
-  return (await enforceReadProjection(
-    ctx.collection,
-    ctx.req,
-    finalDoc,
-  )) as Record<string, unknown>;
+  return (await enforceReadProjection(ctx.collection, ctx.req, finalDoc)) as Record<
+    string,
+    unknown
+  >;
 }
 
 export async function remove(ctx: QueryContext, id: string) {
@@ -651,10 +588,7 @@ export async function remove(ctx: QueryContext, id: string) {
 
 function assertVersioned(ctx: QueryContext) {
   if (!versionConfig(ctx)) {
-    throw httpError(
-      400,
-      `Versioning is not enabled for collection "${ctx.collection.slug}"`,
-    );
+    throw httpError(400, `Versioning is not enabled for collection "${ctx.collection.slug}"`);
   }
 }
 
@@ -665,8 +599,7 @@ export async function publish(ctx: QueryContext, id: string) {
   if (!existingDocRow) throw httpError(404, "Document not found");
 
   const docRecord = existingDocRow as Record<string, unknown>;
-  const existingDoc =
-    materializeStoredDocument(ctx.collection, docRecord) ?? docRecord;
+  const existingDoc = materializeStoredDocument(ctx.collection, docRecord) ?? docRecord;
   const previousStatus = (docRecord._status as string) ?? "draft";
 
   // Check publish access (fallback to update)
@@ -715,8 +648,7 @@ export async function publish(ctx: QueryContext, id: string) {
       }) as Promise<Record<string, unknown>>,
   );
 
-  const materialized =
-    materializeStoredDocument(ctx.collection, finalDoc) ?? finalDoc;
+  const materialized = materializeStoredDocument(ctx.collection, finalDoc) ?? finalDoc;
 
   await runAfterHooks(ctx.collection.hooks?.afterPublish as any, {
     ...hc,
@@ -725,11 +657,10 @@ export async function publish(ctx: QueryContext, id: string) {
     previousStatus,
   });
 
-  return (await enforceReadProjection(
-    ctx.collection,
-    ctx.req,
-    materialized,
-  )) as Record<string, unknown>;
+  return (await enforceReadProjection(ctx.collection, ctx.req, materialized)) as Record<
+    string,
+    unknown
+  >;
 }
 
 export async function unpublish(ctx: QueryContext, id: string) {
@@ -739,8 +670,7 @@ export async function unpublish(ctx: QueryContext, id: string) {
   if (!existingDocRow) throw httpError(404, "Document not found");
 
   const docRecord = existingDocRow as Record<string, unknown>;
-  const existingDoc =
-    materializeStoredDocument(ctx.collection, docRecord) ?? docRecord;
+  const existingDoc = materializeStoredDocument(ctx.collection, docRecord) ?? docRecord;
 
   await checkAccess(
     ctx.collection.access?.publish ?? ctx.collection.access?.update,
@@ -762,29 +692,22 @@ export async function unpublish(ctx: QueryContext, id: string) {
       }) as Promise<Record<string, unknown>>,
   );
 
-  const materialized =
-    materializeStoredDocument(ctx.collection, finalDoc) ?? finalDoc;
+  const materialized = materializeStoredDocument(ctx.collection, finalDoc) ?? finalDoc;
 
-  return (await enforceReadProjection(
-    ctx.collection,
-    ctx.req,
-    materialized,
-  )) as Record<string, unknown>;
+  return (await enforceReadProjection(ctx.collection, ctx.req, materialized)) as Record<
+    string,
+    unknown
+  >;
 }
 
-export async function saveDraft(
-  ctx: QueryContext,
-  id: string,
-  data: Record<string, unknown>,
-) {
+export async function saveDraft(ctx: QueryContext, id: string, data: Record<string, unknown>) {
   assertVersioned(ctx);
 
   const existingDocRow = await findById(ctx.db.db, table(ctx), id);
   if (!existingDocRow) throw httpError(404, "Document not found");
 
   const docRecord = existingDocRow as Record<string, unknown>;
-  const existingDoc =
-    materializeStoredDocument(ctx.collection, docRecord) ?? docRecord;
+  const existingDoc = materializeStoredDocument(ctx.collection, docRecord) ?? docRecord;
 
   // Relaxed validation — required fields not enforced
   const enforced = await enforceWritePayload(
@@ -796,8 +719,7 @@ export async function saveDraft(
     id,
     { relaxRequired: true },
   );
-  const enforcedDoc =
-    materializeStoredDocument(ctx.collection, enforced) ?? enforced;
+  const enforcedDoc = materializeStoredDocument(ctx.collection, enforced) ?? enforced;
   await checkAccess(ctx.collection.access?.update, ctx.req, enforcedDoc, id);
 
   const hc = await runBeforeHooks(
@@ -813,8 +735,7 @@ export async function saveDraft(
     id,
     { relaxRequired: true },
   );
-  const hookDoc =
-    materializeStoredDocument(ctx.collection, hookData) ?? hookData;
+  const hookDoc = materializeStoredDocument(ctx.collection, hookData) ?? hookData;
   await checkAccess(ctx.collection.access?.update, ctx.req, hookDoc, id);
 
   const newVersion = ((docRecord._version as number) ?? 0) + 1;
@@ -831,8 +752,7 @@ export async function saveDraft(
       }) as Promise<Record<string, unknown>>,
   );
 
-  const materialized =
-    materializeStoredDocument(ctx.collection, finalDoc) ?? finalDoc;
+  const materialized = materializeStoredDocument(ctx.collection, finalDoc) ?? finalDoc;
 
   await runAfterHooks(ctx.collection.hooks?.afterChange as any, {
     ...hc,
@@ -840,11 +760,10 @@ export async function saveDraft(
     doc: materialized,
   });
 
-  return (await enforceReadProjection(
-    ctx.collection,
-    ctx.req,
-    materialized,
-  )) as Record<string, unknown>;
+  return (await enforceReadProjection(ctx.collection, ctx.req, materialized)) as Record<
+    string,
+    unknown
+  >;
 }
 
 export async function findVersionHistory(
@@ -855,12 +774,7 @@ export async function findVersionHistory(
   assertVersioned(ctx);
   await checkAccess(ctx.collection.access?.read, ctx.req, undefined, id);
 
-  const versions = await dbFindVersions(
-    ctx.db.db,
-    versionsTable(ctx),
-    id,
-    opts,
-  );
+  const versions = await dbFindVersions(ctx.db.db, versionsTable(ctx), id, opts);
   return versions.map((v: any) => ({
     id: v.id,
     _version: v._version,
@@ -870,11 +784,7 @@ export async function findVersionHistory(
   }));
 }
 
-export async function restoreVersion(
-  ctx: QueryContext,
-  id: string,
-  versionId: string,
-) {
+export async function restoreVersion(ctx: QueryContext, id: string, versionId: string) {
   assertVersioned(ctx);
 
   const existingDocRow = await findById(ctx.db.db, table(ctx), id);
@@ -887,11 +797,7 @@ export async function restoreVersion(
 
   await checkAccess(ctx.collection.access?.update, ctx.req, undefined, id);
 
-  const versionRecord = await findVersionById(
-    ctx.db.db,
-    versionsTable(ctx),
-    versionId,
-  );
+  const versionRecord = await findVersionById(ctx.db.db, versionsTable(ctx), versionId);
   if (!versionRecord) throw httpError(404, "Version not found");
 
   const vRecord = versionRecord as Record<string, unknown>;
@@ -919,8 +825,7 @@ export async function restoreVersion(
     id,
     { relaxRequired: true },
   );
-  const restoreDoc =
-    materializeStoredDocument(ctx.collection, restoreData) ?? restoreData;
+  const restoreDoc = materializeStoredDocument(ctx.collection, restoreData) ?? restoreData;
   await checkAccess(ctx.collection.access?.update, ctx.req, restoreDoc, id);
 
   const newVersion = ((existingDocRow as any)?._version ?? 0) + 1;
@@ -937,8 +842,7 @@ export async function restoreVersion(
       }) as Promise<Record<string, unknown>>,
   );
 
-  const materialized =
-    materializeStoredDocument(ctx.collection, finalDoc) ?? finalDoc;
+  const materialized = materializeStoredDocument(ctx.collection, finalDoc) ?? finalDoc;
 
   await runAfterHooks(ctx.collection.hooks?.afterChange as any, {
     ...hc,
@@ -946,9 +850,8 @@ export async function restoreVersion(
     doc: materialized,
   });
 
-  return (await enforceReadProjection(
-    ctx.collection,
-    ctx.req,
-    materialized,
-  )) as Record<string, unknown>;
+  return (await enforceReadProjection(ctx.collection, ctx.req, materialized)) as Record<
+    string,
+    unknown
+  >;
 }

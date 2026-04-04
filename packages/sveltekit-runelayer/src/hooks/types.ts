@@ -25,7 +25,4 @@ export type {
 
 export type CollectionHooks = Hooks;
 
-export type GlobalHooks = Pick<
-  Hooks,
-  "beforeChange" | "afterChange" | "beforeRead" | "afterRead"
->;
+export type GlobalHooks = Pick<Hooks, "beforeChange" | "afterChange" | "beforeRead" | "afterRead">;

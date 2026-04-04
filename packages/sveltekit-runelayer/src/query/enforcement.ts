@@ -1,10 +1,5 @@
 import type { CollectionConfig } from "../schema/collections.js";
-import type {
-  BlockConfig,
-  Field,
-  NamedField,
-  RefSentinel,
-} from "../schema/fields.js";
+import type { BlockConfig, Field, NamedField, RefSentinel } from "../schema/fields.js";
 import {
   deleteValueAtPath,
   DocumentShapeError,
@@ -25,12 +20,7 @@ type AccessMode = "create" | "read" | "update";
 const TRUE_STRINGS = new Set(["true", "1", "on", "yes"]);
 const FALSE_STRINGS = new Set(["false", "0", "off", "no"]);
 
-export const AUTH_SENSITIVE_FIELDS = [
-  "hash",
-  "salt",
-  "token",
-  "tokenExpiry",
-] as const;
+export const AUTH_SENSITIVE_FIELDS = ["hash", "salt", "token", "tokenExpiry"] as const;
 export const RESERVED_WRITE_FIELDS = new Set<string>([
   "id",
   "createdAt",
@@ -40,10 +30,7 @@ export const RESERVED_WRITE_FIELDS = new Set<string>([
   ...AUTH_SENSITIVE_FIELDS,
 ]);
 
-function httpError(
-  status: number,
-  message: string,
-): Error & { status: number } {
+function httpError(status: number, message: string): Error & { status: number } {
   return Object.assign(new Error(message), { status });
 }
 
@@ -214,12 +201,7 @@ function normalizeValue(field: Field, key: string, rawValue: unknown): unknown {
       return normalizeArray(rawValue, key);
 
     case "relationship":
-      return normalizeRelationshipValue(
-        rawValue,
-        key,
-        field.relationTo,
-        field.hasMany,
-      );
+      return normalizeRelationshipValue(rawValue, key, field.relationTo, field.hasMany);
 
     default:
       return rawValue;
@@ -234,16 +216,10 @@ function validateBuiltIn(field: Field, key: string, value: unknown): void {
     case "textarea": {
       if (typeof value !== "string") break;
       if (field.minLength !== undefined && value.length < field.minLength) {
-        throw httpError(
-          400,
-          `Field "${key}" must be at least ${field.minLength} characters`,
-        );
+        throw httpError(400, `Field "${key}" must be at least ${field.minLength} characters`);
       }
       if (field.maxLength !== undefined && value.length > field.maxLength) {
-        throw httpError(
-          400,
-          `Field "${key}" must be at most ${field.maxLength} characters`,
-        );
+        throw httpError(400, `Field "${key}" must be at most ${field.maxLength} characters`);
       }
       break;
     }
@@ -304,12 +280,7 @@ async function assertWritableFieldAccess(
     try {
       await checkAccess(fn, req, data, id);
     } catch (error) {
-      if (
-        error &&
-        typeof error === "object" &&
-        "status" in error &&
-        error.status === 403
-      ) {
+      if (error && typeof error === "object" && "status" in error && error.status === 403) {
         throw httpError(403, `Forbidden field "${rule.documentPath}"`);
       }
       throw error;
@@ -328,12 +299,7 @@ async function canReadField(
     try {
       await checkAccess(fn, req, doc, id);
     } catch (error) {
-      if (
-        error &&
-        typeof error === "object" &&
-        "status" in error &&
-        error.status === 403
-      ) {
+      if (error && typeof error === "object" && "status" in error && error.status === 403) {
         return false;
       }
       throw error;
@@ -342,15 +308,8 @@ async function canReadField(
   return true;
 }
 
-function runCustomValidator(
-  rule: FieldRule,
-  value: unknown,
-  data: Record<string, unknown>,
-): void {
-  if (
-    !("validate" in rule.field) ||
-    typeof rule.field.validate !== "function"
-  ) {
+function runCustomValidator(rule: FieldRule, value: unknown, data: Record<string, unknown>): void {
+  if (!("validate" in rule.field) || typeof rule.field.validate !== "function") {
     return;
   }
   const result = rule.field.validate(value as never, { data });
@@ -409,9 +368,7 @@ async function enforceFieldSet(
   const nextDocument = inflateDocumentFields(fields, output);
   const validationData = mergeDocumentData(existingDoc, nextDocument);
   const keysToValidate =
-    operation === "create"
-      ? new Set(layout.byStorageKey.keys())
-      : new Set(Object.keys(output));
+    operation === "create" ? new Set(layout.byStorageKey.keys()) : new Set(Object.keys(output));
 
   for (const storageKey of keysToValidate) {
     const rule = layout.byStorageKey.get(storageKey);
@@ -435,10 +392,7 @@ async function enforceFieldSet(
 
   if (operation === "create" && !options?.relaxRequired) {
     for (const rule of layout.blocksRules) {
-      if (
-        rule.field.required &&
-        !hasValue(getValueAtPath(validationData, rule.pathSegments))
-      ) {
+      if (rule.field.required && !hasValue(getValueAtPath(validationData, rule.pathSegments))) {
         throw httpError(400, `Field "${rule.documentPath}" is required`);
       }
     }
@@ -461,13 +415,7 @@ async function enforceFieldSet(
         }
       }
 
-      await assertWritableFieldAccess(
-        blocksRule,
-        operation,
-        req,
-        validationData,
-        id,
-      );
+      await assertWritableFieldAccess(blocksRule, operation, req, validationData, id);
       continue;
     }
 
@@ -517,9 +465,7 @@ async function enforceBlocksField(
       if (typeof blockType !== "string") {
         throw httpError(400, `Block at index ${idx}: missing blockType`);
       }
-      const blockConfig: BlockConfig | undefined = field.blocks.find(
-        (b) => b.slug === blockType,
-      );
+      const blockConfig: BlockConfig | undefined = field.blocks.find((b) => b.slug === blockType);
       if (!blockConfig) {
         throw httpError(
           400,
@@ -528,19 +474,14 @@ async function enforceBlocksField(
       }
 
       // 3b. _key: preserve existing, generate if absent
-      const key =
-        typeof _key === "string" && _key.length > 0
-          ? _key
-          : crypto.randomUUID();
+      const key = typeof _key === "string" && _key.length > 0 ? _key : crypto.randomUUID();
 
       // 3c. blockType immutability: on update, reject if blockType changed for an existing block
       let existingBlock: Record<string, unknown> | undefined;
       if (operation === "update" && existingDoc) {
         const existingBlocks = getValueAtPath(existingDoc, rule.pathSegments);
         if (Array.isArray(existingBlocks)) {
-          existingBlock = (existingBlocks as Record<string, unknown>[]).find(
-            (b) => b._key === key,
-          );
+          existingBlock = (existingBlocks as Record<string, unknown>[]).find((b) => b._key === key);
           if (existingBlock && existingBlock.blockType !== blockType) {
             throw httpError(
               400,
@@ -584,15 +525,7 @@ export async function enforceWritePayload(
     }
   }
 
-  return enforceFieldSet(
-    collection.fields,
-    payload,
-    operation,
-    req,
-    existingDoc,
-    id,
-    options,
-  );
+  return enforceFieldSet(collection.fields, payload, operation, req, existingDoc, id, options);
 }
 
 export async function enforceReadProjection(

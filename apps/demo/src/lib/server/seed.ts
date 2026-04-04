@@ -123,8 +123,7 @@ export async function seed(app: RunelayerApp) {
       tags: JSON.stringify(["photo"]),
     }),
   ]);
-  const [_heroBanner, svelteLogo, codeEditor, teamMeeting] =
-    mediaItems as any[];
+  const [_heroBanner, svelteLogo, codeEditor, teamMeeting] = mediaItems as any[];
 
   // ─── Posts ─────────────────────────────────────────────────
   await Promise.all([
@@ -145,8 +144,7 @@ export async function seed(app: RunelayerApp) {
           { type: "heading", content: "Installation" },
           {
             type: "paragraph",
-            content:
-              "Install the package with pnpm: pnpm add @flaming-codes/sveltekit-runelayer",
+            content: "Install the package with pnpm: pnpm add @flaming-codes/sveltekit-runelayer",
           },
           { type: "heading", content: "Configuration" },
           {
@@ -346,8 +344,7 @@ export async function seed(app: RunelayerApp) {
     api.create(Posts, {
       title: "Responsive Layouts with Carbon Grid System",
       slug: "carbon-grid-responsive",
-      excerpt:
-        "Master Carbon's 16-column grid system for building responsive, content-rich pages.",
+      excerpt: "Master Carbon's 16-column grid system for building responsive, content-rich pages.",
       content: JSON.stringify({
         type: "doc",
         content: [
@@ -368,8 +365,7 @@ export async function seed(app: RunelayerApp) {
       }),
       seo: {
         metaTitle: "Carbon Grid System Guide",
-        metaDescription:
-          "Build responsive layouts using Carbon Design System's 16-column grid.",
+        metaDescription: "Build responsive layouts using Carbon Design System's 16-column grid.",
       },
     }),
     api.create(Posts, {
@@ -405,8 +401,7 @@ export async function seed(app: RunelayerApp) {
     api.create(Posts, {
       title: "File Uploads and Media Management",
       slug: "file-uploads-media",
-      excerpt:
-        "Handling file uploads with path traversal protection and streaming delivery.",
+      excerpt: "Handling file uploads with path traversal protection and streaming delivery.",
       content: JSON.stringify({
         type: "doc",
         content: [
@@ -435,8 +430,7 @@ export async function seed(app: RunelayerApp) {
     api.create(Posts, {
       title: "The Future of Embedded CMS",
       slug: "future-embedded-cms",
-      excerpt:
-        "Why CMS-as-a-package is gaining traction and what it means for the Jamstack.",
+      excerpt: "Why CMS-as-a-package is gaining traction and what it means for the Jamstack.",
       content: JSON.stringify({
         type: "doc",
         content: [
@@ -505,13 +499,7 @@ export async function seed(app: RunelayerApp) {
           },
         ],
       }),
-      features: JSON.stringify([
-        "self-hosted",
-        "cloud",
-        "api",
-        "themes",
-        "analytics",
-      ]),
+      features: JSON.stringify(["self-hosted", "cloud", "api", "themes", "analytics"]),
       specs: JSON.stringify({
         database: "SQLite / PostgreSQL",
         auth: "Better Auth + SSO",
@@ -584,8 +572,7 @@ export async function seed(app: RunelayerApp) {
       layout: "sidebar",
       hero: {
         heading: "Get in Touch",
-        subheading:
-          "Have questions about Runelayer? We would love to hear from you.",
+        subheading: "Have questions about Runelayer? We would love to hear from you.",
         showCta: false,
       },
       showRecent: false,
@@ -602,8 +589,7 @@ export async function seed(app: RunelayerApp) {
     tagline: "CMS-as-a-Package for SvelteKit",
     description:
       "This demo application showcases the features of Runelayer CMS integrated with Carbon Design System. It demonstrates collections, field types, access control, hooks, and more.",
-    footerText:
-      "Built with Runelayer CMS, SvelteKit, and Carbon Design System.",
+    footerText: "Built with Runelayer CMS, SvelteKit, and Carbon Design System.",
   });
 
   // ─── Navigation (singleton) ────────────────────────────────

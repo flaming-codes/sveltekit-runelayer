@@ -52,10 +52,7 @@ function mapField(field: NamedField, prefix = ""): Record<string, ColumnDef> {
   }
 }
 
-function fieldsToColumns(
-  fields: NamedField[],
-  prefix = "",
-): Record<string, ColumnDef> {
+function fieldsToColumns(fields: NamedField[], prefix = ""): Record<string, ColumnDef> {
   let cols: Record<string, ColumnDef> = {};
   for (const f of fields) Object.assign(cols, mapField(f, prefix));
   return cols;
@@ -72,9 +69,7 @@ function baseColumns() {
 export type GeneratedTables = Record<string, AnyTable>;
 
 /** Generate all Drizzle tables from an array of CollectionConfigs. */
-export function generateTables(
-  collections: CollectionConfig[],
-): GeneratedTables {
+export function generateTables(collections: CollectionConfig[]): GeneratedTables {
   const tables: GeneratedTables = {};
 
   for (const collection of collections) {

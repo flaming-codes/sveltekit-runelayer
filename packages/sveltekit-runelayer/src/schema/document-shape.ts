@@ -40,10 +40,7 @@ function joinPath(prefix: string, name: string): string {
   return prefix ? `${prefix}.${name}` : name;
 }
 
-function withAccessChain(
-  accessChain: FieldAccess[],
-  field: Field,
-): FieldAccess[] {
+function withAccessChain(accessChain: FieldAccess[], field: Field): FieldAccess[] {
   if ("access" in field && field.access) {
     return [...accessChain, field.access];
   }
@@ -83,24 +80,12 @@ function buildFieldLayout(
 
     switch (field.type) {
       case "group":
-        buildFieldLayout(
-          field.fields,
-          layout,
-          documentPath,
-          `${storageKey}_`,
-          nextAccessChain,
-        );
+        buildFieldLayout(field.fields, layout, documentPath, `${storageKey}_`, nextAccessChain);
         break;
 
       case "row":
       case "collapsible":
-        buildFieldLayout(
-          field.fields,
-          layout,
-          documentPrefix,
-          storagePrefix,
-          nextAccessChain,
-        );
+        buildFieldLayout(field.fields, layout, documentPrefix, storagePrefix, nextAccessChain);
         break;
 
       case "blocks": {
@@ -225,18 +210,10 @@ function flattenFields(
         }
 
         if (!isRecord(value)) {
-          throw new DocumentShapeError(
-            `Field "${documentPath}" must be an object`,
-          );
+          throw new DocumentShapeError(`Field "${documentPath}" must be an object`);
         }
 
-        flattenFields(
-          field.fields,
-          value,
-          output,
-          documentPath,
-          `${storageKey}_`,
-        );
+        flattenFields(field.fields, value, output, documentPath, `${storageKey}_`);
         break;
       }
 
@@ -261,11 +238,7 @@ function flattenFields(
         }
 
         consumed.add(field.name);
-        output[storageKey] = flattenBlocksValue(
-          field,
-          source[field.name],
-          documentPath,
-        );
+        output[storageKey] = flattenBlocksValue(field, source[field.name], documentPath);
         break;
       }
 
@@ -302,11 +275,8 @@ function flattenBlocksValue(
       return entry;
     }
 
-    const blockType =
-      typeof entry.blockType === "string" ? entry.blockType : undefined;
-    const block = field.blocks.find(
-      (candidate) => candidate.slug === blockType,
-    );
+    const blockType = typeof entry.blockType === "string" ? entry.blockType : undefined;
+    const block = field.blocks.find((candidate) => candidate.slug === blockType);
     if (!block) {
       return { ...entry };
     }
@@ -322,12 +292,7 @@ function flattenBlocksValue(
       output._key = entry._key;
     }
 
-    flattenFields(
-      block.fields,
-      blockEntry,
-      output,
-      `${documentPath}[${index}]`,
-    );
+    flattenFields(block.fields, blockEntry, output, `${documentPath}[${index}]`);
     return output;
   });
 }
@@ -359,10 +324,7 @@ function deepMerge(
   return output;
 }
 
-function inflateBlocksValue(
-  field: NamedField & BlocksField,
-  value: unknown,
-): unknown {
+function inflateBlocksValue(field: NamedField & BlocksField, value: unknown): unknown {
   if (value === null || !Array.isArray(value)) {
     return value;
   }
@@ -372,11 +334,8 @@ function inflateBlocksValue(
       return entry;
     }
 
-    const blockType =
-      typeof entry.blockType === "string" ? entry.blockType : undefined;
-    const block = field.blocks.find(
-      (candidate) => candidate.slug === blockType,
-    );
+    const blockType = typeof entry.blockType === "string" ? entry.blockType : undefined;
+    const block = field.blocks.find((candidate) => candidate.slug === blockType);
     if (!block) {
       return { ...entry };
     }
@@ -399,12 +358,7 @@ function inflateFromStorage(
     switch (field.type) {
       case "group": {
         const nested: Record<string, unknown> = {};
-        const nestedConsumed = inflateFromStorage(
-          field.fields,
-          source,
-          nested,
-          `${storageKey}_`,
-        );
+        const nestedConsumed = inflateFromStorage(field.fields, source, nested, `${storageKey}_`);
         for (const key of nestedConsumed) {
           consumed.add(key);
         }
@@ -416,12 +370,7 @@ function inflateFromStorage(
 
       case "row":
       case "collapsible": {
-        const inlineConsumed = inflateFromStorage(
-          field.fields,
-          source,
-          output,
-          storagePrefix,
-        );
+        const inlineConsumed = inflateFromStorage(field.fields, source, output, storagePrefix);
         for (const key of inlineConsumed) {
           consumed.add(key);
         }
@@ -484,11 +433,7 @@ function mergeExplicitNested(
 
       case "row":
       case "collapsible": {
-        const inlineConsumed = mergeExplicitNested(
-          field.fields,
-          source,
-          output,
-        );
+        const inlineConsumed = mergeExplicitNested(field.fields, source, output);
         for (const key of inlineConsumed) {
           consumed.add(key);
         }
@@ -564,10 +509,7 @@ export function setValueAtPath(
   current[pathSegments[pathSegments.length - 1]] = value;
 }
 
-export function deleteValueAtPath(
-  target: Record<string, unknown>,
-  pathSegments: string[],
-): void {
+export function deleteValueAtPath(target: Record<string, unknown>, pathSegments: string[]): void {
   const parents: Array<Record<string, unknown>> = [];
   const keys: string[] = [];
 

@@ -2,21 +2,14 @@ import { describe, expect, it, vi } from "vitest";
 import { createAdminActions, resolveGuardedRoute } from "../admin-actions.js";
 import type { AdminActionsConfig } from "../admin-actions.js";
 import type { SvelteKitUtils } from "../types.js";
-import {
-  blocks,
-  defineBlock,
-  group,
-  text,
-  textarea,
-} from "../../schema/index.js";
+import { blocks, defineBlock, group, text, textarea } from "../../schema/index.js";
 
 const kit: SvelteKitUtils = {
   redirect(status: number, location: string | URL): never {
     throw Object.assign(new Error(), { status, location: location.toString() });
   },
   error(status: number, body?: string | { message: string }): never {
-    const message =
-      typeof body === "string" ? body : (body?.message ?? "Error");
+    const message = typeof body === "string" ? body : (body?.message ?? "Error");
     throw Object.assign(new Error(message), {
       status,
       body: typeof body === "object" ? body : { message },
@@ -27,10 +20,7 @@ const kit: SvelteKitUtils = {
   },
 };
 
-function makeEvent(
-  path: string | undefined,
-  locals: Record<string, unknown> = {},
-) {
+function makeEvent(path: string | undefined, locals: Record<string, unknown> = {}) {
   return {
     params: { path },
     url: new URL(`http://localhost/admin/${path ?? ""}`),
@@ -109,9 +99,7 @@ describe("resolveGuardedRoute", () => {
   it("throws 404 when route kind does not match expected", async () => {
     const event = makeEvent("collections/posts");
     const cfg = makeCfg();
-    await expect(
-      resolveGuardedRoute(event, "collection-create", cfg),
-    ).rejects.toMatchObject({
+    await expect(resolveGuardedRoute(event, "collection-create", cfg)).rejects.toMatchObject({
       status: 404,
     });
   });
@@ -119,9 +107,7 @@ describe("resolveGuardedRoute", () => {
   it("throws 404 for unparseable paths", async () => {
     const event = makeEvent("totally/invalid/deep/path/here");
     const cfg = makeCfg();
-    await expect(
-      resolveGuardedRoute(event, "dashboard", cfg),
-    ).rejects.toMatchObject({
+    await expect(resolveGuardedRoute(event, "dashboard", cfg)).rejects.toMatchObject({
       status: 404,
     });
   });
@@ -131,11 +117,7 @@ describe("resolveGuardedRoute", () => {
       user: { id: "1", role: "admin", email: "a@b.c", name: "A" },
     });
     const cfg = makeCfg();
-    const route = await resolveGuardedRoute(
-      eventEdit,
-      ["collection-edit", "global-edit"],
-      cfg,
-    );
+    const route = await resolveGuardedRoute(eventEdit, ["collection-edit", "global-edit"], cfg);
     expect(route.kind).toBe("collection-edit");
   });
 
@@ -146,12 +128,7 @@ describe("resolveGuardedRoute", () => {
     const guardMock = vi.fn().mockResolvedValue(undefined);
     const cfg = makeCfg({ guardAdminRoute: guardMock });
     await resolveGuardedRoute(event, "users-create", cfg);
-    expect(guardMock).toHaveBeenCalledWith(
-      event,
-      { kind: "users-create" },
-      "/admin",
-      true,
-    );
+    expect(guardMock).toHaveBeenCalledWith(event, { kind: "users-create" }, "/admin", true);
   });
 });
 
@@ -205,19 +182,16 @@ describe("createAdminActions", () => {
       location: "/admin/collections/pages/page-1",
     });
 
-    expect(createMock).toHaveBeenCalledWith(
-      expect.objectContaining({ slug: "pages" }),
-      {
-        title: "Home",
-        blocks: [
-          {
-            blockType: "hero",
-            heading: "Welcome",
-            subheading: "Hello world",
-          },
-        ],
-      },
-    );
+    expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ slug: "pages" }), {
+      title: "Home",
+      blocks: [
+        {
+          blockType: "hero",
+          heading: "Welcome",
+          subheading: "Hello world",
+        },
+      ],
+    });
   });
 
   it("rejects missing structured payload for collection create", async () => {
@@ -408,8 +382,7 @@ describe("createAdminActions", () => {
     expect(result).toMatchObject({
       status: 409,
       data: {
-        error:
-          "Another setup request already created the first admin. Please sign in.",
+        error: "Another setup request already created the first admin. Please sign in.",
       },
     });
     expect(execute).toHaveBeenCalledWith(
@@ -417,61 +390,56 @@ describe("createAdminActions", () => {
         sql: expect.stringContaining("NOT EXISTS"),
       }),
     );
-    expect(calledUrls).toEqual([
-      "/api/auth/sign-up/email",
-      "/api/auth/sign-out",
-    ]);
+    expect(calledUrls).toEqual(["/api/auth/sign-up/email", "/api/auth/sign-out"]);
   });
 
   it("revokes user sessions when role changes even without a password change", async () => {
     const cfg = makeCfg();
     const actions = createAdminActions(cfg);
     const calledUrls: string[] = [];
-    const fetch = vi.fn(
-      async (input: RequestInfo | URL, init?: RequestInit) => {
-        const url = requestUrl(input);
-        calledUrls.push(url);
-        if (url.includes("/api/auth/admin/get-user")) {
-          return new Response(
-            JSON.stringify({
-              id: "u-2",
-              name: "Editor",
-              email: "editor@example.com",
-              role: "user",
-              emailVerified: true,
-              banned: false,
-            }),
-            { status: 200, headers: { "content-type": "application/json" } },
-          );
-        }
-        if (url.endsWith("/api/auth/admin/update-user")) {
-          return new Response(
-            JSON.stringify({
-              id: "u-2",
-              name: "Editor",
-              email: "editor@example.com",
-              role: "editor",
-              emailVerified: true,
-              banned: false,
-            }),
-            { status: 200, headers: { "content-type": "application/json" } },
-          );
-        }
-        if (url.endsWith("/api/auth/admin/revoke-user-sessions")) {
-          const body = init?.body;
-          expect(typeof body).toBe("string");
-          expect(JSON.parse(body as string)).toEqual({ userId: "u-2" });
-          return new Response(JSON.stringify({ success: true }), {
-            status: 200,
-            headers: { "content-type": "application/json" },
-          });
-        }
-        return new Response(JSON.stringify({ status: true }), {
+    const fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input);
+      calledUrls.push(url);
+      if (url.includes("/api/auth/admin/get-user")) {
+        return new Response(
+          JSON.stringify({
+            id: "u-2",
+            name: "Editor",
+            email: "editor@example.com",
+            role: "user",
+            emailVerified: true,
+            banned: false,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }
+      if (url.endsWith("/api/auth/admin/update-user")) {
+        return new Response(
+          JSON.stringify({
+            id: "u-2",
+            name: "Editor",
+            email: "editor@example.com",
+            role: "editor",
+            emailVerified: true,
+            banned: false,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
+      }
+      if (url.endsWith("/api/auth/admin/revoke-user-sessions")) {
+        const body = init?.body;
+        expect(typeof body).toBe("string");
+        expect(JSON.parse(body as string)).toEqual({ userId: "u-2" });
+        return new Response(JSON.stringify({ success: true }), {
           status: 200,
           headers: { "content-type": "application/json" },
         });
-      },
-    );
+      }
+      return new Response(JSON.stringify({ status: true }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    });
 
     const result = await (actions.updateUser as any)(
       actionEvent("users/u-2", {

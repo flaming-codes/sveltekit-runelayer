@@ -164,7 +164,7 @@
 						<div class="rk-tab-panel">
 							<div class="rk-fields-section">
 								{#each collection.fields as field}
-									<FieldRenderer {field} bind:values />
+									<FieldRenderer {field} fields={collection.fields} bind:values />
 								{/each}
 							</div>
 						</div>

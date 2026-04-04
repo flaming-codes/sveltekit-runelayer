@@ -2,10 +2,7 @@ import { runAfterHooks, runBeforeHooks } from "../hooks/runner.js";
 import type { HookContext } from "../hooks/types.js";
 import type { RunelayerInstance } from "../plugin.js";
 import { checkAccess } from "../query/access.js";
-import {
-  enforceWritePayload,
-  enforceReadProjection,
-} from "../query/enforcement.js";
+import { enforceWritePayload, enforceReadProjection } from "../query/enforcement.js";
 import type { GlobalConfig } from "../schema/globals.js";
 import { quoteIdent } from "../db/sql-utils.js";
 import { normalizeVersionConfig } from "../versions/config.js";
@@ -34,11 +31,7 @@ type StoredGlobalRow = {
 function textValue(value: unknown): string {
   if (typeof value === "string") return value;
   if (value == null) return "";
-  if (
-    typeof value === "number" ||
-    typeof value === "boolean" ||
-    typeof value === "bigint"
-  ) {
+  if (typeof value === "number" || typeof value === "boolean" || typeof value === "bigint") {
     return `${value}`;
   }
   return "";
@@ -117,9 +110,7 @@ async function ensureGlobalTable(runelayer: RunelayerInstance): Promise<void> {
   globalTableReady.add(runelayer);
 }
 
-async function ensureGlobalVersionsTable(
-  runelayer: RunelayerInstance,
-): Promise<void> {
+async function ensureGlobalVersionsTable(runelayer: RunelayerInstance): Promise<void> {
   if (globalVersionsTableReady.has(runelayer)) return;
   await runelayer.database.client.execute(`
     CREATE TABLE IF NOT EXISTS ${quoteIdent(GLOBAL_VERSIONS_TABLE)} (
@@ -188,23 +179,12 @@ function buildGlobalDoc(
   return doc;
 }
 
-function stripGlobalSystemFields(
-  doc: Record<string, unknown>,
-): Record<string, unknown> {
-  const {
-    id: _id,
-    updatedAt: _updatedAt,
-    _status,
-    _version,
-    ...fieldData
-  } = doc;
+function stripGlobalSystemFields(doc: Record<string, unknown>): Record<string, unknown> {
+  const { id: _id, updatedAt: _updatedAt, _status, _version, ...fieldData } = doc;
   return fieldData;
 }
 
-export function getGlobalBySlug(
-  globals: GlobalConfig[],
-  slug: string,
-): GlobalConfig | null {
+export function getGlobalBySlug(globals: GlobalConfig[], slug: string): GlobalConfig | null {
   return globals.find((entry) => entry.slug === slug) ?? null;
 }
 
@@ -215,13 +195,10 @@ export async function readGlobalDocument(
 ): Promise<Record<string, unknown>> {
   await checkAccess(global.access?.read, req, undefined, global.slug);
   const beforeRead = (
-    global.hooks as
-      | { beforeRead?: Array<(ctx: HookContext) => HookContext> }
-      | undefined
+    global.hooks as { beforeRead?: Array<(ctx: HookContext) => HookContext> } | undefined
   )?.beforeRead;
-  const afterRead = (
-    global.hooks as { afterRead?: Array<(ctx: unknown) => void> } | undefined
-  )?.afterRead;
+  const afterRead = (global.hooks as { afterRead?: Array<(ctx: unknown) => void> } | undefined)
+    ?.afterRead;
 
   const hc = await runBeforeHooks(
     beforeRead,
@@ -230,11 +207,7 @@ export async function readGlobalDocument(
   const row = await readStoredGlobal(runelayer, global.slug);
   const doc = materializeGlobalDoc(global, row);
   await runAfterHooks(afterRead, { ...hc, doc });
-  const projected = await enforceReadProjection(
-    globalAsCollection(global),
-    req,
-    doc,
-  );
+  const projected = await enforceReadProjection(globalAsCollection(global), req, doc);
   return projected ?? doc;
 }
 
@@ -252,18 +225,14 @@ export async function updateGlobalDocument(
   const previousStoredData = parseGlobalData(previousRow?.data);
   const previousDoc = materializeGlobalDoc(global, previousRow);
   const hc = await runBeforeHooks(
-    global.hooks?.beforeChange as
-      | Array<(ctx: HookContext) => HookContext>
-      | undefined,
+    global.hooks?.beforeChange as Array<(ctx: HookContext) => HookContext> | undefined,
     hookContext(global, req, "update", {
       id: global.slug,
       data: incoming,
       existingDoc: previousDoc,
     }),
   );
-  const rawNextData = sanitizeData(
-    (hc.data as Record<string, unknown> | undefined) ?? incoming,
-  );
+  const rawNextData = sanitizeData((hc.data as Record<string, unknown> | undefined) ?? incoming);
   const nextPatch = await enforceWritePayload(
     globalAsCollection(global),
     "update",
@@ -308,21 +277,9 @@ export async function updateGlobalDocument(
             ON CONFLICT(slug)
             DO UPDATE SET data = excluded.data, updatedAt = excluded.updatedAt, _version = excluded._version, _status = excluded._status
           `,
-          args: [
-            global.slug,
-            JSON.stringify(nextStoredData),
-            updatedAt,
-            currentStatus,
-            newVersion,
-          ],
+          args: [global.slug, JSON.stringify(nextStoredData), updatedAt, currentStatus, newVersion],
         },
-        buildSnapshotStatement(
-          global.slug,
-          newVersion,
-          currentStatus,
-          doc,
-          getUserId(req),
-        ),
+        buildSnapshotStatement(global.slug, newVersion, currentStatus, doc, getUserId(req)),
       ],
       "write",
     );
@@ -337,30 +294,17 @@ export async function updateGlobalDocument(
         ON CONFLICT(slug)
         DO UPDATE SET data = excluded.data, updatedAt = excluded.updatedAt, _version = excluded._version, _status = excluded._status
       `,
-      args: [
-        global.slug,
-        JSON.stringify(nextStoredData),
-        updatedAt,
-        currentStatus,
-        newVersion,
-      ],
+      args: [global.slug, JSON.stringify(nextStoredData), updatedAt, currentStatus, newVersion],
     });
   }
 
-  await runAfterHooks(
-    global.hooks?.afterChange as Array<(ctx: unknown) => void> | undefined,
-    {
-      ...hc,
-      data: nextDocPatch,
-      doc,
-    },
-  );
-
-  const projected = await enforceReadProjection(
-    globalAsCollection(global),
-    req,
+  await runAfterHooks(global.hooks?.afterChange as Array<(ctx: unknown) => void> | undefined, {
+    ...hc,
+    data: nextDocPatch,
     doc,
-  );
+  });
+
+  const projected = await enforceReadProjection(globalAsCollection(global), req, doc);
   return projected ?? doc;
 }
 
@@ -446,12 +390,7 @@ export async function publishGlobal(
       status: 400,
     });
 
-  await checkAccess(
-    global.access?.publish ?? global.access?.update,
-    req,
-    undefined,
-    global.slug,
-  );
+  await checkAccess(global.access?.publish ?? global.access?.update, req, undefined, global.slug);
 
   const row = await readStoredGlobal(runelayer, global.slug);
   const storedData = parseGlobalData(row?.data);
@@ -476,13 +415,7 @@ export async function publishGlobal(
         `,
         args: [global.slug, JSON.stringify(storedData), updatedAt, newVersion],
       },
-      buildSnapshotStatement(
-        global.slug,
-        newVersion,
-        "published",
-        nextDoc,
-        getUserId(req),
-      ),
+      buildSnapshotStatement(global.slug, newVersion, "published", nextDoc, getUserId(req)),
     ],
     "write",
   );
@@ -490,11 +423,7 @@ export async function publishGlobal(
     await pruneGlobalVersions(runelayer, global.slug, vc.maxPerDoc);
   }
 
-  const projected = await enforceReadProjection(
-    globalAsCollection(global),
-    req,
-    nextDoc,
-  );
+  const projected = await enforceReadProjection(globalAsCollection(global), req, nextDoc);
   return projected ?? nextDoc;
 }
 
@@ -509,12 +438,7 @@ export async function unpublishGlobal(
       status: 400,
     });
 
-  await checkAccess(
-    global.access?.publish ?? global.access?.update,
-    req,
-    undefined,
-    global.slug,
-  );
+  await checkAccess(global.access?.publish ?? global.access?.update, req, undefined, global.slug);
 
   const row = await readStoredGlobal(runelayer, global.slug);
   const storedData = parseGlobalData(row?.data);
@@ -538,13 +462,7 @@ export async function unpublishGlobal(
         `,
         args: [global.slug, JSON.stringify(storedData), updatedAt, newVersion],
       },
-      buildSnapshotStatement(
-        global.slug,
-        newVersion,
-        "draft",
-        nextDoc,
-        getUserId(req),
-      ),
+      buildSnapshotStatement(global.slug, newVersion, "draft", nextDoc, getUserId(req)),
     ],
     "write",
   );
@@ -552,11 +470,7 @@ export async function unpublishGlobal(
     await pruneGlobalVersions(runelayer, global.slug, vc.maxPerDoc);
   }
 
-  const projected = await enforceReadProjection(
-    globalAsCollection(global),
-    req,
-    nextDoc,
-  );
+  const projected = await enforceReadProjection(globalAsCollection(global), req, nextDoc);
   return projected ?? nextDoc;
 }
 
@@ -603,9 +517,7 @@ export async function findGlobalVersions(
     return {
       id: String(r.id ?? ""),
       _version: Number(r._version),
-      _status: (r._status === "published" ? "published" : "draft") as
-        | "draft"
-        | "published",
+      _status: (r._status === "published" ? "published" : "draft") as "draft" | "published",
       createdAt: String(r.createdAt ?? ""),
       _createdBy: r._createdBy != null ? String(r._createdBy) : undefined,
     };
@@ -632,26 +544,20 @@ export async function restoreGlobalVersion(
     args: [versionId],
   });
   const versionRow = result.rows[0] as Record<string, unknown> | undefined;
-  if (!versionRow)
-    throw Object.assign(new Error("Version not found"), { status: 404 });
+  if (!versionRow) throw Object.assign(new Error("Version not found"), { status: 404 });
   if (textValue(versionRow._globalSlug) !== global.slug) {
     throw Object.assign(new Error("Version does not belong to this global"), {
       status: 400,
     });
   }
 
-  const snapshot = inflateDocumentFields(
-    global.fields,
-    parseGlobalData(versionRow._snapshot),
-  );
+  const snapshot = inflateDocumentFields(global.fields, parseGlobalData(versionRow._snapshot));
   const fieldData = stripGlobalSystemFields(snapshot);
 
   const row = await readStoredGlobal(runelayer, global.slug);
   const currentDoc = materializeGlobalDoc(global, row);
   const hc = await runBeforeHooks(
-    global.hooks?.beforeChange as
-      | Array<(ctx: HookContext) => HookContext>
-      | undefined,
+    global.hooks?.beforeChange as Array<(ctx: HookContext) => HookContext> | undefined,
     hookContext(global, req, "update", {
       id: global.slug,
       data: fieldData,
@@ -688,21 +594,9 @@ export async function restoreGlobalVersion(
           VALUES (?, ?, ?, ?, ?)
           ON CONFLICT(slug) DO UPDATE SET data = excluded.data, updatedAt = excluded.updatedAt, _status = excluded._status, _version = excluded._version
         `,
-        args: [
-          global.slug,
-          JSON.stringify(restoreData),
-          updatedAt,
-          "draft",
-          newVersion,
-        ],
+        args: [global.slug, JSON.stringify(restoreData), updatedAt, "draft", newVersion],
       },
-      buildSnapshotStatement(
-        global.slug,
-        newVersion,
-        "draft",
-        doc,
-        getUserId(req),
-      ),
+      buildSnapshotStatement(global.slug, newVersion, "draft", doc, getUserId(req)),
     ],
     "write",
   );
@@ -710,19 +604,12 @@ export async function restoreGlobalVersion(
     await pruneGlobalVersions(runelayer, global.slug, vc.maxPerDoc);
   }
 
-  await runAfterHooks(
-    global.hooks?.afterChange as Array<(ctx: unknown) => void> | undefined,
-    {
-      ...hc,
-      data: restorePatchDoc,
-      doc,
-    },
-  );
-
-  const projected = await enforceReadProjection(
-    globalAsCollection(global),
-    req,
+  await runAfterHooks(global.hooks?.afterChange as Array<(ctx: unknown) => void> | undefined, {
+    ...hc,
+    data: restorePatchDoc,
     doc,
-  );
+  });
+
+  const projected = await enforceReadProjection(globalAsCollection(global), req, doc);
   return projected ?? doc;
 }

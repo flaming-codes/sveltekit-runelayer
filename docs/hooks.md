@@ -30,23 +30,15 @@ type HookContext = {
   previousStatus?: string;
 };
 
-type BeforeChangeHook = (
-  ctx: HookContext,
-) => HookContext | Promise<HookContext>;
+type BeforeChangeHook = (ctx: HookContext) => HookContext | Promise<HookContext>;
 type AfterChangeHook = (
   ctx: HookContext & { doc: Record<string, unknown> },
 ) => void | Promise<void>;
-type BeforeDeleteHook = (
-  ctx: HookContext,
-) => HookContext | Promise<HookContext>;
+type BeforeDeleteHook = (ctx: HookContext) => HookContext | Promise<HookContext>;
 type AfterDeleteHook = (ctx: HookContext) => void | Promise<void>;
 type BeforeReadHook = (ctx: HookContext) => HookContext | Promise<HookContext>;
-type AfterReadHook = (
-  ctx: HookContext & { doc: Record<string, unknown> },
-) => void | Promise<void>;
-type BeforePublishHook = (
-  ctx: HookContext,
-) => HookContext | Promise<HookContext>;
+type AfterReadHook = (ctx: HookContext & { doc: Record<string, unknown> }) => void | Promise<void>;
+type BeforePublishHook = (ctx: HookContext) => HookContext | Promise<HookContext>;
 type AfterPublishHook = (
   ctx: HookContext & { doc: Record<string, unknown> },
 ) => void | Promise<void>;
@@ -78,10 +70,7 @@ const Posts = defineCollection({
             ...ctx,
             data: {
               ...ctx.data,
-              slug: ctx.data.title
-                .toString()
-                .toLowerCase()
-                .replace(/\s+/g, "-"),
+              slug: ctx.data.title.toString().toLowerCase().replace(/\s+/g, "-"),
             },
           };
         }

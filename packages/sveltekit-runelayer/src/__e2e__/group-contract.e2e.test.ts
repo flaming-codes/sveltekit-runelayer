@@ -72,9 +72,7 @@ const Articles: CollectionConfig = defineCollection({
     {
       name: "authorInfo",
       ...group({
-        fields: [
-          { name: "author", ...relationship({ relationTo: "authors" }) },
-        ],
+        fields: [{ name: "author", ...relationship({ relationTo: "authors" }) }],
       }),
     },
   ],
@@ -260,12 +258,7 @@ describe("Grouped field contract", () => {
   beforeAll(async () => {
     tmpDir = await mkdtemp(join(tmpdir(), "runelayer-group-contract-"));
     dbUrl = `file:${join(tmpDir, "group-contract.db")}`;
-    await migrateDatabaseForTests(dbUrl, [
-      Authors,
-      Articles,
-      Pages,
-      HookedArticles,
-    ]);
+    await migrateDatabaseForTests(dbUrl, [Authors, Articles, Pages, HookedArticles]);
 
     kit = createRunelayer(
       defineConfig({
@@ -333,9 +326,7 @@ describe("Grouped field contract", () => {
       metaTitle: "Bravo",
       metaDescription: "Original description",
     });
-    expect(
-      (found?.authorInfo as Record<string, unknown>)?.author,
-    ).toMatchObject({
+    expect((found?.authorInfo as Record<string, unknown>)?.author).toMatchObject({
       id: author.id,
       name: "Alice",
     });
@@ -352,10 +343,7 @@ describe("Grouped field contract", () => {
       sort: "seo.metaTitle",
       sortOrder: "asc",
     });
-    expect(sorted.map((doc) => doc.title)).toEqual([
-      "Second article",
-      "First article",
-    ]);
+    expect(sorted.map((doc) => doc.title)).toEqual(["Second article", "First article"]);
   });
 
   it("round-trips groups nested inside blocks", async () => {
@@ -477,9 +465,7 @@ describe("Grouped field contract", () => {
         },
       },
     });
-    expect(collectionHookEvents.afterRead[0]?.doc).not.toHaveProperty(
-      "seo_metaTitle",
-    );
+    expect(collectionHookEvents.afterRead[0]?.doc).not.toHaveProperty("seo_metaTitle");
   });
 
   it("global hooks receive nested grouped documents and patches", async () => {
@@ -598,9 +584,7 @@ describe("Grouped field contract", () => {
     });
     const nestedVersionId = nestedVersionRows.rows[0]?.id;
     if (typeof nestedVersionId !== "string") {
-      throw new Error(
-        "Expected an initial version row for the published article",
-      );
+      throw new Error("Expected an initial version row for the published article");
     }
     const restoredNested = await restoreVersion(
       ctx(Articles),
@@ -679,14 +663,8 @@ describe("Grouped field contract", () => {
     const versions = await findGlobalVersions(kit, SiteSettings, req, {
       limit: 10,
     });
-    const oldestVersionId =
-      versions[versions.length - 1]?.id ?? versions[0]?.id;
-    const restoredNested = await restoreGlobalVersion(
-      kit,
-      SiteSettings,
-      req,
-      oldestVersionId,
-    );
+    const oldestVersionId = versions[versions.length - 1]?.id ?? versions[0]?.id;
+    const restoredNested = await restoreGlobalVersion(kit, SiteSettings, req, oldestVersionId);
     expect(restoredNested.seo).toEqual({
       title: "Site title",
       description: "Site description",
@@ -712,12 +690,7 @@ describe("Grouped field contract", () => {
       ],
     });
 
-    const restoredLegacy = await restoreGlobalVersion(
-      kit,
-      SiteSettings,
-      req,
-      legacyVersionId,
-    );
+    const restoredLegacy = await restoreGlobalVersion(kit, SiteSettings, req, legacyVersionId);
     expect(restoredLegacy.seo).toEqual({
       title: "Legacy global title",
       description: "Legacy global description",

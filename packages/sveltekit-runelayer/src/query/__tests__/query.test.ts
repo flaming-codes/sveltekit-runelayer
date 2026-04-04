@@ -35,9 +35,7 @@ async function makeContext(
 
 describe("checkAccess", () => {
   it("passes when accessFn is undefined", async () => {
-    await expect(
-      checkAccess(undefined, new Request("http://x")),
-    ).resolves.toBeUndefined();
+    await expect(checkAccess(undefined, new Request("http://x"))).resolves.toBeUndefined();
   });
 
   it("denies when accessFn is defined but req is undefined", async () => {
@@ -51,16 +49,12 @@ describe("checkAccess", () => {
 
   it("passes when accessFn returns true", async () => {
     const fn = () => true;
-    await expect(
-      checkAccess(fn, new Request("http://x")),
-    ).resolves.toBeUndefined();
+    await expect(checkAccess(fn, new Request("http://x"))).resolves.toBeUndefined();
   });
 
   it("throws 403 when accessFn returns false", async () => {
     const fn = () => false;
-    await expect(checkAccess(fn, new Request("http://x"))).rejects.toThrow(
-      "Forbidden",
-    );
+    await expect(checkAccess(fn, new Request("http://x"))).rejects.toThrow("Forbidden");
   });
 
   it("throws with status 403 property", async () => {
@@ -113,9 +107,7 @@ describe("query operations call hooks", () => {
     const hookCollection: CollectionConfig = {
       ...collection,
       hooks: {
-        beforeChange: [
-          (args) => ({ ...args, data: { ...args.data, title: "Hooked" } }),
-        ],
+        beforeChange: [(args) => ({ ...args, data: { ...args.data, title: "Hooked" } })],
       },
     };
     const hookCtx: QueryContext = { db: rdb, collection: hookCollection };
@@ -143,9 +135,9 @@ describe("runtime schema enforcement", () => {
   });
 
   it("rejects reserved fields on create", async () => {
-    await expect(
-      create(ctx, { title: "Known", id: "forced-id" }),
-    ).rejects.toThrow('Field "id" is reserved and cannot be written');
+    await expect(create(ctx, { title: "Known", id: "forced-id" })).rejects.toThrow(
+      'Field "id" is reserved and cannot be written',
+    );
   });
 
   it("enforces required fields", async () => {
@@ -159,8 +151,7 @@ describe("runtime schema enforcement", () => {
         {
           name: "title",
           ...text({
-            validate: (value) =>
-              value.startsWith("ok-") || "Title must start with ok-",
+            validate: (value) => value.startsWith("ok-") || "Title must start with ok-",
           }),
         },
       ],
@@ -169,9 +160,7 @@ describe("runtime schema enforcement", () => {
     await expect(create(validatedCtx, { title: "nope" })).rejects.toThrow(
       "Title must start with ok-",
     );
-    await expect(
-      create(validatedCtx, { title: "ok-title" }),
-    ).resolves.toBeDefined();
+    await expect(create(validatedCtx, { title: "ok-title" })).resolves.toBeDefined();
   });
 
   it("coerces and validates number fields", async () => {
@@ -215,9 +204,9 @@ describe("runtime schema enforcement", () => {
     const userCtx = await makeContext(secureCollection, userReq);
     const adminCtx = await makeContext(secureCollection, adminReq);
 
-    await expect(
-      create(userCtx, { title: "A", internalNotes: "secret" }),
-    ).rejects.toThrow('Forbidden field "internalNotes"');
+    await expect(create(userCtx, { title: "A", internalNotes: "secret" })).rejects.toThrow(
+      'Forbidden field "internalNotes"',
+    );
 
     const created = await create(adminCtx, {
       title: "A",
@@ -268,8 +257,7 @@ describe("runtime schema enforcement", () => {
   });
 
   it("inherits parent group access for grouped writes and reads", async () => {
-    const adminOnly = ({ req }: { req: Request }) =>
-      req.headers.get("x-user-role") === "admin";
+    const adminOnly = ({ req }: { req: Request }) => req.headers.get("x-user-role") === "admin";
 
     const secureCollection: CollectionConfig = {
       slug: "secure_group_posts",
@@ -342,8 +330,7 @@ describe("runtime schema enforcement", () => {
   });
 
   it("redacts restricted grouped children while preserving allowed siblings", async () => {
-    const adminOnly = ({ req }: { req: Request }) =>
-      req.headers.get("x-user-role") === "admin";
+    const adminOnly = ({ req }: { req: Request }) => req.headers.get("x-user-role") === "admin";
 
     const secureCollection: CollectionConfig = {
       slug: "secure_group_child_posts",
