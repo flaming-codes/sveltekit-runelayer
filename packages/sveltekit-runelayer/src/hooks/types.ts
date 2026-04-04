@@ -1,43 +1,31 @@
-export interface HookContext {
-  collection: string;
-  operation: "create" | "read" | "update" | "delete" | "publish";
-  req?: Request;
-  data?: Record<string, unknown>;
-  id?: string;
-  existingDoc?: Record<string, unknown>;
-  previousStatus?: string;
-}
+import type {
+  HookContext,
+  BeforeChangeHook,
+  AfterChangeHook,
+  BeforeDeleteHook,
+  AfterDeleteHook,
+  BeforeReadHook,
+  AfterReadHook,
+  BeforePublishHook,
+  AfterPublishHook,
+  Hooks,
+} from "../schema/types.js";
 
-export type BeforeChangeHook = (ctx: HookContext) => Promise<HookContext> | HookContext;
-export type AfterChangeHook = (
-  ctx: HookContext & { doc: Record<string, unknown> },
-) => Promise<void> | void;
-export type BeforeDeleteHook = (ctx: HookContext) => Promise<HookContext> | HookContext;
-export type AfterDeleteHook = (ctx: HookContext) => Promise<void> | void;
-export type BeforeReadHook = (ctx: HookContext) => Promise<HookContext> | HookContext;
-export type AfterReadHook = (
-  ctx: HookContext & { doc: Record<string, unknown> },
-) => Promise<Record<string, unknown>>;
+export type {
+  HookContext,
+  BeforeChangeHook,
+  AfterChangeHook,
+  BeforeDeleteHook,
+  AfterDeleteHook,
+  BeforeReadHook,
+  AfterReadHook,
+  BeforePublishHook,
+  AfterPublishHook,
+};
 
-export type BeforePublishHook = (ctx: HookContext) => Promise<HookContext> | HookContext;
-export type AfterPublishHook = (
-  ctx: HookContext & { doc: Record<string, unknown> },
-) => Promise<void> | void;
+export type CollectionHooks = Hooks;
 
-export interface CollectionHooks {
-  beforeChange?: BeforeChangeHook[];
-  afterChange?: AfterChangeHook[];
-  beforeDelete?: BeforeDeleteHook[];
-  afterDelete?: AfterDeleteHook[];
-  beforeRead?: BeforeReadHook[];
-  afterRead?: AfterReadHook[];
-  beforePublish?: BeforePublishHook[];
-  afterPublish?: AfterPublishHook[];
-}
-
-export interface GlobalHooks {
-  beforeChange?: BeforeChangeHook[];
-  afterChange?: AfterChangeHook[];
-  beforeRead?: BeforeReadHook[];
-  afterRead?: AfterReadHook[];
-}
+export type GlobalHooks = Pick<
+  Hooks,
+  "beforeChange" | "afterChange" | "beforeRead" | "afterRead"
+>;

@@ -6,6 +6,8 @@ export type {
   AfterDeleteHook,
   BeforeReadHook,
   AfterReadHook,
+  BeforePublishHook,
+  AfterPublishHook,
   CollectionHooks,
   GlobalHooks,
 } from "./types.js";

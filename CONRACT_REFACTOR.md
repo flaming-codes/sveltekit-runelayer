@@ -2,15 +2,31 @@
 
 ## Purpose
 
-This document records the current group-field contract drift in the codebase, the concrete places where it appears, and the recommended long-term refactor plan.
+This document originally recorded the group-field contract drift in the codebase, the concrete places where it appeared, and the refactor plan needed to remove it.
 
-It is intended as a handoff document for the next agent so the work can continue from a clear architectural baseline instead of accumulating more boundary-specific patches.
+It now serves two purposes:
 
-## Summary
+- preserve the historical analysis that motivated the refactor,
+- record the current implemented state so future work does not accidentally reintroduce the old hybrid model.
 
-The codebase does not have a single canonical runtime contract for `group()` fields.
+## Status
 
-Today, three different models coexist:
+The main runtime refactor described in this document has been implemented.
+
+Current repository state:
+
+- external group-field contract is nested across schema inference, query reads and writes, admin loaders and actions, globals, version snapshots and restores, and first-party demo consumers,
+- internal persistence remains flattened and is owned centrally by `schema/document-shape.ts`,
+- public grouped `where` and `sort` paths use dot notation and translate centrally to storage keys,
+- collection and global restore paths accept both new nested snapshots and legacy flat snapshots,
+- grouped field access rules inherit parent group access and then apply child field access on top,
+- remaining work is ordinary maintenance: keep hook docs and typing aligned, and keep grouped regression coverage in place.
+
+## Historical Summary
+
+When this document was first written, the codebase did not have a single canonical runtime contract for `group()` fields.
+
+At that point, three different models coexisted:
 
 1. Schema typing and admin state model groups as nested objects.
 2. Database schema and query enforcement model groups as flattened underscore-prefixed keys.
@@ -24,7 +40,7 @@ The recommended long-term direction is:
 - Internal persistence contract: flattened storage keys.
 - Translation boundary: one shared schema-aware layer that is the only place that knows how to flatten and inflate groups.
 
-## Why This Matters
+## Why This Mattered
 
 Without a single contract:
 
@@ -35,9 +51,11 @@ Without a single contract:
 - public query behavior becomes difficult to document accurately,
 - first-party apps encode assumptions that contradict the schema DSL.
 
-The immediate admin payload flattening fix is a stopgap. It prevents one user-visible failure, but it does not resolve the architectural drift.
+The immediate admin payload flattening fix described below was a stopgap. It prevented one user-visible failure, but it did not resolve the architectural drift by itself.
 
-## Current State Snapshot
+## Historical Drift Snapshot
+
+The following sections describe the pre-refactor behavior that motivated the work. They are retained as historical context and are no longer the live implementation.
 
 ### 1. Schema DSL and inferred types say groups are nested
 
@@ -224,9 +242,9 @@ Impact:
 
 - the current mismatch survived because the suite does not enforce a single runtime contract.
 
-## Current Stopgap
+## Historical Stopgap
 
-The most recent patch introduced:
+An intermediate patch introduced:
 
 - JSON `payload` submission for admin document/global writes,
 - schema-aware flattening of nested group values in `admin-actions.ts`,
@@ -237,13 +255,27 @@ What this fixes:
 - browser form serialization no longer leaks block subfields like `heading` into top-level collection writes,
 - grouped admin writes can now be converted to query-layer storage shape.
 
-What this does not fix:
+What this still did not fix at the time:
 
-- query read results are still flat,
-- loader document shape is still flat,
-- hooks/access/projection still operate on flat keys,
-- version snapshots still risk storing/returning flat documents,
-- first-party app code is still flat.
+- query read results were still flat,
+- loader document shape was still flat,
+- hooks/access/projection still operated on flat keys,
+- version snapshots still risked storing or returning flat documents,
+- first-party app code was still flat.
+
+The repository has since moved past this stopgap. Admin actions now pass structured JSON payloads directly, and group translation is handled centrally by the runtime translator.
+
+## Current Implementation Snapshot
+
+The implemented contract now matches the intended end state:
+
+- `packages/sveltekit-runelayer/src/schema/document-shape.ts` owns flattening, inflating, grouped path translation, merge behavior, and storage-key collision detection.
+- `packages/sveltekit-runelayer/src/query/enforcement.ts` validates nested public payloads, translates them to storage shape internally, and applies grouped access rules through the shared field layout.
+- `packages/sveltekit-runelayer/src/query/operations.ts` materializes stored rows back to nested documents before hooks, read projection, relationship population, and version snapshot creation.
+- `packages/sveltekit-runelayer/src/sveltekit/globals.ts` uses the same nested public contract as collections for reads, writes, and version restore.
+- `packages/sveltekit-runelayer/src/sveltekit/admin-actions.ts` parses structured JSON payloads and no longer performs group-specific flattening.
+- `apps/demo` consumes nested group data rather than flat storage keys.
+- regression coverage now includes grouped round-trips, grouped dot-path queries, grouped blocks, grouped access control, grouped hook payloads, admin loader shape, and legacy snapshot compatibility.
 
 ## Recommended Target Contract
 
@@ -518,7 +550,7 @@ Blocks already have their own recursive enforcement path. Group refactor work th
 
 ## Required Test Matrix
 
-The next agent should add or update tests for all of the following before finishing the refactor.
+This section is kept as the original target matrix. The core items are now covered by the runtime, loader, admin-action, grouped-access, and grouped-hook suites.
 
 ### Query-level tests
 
@@ -568,9 +600,9 @@ The next agent should add or update tests for all of the following before finish
 2. Demo app rendering updated from flat to nested.
 3. Demo seed data updated to nested writes.
 
-## Suggested Acceptance Criteria
+## Acceptance Status
 
-The refactor is complete when all of the following are true:
+The runtime refactor is considered complete because all of the following are now true:
 
 1. Public query write inputs accept nested grouped values.
 2. Public query read outputs return nested grouped values.
@@ -583,19 +615,13 @@ The refactor is complete when all of the following are true:
 9. Docs describe exactly one external contract.
 10. No tests assert flat runtime grouped keys except explicit legacy compatibility tests.
 
-## Work Items For The Next Agent
+## Current Maintenance Tasks
 
-Recommended order:
+The original implementation work items are closed. Ongoing maintenance is limited to:
 
-1. Add failing contract tests for grouped round-trip behavior.
-2. Implement shared flatten/inflate/path-translation helpers.
-3. Refactor collection query reads/writes to use them.
-4. Refactor globals to use the same helpers.
-5. Update hooks/access/projection behavior.
-6. Update version snapshot/restore behavior.
-7. Migrate demo app types, seed data, and page usage.
-8. Remove temporary admin-only flattening if it is no longer necessary.
-9. Rewrite docs to describe the final contract only.
+1. Keep hook docs and exported hook types aligned with the runtime contract.
+2. Preserve grouped access and grouped hook regression coverage as nearby code evolves.
+3. Treat any new flat runtime group key as a regression unless it is explicit legacy snapshot compatibility logic.
 
 ## Files Most Likely To Change
 
@@ -629,11 +655,11 @@ Docs/examples:
 - `apps/demo/src/lib/server/seed.ts`
 - demo route files consuming grouped fields
 
-## Recommended Final Direction
+## Current Direction
 
-Pick one contract and remove the hybrid model.
+The repository now follows one contract and rejects the historical hybrid model.
 
-Recommendation:
+Implemented direction:
 
 - external contract: nested groups,
 - internal storage: flattened groups,

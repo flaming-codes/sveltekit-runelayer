@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -106,6 +106,136 @@ const SiteSettings: GlobalConfig = defineGlobal({
   versions: { drafts: true, maxPerDoc: 10 },
 });
 
+type HookSnapshot = {
+  id?: string;
+  data?: Record<string, unknown>;
+  existingDoc?: Record<string, unknown>;
+  doc?: Record<string, unknown>;
+};
+
+const collectionHookEvents = {
+  beforeChange: [] as HookSnapshot[],
+  afterChange: [] as HookSnapshot[],
+  beforeRead: [] as HookSnapshot[],
+  afterRead: [] as HookSnapshot[],
+};
+
+const globalHookEvents = {
+  beforeChange: [] as HookSnapshot[],
+  afterChange: [] as HookSnapshot[],
+  beforeRead: [] as HookSnapshot[],
+  afterRead: [] as HookSnapshot[],
+};
+
+function cloneRecord(
+  value: Record<string, unknown> | undefined,
+): Record<string, unknown> | undefined {
+  return value ? structuredClone(value) : undefined;
+}
+
+function captureHookSnapshot(ctx: {
+  id?: string;
+  data?: Record<string, unknown>;
+  existingDoc?: Record<string, unknown>;
+  doc?: Record<string, unknown>;
+}): HookSnapshot {
+  return {
+    id: ctx.id,
+    data: cloneRecord(ctx.data),
+    existingDoc: cloneRecord(ctx.existingDoc),
+    doc: cloneRecord(ctx.doc),
+  };
+}
+
+function resetHookEvents(): void {
+  for (const events of [collectionHookEvents, globalHookEvents]) {
+    events.beforeChange.length = 0;
+    events.afterChange.length = 0;
+    events.beforeRead.length = 0;
+    events.afterRead.length = 0;
+  }
+}
+
+const HookedArticles: CollectionConfig = defineCollection({
+  slug: "hooked_articles",
+  fields: [
+    { name: "title", ...text({ required: true }) },
+    {
+      name: "seo",
+      ...group({
+        fields: [
+          { name: "metaTitle", ...text() },
+          { name: "metaDescription", ...textarea() },
+        ],
+      }),
+    },
+  ],
+  hooks: {
+    beforeChange: [
+      (ctx) => {
+        collectionHookEvents.beforeChange.push(captureHookSnapshot(ctx));
+        return ctx;
+      },
+    ],
+    afterChange: [
+      (ctx) => {
+        collectionHookEvents.afterChange.push(captureHookSnapshot(ctx));
+      },
+    ],
+    beforeRead: [
+      (ctx) => {
+        collectionHookEvents.beforeRead.push(captureHookSnapshot(ctx));
+        return ctx;
+      },
+    ],
+    afterRead: [
+      (ctx) => {
+        collectionHookEvents.afterRead.push(captureHookSnapshot(ctx));
+      },
+    ],
+  },
+});
+
+const HookedSettings: GlobalConfig = defineGlobal({
+  slug: "hooked-settings",
+  label: "Hooked Settings",
+  fields: [
+    {
+      name: "seo",
+      ...group({
+        fields: [
+          { name: "title", ...text() },
+          { name: "description", ...textarea() },
+        ],
+      }),
+    },
+  ],
+  hooks: {
+    beforeChange: [
+      (ctx) => {
+        globalHookEvents.beforeChange.push(captureHookSnapshot(ctx));
+        return ctx;
+      },
+    ],
+    afterChange: [
+      (ctx) => {
+        globalHookEvents.afterChange.push(captureHookSnapshot(ctx));
+      },
+    ],
+    beforeRead: [
+      (ctx) => {
+        globalHookEvents.beforeRead.push(captureHookSnapshot(ctx));
+        return ctx;
+      },
+    ],
+    afterRead: [
+      (ctx) => {
+        globalHookEvents.afterRead.push(captureHookSnapshot(ctx));
+      },
+    ],
+  },
+});
+
 function adminReq(): Request {
   const headers = new Headers();
   headers.set("x-user-id", "admin-1");
@@ -130,12 +260,17 @@ describe("Grouped field contract", () => {
   beforeAll(async () => {
     tmpDir = await mkdtemp(join(tmpdir(), "runelayer-group-contract-"));
     dbUrl = `file:${join(tmpDir, "group-contract.db")}`;
-    await migrateDatabaseForTests(dbUrl, [Authors, Articles, Pages]);
+    await migrateDatabaseForTests(dbUrl, [
+      Authors,
+      Articles,
+      Pages,
+      HookedArticles,
+    ]);
 
     kit = createRunelayer(
       defineConfig({
-        collections: [Authors, Articles, Pages],
-        globals: [SiteSettings],
+        collections: [Authors, Articles, Pages, HookedArticles],
+        globals: [SiteSettings, HookedSettings],
         database: { url: dbUrl },
         auth: {
           secret: "group-contract-secret-32-chars!!",
@@ -143,6 +278,10 @@ describe("Grouped field contract", () => {
         },
       }),
     );
+  });
+
+  beforeEach(() => {
+    resetHookEvents();
   });
 
   afterAll(async () => {
@@ -247,6 +386,196 @@ describe("Grouped field contract", () => {
       label: "Get started",
       url: "/docs",
     });
+  });
+
+  it("collection hooks receive nested grouped documents and patches", async () => {
+    const created = await create(ctx(HookedArticles), {
+      title: "Hooked article",
+      seo: {
+        metaTitle: "Initial title",
+        metaDescription: "Initial description",
+      },
+    });
+
+    expect(collectionHookEvents.beforeChange).toHaveLength(1);
+    expect(collectionHookEvents.beforeChange[0]).toMatchObject({
+      data: {
+        title: "Hooked article",
+        seo: {
+          metaTitle: "Initial title",
+          metaDescription: "Initial description",
+        },
+      },
+    });
+    expect(collectionHookEvents.afterChange).toHaveLength(1);
+    expect(collectionHookEvents.afterChange[0]).toMatchObject({
+      doc: {
+        id: created.id,
+        seo: {
+          metaTitle: "Initial title",
+          metaDescription: "Initial description",
+        },
+      },
+    });
+
+    const updated = await update(ctx(HookedArticles), created.id as string, {
+      seo: {
+        metaTitle: "Updated title",
+      },
+    });
+
+    expect(collectionHookEvents.beforeChange).toHaveLength(2);
+    expect(collectionHookEvents.beforeChange[1]).toMatchObject({
+      id: created.id,
+      data: {
+        seo: {
+          metaTitle: "Updated title",
+        },
+      },
+      existingDoc: {
+        id: created.id,
+        seo: {
+          metaTitle: "Initial title",
+          metaDescription: "Initial description",
+        },
+      },
+    });
+    expect(collectionHookEvents.afterChange).toHaveLength(2);
+    expect(collectionHookEvents.afterChange[1]).toMatchObject({
+      doc: {
+        id: created.id,
+        seo: {
+          metaTitle: "Updated title",
+          metaDescription: "Initial description",
+        },
+      },
+    });
+    expect(updated.seo).toEqual({
+      metaTitle: "Updated title",
+      metaDescription: "Initial description",
+    });
+
+    resetHookEvents();
+    const found = await findOne(ctx(HookedArticles), created.id as string);
+
+    expect(found?.seo).toEqual({
+      metaTitle: "Updated title",
+      metaDescription: "Initial description",
+    });
+    expect(collectionHookEvents.beforeRead).toHaveLength(1);
+    expect(collectionHookEvents.beforeRead[0]).toMatchObject({
+      id: created.id,
+    });
+    expect(collectionHookEvents.afterRead).toHaveLength(1);
+    expect(collectionHookEvents.afterRead[0]).toMatchObject({
+      id: created.id,
+      doc: {
+        id: created.id,
+        seo: {
+          metaTitle: "Updated title",
+          metaDescription: "Initial description",
+        },
+      },
+    });
+    expect(collectionHookEvents.afterRead[0]?.doc).not.toHaveProperty(
+      "seo_metaTitle",
+    );
+  });
+
+  it("global hooks receive nested grouped documents and patches", async () => {
+    const req = adminReq();
+
+    const first = await updateGlobalDocument(kit, HookedSettings, req, {
+      seo: {
+        title: "Initial global title",
+        description: "Initial global description",
+      },
+    });
+
+    expect(globalHookEvents.beforeChange).toHaveLength(1);
+    expect(globalHookEvents.beforeChange[0]).toMatchObject({
+      data: {
+        seo: {
+          title: "Initial global title",
+          description: "Initial global description",
+        },
+      },
+    });
+    expect(globalHookEvents.afterChange).toHaveLength(1);
+    expect(globalHookEvents.afterChange[0]).toMatchObject({
+      doc: {
+        id: HookedSettings.slug,
+        seo: {
+          title: "Initial global title",
+          description: "Initial global description",
+        },
+      },
+    });
+    expect(first.seo).toEqual({
+      title: "Initial global title",
+      description: "Initial global description",
+    });
+
+    const second = await updateGlobalDocument(kit, HookedSettings, req, {
+      seo: {
+        title: "Updated global title",
+      },
+    });
+
+    expect(globalHookEvents.beforeChange).toHaveLength(2);
+    expect(globalHookEvents.beforeChange[1]).toMatchObject({
+      id: HookedSettings.slug,
+      data: {
+        seo: {
+          title: "Updated global title",
+        },
+      },
+      existingDoc: {
+        id: HookedSettings.slug,
+        seo: {
+          title: "Initial global title",
+          description: "Initial global description",
+        },
+      },
+    });
+    expect(globalHookEvents.afterChange).toHaveLength(2);
+    expect(globalHookEvents.afterChange[1]).toMatchObject({
+      doc: {
+        id: HookedSettings.slug,
+        seo: {
+          title: "Updated global title",
+          description: "Initial global description",
+        },
+      },
+    });
+    expect(second.seo).toEqual({
+      title: "Updated global title",
+      description: "Initial global description",
+    });
+
+    resetHookEvents();
+    const current = await readGlobalDocument(kit, HookedSettings, req);
+
+    expect(current.seo).toEqual({
+      title: "Updated global title",
+      description: "Initial global description",
+    });
+    expect(globalHookEvents.beforeRead).toHaveLength(1);
+    expect(globalHookEvents.beforeRead[0]).toMatchObject({
+      id: HookedSettings.slug,
+    });
+    expect(globalHookEvents.afterRead).toHaveLength(1);
+    expect(globalHookEvents.afterRead[0]).toMatchObject({
+      id: HookedSettings.slug,
+      doc: {
+        id: HookedSettings.slug,
+        seo: {
+          title: "Updated global title",
+          description: "Initial global description",
+        },
+      },
+    });
+    expect(globalHookEvents.afterRead[0]?.doc).not.toHaveProperty("seo_title");
   });
 
   it("stores new snapshots as nested documents and restores legacy flat snapshots", async () => {
