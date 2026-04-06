@@ -39,7 +39,6 @@ export type {
   EmailField,
   GroupField,
   BlocksField,
-  ArrayField,
   RowField,
   CollapsibleField,
   RefSentinel,
@@ -65,7 +64,6 @@ export {
   group,
   blocks,
   defineBlock,
-  array,
   row,
   collapsible,
 } from "./fields.js";

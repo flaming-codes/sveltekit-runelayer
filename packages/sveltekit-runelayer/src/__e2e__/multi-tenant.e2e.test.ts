@@ -73,7 +73,6 @@ const Projects: CollectionConfig = defineCollection({
     update: tenantWriteAccess,
     delete: tenantWriteAccess,
   },
-  timestamps: true,
 });
 
 const Tasks: CollectionConfig = defineCollection({
@@ -112,7 +111,6 @@ const Tasks: CollectionConfig = defineCollection({
     update: tenantWriteAccess,
     delete: tenantWriteAccess,
   },
-  timestamps: true,
 });
 
 // --- Request helpers ---

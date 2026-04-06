@@ -108,7 +108,7 @@ export function createAuth(
 
     if (sessionUser && hasActiveBan(sessionUser)) {
       const signOutResponse = await auth.api
-        .signOut({ headers: event.request.headers })
+        .signOut({ headers: event.request.headers, returnHeaders: true })
         .catch(() => null);
       clearAuthContext(event);
 

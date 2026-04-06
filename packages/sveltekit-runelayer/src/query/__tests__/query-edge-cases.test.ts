@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { createDatabase, type RunelayerDatabase } from "../../db/init.js";
+import { createDatabase } from "../../db/init.js";
 import { email, text, number } from "../../schema/fields.js";
 import type { CollectionConfig } from "../../schema/collections.js";
 import { checkAccess } from "../access.js";

@@ -18,10 +18,8 @@ import {
   defineBlock,
   row,
   collapsible,
-  isAdmin,
-  isLoggedIn,
-  hasRole,
 } from "@flaming-codes/sveltekit-runelayer/schema";
+import { isAdmin, isLoggedIn, hasRole } from "@flaming-codes/sveltekit-runelayer";
 
 // ─── Collections ───────────────────────────────────────────────
 
