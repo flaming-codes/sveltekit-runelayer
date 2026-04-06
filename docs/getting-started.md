@@ -22,6 +22,7 @@ Use these paths when integrating the CMS into an app.
 - Wire `runelayer.handle` in `hooks.server.ts`.
 - Mount admin load/actions in one catch-all route.
 - Run migrations before startup.
+- Decide whether uploaded files should be public (`storage.publicRead: true`) or auth-protected (default).
 
 ## Install
 

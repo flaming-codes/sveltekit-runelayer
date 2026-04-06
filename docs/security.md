@@ -13,6 +13,9 @@ The runtime `handle` hook:
 3. injects verified `x-user-*` headers only after session validation
 4. evaluates storage-route file serving only after the same auth sanitization/session boundary
 
+When using `createRunelayer()`, storage file serving is authenticated by default. Set
+`storage.publicRead: true` to opt into public file serving.
+
 This blocks header spoofing attempts from external clients.
 
 ## Access control
@@ -65,7 +68,7 @@ For polymorphic relationship fields (`relationTo: string[]`), the `_collection` 
 
 ### Admin API endpoint
 
-The `/runelayer/api/{slug}` endpoint uses per-request access context (not system context), ensuring collection-level access rules are respected. Responses include `Cache-Control: private, no-store` to prevent proxy caching of sensitive data.
+The `/runelayer/api/{slug}` endpoint runs inside the shared auth `handle` boundary and requires an authenticated admin user. It uses per-request access context (not system context), ensuring collection-level access rules are respected. Responses include `Cache-Control: private, no-store` to prevent proxy caching of sensitive data.
 
 ## Storage security
 

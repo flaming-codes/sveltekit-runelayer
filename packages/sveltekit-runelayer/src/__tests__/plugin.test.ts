@@ -144,4 +144,45 @@ describe("createRunelayer plugin handle", () => {
     expect(resolve).toHaveBeenCalledOnce();
     expect(response.status).toBe(200);
   });
+
+  it("configures storage reads as authenticated-only by default", async () => {
+    const authHandle = vi.fn(async ({ event, resolve }: { event: MockEvent; resolve: any }) => {
+      // Simulate anonymous request after auth resolution.
+      event.request.headers.delete("x-user-id");
+      return resolve(event);
+    });
+    mocks.createAuth.mockReturnValue({ auth: {}, handle: authHandle });
+    mocks.createServeHandler.mockReturnValue(vi.fn(async () => new Response("ok")));
+
+    createRunelayer(createConfig());
+
+    const serveConfig = mocks.createServeHandler.mock.calls[0]?.[0] as
+      | { accessCheck?: (request: Request) => Promise<boolean> }
+      | undefined;
+    expect(serveConfig?.accessCheck).toBeTypeOf("function");
+
+    const anonymousReq = new Request("http://localhost:3000/uploads/a.png");
+    const authedReq = new Request("http://localhost:3000/uploads/a.png", {
+      headers: { "x-user-id": "verified-user" },
+    });
+    await expect(serveConfig!.accessCheck!(anonymousReq)).resolves.toBe(false);
+    await expect(serveConfig!.accessCheck!(authedReq)).resolves.toBe(true);
+  });
+
+  it("allows explicit public storage reads when storage.publicRead is enabled", async () => {
+    const authHandle = vi.fn(async ({ event, resolve }: { event: MockEvent; resolve: any }) =>
+      resolve(event),
+    );
+    mocks.createAuth.mockReturnValue({ auth: {}, handle: authHandle });
+    mocks.createServeHandler.mockReturnValue(vi.fn(async () => new Response("ok")));
+
+    const config = createConfig();
+    (config.storage as Record<string, unknown>).publicRead = true;
+    createRunelayer(config);
+
+    const serveConfig = mocks.createServeHandler.mock.calls[0]?.[0] as
+      | { accessCheck?: (request: Request) => Promise<boolean> }
+      | undefined;
+    expect(serveConfig?.accessCheck).toBeUndefined();
+  });
 });

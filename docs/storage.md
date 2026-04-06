@@ -134,6 +134,19 @@ export const GET = serveHandler;
 
 When served via `createRunelayer()`, this handler runs inside the same auth `handle` boundary that strips spoofed `x-user-*` headers and resolves sessions.
 
+By default, `createRunelayer()` protects storage reads and only serves files to authenticated requests (`x-user-id` present after session resolution). To allow public reads, opt in explicitly:
+
+```ts
+const runelayer = createRunelayerApp({
+  // ...
+  storage: {
+    directory: "./uploads",
+    urlPrefix: "/uploads",
+    publicRead: true, // default is false
+  },
+});
+```
+
 ### Content-Type Detection
 
 Based on file extension:

@@ -83,7 +83,7 @@ For each request, `handle`:
 3. Injects verified user headers
 4. Attaches user/session to `event.locals`
 5. Routes auth endpoints to Better Auth handler
-6. For storage URL-prefix requests, runs the serve handler inside the same auth boundary
+6. For storage URL-prefix requests, runs the serve handler inside the same auth boundary (authenticated by default; configurable via `storage.publicRead`)
 7. Delegates remaining routes to SvelteKit (storage 404 responses fall through here)
 
 ### Query operations

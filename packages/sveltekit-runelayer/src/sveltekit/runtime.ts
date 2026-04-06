@@ -238,40 +238,46 @@ export function createRunelayerRuntime(
       });
     }
 
-    // Intercept /runelayer/api/{collectionSlug} for admin relationship field options.
-    if (event.url.pathname.startsWith(apiBase) && event.request.method === "GET") {
-      const user = getUser(event);
-      if (!user || user.role !== "admin") {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { "content-type": "application/json" },
-        });
-      }
-      const slug = event.url.pathname.slice(apiBase.length).split("/")[0];
-      const collection = runelayer.collections.find((c) => c.slug === slug);
-      if (!collection || !slug) {
-        return new Response(JSON.stringify({ error: "Unknown collection" }), {
-          status: 404,
-          headers: { "content-type": "application/json" },
-        });
-      }
-      const limitParam = event.url.searchParams.get("limit");
-      const limit = Math.min(
-        Number.isFinite(Number.parseInt(limitParam ?? "", 10))
-          ? Number.parseInt(limitParam!, 10)
-          : 100,
-        200,
-      );
-      const api = withRequest(event);
-      const docs = await api.find(collection, { limit });
-      const useAsTitle = collection.admin?.useAsTitle;
-      return new Response(JSON.stringify({ docs, useAsTitle }), {
-        status: 200,
-        headers: { "content-type": "application/json", "cache-control": "private, no-store" },
-      });
-    }
+    return (runelayer.handle as Handle)({
+      event,
+      resolve: async (authedEvent) => {
+        // Intercept /runelayer/api/{collectionSlug} for admin relationship field options.
+        // This must run inside the shared auth boundary so event.locals is trusted.
+        if (authedEvent.url.pathname.startsWith(apiBase) && authedEvent.request.method === "GET") {
+          const user = getUser(authedEvent as RequestEvent);
+          if (!user || user.role !== "admin") {
+            return new Response(JSON.stringify({ error: "Unauthorized" }), {
+              status: 401,
+              headers: { "content-type": "application/json" },
+            });
+          }
+          const slug = authedEvent.url.pathname.slice(apiBase.length).split("/")[0];
+          const collection = runelayer.collections.find((c) => c.slug === slug);
+          if (!collection || !slug) {
+            return new Response(JSON.stringify({ error: "Unknown collection" }), {
+              status: 404,
+              headers: { "content-type": "application/json" },
+            });
+          }
+          const limitParam = authedEvent.url.searchParams.get("limit");
+          const limit = Math.min(
+            Number.isFinite(Number.parseInt(limitParam ?? "", 10))
+              ? Number.parseInt(limitParam!, 10)
+              : 100,
+            200,
+          );
+          const api = withRequest(authedEvent as RequestEvent);
+          const docs = await api.find(collection, { limit });
+          const useAsTitle = collection.admin?.useAsTitle;
+          return new Response(JSON.stringify({ docs, useAsTitle }), {
+            status: 200,
+            headers: { "content-type": "application/json", "cache-control": "private, no-store" },
+          });
+        }
 
-    return (runelayer.handle as Handle)({ event, resolve });
+        return resolve(authedEvent);
+      },
+    });
   };
 
   return {

@@ -52,7 +52,13 @@ export function createRunelayer(config: RunelayerConfig): RunelayerInstance {
 
   // Storage serve handler for uploaded files
   const storagePrefix = config.storage?.urlPrefix ?? "/uploads";
-  const serveHandler = createServeHandler({ storage, urlPrefix: storagePrefix });
+  const serveHandler = createServeHandler({
+    storage,
+    urlPrefix: storagePrefix,
+    accessCheck: config.storage?.publicRead
+      ? undefined
+      : async (request) => Boolean(request.headers.get("x-user-id")),
+  });
 
   // Combined SvelteKit handle hook: auth boundary first, then storage serving.
   const handle = async ({
