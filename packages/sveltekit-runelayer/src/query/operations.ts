@@ -16,6 +16,7 @@ import { runBeforeHooks, runAfterHooks } from "../hooks/runner.js";
 import type { HookContext } from "../hooks/types.js";
 import { checkAccess } from "./access.js";
 import { allowedQueryColumns, enforceReadProjection, enforceWritePayload } from "./enforcement.js";
+import { httpError } from "./errors.js";
 import type { QueryContext, FindArgs, FindOneOpts } from "./types.js";
 import { normalizeVersionConfig } from "../versions/config.js";
 import type { BlockConfig, NamedField, RefSentinel } from "../schema/fields.js";
@@ -44,10 +45,6 @@ function hookCtx(
 
 function getUserId(req?: Request): string | undefined {
   return req?.headers.get("x-user-id") ?? undefined;
-}
-
-function httpError(status: number, message: string): Error & { status: number } {
-  return Object.assign(new Error(message), { status });
 }
 
 function versionConfig(ctx: QueryContext) {
@@ -337,12 +334,10 @@ async function populateRefs(
 
 export async function find(ctx: QueryContext, args: FindArgs = {}) {
   await checkAccess(ctx.collection.access?.read, ctx.req);
-  const hc = await runBeforeHooks(ctx.collection.hooks?.beforeRead as any, hookCtx(ctx, "read"));
+  const hc = await runBeforeHooks(ctx.collection.hooks?.beforeRead, hookCtx(ctx, "read"));
   const allowedColumns = allowedQueryColumns(ctx.collection);
   if (args.sort && !allowedColumns.has(args.sort)) {
-    throw Object.assign(new Error(`Invalid sort column "${args.sort}"`), {
-      status: 400,
-    });
+    throw httpError(400, `Invalid sort column "${args.sort}"`);
   }
 
   const sortColumn = args.sort
@@ -363,16 +358,12 @@ export async function find(ctx: QueryContext, args: FindArgs = {}) {
   if (args.where) {
     for (const [column, value] of Object.entries(args.where)) {
       if (!allowedColumns.has(column)) {
-        throw Object.assign(new Error(`Invalid where field "${column}"`), {
-          status: 400,
-        });
+        throw httpError(400, `Invalid where field "${column}"`);
       }
       const storageKey = translateDocumentPathToStorageKey(ctx.collection.fields, column) ?? column;
       const tableColumn = (table(ctx) as Record<string, unknown>)[storageKey];
       if (!tableColumn) {
-        throw Object.assign(new Error(`Invalid where field "${column}"`), {
-          status: 400,
-        });
+        throw httpError(400, `Invalid where field "${column}"`);
       }
       conditions.push(eq(tableColumn as never, value as never));
     }
@@ -396,15 +387,15 @@ export async function find(ctx: QueryContext, args: FindArgs = {}) {
     .map((doc) => materializeStoredDocument(ctx.collection, doc as Record<string, unknown>))
     .filter((doc): doc is Record<string, unknown> => doc !== undefined);
 
-  for (const doc of materializedDocs) {
-    await runAfterHooks(ctx.collection.hooks?.afterRead as any, { ...hc, doc });
-  }
-
   const projected = (
     await Promise.all(
       materializedDocs.map((doc) => enforceReadProjection(ctx.collection, ctx.req, doc)),
     )
   ).filter((doc): doc is Record<string, unknown> => doc !== undefined);
+
+  for (const doc of projected) {
+    await runAfterHooks(ctx.collection.hooks?.afterRead, { ...hc, doc });
+  }
 
   if (args.depth === 1) {
     return populateRefs(
@@ -421,20 +412,15 @@ export async function find(ctx: QueryContext, args: FindArgs = {}) {
 
 export async function findOne(ctx: QueryContext, id: string, opts: FindOneOpts = {}) {
   await checkAccess(ctx.collection.access?.read, ctx.req, undefined, id);
-  const hc = await runBeforeHooks(
-    ctx.collection.hooks?.beforeRead as any,
-    hookCtx(ctx, "read", { id }),
-  );
+  const hc = await runBeforeHooks(ctx.collection.hooks?.beforeRead, hookCtx(ctx, "read", { id }));
   const rawDoc = await findById(ctx.db.db, table(ctx), id);
   const doc = materializeStoredDocument(
     ctx.collection,
     rawDoc as Record<string, unknown> | undefined,
   );
-  if (doc) {
-    await runAfterHooks(ctx.collection.hooks?.afterRead as any, { ...hc, doc });
-  }
   const projected = await enforceReadProjection(ctx.collection, ctx.req, doc);
   if (!projected) return projected;
+  await runAfterHooks(ctx.collection.hooks?.afterRead, { ...hc, doc: projected });
 
   if (opts.depth === 1) {
     const [populated] = await populateRefs(
@@ -456,7 +442,7 @@ export async function create(ctx: QueryContext, data: Record<string, unknown>) {
   const enforcedDoc = materializeStoredDocument(ctx.collection, enforced) ?? enforced;
   await checkAccess(ctx.collection.access?.create, ctx.req, enforcedDoc);
   const hc = await runBeforeHooks(
-    ctx.collection.hooks?.beforeChange as any,
+    ctx.collection.hooks?.beforeChange,
     hookCtx(ctx, "create", { data: enforcedDoc }),
   );
   const hookData = await enforceWritePayload(
@@ -483,7 +469,7 @@ export async function create(ctx: QueryContext, data: Record<string, unknown>) {
 
   const finalDoc = materializeStoredDocument(ctx.collection, doc) ?? doc;
 
-  await runAfterHooks(ctx.collection.hooks?.afterChange as any, {
+  await runAfterHooks(ctx.collection.hooks?.afterChange, {
     ...hc,
     data: hookDoc,
     doc: finalDoc,
@@ -498,6 +484,9 @@ export async function create(ctx: QueryContext, data: Record<string, unknown>) {
 export async function update(ctx: QueryContext, id: string, data: Record<string, unknown>) {
   const vc = versionConfig(ctx);
   const existingDocRow = await findById(ctx.db.db, table(ctx), id);
+  if (!existingDocRow) {
+    throw httpError(404, "Document not found");
+  }
   const existingDoc = materializeStoredDocument(
     ctx.collection,
     existingDocRow as Record<string, unknown> | undefined,
@@ -513,11 +502,11 @@ export async function update(ctx: QueryContext, id: string, data: Record<string,
   const enforcedDoc = materializeStoredDocument(ctx.collection, enforced) ?? enforced;
   await checkAccess(ctx.collection.access?.update, ctx.req, enforcedDoc, id);
   const hc = await runBeforeHooks(
-    ctx.collection.hooks?.beforeChange as any,
+    ctx.collection.hooks?.beforeChange,
     hookCtx(ctx, "update", {
       data: enforcedDoc,
       id,
-      existingDoc: existingDoc as any,
+      existingDoc,
     }),
   );
   const hookData = await enforceWritePayload(
@@ -547,7 +536,7 @@ export async function update(ctx: QueryContext, id: string, data: Record<string,
 
   const finalDoc = materializeStoredDocument(ctx.collection, doc) ?? doc;
 
-  await runAfterHooks(ctx.collection.hooks?.afterChange as any, {
+  await runAfterHooks(ctx.collection.hooks?.afterChange, {
     ...hc,
     data: hookDoc,
     doc: finalDoc,
@@ -561,8 +550,12 @@ export async function update(ctx: QueryContext, id: string, data: Record<string,
 
 export async function remove(ctx: QueryContext, id: string) {
   await checkAccess(ctx.collection.access?.delete, ctx.req, undefined, id);
+  const existing = await findById(ctx.db.db, table(ctx), id);
+  if (!existing) {
+    throw httpError(404, "Document not found");
+  }
   const hc = await runBeforeHooks(
-    ctx.collection.hooks?.beforeDelete as any,
+    ctx.collection.hooks?.beforeDelete,
     hookCtx(ctx, "delete", { id }),
   );
   const doc = await deleteOne(ctx.db.db, table(ctx), id);
@@ -576,7 +569,7 @@ export async function remove(ctx: QueryContext, id: string) {
     await deleteVersionsByParent(ctx.db.db, versionsTable(ctx), id);
   }
 
-  await runAfterHooks(ctx.collection.hooks?.afterDelete as any, {
+  await runAfterHooks(ctx.collection.hooks?.afterDelete, {
     ...hc,
     doc: finalDoc,
   });
@@ -612,7 +605,7 @@ export async function publish(ctx: QueryContext, id: string) {
 
   // Run beforePublish hooks
   const hc = await runBeforeHooks(
-    ctx.collection.hooks?.beforePublish as any,
+    ctx.collection.hooks?.beforePublish,
     hookCtx(ctx, "publish", {
       id,
       data: existingDoc,
@@ -650,7 +643,7 @@ export async function publish(ctx: QueryContext, id: string) {
 
   const materialized = materializeStoredDocument(ctx.collection, finalDoc) ?? finalDoc;
 
-  await runAfterHooks(ctx.collection.hooks?.afterPublish as any, {
+  await runAfterHooks(ctx.collection.hooks?.afterPublish, {
     ...hc,
     data: inflateDocumentFields(ctx.collection.fields, enforced),
     doc: materialized,
@@ -723,7 +716,7 @@ export async function saveDraft(ctx: QueryContext, id: string, data: Record<stri
   await checkAccess(ctx.collection.access?.update, ctx.req, enforcedDoc, id);
 
   const hc = await runBeforeHooks(
-    ctx.collection.hooks?.beforeChange as any,
+    ctx.collection.hooks?.beforeChange,
     hookCtx(ctx, "update", { data: enforcedDoc, id, existingDoc }),
   );
   const hookData = await enforceWritePayload(
@@ -754,7 +747,7 @@ export async function saveDraft(ctx: QueryContext, id: string, data: Record<stri
 
   const materialized = materializeStoredDocument(ctx.collection, finalDoc) ?? finalDoc;
 
-  await runAfterHooks(ctx.collection.hooks?.afterChange as any, {
+  await runAfterHooks(ctx.collection.hooks?.afterChange, {
     ...hc,
     data: hookDoc,
     doc: materialized,
@@ -812,7 +805,7 @@ export async function restoreVersion(ctx: QueryContext, id: string, versionId: s
   const fieldData = stripSystemFields(snapshot);
 
   const hc = await runBeforeHooks(
-    ctx.collection.hooks?.beforeChange as any,
+    ctx.collection.hooks?.beforeChange,
     hookCtx(ctx, "update", { data: fieldData, id, existingDoc }),
   );
 
@@ -844,7 +837,7 @@ export async function restoreVersion(ctx: QueryContext, id: string, versionId: s
 
   const materialized = materializeStoredDocument(ctx.collection, finalDoc) ?? finalDoc;
 
-  await runAfterHooks(ctx.collection.hooks?.afterChange as any, {
+  await runAfterHooks(ctx.collection.hooks?.afterChange, {
     ...hc,
     data: restoreDoc,
     doc: materialized,

@@ -21,9 +21,9 @@ export interface RunelayerConfig {
 
 export function defineConfig(config: RunelayerConfig): RunelayerConfig {
   return {
-    adminPath: "/admin",
-    database: { url: "file:./data/sveltekit-runelayer.db" },
-    globals: [],
     ...config,
+    adminPath: config.adminPath ?? "/admin",
+    database: { url: "file:./data/sveltekit-runelayer.db", ...config.database },
+    globals: config.globals ?? [],
   };
 }

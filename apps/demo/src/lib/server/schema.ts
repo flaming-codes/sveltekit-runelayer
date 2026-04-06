@@ -75,7 +75,6 @@ export const Authors = defineCollection({
     },
   ],
   admin: { useAsTitle: "name", defaultColumns: ["name", "email", "role"] },
-  timestamps: true,
   access: {
     read: () => true,
     create: isLoggedIn(),
@@ -95,7 +94,6 @@ export const Categories = defineCollection({
     { name: "featured", label: "Featured", ...checkbox() },
   ],
   admin: { useAsTitle: "name", defaultColumns: ["name", "sortOrder", "featured"] },
-  timestamps: true,
   access: { read: () => true },
 });
 
@@ -143,7 +141,6 @@ export const Posts = defineCollection({
     },
   ],
   admin: { useAsTitle: "title", defaultColumns: ["title", "status", "author", "publishedAt"] },
-  timestamps: true,
   access: {
     read: () => true,
     create: isLoggedIn(),
@@ -211,7 +208,6 @@ export const Media = defineCollection({
     },
   ],
   admin: { useAsTitle: "filename", defaultColumns: ["filename", "mimeType", "tags"] },
-  timestamps: true,
   access: { read: () => true },
 });
 
@@ -286,7 +282,6 @@ export const Pages = defineCollection({
     },
   ],
   admin: { useAsTitle: "title", defaultColumns: ["title", "layout"] },
-  timestamps: true,
   access: { read: () => true },
 });
 
@@ -326,7 +321,6 @@ export const Products = defineCollection({
     { name: "inStock", label: "In Stock", ...checkbox({ defaultValue: true }) },
   ],
   admin: { useAsTitle: "name", defaultColumns: ["name", "price", "inStock"] },
-  timestamps: true,
   access: { read: () => true },
 });
 
@@ -340,7 +334,6 @@ export const SiteSettings = defineCollection({
     { name: "footerText", label: "Footer Text", ...text() },
   ],
   admin: { useAsTitle: "siteName" },
-  timestamps: true,
 });
 
 export const Navigation = defineCollection({
@@ -357,7 +350,6 @@ export const Navigation = defineCollection({
     },
   ],
   admin: { useAsTitle: "label" },
-  timestamps: true,
 });
 
 export const allCollections = [

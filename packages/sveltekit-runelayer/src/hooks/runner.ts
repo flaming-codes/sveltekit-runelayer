@@ -11,7 +11,11 @@ export async function runBeforeHooks(
 
   let ctx = context;
   for (const hook of hooks) {
-    ctx = await hook(ctx);
+    const result = await hook(ctx);
+    if (result == null) {
+      throw new Error("[runelayer] beforeHook must return HookContext — did you forget to return?");
+    }
+    ctx = result;
   }
   return ctx;
 }

@@ -49,13 +49,16 @@ const SiteSettings = defineGlobal({
   },
   hooks: {
     beforeChange: [
-      (ctx) => ({
-        ...ctx,
-        data: {
-          ...ctx.data,
-          siteName: typeof ctx.data.siteName === "string" ? ctx.data.siteName.trim() : "",
-        },
-      }),
+      (ctx) => {
+        const siteName = ctx.data?.siteName;
+        return {
+          ...ctx,
+          data: {
+            ...ctx.data,
+            siteName: typeof siteName === "string" ? siteName.trim() : "",
+          },
+        };
+      },
     ],
   },
 });
@@ -127,7 +130,7 @@ async function applyAuthSchemaForTests(url: string, users: TestAuthUser[] = []) 
 async function createTestApp(options?: { authUsers?: TestAuthUser[] }) {
   const tempDir = mkdtempSync(join(tmpdir(), "runelayer-sveltekit-"));
   const dbUrl = `file:${join(tempDir, "test.db")}`;
-  await migrateDatabaseForTests(dbUrl, [Posts]);
+  await migrateDatabaseForTests(dbUrl, [Posts], [SiteSettings]);
   await applyAuthSchemaForTests(dbUrl, options?.authUsers ?? [DEFAULT_ADMIN_USER]);
 
   return createRunelayerRuntime(
@@ -379,9 +382,11 @@ describe("createRunelayerApp", () => {
       }),
     );
 
+    // parseAuthErrorMessage now returns only the generic fallback to avoid
+    // leaking internal auth-provider error details to the browser.
     expect(result).toMatchObject({
       status: 403,
-      data: { error: "Please verify your email address before signing in." },
+      data: { error: "Sign-in is blocked for this account." },
     });
   });
 

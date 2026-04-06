@@ -16,10 +16,11 @@ export async function findMany(db: LibSQLDatabase, table: AnyTable, opts: FindMa
   if (opts.where) q = q.where(opts.where);
   if (opts.sort) {
     const col = (table as any)[opts.sort.column];
+    if (!col) throw new Error(`Unknown sort column "${opts.sort.column}"`);
     q = q.orderBy(opts.sort.order === "desc" ? sql`${col} desc` : col);
   }
-  if (opts.limit) q = q.limit(opts.limit);
-  if (opts.offset) q = q.offset(opts.offset);
+  if (opts.limit != null) q = q.limit(opts.limit);
+  if (opts.offset != null) q = q.offset(opts.offset);
   return await q.all();
 }
 
@@ -98,8 +99,8 @@ export async function findVersions(
     .where(eq((versionsTable as any)._parentId, parentId))
     .orderBy(sql`${(versionsTable as any).createdAt} desc`)
     .$dynamic();
-  if (opts?.limit) q = q.limit(opts.limit);
-  if (opts?.offset) q = q.offset(opts.offset);
+  if (opts?.limit != null) q = q.limit(opts.limit);
+  if (opts?.offset != null) q = q.offset(opts.offset);
   return await q.all();
 }
 
@@ -140,6 +141,7 @@ export async function pruneVersions(
 ) {
   if (maxPerDoc <= 0) return;
 
+  // Select only id and _status (not _snapshot) to minimize memory usage.
   const all = await db
     .select({ id: versionsTable.id, _status: (versionsTable as any)._status })
     .from(versionsTable)

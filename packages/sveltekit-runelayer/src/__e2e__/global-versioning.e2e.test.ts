@@ -79,8 +79,7 @@ describe("Global Versioning — E2E Journey", () => {
   beforeAll(async () => {
     tmpDir = await mkdtemp(join(tmpdir(), "runelayer-global-versioning-e2e-"));
     dbUrl = `file:${join(tmpDir, "global-versioning.db")}`;
-    // Globals use raw SQL tables (not Drizzle-generated), so no collection migration needed.
-    await migrateDatabaseForTests(dbUrl, []);
+    await migrateDatabaseForTests(dbUrl, [], [SiteSettings, OtherGlobal]);
 
     kit = createRunelayer(
       defineConfig({

@@ -118,7 +118,6 @@ const Articles: CollectionConfig = defineCollection({
       }) as any,
     ],
   },
-  timestamps: true,
 });
 
 // --- Notification tracker (simulates webhook) ---

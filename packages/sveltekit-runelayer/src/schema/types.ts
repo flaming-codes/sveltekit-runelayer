@@ -35,15 +35,14 @@ export type HookContext = {
   previousStatus?: string;
 };
 
-// Backward-compatible alias for the historical schema hook naming.
-export type HookArgs = HookContext;
-
 export type BeforeChangeHook = (ctx: HookContext) => HookContext | Promise<HookContext>;
 export type AfterChangeHook = (
   ctx: HookContext & { doc: Record<string, unknown> },
 ) => void | Promise<void>;
 export type BeforeDeleteHook = (ctx: HookContext) => HookContext | Promise<HookContext>;
-export type AfterDeleteHook = (ctx: HookContext) => void | Promise<void>;
+export type AfterDeleteHook = (
+  ctx: HookContext & { doc?: Record<string, unknown> },
+) => void | Promise<void>;
 
 export type BeforeReadHook = (ctx: HookContext) => HookContext | Promise<HookContext>;
 export type AfterReadHook = (

@@ -65,6 +65,9 @@ const _schema = createDrizzleKitSchema([Posts]);
 export const { posts, user, session, account, verification } = _schema;
 ```
 
+If your app uses globals, pass them as the second argument so drizzle-kit also exports
+`__runelayer_globals` (and `__runelayer_global_versions` when global versioning is enabled).
+
 ```ts
 // drizzle.config.ts
 import { defineConfig } from "drizzle-kit";

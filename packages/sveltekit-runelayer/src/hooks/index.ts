@@ -8,8 +8,13 @@ export type {
   AfterReadHook,
   BeforePublishHook,
   AfterPublishHook,
-  CollectionHooks,
-  GlobalHooks,
-} from "./types.js";
+  Hooks,
+} from "../schema/types.js";
+
+import type { Hooks } from "../schema/types.js";
+
+export type CollectionHooks = Hooks;
+
+export type GlobalHooks = Pick<Hooks, "beforeChange" | "afterChange" | "beforeRead" | "afterRead">;
 
 export { runBeforeHooks, runAfterHooks } from "./runner.js";

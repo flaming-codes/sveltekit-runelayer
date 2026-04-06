@@ -65,7 +65,6 @@ const Authors: CollectionConfig = defineCollection({
     { name: "active", label: "Active", ...checkbox({ defaultValue: true }) },
   ],
   admin: { useAsTitle: "name", defaultColumns: ["name", "email", "role"] },
-  timestamps: true,
 });
 
 const Categories: CollectionConfig = defineCollection({
@@ -108,7 +107,6 @@ const Posts: CollectionConfig = defineCollection({
     { name: "metadata", label: "SEO Metadata", ...json() },
   ],
   admin: { useAsTitle: "title", defaultColumns: ["title", "status", "author"] },
-  timestamps: true,
   versions: { drafts: true },
 });
 

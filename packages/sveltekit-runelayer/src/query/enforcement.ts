@@ -1,5 +1,5 @@
 import type { CollectionConfig } from "../schema/collections.js";
-import type { BlockConfig, Field, NamedField, RefSentinel } from "../schema/fields.js";
+import type { BlockConfig, Field, NamedField, RefSentinel, SlugField } from "../schema/fields.js";
 import {
   deleteValueAtPath,
   DocumentShapeError,
@@ -13,6 +13,7 @@ import {
 } from "../schema/document-shape.js";
 import type { AccessFn, FieldAccess } from "../schema/types.js";
 import { checkAccess } from "./access.js";
+import { httpError } from "./errors.js";
 
 type WriteOperation = "create" | "update";
 type AccessMode = "create" | "read" | "update";
@@ -30,15 +31,25 @@ export const RESERVED_WRITE_FIELDS = new Set<string>([
   ...AUTH_SENSITIVE_FIELDS,
 ]);
 
-function httpError(status: number, message: string): Error & { status: number } {
-  return Object.assign(new Error(message), { status });
-}
-
 function toRecord(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw httpError(400, "Expected an object payload");
   }
   return value as Record<string, unknown>;
+}
+
+function slugify(str: string): string {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function resolveDefault(field: Field): unknown {
+  if (!("defaultValue" in field)) return undefined;
+  return field.defaultValue;
 }
 
 function hasValue(value: unknown): boolean {
@@ -224,6 +235,16 @@ function validateBuiltIn(field: Field, key: string, value: unknown): void {
       break;
     }
 
+    case "email": {
+      if (typeof value === "string" && value.length > 0) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          throw httpError(400, `Invalid email format for field "${key}"`);
+        }
+      }
+      break;
+    }
+
     case "number":
       if (typeof value !== "number") break;
       if (field.min !== undefined && value < field.min) {
@@ -362,6 +383,35 @@ async function enforceFieldSet(
     const normalized = normalizeValue(rule.field, rule.documentPath, rawValue);
     if (normalized !== undefined) {
       output[storageKey] = normalized;
+    }
+  }
+
+  // Apply defaultValue and slug derivation on create.
+  if (operation === "create") {
+    for (const [storageKey, rule] of layout.byStorageKey.entries()) {
+      if (output[storageKey] === undefined || output[storageKey] === null) {
+        const defaultVal = resolveDefault(rule.field);
+        if (defaultVal !== undefined) {
+          output[storageKey] = defaultVal;
+        }
+      }
+      if (
+        rule.field.type === "slug" &&
+        !hasValue(output[storageKey]) &&
+        (rule.field as SlugField).from
+      ) {
+        const sourceField = (rule.field as SlugField).from;
+        // Look up the source field's storage key
+        for (const [srcKey, srcRule] of layout.byStorageKey.entries()) {
+          if (srcRule.documentPath === sourceField || srcKey === sourceField) {
+            const sourceValue = output[srcKey];
+            if (typeof sourceValue === "string" && sourceValue.trim().length > 0) {
+              output[storageKey] = slugify(sourceValue);
+            }
+            break;
+          }
+        }
+      }
     }
   }
 

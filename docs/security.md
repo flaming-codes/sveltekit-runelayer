@@ -11,6 +11,7 @@ The runtime `handle` hook:
 1. strips inbound `x-user-id`, `x-user-role`, `x-user-email`
 2. resolves session from cookies
 3. injects verified `x-user-*` headers only after session validation
+4. evaluates storage-route file serving only after the same auth sanitization/session boundary
 
 This blocks header spoofing attempts from external clients.
 

@@ -32,7 +32,17 @@ import {
   loadUsersCreate,
   dispatchLoader,
 } from "../runtime-loaders.js";
-import { createQueryApi, systemRequest } from "../admin-queries.js";
+import { createQueryApi } from "../admin-queries.js";
+
+function systemRequest(adminPath: string): Request {
+  return new Request(`http://localhost${adminPath}`, {
+    headers: {
+      "x-user-id": "runelayer-system",
+      "x-user-role": "admin",
+      "x-user-email": "system@runelayer.local",
+    },
+  });
+}
 import { updateGlobalDocument } from "../globals.js";
 
 const kit: SvelteKitUtils = {
@@ -123,7 +133,7 @@ async function createCtx(opts?: {
   const dbUrl = `file:${join(tempDir, "test.db")}`;
   const collections = opts?.collections ?? [Posts];
   const globals = opts?.globals ?? [];
-  await migrateDatabaseForTests(dbUrl, collections);
+  await migrateDatabaseForTests(dbUrl, collections, globals);
   await applyAuthSchemaForTests(dbUrl);
 
   const runelayer = createRunelayer(

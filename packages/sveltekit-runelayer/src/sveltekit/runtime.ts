@@ -11,13 +11,13 @@ import {
   countAdminUsers,
   createQueryApi,
   getUser,
-  systemRequest,
-  toRequest,
   normalizeUserRole,
   parseAuthErrorMessage,
   parseManagedUser,
+  toRequest,
 } from "./admin-queries.js";
 import { createAdminActions } from "./admin-actions.js";
+import { authAdminPath, safeInt, systemRequest } from "./admin-runtime-utils.js";
 import type {
   RunelayerAdminPageComponent,
   RunelayerAdminPageData,
@@ -117,18 +117,6 @@ export function createRunelayerRuntime(
     return createQueryApi(runelayer, () => req);
   };
 
-  const authAdminPath = (suffix: string, searchParams?: URLSearchParams): string => {
-    const query = searchParams?.toString();
-    const path = `${authBasePath}/admin/${suffix}`;
-    return query && query.length > 0 ? `${path}?${query}` : path;
-  };
-
-  const safeInt = (value: string | null, fallback: number, max?: number): number => {
-    const parsed = Number.parseInt(value ?? "", 10);
-    const clamped = Number.isFinite(parsed) && parsed >= 1 ? parsed : fallback;
-    return max ? Math.min(clamped, max) : clamped;
-  };
-
   const fetchManagedUserList = async (event: RequestEvent): Promise<RunelayerManagedUserList> => {
     const page = safeInt(event.url.searchParams.get("page"), 1);
     const limit = safeInt(event.url.searchParams.get("limit"), 20, 100);
@@ -152,7 +140,7 @@ export function createRunelayerRuntime(
       params.set("searchOperator", "contains");
     }
 
-    const response = await event.fetch(authAdminPath("list-users", params), {
+    const response = await event.fetch(authAdminPath(authBasePath, "list-users", params), {
       method: "GET",
     });
     const payload = await response.json().catch(() => null);
@@ -180,7 +168,9 @@ export function createRunelayerRuntime(
     id: string,
   ): Promise<RunelayerManagedUser> => {
     const params = new URLSearchParams({ id });
-    const response = await event.fetch(authAdminPath("get-user", params), { method: "GET" });
+    const response = await event.fetch(authAdminPath(authBasePath, "get-user", params), {
+      method: "GET",
+    });
     const payload = await response.json().catch(() => null);
     if (!response.ok) {
       throw error(response.status, parseAuthErrorMessage(payload, "Unable to load user."));

@@ -21,45 +21,35 @@
   },
   "files": [
     "src",
-    "package.json"
+    "dist"
   ],
   "type": "module",
   "svelte": "./src/index.ts",
   "exports": {
     ".": {
+      "types": "./src/index.ts",
       "svelte": "./src/index.ts",
       "default": "./src/index.ts"
     },
     "./admin": {
+      "types": "./src/admin/index.ts",
       "svelte": "./src/admin/index.ts",
       "default": "./src/admin/index.ts"
     },
     "./sveltekit": {
+      "types": "./src/sveltekit/index.ts",
       "svelte": "./src/sveltekit/index.ts",
       "default": "./src/sveltekit/index.ts"
     },
     "./sveltekit/server": {
+      "types": "./src/sveltekit/server.ts",
       "default": "./src/sveltekit/server.ts"
     },
-    "./schema": {
-      "default": "./src/schema/index.ts"
-    },
-    "./drizzle": {
-      "default": "./src/db/drizzle-kit.ts"
-    },
-    "./sveltekit/drizzle": {
-      "default": "./src/sveltekit/drizzle-config.ts"
-    },
     "./sveltekit/components": {
+      "types": "./src/sveltekit/components.ts",
       "svelte": "./src/sveltekit/components.ts",
       "default": "./src/sveltekit/components.ts"
     },
-    "./admin/styles/carbon-all.css": "./src/admin/styles/carbon-all.css",
-    "./admin/styles/carbon-white.css": "./src/admin/styles/carbon-white.css",
-    "./admin/styles/carbon-g10.css": "./src/admin/styles/carbon-g10.css",
-    "./admin/styles/carbon-g80.css": "./src/admin/styles/carbon-g80.css",
-    "./admin/styles/carbon-g90.css": "./src/admin/styles/carbon-g90.css",
-    "./admin/styles/carbon-g100.css": "./src/admin/styles/carbon-g100.css",
     "./package.json": "./package.json"
   },
   "publishConfig": {

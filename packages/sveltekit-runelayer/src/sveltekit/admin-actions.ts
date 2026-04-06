@@ -21,6 +21,7 @@ import {
   parseAuthErrorMessage,
   parseManagedUser,
 } from "./admin-queries.js";
+import { authAdminPath } from "./admin-runtime-utils.js";
 import { RESERVED_WRITE_FIELDS } from "../query/enforcement.js";
 
 function parseDocumentPayload(
@@ -90,12 +91,6 @@ export async function resolveGuardedRoute<K extends AdminRoute["kind"]>(
 export function createAdminActions(cfg: AdminActionsConfig): Actions {
   const { redirect, error, fail } = cfg.kit;
 
-  const authAdminPath = (suffix: string, searchParams?: URLSearchParams): string => {
-    const query = searchParams?.toString();
-    const path = `${cfg.authBasePath}/admin/${suffix}`;
-    return query && query.length > 0 ? `${path}?${query}` : path;
-  };
-
   const callAuthAdmin = async (
     event: RequestEvent,
     suffix: string,
@@ -107,7 +102,7 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
   }> => {
     const headers = new Headers(init?.headers);
     headers.set("content-type", "application/json");
-    const response = await event.fetch(authAdminPath(suffix), {
+    const response = await event.fetch(authAdminPath(cfg.authBasePath, suffix), {
       ...init,
       headers,
     });
@@ -350,9 +345,12 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       }
 
       const currentUserParams = new URLSearchParams({ id: route.id });
-      const currentUserResponse = await event.fetch(authAdminPath("get-user", currentUserParams), {
-        method: "GET",
-      });
+      const currentUserResponse = await event.fetch(
+        authAdminPath(cfg.authBasePath, "get-user", currentUserParams),
+        {
+          method: "GET",
+        },
+      );
       const currentUserPayload = await currentUserResponse.json().catch(() => null);
       if (!currentUserResponse.ok) {
         return fail(currentUserResponse.status, {
@@ -433,9 +431,12 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       }
 
       const fetchUserParams = new URLSearchParams({ id: route.id });
-      const fetchUserResponse = await event.fetch(authAdminPath("get-user", fetchUserParams), {
-        method: "GET",
-      });
+      const fetchUserResponse = await event.fetch(
+        authAdminPath(cfg.authBasePath, "get-user", fetchUserParams),
+        {
+          method: "GET",
+        },
+      );
       const fetchUserPayload = await fetchUserResponse.json().catch(() => null);
       if (!fetchUserResponse.ok) {
         throw error(

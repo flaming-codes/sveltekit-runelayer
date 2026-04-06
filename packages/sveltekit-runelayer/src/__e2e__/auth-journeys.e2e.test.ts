@@ -41,7 +41,6 @@ const kit: SvelteKitUtils = {
 const Accounts: CollectionConfig = defineCollection({
   slug: "accounts",
   fields: [{ name: "title", ...text({ required: true }) }],
-  timestamps: true,
 });
 
 interface SessionPayload {

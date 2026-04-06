@@ -143,11 +143,12 @@
 					</div>
 
 					{#if isOpen}
+						{@const blockArr = values[field.name] as Record<string, any>[]}
 						<div class="rk-block-fields">
 							{#each getBlockFields(block.blockType) as subField}
 								<FieldRenderer
 									field={subField}
-									bind:values={(values[field.name] as Record<string, any>[])[index]}
+									bind:values={blockArr[index]}
 									{errors}
 									{disabled}
 								/>

@@ -18,7 +18,6 @@ export type {
   Hooks,
   CollectionAuthConfig,
   UploadConfig,
-  HookArgs,
 } from "./types.js";
 
 // Fields
@@ -40,6 +39,7 @@ export type {
   EmailField,
   GroupField,
   BlocksField,
+  ArrayField,
   RowField,
   CollapsibleField,
   RefSentinel,
@@ -65,6 +65,7 @@ export {
   group,
   blocks,
   defineBlock,
+  array,
   row,
   collapsible,
 } from "./fields.js";
@@ -89,6 +90,3 @@ export interface SchemaConfig {
 export function defineSchema(config: SchemaConfig): SchemaConfig {
   return config;
 }
-
-// Auth access helpers — lightweight re-exports for schema definitions
-export { isAdmin, isLoggedIn, hasRole } from "./access.js";

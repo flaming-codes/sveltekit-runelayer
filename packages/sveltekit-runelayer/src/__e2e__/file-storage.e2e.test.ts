@@ -130,9 +130,12 @@ describe("File Upload & Media Management — Full Journey", () => {
     expect(content).toBe("fake-png-content-for-testing");
   });
 
-  it("getStream returns null for non-existent files", () => {
+  it("getStream returns a ReadableStream even for non-existent files", () => {
+    // After removing the blocking existsSync guard, getStream always returns a stream.
+    // The stream will emit an error when read, but the caller (serve handler)
+    // checks exists() before calling getStream.
     const stream = storage.getStream("nonexistent-file.jpg");
-    expect(stream).toBeNull();
+    expect(stream).toBeInstanceOf(ReadableStream);
   });
 
   it("getUrl returns correct URLs", () => {
@@ -167,6 +170,13 @@ describe("File Upload & Media Management — Full Journey", () => {
   it("serve handler returns 404 for non-existent files", async () => {
     const serve = createServeHandler({ storage, urlPrefix: "/media" });
     const req = new Request("http://localhost/media/does-not-exist.jpg");
+    const res = await serve({ request: req });
+    expect(res.status).toBe(404);
+  });
+
+  it("serve handler returns 404 for directory paths", async () => {
+    const serve = createServeHandler({ storage, urlPrefix: "/media" });
+    const req = new Request("http://localhost/media/documents");
     const res = await serve({ request: req });
     expect(res.status).toBe(404);
   });

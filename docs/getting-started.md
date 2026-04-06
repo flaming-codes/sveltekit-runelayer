@@ -74,7 +74,7 @@ export const Posts = defineCollection({
 
 drizzle-kit discovers Drizzle table instances from **top-level named exports** only.
 You must destructure and re-export each table individually. Use `listTableNames()`
-to see which table keys your collections produce.
+to see which table keys your collections/globals produce.
 
 ```ts
 // src/lib/server/drizzle-schema.ts
@@ -84,6 +84,9 @@ import { Posts } from "./schema.js";
 const _schema = createDrizzleKitSchema([Posts]);
 export const { posts, user, session, account, verification } = _schema;
 ```
+
+If you register globals, pass them as the second argument so migration files include
+`__runelayer_globals` (and `__runelayer_global_versions` for versioned globals).
 
 ## 4. Use the drizzle helper config
 

@@ -194,19 +194,13 @@ export async function readGlobalDocument(
   req: Request,
 ): Promise<Record<string, unknown>> {
   await checkAccess(global.access?.read, req, undefined, global.slug);
-  const beforeRead = (
-    global.hooks as { beforeRead?: Array<(ctx: HookContext) => HookContext> } | undefined
-  )?.beforeRead;
-  const afterRead = (global.hooks as { afterRead?: Array<(ctx: unknown) => void> } | undefined)
-    ?.afterRead;
-
   const hc = await runBeforeHooks(
-    beforeRead,
+    global.hooks?.beforeRead,
     hookContext(global, req, "read", { id: global.slug }),
   );
   const row = await readStoredGlobal(runelayer, global.slug);
   const doc = materializeGlobalDoc(global, row);
-  await runAfterHooks(afterRead, { ...hc, doc });
+  await runAfterHooks(global.hooks?.afterRead, { ...hc, doc });
   const projected = await enforceReadProjection(globalAsCollection(global), req, doc);
   return projected ?? doc;
 }
@@ -225,7 +219,7 @@ export async function updateGlobalDocument(
   const previousStoredData = parseGlobalData(previousRow?.data);
   const previousDoc = materializeGlobalDoc(global, previousRow);
   const hc = await runBeforeHooks(
-    global.hooks?.beforeChange as Array<(ctx: HookContext) => HookContext> | undefined,
+    global.hooks?.beforeChange,
     hookContext(global, req, "update", {
       id: global.slug,
       data: incoming,
@@ -298,7 +292,7 @@ export async function updateGlobalDocument(
     });
   }
 
-  await runAfterHooks(global.hooks?.afterChange as Array<(ctx: unknown) => void> | undefined, {
+  await runAfterHooks(global.hooks?.afterChange, {
     ...hc,
     data: nextDocPatch,
     doc,
@@ -557,7 +551,7 @@ export async function restoreGlobalVersion(
   const row = await readStoredGlobal(runelayer, global.slug);
   const currentDoc = materializeGlobalDoc(global, row);
   const hc = await runBeforeHooks(
-    global.hooks?.beforeChange as Array<(ctx: HookContext) => HookContext> | undefined,
+    global.hooks?.beforeChange,
     hookContext(global, req, "update", {
       id: global.slug,
       data: fieldData,
@@ -604,7 +598,7 @@ export async function restoreGlobalVersion(
     await pruneGlobalVersions(runelayer, global.slug, vc.maxPerDoc);
   }
 
-  await runAfterHooks(global.hooks?.afterChange as Array<(ctx: unknown) => void> | undefined, {
+  await runAfterHooks(global.hooks?.afterChange, {
     ...hc,
     data: restorePatchDoc,
     doc,

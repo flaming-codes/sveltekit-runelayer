@@ -31,6 +31,7 @@ import { readGlobalDocument, findGlobalVersions } from "./globals.js";
 import { normalizeVersionConfig } from "../versions/config.js";
 import { toSerializable } from "./serializable.js";
 import { buildHealthPayload } from "./health.js";
+import { safeInt } from "./admin-runtime-utils.js";
 
 const USER_ROLES: RunelayerManagedUserRole[] = ["admin", "editor", "user"];
 
@@ -158,12 +159,6 @@ export async function loadUsersEdit(
     managedUser,
     roles: USER_ROLES,
   });
-}
-
-function safeInt(value: string | null, fallback: number, max?: number): number {
-  const parsed = Number.parseInt(value ?? "", 10);
-  const clamped = Number.isFinite(parsed) && parsed >= 1 ? parsed : fallback;
-  return max ? Math.min(clamped, max) : clamped;
 }
 
 export async function loadCollectionList(

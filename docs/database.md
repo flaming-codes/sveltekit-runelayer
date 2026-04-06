@@ -103,10 +103,11 @@ All write operations use `.returning()`.
 
 Runtime schema push is not part of `sveltekit-runelayer` startup. Hosts must generate and apply migrations before app startup.
 
-The package exports `createDrizzleKitSchema(collections)` to help hosts expose schema objects to
+The package exports `createDrizzleKitSchema(collections, globals?)` to help hosts expose schema objects to
 drizzle-kit. The generated schema includes:
 
 - collection tables derived from `CollectionConfig[]`
+- globals infrastructure tables (`__runelayer_globals` and `__runelayer_global_versions` when any global has `versions` enabled)
 - Better Auth tables (`user`, `session`, `account`, `verification`)
 
 Example host schema export:
@@ -117,12 +118,12 @@ Destructure and re-export each table individually:
 ```ts
 // src/lib/server/drizzle-schema.ts
 import { createDrizzleKitSchema } from "@flaming-codes/sveltekit-runelayer/drizzle";
-import { allCollections } from "./schema.js";
+import { allCollections, allGlobals } from "./schema.js";
 
-const _schema = createDrizzleKitSchema(allCollections);
+const _schema = createDrizzleKitSchema(allCollections, allGlobals);
 // Export each table — drizzle-kit requires top-level named exports.
-// Use listTableNames(allCollections) to see the full list of keys.
-export const { posts, user, session, account, verification } = _schema;
+// Use listTableNames(allCollections, allGlobals) to see the full list of keys.
+export const { posts, __runelayer_globals, user, session, account, verification } = _schema;
 ```
 
 Example drizzle-kit config:

@@ -54,6 +54,10 @@ export function createAuth(
   /** Drizzle database instance (from `drizzle(sqlite)`) */
   db: any,
 ): RunelayerAuth {
+  if (!config.secret || config.secret.length < 32) {
+    throw new Error("[runelayer] auth.secret must be at least 32 characters");
+  }
+
   const emailVerification = config.emailVerification ? { ...config.emailVerification } : undefined;
   if (config.requireEmailVerification) {
     if (!emailVerification?.sendVerificationEmail) {
@@ -103,15 +107,27 @@ export function createAuth(
         : null;
 
     if (sessionUser && hasActiveBan(sessionUser)) {
-      await auth.api.signOut({ headers: event.request.headers }).catch(() => null);
+      const signOutResponse = await auth.api
+        .signOut({ headers: event.request.headers })
+        .catch(() => null);
       clearAuthContext(event);
-    } else if (session?.user) {
+
+      // Propagate Set-Cookie from signOut to clear the session cookie in the browser
+      const response = await resolve(event);
+      if (signOutResponse) {
+        const setCookie = signOutResponse.headers?.get("set-cookie");
+        if (setCookie) {
+          response.headers.append("set-cookie", setCookie);
+        }
+      }
+      return response;
+    } else if (session?.user && session.user.id) {
       event.request.headers.set("x-user-id", session.user.id);
       event.request.headers.set(
         "x-user-role",
         typeof sessionUser?.role === "string" ? sessionUser.role : "user",
       );
-      event.request.headers.set("x-user-email", session.user.email);
+      event.request.headers.set("x-user-email", session.user.email ?? "");
       event.locals.user = session.user;
       event.locals.session = session.session;
     }

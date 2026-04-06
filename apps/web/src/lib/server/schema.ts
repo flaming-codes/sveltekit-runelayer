@@ -122,7 +122,6 @@ export const Pages = defineCollection({
     },
   ],
   admin: { useAsTitle: "title", defaultColumns: ["title", "slug", "published"] },
-  timestamps: true,
   versions: true,
   access: { read: () => true },
 });
@@ -146,7 +145,6 @@ export const Articles = defineCollection({
     },
   ],
   admin: { useAsTitle: "title", defaultColumns: ["title", "slug", "featured"] },
-  timestamps: true,
   versions: true,
   access: { read: () => true },
 });

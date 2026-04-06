@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { generateTables } from "../schema.js";
+import { generateTables, generateGlobalTables } from "../schema.js";
 import { createDatabase, type RunelayerDatabase } from "../init.js";
 import { insertOne, findById, findMany, updateOne, deleteOne } from "../operations.js";
 import {
@@ -12,6 +12,7 @@ import {
   relationship,
 } from "../../schema/fields.js";
 import type { CollectionConfig } from "../../schema/collections.js";
+import { defineGlobal } from "../../schema/globals.js";
 import { applySchemaForTests } from "../../__testutils__/migrations.js";
 
 const postsCollection: CollectionConfig = {
@@ -78,6 +79,31 @@ describe("generateTables", () => {
     };
     const tables = generateTables([col]);
     expect(tables).toHaveProperty("users");
+  });
+});
+
+describe("generateGlobalTables", () => {
+  const SiteSettings = defineGlobal({
+    slug: "site-settings",
+    fields: [{ name: "siteName", ...text({ required: true }) }],
+  });
+
+  const VersionedSettings = defineGlobal({
+    slug: "versioned-settings",
+    fields: [{ name: "siteName", ...text({ required: true }) }],
+    versions: true,
+  });
+
+  it("creates the shared globals table when globals are configured", () => {
+    const tables = generateGlobalTables([SiteSettings]);
+    expect(tables).toHaveProperty("__runelayer_globals");
+    expect(tables).not.toHaveProperty("__runelayer_global_versions");
+  });
+
+  it("creates the globals versions table when versioning is enabled", () => {
+    const tables = generateGlobalTables([SiteSettings, VersionedSettings]);
+    expect(tables).toHaveProperty("__runelayer_globals");
+    expect(tables).toHaveProperty("__runelayer_global_versions");
   });
 });
 

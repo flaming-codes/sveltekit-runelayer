@@ -71,16 +71,6 @@ export function toRequest(eventOrRequest: RequestEvent | Request): Request {
   throw new Error("Expected Request or RequestEvent");
 }
 
-export function systemRequest(adminPath: string): Request {
-  return new Request(`http://localhost${adminPath}`, {
-    headers: {
-      "x-user-id": "runelayer-system",
-      "x-user-role": "admin",
-      "x-user-email": "system@runelayer.local",
-    },
-  });
-}
-
 export function createQueryApi(
   runelayer: RunelayerInstance,
   requestFactory: () => Request,
@@ -284,11 +274,12 @@ export function normalizeUserRole(input: string): string {
 export function parseAuthErrorMessage(payload: unknown, fallback: string): string {
   if (payload && typeof payload === "object") {
     const data = payload as Record<string, unknown>;
-    if (typeof data.message === "string" && data.message.trim().length > 0) {
-      return data.message;
-    }
-    if (typeof data.error === "string" && data.error.trim().length > 0) {
-      return data.error;
+    const rawMessage =
+      (typeof data.message === "string" && data.message.trim().length > 0 && data.message) ||
+      (typeof data.error === "string" && data.error.trim().length > 0 && data.error) ||
+      undefined;
+    if (rawMessage) {
+      console.error("[runelayer] Auth error:", rawMessage);
     }
   }
   return fallback;

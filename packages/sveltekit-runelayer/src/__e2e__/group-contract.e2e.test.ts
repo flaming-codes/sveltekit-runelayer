@@ -258,7 +258,11 @@ describe("Grouped field contract", () => {
   beforeAll(async () => {
     tmpDir = await mkdtemp(join(tmpdir(), "runelayer-group-contract-"));
     dbUrl = `file:${join(tmpDir, "group-contract.db")}`;
-    await migrateDatabaseForTests(dbUrl, [Authors, Articles, Pages, HookedArticles]);
+    await migrateDatabaseForTests(
+      dbUrl,
+      [Authors, Articles, Pages, HookedArticles],
+      [SiteSettings, HookedSettings],
+    );
 
     kit = createRunelayer(
       defineConfig({

@@ -46,7 +46,7 @@ const storage = createLocalStorage({
 - **Upload**: Generates a unique filename using `crypto.randomUUID()` + original extension. Creates subdirectories as needed.
 - **Delete**: Removes the file from disk.
 - **getUrl**: Returns `{urlPrefix}/{path}`.
-- **getStream**: Returns a Node.js `ReadableStream` converted from `fs.createReadStream`. Returns `null` if the file does not exist.
+- **getStream**: Returns a Node.js `ReadableStream` converted from `fs.createReadStream`. Returns `null` when the target is missing or not a file, and throws on path traversal attempts.
 - **exists**: Checks file existence via `fs.stat`.
 
 ### Security: Path Traversal Protection
@@ -131,6 +131,8 @@ export const GET = serveHandler;
 2. Rejects paths containing `..` (path traversal)
 3. Checks file existence
 4. Streams the file with appropriate `Content-Type` header
+
+When served via `createRunelayer()`, this handler runs inside the same auth `handle` boundary that strips spoofed `x-user-*` headers and resolves sessions.
 
 ### Content-Type Detection
 

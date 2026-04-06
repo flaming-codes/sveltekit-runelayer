@@ -170,7 +170,6 @@ describe("Schema Evolution & Migration — Full Journey", () => {
         { name: "reviewDate", ...date() },
         { name: "verified", ...checkbox() },
       ],
-      timestamps: true,
     });
 
     const rdb = createDatabase({ url: dbUrl, collections: [ProductsV2, Reviews] });
@@ -243,7 +242,6 @@ describe("Schema Evolution & Migration — Full Journey", () => {
         { name: "reviewDate", ...date() },
         { name: "verified", ...checkbox() },
       ],
-      timestamps: true,
     });
 
     const rdb = createDatabase({ url: dbUrl, collections: [ProductsV3, Reviews] });
@@ -306,7 +304,6 @@ describe("Schema Evolution & Migration — Full Journey", () => {
         { name: "reviewDate", ...date() },
         { name: "verified", ...checkbox() },
       ],
-      timestamps: true,
     });
 
     const rdb = createDatabase({ url: dbUrl, collections: [ProductsV3, Reviews] });

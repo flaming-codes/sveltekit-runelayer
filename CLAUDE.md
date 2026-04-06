@@ -60,7 +60,7 @@ npx vp check --fix                # Combined format + lint + typecheck
 ```
 apps/demo/           → SvelteKit demo app (depends on @flaming-codes/sveltekit-runelayer workspace:*)
 packages/sveltekit-runelayer/   → Core CMS library
-docs/               → Internal design documentation (14 files)
+docs/               → Internal design documentation (16 files)
 ```
 
 ### Module Structure (packages/sveltekit-runelayer/src/)
@@ -76,6 +76,7 @@ storage/            → Local FS adapter with path traversal protection, upload/
 hooks/              → Sequential lifecycle runner (beforeChange/afterChange/beforeDelete/afterDelete/beforeRead/afterRead)
 query/              → High-level CRUD: find/findOne/create/update/remove with access control + hooks
 admin/              → Svelte 5 components (layout, dashboard, login, collection CRUD, 10 field renderers)
+sveltekit/          → High-level SvelteKit app integration (createRunelayerApp, drizzle config, admin routing/loaders/actions)
 ```
 
 ### Key Design Decisions
@@ -93,8 +94,8 @@ admin/              → Svelte 5 components (layout, dashboard, login, collectio
 
 ### Test Structure
 
-- `src/**/__tests__/*.test.ts` — Unit tests (54 tests, 6 files)
-- `src/__e2e__/*.e2e.test.ts` — User journey E2E tests (96 tests, 7 files)
+- `src/**/__tests__/*.test.ts` — Unit tests
+- `src/__e2e__/*.e2e.test.ts` — User journey E2E tests
 - Container-based tests use `describe.skipIf(!isDockerRunning())` from `__e2e__/docker-check.ts`
 
 ## Critical Constraints

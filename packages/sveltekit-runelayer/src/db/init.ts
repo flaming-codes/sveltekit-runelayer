@@ -1,7 +1,8 @@
 import { createClient, type Client } from "@libsql/client";
 import { drizzle, type LibSQLDatabase } from "drizzle-orm/libsql";
 import type { CollectionConfig } from "../schema/collections.js";
-import { generateTables, type GeneratedTables } from "./schema.js";
+import type { GlobalConfig } from "../schema/globals.js";
+import { generateTables, generateGlobalTables, type GeneratedTables } from "./schema.js";
 
 export interface DatabaseConnectionConfig {
   /** libsql database URL (e.g. `file:./data/sveltekit-runelayer.db`, `libsql://...`) */
@@ -12,6 +13,7 @@ export interface DatabaseConnectionConfig {
 
 export interface DatabaseConfig extends DatabaseConnectionConfig {
   collections: CollectionConfig[];
+  globals?: GlobalConfig[];
 }
 
 export interface RunelayerDatabase {
@@ -26,6 +28,9 @@ export function createDatabase(config: DatabaseConfig): RunelayerDatabase {
     authToken: config.authToken,
   });
   const db = drizzle(client);
-  const tables = generateTables(config.collections);
+  const tables = {
+    ...generateTables(config.collections),
+    ...generateGlobalTables(config.globals ?? []),
+  };
   return { db, tables, client };
 }
