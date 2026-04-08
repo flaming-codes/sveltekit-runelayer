@@ -164,24 +164,13 @@ Effect:
 - global documents are also storage-shaped on read,
 - the current admin global path only works because the action layer now flattens nested writes, not because the global runtime contract is nested.
 
-### 8. First-party demo code already depends on flat grouped keys
+### 8. First-party demo code previously depended on flat grouped keys
 
-Files:
-
-- `apps/demo/src/lib/types.ts`
-- `apps/demo/src/lib/server/seed.ts`
-- `apps/demo/src/routes/(site)/blog/[slug]/+page.svelte`
-- `apps/demo/src/routes/(site)/pages/[slug]/+page.svelte`
-
-Observed behavior:
-
-- row types declare fields like `seo_metaTitle` and `hero_heading`,
-- seed data writes flattened group keys,
-- page components render flattened group keys.
+The demo app (since removed) used flat grouped keys like `seo_metaTitle` and `hero_heading` in row types, seed data, and page components.
 
 Effect:
 
-- the repository itself encodes the flat leak,
+- the repository itself encoded the flat leak,
 - any long-term refactor must migrate first-party consumers alongside the package contract.
 
 ## Concrete Drift Inventory
@@ -274,7 +263,7 @@ The implemented contract now matches the intended end state:
 - `packages/sveltekit-runelayer/src/query/operations.ts` materializes stored rows back to nested documents before hooks, read projection, relationship population, and version snapshot creation.
 - `packages/sveltekit-runelayer/src/sveltekit/globals.ts` uses the same nested public contract as collections for reads, writes, and version restore.
 - `packages/sveltekit-runelayer/src/sveltekit/admin-actions.ts` parses structured JSON payloads and no longer performs group-specific flattening.
-- `apps/demo` consumes nested group data rather than flat storage keys.
+- consumers use nested group data rather than flat storage keys.
 - regression coverage now includes grouped round-trips, grouped dot-path queries, grouped blocks, grouped access control, grouped hook payloads, admin loader shape, and legacy snapshot compatibility.
 
 ## Recommended Target Contract
@@ -651,9 +640,7 @@ Docs/examples:
 - `docs/query-api.md`
 - `docs/admin-ui.md`
 - `docs/database.md`
-- `apps/demo/src/lib/types.ts`
-- `apps/demo/src/lib/server/seed.ts`
-- demo route files consuming grouped fields
+- consumer app types and seed files consuming grouped fields
 
 ## Current Direction
 

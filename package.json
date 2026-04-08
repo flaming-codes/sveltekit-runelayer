@@ -4,7 +4,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vp run demo#dev",
     "dev:web": "vp run web#dev",
     "build": "vp run build -r",
     "check": "vp check",

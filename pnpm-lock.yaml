@@ -86,46 +86,6 @@ importers:
         specifier: npm:@voidzero-dev/vite-plus-test@^0.1.14
         version: '@voidzero-dev/vite-plus-test@0.1.14(@opentelemetry/api@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(tsx@4.21.0)(typescript@5.9.3)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.4)(tsx@4.21.0)(yaml@2.8.3))(yaml@2.8.3)'
 
-  apps/demo:
-    dependencies:
-      '@flaming-codes/sveltekit-runelayer':
-        specifier: workspace:*
-        version: link:../../packages/sveltekit-runelayer
-      carbon-components-svelte:
-        specifier: 'catalog:'
-        version: 0.105.0
-      carbon-icons-svelte:
-        specifier: 'catalog:'
-        version: 13.10.0
-    devDependencies:
-      '@sveltejs/adapter-auto':
-        specifier: 'catalog:'
-        version: 6.1.1(@sveltejs/kit@2.55.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@6.2.4(@voidzero-dev/vite-plus-core@0.1.15(@types/node@25.5.0)(esbuild@0.27.4)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(svelte@5.55.0))(@voidzero-dev/vite-plus-core@0.1.15(@types/node@25.5.0)(esbuild@0.27.4)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(svelte@5.55.0)(typescript@5.9.3))
-      '@sveltejs/kit':
-        specifier: 'catalog:'
-        version: 2.55.0(@opentelemetry/api@1.9.1)(@sveltejs/vite-plugin-svelte@6.2.4(@voidzero-dev/vite-plus-core@0.1.15(@types/node@25.5.0)(esbuild@0.27.4)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(svelte@5.55.0))(@voidzero-dev/vite-plus-core@0.1.15(@types/node@25.5.0)(esbuild@0.27.4)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(svelte@5.55.0)(typescript@5.9.3)
-      '@sveltejs/vite-plugin-svelte':
-        specifier: ^6.2.4
-        version: 6.2.4(@voidzero-dev/vite-plus-core@0.1.15(@types/node@25.5.0)(esbuild@0.27.4)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(svelte@5.55.0)
-      drizzle-kit:
-        specifier: 'catalog:'
-        version: 0.31.10
-      svelte:
-        specifier: 'catalog:'
-        version: 5.55.0
-      svelte-check:
-        specifier: ^4.4.2
-        version: 4.4.5(picomatch@4.0.4)(svelte@5.55.0)(typescript@5.9.3)
-      typescript:
-        specifier: 'catalog:'
-        version: 5.9.3
-      vite:
-        specifier: npm:@voidzero-dev/vite-plus-core@^0.1.14
-        version: '@voidzero-dev/vite-plus-core@0.1.15(@types/node@25.5.0)(esbuild@0.27.4)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)'
-      vite-plus:
-        specifier: 'catalog:'
-        version: 0.1.15(@opentelemetry/api@1.9.1)(@types/node@25.5.0)(@voidzero-dev/vite-plus-core@0.1.15(@types/node@25.5.0)(esbuild@0.27.4)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3))(esbuild@0.27.4)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)
-
   apps/web:
     dependencies:
       '@flaming-codes/sveltekit-runelayer':

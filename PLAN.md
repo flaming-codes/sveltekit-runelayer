@@ -49,7 +49,7 @@
 - [x] **Plugin wiring** (`src/plugin.ts`) — createRunelayer() initializes DB, auth, storage, push schema, returns handle hook
 - [x] **Config system** — defineConfig() with collections, globals, auth, storage, dbPath
 - [x] **Main exports** (`src/index.ts`) — Unified public API surface
-- [ ] **Demo app** (`apps/demo`) — working example with collections
+- [x] ~~**Demo app** — removed~~
 
 ### Phase 5: Testing & Quality
 

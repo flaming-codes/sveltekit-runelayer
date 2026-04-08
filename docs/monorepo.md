@@ -6,7 +6,6 @@
 
 ```
 sveltekit-runelayer/
-├── apps/demo/
 ├── packages/sveltekit-runelayer/
 ├── docs/
 ├── CHANGELOG.md
@@ -24,7 +23,6 @@ Workspace packages:
 
 ```yaml
 packages:
-  - apps/*
   - packages/*
 ```
 
@@ -40,7 +38,6 @@ Shared catalog includes:
 
 ```json
 {
-  "dev": "vp run demo#dev",
   "build": "vp run build -r",
   "check": "vp check",
   "ready": "vp fmt && vp lint && vp run test -r && vp run build -r",
