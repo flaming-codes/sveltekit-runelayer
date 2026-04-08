@@ -1,5 +1,12 @@
 <script lang="ts">
-	import { Button } from "carbon-components-svelte";
+	import {
+		Breadcrumb,
+		BreadcrumbItem,
+		Button,
+		ButtonSet,
+		Tag,
+		Tile,
+	} from "carbon-components-svelte";
 
 	let {
 		status = 500,
@@ -15,6 +22,10 @@
 	let is5xx = $derived(status >= 500);
 
 	let title = $derived(is404 ? "Page not found" : is5xx ? "Something went wrong" : "Request failed");
+	let label = $derived(is404 ? "Not Found" : is5xx ? "Server Error" : "Error");
+	let tagType: "warm-gray" | "red" | "cool-gray" = $derived(
+		is404 ? "warm-gray" : is5xx ? "red" : "cool-gray",
+	);
 	let subtitle = $derived(
 		error?.message ??
 			(is404
@@ -33,139 +44,114 @@
 </script>
 
 <section class="rk-error-page">
-	<div class="rk-error-container">
-		<div class="rk-error-status-block" class:rk-error-status-404={is404} class:rk-error-status-5xx={is5xx}>
-			<span class="rk-error-code">{status}</span>
+	<div class="rk-page-header">
+		<div class="rk-page-header-inner">
+			<Breadcrumb noTrailingSlash>
+				<BreadcrumbItem href={basePath}>Dashboard</BreadcrumbItem>
+				<BreadcrumbItem href={basePath} isCurrentPage>{label}</BreadcrumbItem>
+			</Breadcrumb>
 		</div>
+	</div>
 
-		<div class="rk-error-body">
-			<p class="rk-error-label">{is404 ? "Not Found" : is5xx ? "Server Error" : "Error"}</p>
-			<h1 class="rk-error-title">{title}</h1>
-			<p class="rk-error-subtitle">{subtitle}</p>
-			<p class="rk-error-hint">{hint}</p>
-
-			<div class="rk-error-actions">
-				<Button href={basePath}>Go to dashboard</Button>
-				<Button kind="secondary" on:click={() => history.back()}>Go back</Button>
-			</div>
+	<div class="rk-page-body rk-error-body">
+		<div class="rk-error-frame">
+			<Tile class="rk-error-tile">
+				<div class="rk-error-stack">
+					<Tag size="sm" type={tagType}>{label}</Tag>
+					<p class="rk-error-code">{status}</p>
+					<div class="rk-error-copy">
+						<h1>{title}</h1>
+						<p class="rk-error-subtitle">{subtitle}</p>
+						<p class="rk-error-hint">{hint}</p>
+					</div>
+					<ButtonSet>
+						<Button href={basePath}>Go to dashboard</Button>
+						<Button kind="secondary" on:click={() => history.back()}>Go back</Button>
+					</ButtonSet>
+				</div>
+			</Tile>
 		</div>
 	</div>
 </section>
 
 <style>
+	@import "./page-layout.css";
+
 	.rk-error-page {
-		grid-column: 1 / -1;
+		min-height: 100svh;
 		display: grid;
-		place-items: center;
-		min-height: 70vh;
-		padding: var(--cds-spacing-07) var(--cds-spacing-05);
-	}
-
-	.rk-error-container {
-		display: flex;
-		width: min(640px, 100%);
-		border: 1px solid var(--cds-border-subtle);
-		background: var(--cds-layer-02);
-		overflow: hidden;
-	}
-
-	.rk-error-status-block {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		min-width: 140px;
-		padding: var(--cds-spacing-07) var(--cds-spacing-06);
-		background: var(--cds-layer-accent-01);
-	}
-
-	.rk-error-status-404 {
-		background: var(--cds-support-warning);
-	}
-
-	.rk-error-status-5xx {
-		background: var(--cds-support-error);
-	}
-
-	.rk-error-code {
-		font-size: 3.5rem;
-		font-weight: 300;
-		line-height: 1;
-		letter-spacing: -0.02em;
-		color: var(--cds-text-primary);
-	}
-
-	.rk-error-status-404 .rk-error-code {
-		color: var(--cds-text-inverse);
+		grid-template-rows: auto 1fr;
 	}
 
 	.rk-error-body {
-		flex: 1;
-		padding: var(--cds-spacing-07);
+		display: flex;
+		align-items: center;
+	}
+
+	.rk-error-frame {
+		width: 100%;
+		display: flex;
+		justify-content: center;
+	}
+
+	:global(.rk-error-tile) {
+		width: fit-content;
+		max-width: min(100%, 40rem);
+	}
+
+	.rk-error-stack {
 		display: flex;
 		flex-direction: column;
-		gap: var(--cds-spacing-03);
+		gap: var(--cds-spacing-05);
+		align-items: flex-start;
 	}
 
-	.rk-error-label {
-		font-size: 0.75rem;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		color: var(--cds-text-helper);
+	.rk-error-code {
 		margin: 0;
-	}
-
-	.rk-error-title {
-		font-size: 1.5rem;
-		font-weight: 400;
-		line-height: 1.3;
-		margin: 0;
+		font-size: clamp(4rem, 11vw, 7rem);
+		font-weight: 300;
+		line-height: 0.85;
+		letter-spacing: -0.04em;
 		color: var(--cds-text-primary);
 	}
 
-	.rk-error-subtitle {
-		font-size: 0.875rem;
+	.rk-error-copy {
+		display: flex;
+		flex-direction: column;
+		gap: var(--cds-spacing-03);
+		max-width: 36rem;
+	}
+
+	.rk-error-copy h1 {
+		margin: 0;
+		font-size: clamp(1.75rem, 3vw, 2.5rem);
+		font-weight: 300;
+		line-height: 1.1;
+		letter-spacing: -0.02em;
+	}
+
+	.rk-error-subtitle,
+	.rk-error-hint {
+		margin: 0;
+		font-size: 1rem;
 		line-height: 1.5;
-		color: var(--cds-text-secondary);
-		margin: var(--cds-spacing-02) 0 0;
+	}
+
+	.rk-error-subtitle {
+		color: var(--cds-text-primary);
 	}
 
 	.rk-error-hint {
-		font-size: 0.8125rem;
-		line-height: 1.5;
-		color: var(--cds-text-helper);
-		margin: 0;
-		padding-top: var(--cds-spacing-03);
-		border-top: 1px solid var(--cds-border-subtle);
+		color: var(--cds-text-secondary);
 	}
 
-	.rk-error-actions {
-		display: flex;
-		gap: var(--cds-spacing-04);
-		margin-top: var(--cds-spacing-05);
-	}
-
-	/* Carbon md breakpoint (672px) */
 	@media (max-width: 672px) {
-		.rk-error-container {
-			flex-direction: column;
-		}
-
-		.rk-error-status-block {
-			min-width: unset;
-			padding: var(--cds-spacing-06);
-		}
-
-		.rk-error-code {
-			font-size: 2.5rem;
-		}
-
 		.rk-error-body {
-			padding: var(--cds-spacing-06);
+			align-items: flex-start;
 		}
 
-		.rk-error-actions {
-			flex-direction: column;
+		:global(.rk-error-tile) {
+			width: 100%;
 		}
 	}
 </style>

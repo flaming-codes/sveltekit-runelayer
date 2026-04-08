@@ -6,16 +6,18 @@ export type {
   AccessControl,
   FieldAccess,
   ValidationFn,
+  HookContext,
   BeforeChangeHook,
   AfterChangeHook,
   BeforeDeleteHook,
   AfterDeleteHook,
   BeforeReadHook,
   AfterReadHook,
+  BeforePublishHook,
+  AfterPublishHook,
   Hooks,
   CollectionAuthConfig,
   UploadConfig,
-  HookArgs,
 } from "./types.js";
 
 // Fields
@@ -36,9 +38,14 @@ export type {
   SlugField,
   EmailField,
   GroupField,
-  ArrayField,
+  BlocksField,
   RowField,
   CollapsibleField,
+  RefSentinel,
+  BlockConfig,
+  BlocksValue,
+  InferBlockData,
+  InferFieldsData,
 } from "./fields.js";
 export {
   text,
@@ -55,7 +62,8 @@ export {
   slug,
   email,
   group,
-  array,
+  blocks,
+  defineBlock,
   row,
   collapsible,
 } from "./fields.js";

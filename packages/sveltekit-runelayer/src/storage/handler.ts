@@ -11,15 +11,23 @@ export interface UploadHandlerConfig {
   storage: StorageAdapter;
   maxFileSize?: number;
   allowedMimeTypes?: string[];
+  accessCheck?: (request: Request) => Promise<boolean>;
 }
 
 export function createUploadHandler(config: UploadHandlerConfig) {
-  const { storage, maxFileSize = 10 * 1024 * 1024, allowedMimeTypes } = config;
+  const { storage, maxFileSize = 10 * 1024 * 1024, allowedMimeTypes, accessCheck } = config;
   const allowed = allowedMimeTypes?.map((entry) => normalizeMimeType(entry)).filter(Boolean) as
     | string[]
     | undefined;
 
   return async ({ request }: { request: Request }) => {
+    if (accessCheck) {
+      const hasAccess = await accessCheck(request);
+      if (!hasAccess) {
+        return json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
     const formData = await request.formData();
     const file = formData.get("file");
 
@@ -42,6 +50,11 @@ export function createUploadHandler(config: UploadHandlerConfig) {
 
     const safeFilename = sanitizeFilename(file.name);
     const buffer = Buffer.from(await file.arrayBuffer());
+
+    if (buffer.byteLength > maxFileSize) {
+      return json({ error: `File exceeds max size of ${maxFileSize} bytes` }, { status: 413 });
+    }
+
     const detectedMime = normalizeMimeType(detectMimeType(buffer, safeFilename));
     const declaredMime = normalizeMimeType(file.type);
 
@@ -50,6 +63,10 @@ export function createUploadHandler(config: UploadHandlerConfig) {
         { error: `Uploaded file content does not match declared MIME type ${file.type}` },
         { status: 415 },
       );
+    }
+
+    if (allowed && !detectedMime) {
+      return json({ error: "Could not verify file type" }, { status: 415 });
     }
 
     const effectiveMime = detectedMime ?? declaredMime ?? "application/octet-stream";

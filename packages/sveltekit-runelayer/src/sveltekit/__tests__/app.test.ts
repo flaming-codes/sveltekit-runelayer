@@ -49,13 +49,16 @@ const SiteSettings = defineGlobal({
   },
   hooks: {
     beforeChange: [
-      (ctx) => ({
-        ...ctx,
-        data: {
-          ...ctx.data,
-          siteName: typeof ctx.data.siteName === "string" ? ctx.data.siteName.trim() : "",
-        },
-      }),
+      (ctx) => {
+        const siteName = ctx.data?.siteName;
+        return {
+          ...ctx,
+          data: {
+            ...ctx.data,
+            siteName: typeof siteName === "string" ? siteName.trim() : "",
+          },
+        };
+      },
     ],
   },
 });
@@ -127,7 +130,7 @@ async function applyAuthSchemaForTests(url: string, users: TestAuthUser[] = []) 
 async function createTestApp(options?: { authUsers?: TestAuthUser[] }) {
   const tempDir = mkdtempSync(join(tmpdir(), "runelayer-sveltekit-"));
   const dbUrl = `file:${join(tempDir, "test.db")}`;
-  await migrateDatabaseForTests(dbUrl, [Posts]);
+  await migrateDatabaseForTests(dbUrl, [Posts], [SiteSettings]);
   await applyAuthSchemaForTests(dbUrl, options?.authUsers ?? [DEFAULT_ADMIN_USER]);
 
   return createRunelayerRuntime(
@@ -204,7 +207,9 @@ function requestUrl(input: RequestInfo | URL): string {
 describe("createRunelayerApp", () => {
   it("resolves admin paths and returns serializable payloads", async () => {
     const app = await createTestApp();
-    const created = (await app.system.create(Posts, { title: "Hello" })) as { id: string };
+    const created = (await app.system.create(Posts, { title: "Hello" })) as {
+      id: string;
+    };
 
     const dashboard = await app.admin.load(adminEvent());
     expect(dashboard.view).toBe("dashboard");
@@ -229,20 +234,19 @@ describe("createRunelayerApp", () => {
   it("dispatches create/update/delete admin actions", async () => {
     const app = await createTestApp();
 
-    const created = await (app.admin.actions.create as any)(
+    const createRedirect = await (app.admin.actions.create as any)(
       adminEvent("collections/posts/create", {
-        form: { title: "Draft" },
+        form: { payload: JSON.stringify({ title: "Draft" }) },
       }),
-    );
+    ).catch((e: unknown) => e);
 
-    expect(created.success).toBe(true);
-    const id = created.document.id as string;
+    expect(createRedirect).toMatchObject({ status: 303 });
+    const id = (createRedirect as { location: string }).location.split("/").pop() as string;
 
     const updated = await (app.admin.actions.update as any)(
       adminEvent(`collections/posts/${id}`, {
         form: {
-          id,
-          title: "Published",
+          payload: JSON.stringify({ title: "Published" }),
         },
       }),
     );
@@ -267,7 +271,7 @@ describe("createRunelayerApp", () => {
     const updated = await (app.admin.actions.update as any)(
       adminEvent("globals/site-settings", {
         form: {
-          siteName: "  Runelayer CMS  ",
+          payload: JSON.stringify({ siteName: "  Runelayer CMS  " }),
         },
       }),
     );
@@ -308,7 +312,13 @@ describe("createRunelayerApp", () => {
     await expect(
       app.admin.load(
         makeEvent(undefined, {
-          locals: { user: { id: "editor-1", email: "editor@example.com", role: "editor" } },
+          locals: {
+            user: {
+              id: "editor-1",
+              email: "editor@example.com",
+              role: "editor",
+            },
+          },
         }),
       ),
     ).rejects.toMatchObject({
@@ -372,9 +382,11 @@ describe("createRunelayerApp", () => {
       }),
     );
 
+    // parseAuthErrorMessage now returns only the generic fallback to avoid
+    // leaking internal auth-provider error details to the browser.
     expect(result).toMatchObject({
       status: 403,
-      data: { error: "Please verify your email address before signing in." },
+      data: { error: "Sign-in is blocked for this account." },
     });
   });
 

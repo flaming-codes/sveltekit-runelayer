@@ -1,5 +1,6 @@
 import { getTableConfig } from "drizzle-orm/sqlite-core";
 import type { CollectionConfig } from "../schema/collections.js";
+import type { GlobalConfig } from "../schema/globals.js";
 import { createDatabase, type RunelayerDatabase } from "../db/init.js";
 
 function quoteIdent(name: string): string {
@@ -54,8 +55,9 @@ export async function applySchemaForTests({
 export async function migrateDatabaseForTests(
   url: string,
   collections: CollectionConfig[],
+  globals: GlobalConfig[] = [],
 ): Promise<void> {
-  const database = createDatabase({ url, collections });
+  const database = createDatabase({ url, collections, globals });
   try {
     await applySchemaForTests(database);
   } finally {

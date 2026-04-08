@@ -70,6 +70,8 @@ Supported views under the admin mount:
 Each `view` variant carries only the data needed by that page (for example, `users-list` includes pagination/search fields, while `collection-edit` includes `collection` and `document`).
 `AdminPage` uses the same union type, so loader output and UI rendering stay in one typed contract.
 
+Collection and global edit loaders return documents in the same public nested field shape used by the query API. Group fields stay nested in loader data and form payloads; admin routes do not expose flattened storage keys.
+
 Supported actions:
 
 - `?/login`
@@ -77,6 +79,14 @@ Supported actions:
 - `?/create` (collection create)
 - `?/update` (collection update and global update)
 - `?/delete` (collection delete)
+- `?/publish` (publish versioned collection document)
+- `?/unpublish` (unpublish versioned collection document)
+- `?/saveDraft` (save versioned collection document as draft)
+- `?/restoreVersion` (restore a previous version of a collection document)
+- `?/publishGlobal` (publish versioned global)
+- `?/unpublishGlobal` (unpublish versioned global)
+- `?/saveDraftGlobal` (save versioned global as draft)
+- `?/restoreGlobalVersion` (restore a previous version of a global)
 - `?/createUser` (auth user create)
 - `?/updateUser` (auth user update + optional password reset)
 - `?/deleteUser` (auth user delete)
@@ -108,10 +118,14 @@ User management is runtime-managed via Better Auth admin endpoints:
 
 All admin pages follow a consistent layout pattern:
 
-1. **Page header** — full-width band with `--cds-ui-background` background and `--cds-border-subtle` bottom border. Contains breadcrumb navigation, an uppercase eyebrow label, the page title (h1), and optional action button or status tag aligned right.
+1. **Page header** — full-width band with `--cds-ui-background` background and `--cds-border-subtle` bottom border. Contains breadcrumb navigation, the page title (h1) with inline status badges for versioned content, and a horizontal action bar with `ButtonSet` for primary actions separated from secondary actions (e.g., Delete) by a border-top divider.
 2. **Page body** — max-width `90rem`, centered, with `--cds-spacing-06` horizontal padding. Contains the page-specific content (data tables, editor forms, cards).
 
-Edit pages (CollectionEdit, UserEdit, GlobalEdit) use a two-column Grid inside the page body: 11-column content tile + 5-column sidebar tile with metadata and actions.
+Edit pages (CollectionEdit, GlobalEdit) use Carbon `Tabs` to switch between content editing and version history when versioning is enabled. The content tab uses a responsive `Grid` with a 12-column content area and a 4-column metadata tile for document info (collection, ID, timestamps). The action bar sits in the page header as a horizontal `ButtonSet` with context-dependent buttons.
+
+For new documents and non-versioned collections, the layout renders a simple form without tabs.
+
+UserEdit uses a two-column Grid: content form + sidebar tile with metadata and actions.
 
 List pages (UsersList, CollectionList) render search/filter controls above a Carbon DataTable with toolbar integration.
 
@@ -122,6 +136,24 @@ All spacing uses Carbon spacing tokens (`--cds-spacing-02` through `--cds-spacin
 Shared page-layout CSS (`.rk-page-header`, `.rk-page-header-inner`, `.rk-page-title-row`, `.rk-eyebrow`, `.rk-page-body`, and the 672px responsive breakpoint) lives in `page-layout.css` and is imported by all page components via `@import "./page-layout.css"`. Shared editor styles (`.rk-form`, `.rk-fields`, `.rk-sidebar-title`, `.rk-meta-list`, `.rk-actions`) live in `editor-layout.css` and are imported by CollectionEdit and UserEdit.
 
 Every page includes breadcrumb navigation back to the Dashboard.
+
+## Field renderers
+
+The `FieldRenderer` component dispatches rendering based on field type. Supported types:
+
+- `text`, `slug`, `email` → `TextField` (Carbon `TextInput`)
+- `number` → `NumberField` (Carbon `NumberInput`)
+- `checkbox` → `CheckboxField` (Carbon `Checkbox`)
+- `select` → `SelectField` (Carbon `Select`)
+- `textarea` → `TextareaField` (Carbon `TextArea`)
+- `date` → `DateField` (Carbon `TextInput` with `type="date"` or `type="datetime-local"`)
+- `richText` → `RichTextField` (placeholder for Tiptap integration)
+- `json` → `JsonField` (Carbon `TextArea` with JSON serialization)
+- `relationship` → `RelationshipField` — Carbon `ComboBox` (single) or `MultiSelect` (hasMany) with live document fetching from the `/runelayer/api/{collectionSlug}` admin API endpoint. Stores `RefSentinel` objects (`{ _ref, _collection }`) rather than bare ID strings.
+- `blocks` → `BlocksField` — renders a polymorphic block list. Each block instance is displayed as a Carbon `Tile` with `ChevronUp`/`ChevronDown`/`TrashCan` icon buttons for reorder and delete. Block fields are rendered recursively via `FieldRenderer`. A `BlockPalette` overflow menu lists available block types by label and appends a new block instance when selected. Respects `minBlocks`/`maxBlocks` constraints.
+- `group` → `GroupField` — renders nested fields inline within a Carbon `FormGroup` with a left border accent. Stores values as a nested object keyed by the group name.
+
+Unsupported field types render a fallback message.
 
 ## Accessibility
 
@@ -170,5 +202,36 @@ The admin subpath now exposes Carbon-structured primitives:
 - `AdminHealthPage`
 - `AdminErrorPage`
 - `AdminFieldRenderer`
+- `AdminVersionHistory`
 
 Direct handler-factory and route-helper wiring is no longer the primary integration model.
+
+## Versioning UI
+
+For collections and globals with `versions` enabled, the admin UI provides:
+
+**CollectionEdit** changes:
+
+- Status badge (Draft/Published) and version number displayed inline with the page title
+- Horizontal action bar with `ButtonSet`: "Publish" + "Save draft" for drafts, "Save as draft" + "Unpublish" for published documents, and a secondary "Delete" button (danger-ghost) aligned right
+- Inline info notification when editing a published document: "Saving as draft will unpublish this document"
+- `Tabs` component with "Content" and "Version history" tabs, giving version history equal prominence with the content editor
+- Restore confirmation modal (follows the same pattern as the delete modal)
+
+**CollectionList** changes:
+
+- Status column with green "published" / teal "draft" Tag badges for versioned collections
+- Admin list shows all documents (drafts included) via `draft: true` in the query
+
+**GlobalEdit** changes:
+
+- Same inline status badges and horizontal `ButtonSet` action bar as CollectionEdit
+- `Tabs` with "Configuration" and "Version history" tabs
+- Restore confirmation modal
+
+**VersionHistory component** (`AdminVersionHistory`):
+
+- Reusable component exported from `@flaming-codes/sveltekit-runelayer/admin`
+- Uses Carbon `DataTable` with columns: Version (monospace v-number), Status (Tag), Author, Date, and Actions (Restore button or "Current" Tag)
+- Progressive loading with "Show more" button (starts with 10 entries, loads 20 more per click)
+- Current version marked with outline "Current" tag instead of Restore button

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createAdminActions, resolveGuardedRoute } from "../admin-actions.js";
 import type { AdminActionsConfig } from "../admin-actions.js";
 import type { SvelteKitUtils } from "../types.js";
+import { blocks, defineBlock, group, text, textarea } from "../../schema/index.js";
 
 const kit: SvelteKitUtils = {
   redirect(status: number, location: string | URL): never {
@@ -132,6 +133,205 @@ describe("resolveGuardedRoute", () => {
 });
 
 describe("createAdminActions", () => {
+  it("parses structured payload JSON for collection create", async () => {
+    const heroBlock = defineBlock({
+      slug: "hero",
+      label: "Hero",
+      fields: [
+        { name: "heading", ...text({ required: true }) },
+        { name: "subheading", ...textarea() },
+      ],
+    });
+    const createMock = vi.fn(async (_collection, data) => ({
+      id: "page-1",
+      ...data,
+    }));
+    const cfg = makeCfg({
+      getCollectionBySlug: () =>
+        ({
+          slug: "pages",
+          fields: [
+            { name: "title", ...text({ required: true }) },
+            { name: "blocks", ...blocks({ blocks: [heroBlock] }) },
+          ],
+        }) as any,
+      withRequest: () => ({ create: createMock }) as any,
+    });
+    const actions = createAdminActions(cfg);
+
+    await expect(
+      (actions.create as any)(
+        actionEvent("collections/pages/create", {
+          method: "POST",
+          form: {
+            payload: JSON.stringify({
+              title: "Home",
+              blocks: [
+                {
+                  blockType: "hero",
+                  heading: "Welcome",
+                  subheading: "Hello world",
+                },
+              ],
+            }),
+          },
+        }),
+      ),
+    ).rejects.toMatchObject({
+      status: 303,
+      location: "/admin/collections/pages/page-1",
+    });
+
+    expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ slug: "pages" }), {
+      title: "Home",
+      blocks: [
+        {
+          blockType: "hero",
+          heading: "Welcome",
+          subheading: "Hello world",
+        },
+      ],
+    });
+  });
+
+  it("rejects missing structured payload for collection create", async () => {
+    const cfg = makeCfg({
+      withRequest: () => ({ create: vi.fn() }) as any,
+    });
+    const actions = createAdminActions(cfg);
+
+    await expect(
+      (actions.create as any)(
+        actionEvent("collections/pages/create", {
+          method: "POST",
+          form: { title: "Home" },
+        }),
+      ),
+    ).rejects.toMatchObject({
+      status: 400,
+      body: { message: "Admin form payload is missing." },
+    });
+  });
+
+  it("parses structured payload JSON for collection saveDraft", async () => {
+    const heroBlock = defineBlock({
+      slug: "hero",
+      label: "Hero",
+      fields: [{ name: "heading", ...text({ required: true }) }],
+    });
+    const saveDraftMock = vi.fn(async (_collection, id, data) => ({
+      id,
+      ...data,
+    }));
+    const cfg = makeCfg({
+      getCollectionBySlug: () =>
+        ({
+          slug: "pages",
+          fields: [
+            { name: "title", ...text({ required: true }) },
+            { name: "blocks", ...blocks({ blocks: [heroBlock] }) },
+          ],
+        }) as any,
+      withRequest: () => ({ saveDraft: saveDraftMock }) as any,
+    });
+    const actions = createAdminActions(cfg);
+
+    const result = await (actions.saveDraft as any)(
+      actionEvent("collections/pages/doc-1", {
+        method: "POST",
+        form: {
+          payload: JSON.stringify({
+            id: "doc-1",
+            title: "Draft page",
+            blocks: [
+              {
+                blockType: "hero",
+                heading: "Draft hero",
+              },
+            ],
+          }),
+        },
+      }),
+    );
+
+    expect(saveDraftMock).toHaveBeenCalledWith(
+      expect.objectContaining({ slug: "pages" }),
+      "doc-1",
+      {
+        title: "Draft page",
+        blocks: [
+          {
+            blockType: "hero",
+            heading: "Draft hero",
+          },
+        ],
+      },
+    );
+    expect(result).toMatchObject({
+      success: true,
+      document: {
+        id: "doc-1",
+        title: "Draft page",
+      },
+    });
+  });
+
+  it("parses structured payload JSON for global update", async () => {
+    const cfg = makeCfg({
+      resolveGlobalBySlug: () =>
+        ({
+          slug: "settings",
+          fields: [
+            {
+              name: "seo",
+              ...group({
+                fields: [
+                  { name: "title", ...text() },
+                  { name: "description", ...text() },
+                ],
+              }),
+            },
+          ],
+        }) as any,
+      runelayer: {
+        database: {
+          client: {
+            execute: vi.fn(async () => ({ rows: [] })),
+            batch: vi.fn(async () => ({ rows: [] })),
+          },
+        },
+        collections: [],
+        globals: [],
+      } as any,
+    });
+    const actions = createAdminActions(cfg);
+
+    const result = await (actions.update as any)(
+      actionEvent("globals/settings", {
+        method: "POST",
+        form: {
+          payload: JSON.stringify({
+            seo: {
+              title: "Site title",
+              description: "Meta description",
+            },
+          }),
+        },
+      }),
+    );
+
+    expect(result).toMatchObject({
+      success: true,
+      document: {
+        id: "settings",
+        seo: {
+          title: "Site title",
+          description: "Meta description",
+        },
+      },
+    });
+  });
+
   it("handles first-admin setup races and signs out the losing bootstrap session", async () => {
     let countCalls = 0;
     const execute = vi.fn(async (query: unknown) => {

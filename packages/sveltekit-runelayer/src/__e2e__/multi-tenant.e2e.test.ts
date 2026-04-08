@@ -73,7 +73,6 @@ const Projects: CollectionConfig = defineCollection({
     update: tenantWriteAccess,
     delete: tenantWriteAccess,
   },
-  timestamps: true,
 });
 
 const Tasks: CollectionConfig = defineCollection({
@@ -112,7 +111,6 @@ const Tasks: CollectionConfig = defineCollection({
     update: tenantWriteAccess,
     delete: tenantWriteAccess,
   },
-  timestamps: true,
 });
 
 // --- Request helpers ---
@@ -266,12 +264,14 @@ describe("Multi-Tenant CMS — Full Journey", () => {
   });
 
   it("tenant users can see all content (app-level filtering needed)", async () => {
-    // Note: Runelayer v1 access control returns boolean, not query constraints
-    // So at the DB level, all authenticated users see all rows
-    // Tenant filtering must be done at the application layer
+    // v1 access control returns boolean (allow/deny), NOT query constraints.
+    // All authenticated users see all rows regardless of tenant.
+    // True tenant isolation requires query-constraint-based access control
+    // (returning a WHERE clause instead of a boolean), which is planned for v2.
+    // Until then, tenant filtering must be done at the application layer.
     const acmeView = await find(ctx(Projects, acmeUser1Req));
-    expect(acmeView.length).toBeGreaterThanOrEqual(3);
-    // In a real app, you'd filter: acmeView.filter(p => p.tenant === 'acme')
+    // Exact count: 2 Acme + 1 Globex = 3. Acme user sees ALL projects, not just their own.
+    expect(acmeView).toHaveLength(3);
   });
 
   // --- Phase 4: Cross-tenant workflow simulation ---

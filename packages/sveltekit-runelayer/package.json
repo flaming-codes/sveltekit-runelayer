@@ -21,29 +21,48 @@
   },
   "files": [
     "src",
-    "package.json"
+    "dist"
   ],
   "type": "module",
   "svelte": "./src/index.ts",
   "exports": {
     ".": {
+      "types": "./src/index.ts",
       "svelte": "./src/index.ts",
       "default": "./src/index.ts"
     },
+    "./schema": {
+      "types": "./src/schema/index.ts",
+      "svelte": "./src/schema/index.ts",
+      "default": "./src/schema/index.ts"
+    },
+    "./drizzle": {
+      "types": "./src/db/drizzle-kit.ts",
+      "default": "./src/db/drizzle-kit.ts"
+    },
     "./admin": {
+      "types": "./src/admin/index.ts",
       "svelte": "./src/admin/index.ts",
       "default": "./src/admin/index.ts"
     },
+    "./admin/styles/*": "./src/admin/styles/*",
     "./sveltekit": {
+      "types": "./src/sveltekit/index.ts",
       "svelte": "./src/sveltekit/index.ts",
       "default": "./src/sveltekit/index.ts"
     },
     "./sveltekit/server": {
+      "types": "./src/sveltekit/server.ts",
       "default": "./src/sveltekit/server.ts"
     },
     "./sveltekit/components": {
+      "types": "./src/sveltekit/components.ts",
       "svelte": "./src/sveltekit/components.ts",
       "default": "./src/sveltekit/components.ts"
+    },
+    "./sveltekit/drizzle": {
+      "types": "./src/sveltekit/drizzle-config.ts",
+      "default": "./src/sveltekit/drizzle-config.ts"
     },
     "./package.json": "./package.json"
   },

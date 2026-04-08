@@ -102,30 +102,75 @@ const schema = defineSchema({
 
 ### Data Fields
 
-| Builder          | Type String    | SQLite Column             | Options                                  |
-| ---------------- | -------------- | ------------------------- | ---------------------------------------- |
-| `text()`         | `text`         | `text`                    | `minLength`, `maxLength`, `defaultValue` |
-| `textarea()`     | `textarea`     | `text`                    | `minLength`, `maxLength`, `defaultValue` |
-| `email()`        | `email`        | `text`                    | `defaultValue`                           |
-| `number()`       | `number`       | `real`                    | `min`, `max`, `defaultValue`             |
-| `checkbox()`     | `checkbox`     | `integer` (boolean)       | `defaultValue`                           |
-| `date()`         | `date`         | `text` (ISO string)       | `includeTime`, `defaultValue`            |
-| `select()`       | `select`       | `text`                    | `options` (required), `defaultValue`     |
-| `multiSelect()`  | `multiSelect`  | `text` (JSON)             | `options` (required), `defaultValue`     |
-| `richText()`     | `richText`     | `text` (JSON)             | `defaultValue`                           |
-| `json()`         | `json`         | `text` (JSON)             | `defaultValue`                           |
-| `slug()`         | `slug`         | `text`                    | `from` (required) — source field name    |
-| `relationship()` | `relationship` | `text` (FK) or join table | `relationTo`, `hasMany`                  |
-| `upload()`       | `upload`       | `text` (file ref)         | `relationTo` (required)                  |
+| Builder          | Type String    | SQLite Column       | Options                                  |
+| ---------------- | -------------- | ------------------- | ---------------------------------------- |
+| `text()`         | `text`         | `text`              | `minLength`, `maxLength`, `defaultValue` |
+| `textarea()`     | `textarea`     | `text`              | `minLength`, `maxLength`, `defaultValue` |
+| `email()`        | `email`        | `text`              | `defaultValue`                           |
+| `number()`       | `number`       | `real`              | `min`, `max`, `defaultValue`             |
+| `checkbox()`     | `checkbox`     | `integer` (boolean) | `defaultValue`                           |
+| `date()`         | `date`         | `text` (ISO string) | `includeTime`, `defaultValue`            |
+| `select()`       | `select`       | `text`              | `options` (required), `defaultValue`     |
+| `multiSelect()`  | `multiSelect`  | `text` (JSON)       | `options` (required), `defaultValue`     |
+| `richText()`     | `richText`     | `text` (JSON)       | `defaultValue`                           |
+| `json()`         | `json`         | `text` (JSON)       | `defaultValue`                           |
+| `slug()`         | `slug`         | `text`              | `from` (required) — source field name    |
+| `relationship()` | `relationship` | `text` (JSON)       | `relationTo`, `hasMany`                  |
+| `upload()`       | `upload`       | `text` (file ref)   | `relationTo` (required)                  |
 
 ### Structural Fields
 
-| Builder         | Type String   | DB Impact             | Purpose                                                 |
-| --------------- | ------------- | --------------------- | ------------------------------------------------------- |
-| `group()`       | `group`       | Flattened with prefix | Nests fields under a namespace (e.g., `address_street`) |
-| `array()`       | `array`       | Separate table        | Repeating rows with sub-fields                          |
-| `row()`         | `row`         | None (layout only)    | Horizontal field layout in admin UI                     |
-| `collapsible()` | `collapsible` | None (layout only)    | Collapsible section in admin UI                         |
+| Builder         | Type String   | DB Impact                                 | Purpose                                                      |
+| --------------- | ------------- | ----------------------------------------- | ------------------------------------------------------------ |
+| `group()`       | `group`       | Nested in documents; flattened in storage | Nests fields under a namespace (e.g., `address.street`)      |
+| `blocks()`      | `blocks`      | JSON column                               | Polymorphic repeating blocks, each with its own field schema |
+| `row()`         | `row`         | None (layout only)                        | Horizontal field layout in admin UI                          |
+| `collapsible()` | `collapsible` | None (layout only)                        | Collapsible section in admin UI                              |
+
+Group fields expose a single public document contract everywhere above the storage layer.
+
+- Query payloads and query results use nested objects such as `{ address: { street: "Main" } }`.
+- Admin loaders, admin actions, hooks, globals, and version restores use the same nested object shape.
+- Persistence still flattens grouped leaf fields to prefixed storage keys such as `address_street`.
+- Query filters and sorts address grouped leaves with dot paths such as `address.street`.
+
+### defineBlock
+
+Blocks are defined with `defineBlock()` and composed into a `blocks()` field:
+
+```ts
+import { defineBlock, blocks, text, number } from "@flaming-codes/sveltekit-runelayer";
+
+const HeroBlock = defineBlock({
+  slug: "hero",
+  label: "Hero",
+  fields: [
+    { name: "heading", ...text({ required: true }) },
+    { name: "subheading", ...text() },
+  ],
+});
+
+const CalloutBlock = defineBlock({
+  slug: "callout",
+  label: "Callout",
+  fields: [
+    { name: "message", ...text({ required: true }) },
+    { name: "level", ...number({ min: 1, max: 3 }) },
+  ],
+});
+
+// Use in a collection field:
+{ name: "content", ...blocks({ blocks: [HeroBlock, CalloutBlock], minBlocks: 1, maxBlocks: 10 }) }
+```
+
+Each block instance stored in the database includes a `blockType` (matching the block's `slug`) and a `_key` (unique identifier for the block within the list), followed by the block's own field values.
+
+`blocks()` field options beyond the base options:
+
+- `blocks` (required): array of `BlockConfig` definitions
+- `minBlocks?: number` — minimum number of blocks required
+- `maxBlocks?: number` — maximum number of blocks allowed
+- `validate?: ValidationFn<unknown[]>` — custom validator for the full blocks array
 
 ### Common Field Options
 
@@ -174,7 +219,7 @@ All fields in a collection must have a `name` and optional `label`:
 { name: 'firstName', label: 'First Name', ...text({ required: true }) }
 ```
 
-The `name` becomes the database column name and the key in document objects. The `label` is used in the admin UI (defaults to `name` if omitted).
+For leaf fields, the `name` becomes the document key and the storage column name. Group field names become document namespaces and prefix the flattened storage keys for their nested leaves. The `label` is used in the admin UI (defaults to `name` if omitted).
 
 ## Type System
 
@@ -196,7 +241,7 @@ type Field =
   | SlugField
   | EmailField
   | GroupField
-  | ArrayField
+  | BlocksField
   | RowField
   | CollapsibleField;
 
@@ -212,24 +257,44 @@ const f = text({ required: true, maxLength: 100 });
 
 ## Relationship Fields
 
+Relationship values are stored as sentinel objects rather than bare ID strings. This allows the query layer to track both the referenced document ID and the collection it belongs to, which is required for polymorphic relationships and depth-based population.
+
+A single relationship sentinel:
+
+```ts
+{ _ref: "abc123", _collection: "users" }
+```
+
+A hasMany relationship stores an array of sentinels:
+
+```ts
+[
+  { _ref: "abc123", _collection: "tags" },
+  { _ref: "def456", _collection: "tags" },
+];
+```
+
+Both single and hasMany relationships are stored as a JSON column in the main table — no join tables are used.
+
 Single relationship:
 
 ```ts
 { name: 'author', ...relationship({ relationTo: 'users' }) }
-// Stored as a text column with the related document's ID
+// Stored as a JSON column: { _ref: "...", _collection: "users" }
 ```
 
 Has-many relationship:
 
 ```ts
 { name: 'tags', ...relationship({ relationTo: 'tags', hasMany: true }) }
-// Stored in a separate join table: posts_rels_tags
+// Stored as a JSON column: [{ _ref: "...", _collection: "tags" }, ...]
 ```
 
 Polymorphic relationship (multiple collections):
 
 ```ts
 { name: 'relatedContent', ...relationship({ relationTo: ['posts', 'pages'] }) }
+// Stored as { _ref: "...", _collection: "posts" } or { _ref: "...", _collection: "pages" }
 ```
 
 ## Database Mapping Summary
@@ -240,7 +305,7 @@ The schema-to-database mapping is handled automatically by `generateTables()`:
 - All tables get `id` (text primary key), `createdAt` (text), `updatedAt` (text)
 - `versions: true` adds `_status` (text) and `_version` (integer) columns
 - `auth: true` adds `hash`, `salt`, `token`, `tokenExpiry` columns
-- `group` fields are flattened: `{ name: 'address', fields: [{ name: 'street' }] }` becomes column `address_street`
-- `array` fields create a separate table: `{collectionSlug}_{fieldName}` with `_parentId` and `_order`
-- `hasMany` relationships create join tables: `{collectionSlug}_rels_{fieldName}`
+- `group` fields stay nested in runtime documents and flatten only in storage: `{ address: { street: "Main" } }` persists under `address_street`
+- `relationship` fields (single and hasMany) → JSON column in the main table; no join tables
+- `blocks` fields → JSON column in the main table; no auxiliary table
 - `row` and `collapsible` fields pass through their children with no column prefix

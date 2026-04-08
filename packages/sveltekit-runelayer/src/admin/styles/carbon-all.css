@@ -1,0 +1,9 @@
+/*
+ * Carbon Design System — all themes (white, g10, g80, g90, g100).
+ * Wrapped in @layer to prevent Carbon's global reset from overriding
+ * consumer styles. Unlayered consumer CSS always wins over layered CSS.
+ *
+ * Usage (in your admin layout):
+ *   import "@flaming-codes/sveltekit-runelayer/admin/styles/carbon-all.css";
+ */
+@import "carbon-components-svelte/css/all.css" layer(carbon);

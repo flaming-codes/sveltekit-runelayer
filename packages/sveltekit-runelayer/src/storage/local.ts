@@ -1,5 +1,5 @@
-import { mkdir, writeFile, unlink, stat } from "node:fs/promises";
-import { createReadStream, existsSync } from "node:fs";
+import { mkdir, writeFile, unlink, stat, rename, rm } from "node:fs/promises";
+import { createReadStream } from "node:fs";
 import { join, extname, resolve, relative } from "node:path";
 import { Readable } from "node:stream";
 import { randomUUID } from "node:crypto";
@@ -16,7 +16,7 @@ function safePath(directory: string, userPath?: string): string {
   const normalizedPath = normalizeRelativePath(userPath, "file path");
   const resolved = resolve(directory, normalizedPath ?? ".");
   const rel = relative(resolve(directory), resolved);
-  if (rel.startsWith("..") || (resolve(resolved) !== resolved && rel.includes(".."))) {
+  if (rel.startsWith("..")) {
     throw new Error("Path traversal detected");
   }
   return resolved;
@@ -37,7 +37,13 @@ export function createLocalStorage(config: LocalStorageConfig = {}): StorageAdap
 
       const filePath = join(dir, uniqueName);
       const buffer = Buffer.isBuffer(file) ? file : Buffer.from(await (file as File).arrayBuffer());
-      await writeFile(filePath, buffer);
+      const tmpPath = filePath + ".tmp";
+      try {
+        await writeFile(tmpPath, buffer);
+        await rename(tmpPath, filePath);
+      } finally {
+        await rm(tmpPath, { force: true }).catch(() => {});
+      }
 
       const relativePath = folder ? `${folder}/${uniqueName}` : uniqueName;
       return {
@@ -59,15 +65,14 @@ export function createLocalStorage(config: LocalStorageConfig = {}): StorageAdap
 
     getStream(path) {
       const resolved = safePath(directory, path);
-      if (!existsSync(resolved)) return null;
       const nodeStream = createReadStream(resolved);
       return Readable.toWeb(nodeStream) as ReadableStream;
     },
 
     async exists(path) {
       try {
-        await stat(safePath(directory, path));
-        return true;
+        const s = await stat(safePath(directory, path));
+        return s.isFile();
       } catch {
         return false;
       }

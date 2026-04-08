@@ -12,3 +12,4 @@ export { default as AdminUsersListPage } from "./components/UsersList.svelte";
 export { default as AdminUserEditorPage } from "./components/UserEdit.svelte";
 export { default as AdminErrorPage } from "./components/ErrorPage.svelte";
 export { default as AdminFieldRenderer } from "./components/fields/FieldRenderer.svelte";
+export { default as AdminVersionHistory } from "./components/VersionHistory.svelte";

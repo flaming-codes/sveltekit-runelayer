@@ -2,7 +2,8 @@
 
 `sveltekit-runelayer` ships a high-level SvelteKit integration surface split into server and client entry points:
 
-- `@flaming-codes/sveltekit-runelayer/sveltekit/server` — server-only runtime (`createRunelayerApp`, `defineRunelayerDrizzleConfig`)
+- `@flaming-codes/sveltekit-runelayer/sveltekit/server` — server-only runtime (`createRunelayerApp`)
+- `@flaming-codes/sveltekit-runelayer/sveltekit/drizzle` — drizzle-kit config helper (`defineRunelayerDrizzleConfig`)
 - `@flaming-codes/sveltekit-runelayer/sveltekit/components` — client-safe Svelte components (`AdminPage`, `AdminErrorPage`)
 
 Use these paths when integrating the CMS into an app.
@@ -21,13 +22,16 @@ Use these paths when integrating the CMS into an app.
 - Wire `runelayer.handle` in `hooks.server.ts`.
 - Mount admin load/actions in one catch-all route.
 - Run migrations before startup.
+- Decide whether uploaded files should be public (`storage.publicRead: true`) or auth-protected (default).
 
 ## Install
 
 ```bash
 pnpm add @flaming-codes/sveltekit-runelayer
-pnpm add -D drizzle-kit
+pnpm add -D drizzle-kit drizzle-orm
 ```
+
+`drizzle-orm` must be a direct devDependency so drizzle-kit can resolve it (pnpm strict mode does not hoist transitive dependencies).
 
 ## 1. Add Vite alias required by Better Auth + zod v4
 
@@ -69,20 +73,28 @@ export const Posts = defineCollection({
 
 ## 3. Export schema for drizzle-kit
 
+drizzle-kit discovers Drizzle table instances from **top-level named exports** only.
+You must destructure and re-export each table individually. Use `listTableNames()`
+to see which table keys your collections/globals produce.
+
 ```ts
 // src/lib/server/drizzle-schema.ts
-import { createDrizzleKitSchema } from "@flaming-codes/sveltekit-runelayer";
+import { createDrizzleKitSchema } from "@flaming-codes/sveltekit-runelayer/drizzle";
 import { Posts } from "./schema.js";
 
-export const runelayerSchema = createDrizzleKitSchema([Posts]);
+const _schema = createDrizzleKitSchema([Posts]);
+export const { posts, user, session, account, verification } = _schema;
 ```
+
+If you register globals, pass them as the second argument so migration files include
+`__runelayer_globals` (and `__runelayer_global_versions` for versioned globals).
 
 ## 4. Use the drizzle helper config
 
 ```ts
 // drizzle.config.ts
 import { defineConfig } from "drizzle-kit";
-import { defineRunelayerDrizzleConfig } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
+import { defineRunelayerDrizzleConfig } from "@flaming-codes/sveltekit-runelayer/sveltekit/drizzle";
 
 export default defineConfig(
   defineRunelayerDrizzleConfig({
@@ -96,12 +108,15 @@ export default defineConfig(
 );
 ```
 
-Generate and apply migrations before startup:
+Create the data directory and generate/apply migrations before startup:
 
 ```bash
+mkdir -p data
 npx drizzle-kit generate
 npx drizzle-kit migrate
 ```
+
+libsql can create the database file but not the parent directory.
 
 ## 5. Create the app integration instance
 

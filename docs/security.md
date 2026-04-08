@@ -11,6 +11,10 @@ The runtime `handle` hook:
 1. strips inbound `x-user-id`, `x-user-role`, `x-user-email`
 2. resolves session from cookies
 3. injects verified `x-user-*` headers only after session validation
+4. evaluates storage-route file serving only after the same auth sanitization/session boundary
+
+When using `createRunelayer()`, storage file serving is authenticated by default. Set
+`storage.publicRead: true` to opt into public file serving.
 
 This blocks header spoofing attempts from external clients.
 
@@ -49,6 +53,22 @@ Writes are schema-validated before persistence:
 - custom field `validate` functions are executed
 
 This prevents mass-assignment style writes and keeps runtime behavior aligned with schema definitions.
+
+### Global document enforcement
+
+Global document writes go through `enforceWritePayload` using the global's field config, with the same schema validation, normalization, and field-level access checks as collection documents. Global document reads apply `enforceReadProjection` to redact fields denied by field-level access rules.
+
+### Populated sub-document projection
+
+When `depth: 1` populates relationship references, fetched sub-documents from referenced collections are run through `enforceReadProjection` using the referenced collection's field config. Field-level access rules on referenced collections are enforced on populated documents.
+
+### Polymorphic relationship collection validation
+
+For polymorphic relationship fields (`relationTo: string[]`), the `_collection` value in sentinel objects is validated against the `relationTo` allowlist on write. Sentinels referencing collections not in the allowlist are rejected with a 400 error.
+
+### Admin API endpoint
+
+The `/runelayer/api/{slug}` endpoint runs inside the shared auth `handle` boundary and requires an authenticated admin user. It uses per-request access context (not system context), ensuring collection-level access rules are respected. Responses include `Cache-Control: private, no-store` to prevent proxy caching of sensitive data.
 
 ## Storage security
 

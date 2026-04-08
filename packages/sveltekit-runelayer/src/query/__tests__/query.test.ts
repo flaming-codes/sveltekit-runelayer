@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDatabase, type RunelayerDatabase } from "../../db/init.js";
-import { number, select, text } from "../../schema/fields.js";
+import { group, number, select, text } from "../../schema/fields.js";
 import type { CollectionConfig } from "../../schema/collections.js";
 import { checkAccess } from "../access.js";
 import { create, findOne, find, update, remove } from "../operations.js";
@@ -25,7 +25,10 @@ async function makeContext(
   collectionConfig: CollectionConfig,
   req?: Request,
 ): Promise<QueryContext> {
-  const db = createDatabase({ url: ":memory:", collections: [collectionConfig] });
+  const db = createDatabase({
+    url: ":memory:",
+    collections: [collectionConfig],
+  });
   await applySchemaForTests(db);
   return { db, collection: collectionConfig, req };
 }
@@ -192,8 +195,12 @@ describe("runtime schema enforcement", () => {
       ],
     };
 
-    const userReq = new Request("http://x", { headers: { "x-user-role": "editor" } });
-    const adminReq = new Request("http://x", { headers: { "x-user-role": "admin" } });
+    const userReq = new Request("http://x", {
+      headers: { "x-user-role": "editor" },
+    });
+    const adminReq = new Request("http://x", {
+      headers: { "x-user-role": "admin" },
+    });
     const userCtx = await makeContext(secureCollection, userReq);
     const adminCtx = await makeContext(secureCollection, adminReq);
 
@@ -201,7 +208,10 @@ describe("runtime schema enforcement", () => {
       'Forbidden field "internalNotes"',
     );
 
-    const created = await create(adminCtx, { title: "A", internalNotes: "secret" });
+    const created = await create(adminCtx, {
+      title: "A",
+      internalNotes: "secret",
+    });
     expect(created.internalNotes).toBe("secret");
   });
 
@@ -221,8 +231,12 @@ describe("runtime schema enforcement", () => {
       ],
     };
 
-    const adminReq = new Request("http://x", { headers: { "x-user-role": "admin" } });
-    const userReq = new Request("http://x", { headers: { "x-user-role": "editor" } });
+    const adminReq = new Request("http://x", {
+      headers: { "x-user-role": "admin" },
+    });
+    const userReq = new Request("http://x", {
+      headers: { "x-user-role": "editor" },
+    });
     const adminCtx = await makeContext(secureCollection, adminReq);
     const userCtx: QueryContext = {
       db: adminCtx.db,
@@ -230,13 +244,168 @@ describe("runtime schema enforcement", () => {
       req: userReq,
     };
 
-    const created = await create(adminCtx, { title: "A", internalNotes: "secret" });
+    const created = await create(adminCtx, {
+      title: "A",
+      internalNotes: "secret",
+    });
     const visibleToUser = await findOne(userCtx, created.id as string);
     const visibleToAdmin = await findOne(adminCtx, created.id as string);
 
     expect(visibleToUser).toBeDefined();
     expect(visibleToUser?.internalNotes).toBeUndefined();
     expect(visibleToAdmin?.internalNotes).toBe("secret");
+  });
+
+  it("inherits parent group access for grouped writes and reads", async () => {
+    const adminOnly = ({ req }: { req: Request }) => req.headers.get("x-user-role") === "admin";
+
+    const secureCollection: CollectionConfig = {
+      slug: "secure_group_posts",
+      fields: [
+        { name: "title", ...text() },
+        {
+          name: "seo",
+          ...group({
+            access: {
+              create: adminOnly,
+              update: adminOnly,
+              read: adminOnly,
+            },
+            fields: [
+              { name: "metaTitle", ...text() },
+              { name: "metaDescription", ...text() },
+            ],
+          }),
+        },
+      ],
+    };
+
+    const adminReq = new Request("http://x", {
+      headers: { "x-user-role": "admin" },
+    });
+    const editorReq = new Request("http://x", {
+      headers: { "x-user-role": "editor" },
+    });
+    const adminCtx = await makeContext(secureCollection, adminReq);
+    const editorCtx: QueryContext = {
+      db: adminCtx.db,
+      collection: secureCollection,
+      req: editorReq,
+    };
+
+    await expect(
+      create(editorCtx, {
+        title: "A",
+        seo: {
+          metaTitle: "Blocked",
+        },
+      }),
+    ).rejects.toThrow('Forbidden field "seo.metaTitle"');
+
+    const created = await create(adminCtx, {
+      title: "A",
+      seo: {
+        metaTitle: "Secret title",
+        metaDescription: "Secret description",
+      },
+    });
+
+    await expect(
+      update(editorCtx, created.id as string, {
+        seo: {
+          metaTitle: "Still blocked",
+        },
+      }),
+    ).rejects.toThrow('Forbidden field "seo.metaTitle"');
+
+    const visibleToEditor = await findOne(editorCtx, created.id as string);
+    const visibleToAdmin = await findOne(adminCtx, created.id as string);
+
+    expect(visibleToEditor).toBeDefined();
+    expect(visibleToEditor?.seo).toBeUndefined();
+    expect(visibleToAdmin?.seo).toEqual({
+      metaTitle: "Secret title",
+      metaDescription: "Secret description",
+    });
+  });
+
+  it("redacts restricted grouped children while preserving allowed siblings", async () => {
+    const adminOnly = ({ req }: { req: Request }) => req.headers.get("x-user-role") === "admin";
+
+    const secureCollection: CollectionConfig = {
+      slug: "secure_group_child_posts",
+      fields: [
+        { name: "title", ...text() },
+        {
+          name: "seo",
+          ...group({
+            fields: [
+              { name: "metaTitle", ...text() },
+              {
+                name: "internalNotes",
+                ...text({
+                  access: {
+                    create: adminOnly,
+                    update: adminOnly,
+                    read: adminOnly,
+                  },
+                }),
+              },
+            ],
+          }),
+        },
+      ],
+    };
+
+    const adminReq = new Request("http://x", {
+      headers: { "x-user-role": "admin" },
+    });
+    const editorReq = new Request("http://x", {
+      headers: { "x-user-role": "editor" },
+    });
+    const adminCtx = await makeContext(secureCollection, adminReq);
+    const editorCtx: QueryContext = {
+      db: adminCtx.db,
+      collection: secureCollection,
+      req: editorReq,
+    };
+
+    const created = await create(adminCtx, {
+      title: "A",
+      seo: {
+        metaTitle: "Visible title",
+        internalNotes: "Secret note",
+      },
+    });
+
+    const editorUpdated = await update(editorCtx, created.id as string, {
+      seo: {
+        metaTitle: "Updated visible title",
+      },
+    });
+
+    expect(editorUpdated.seo).toEqual({
+      metaTitle: "Updated visible title",
+    });
+
+    await expect(
+      update(editorCtx, created.id as string, {
+        seo: {
+          internalNotes: "Should fail",
+        },
+      }),
+    ).rejects.toThrow('Forbidden field "seo.internalNotes"');
+
+    const visibleToEditor = await findOne(editorCtx, created.id as string);
+    const visibleToAdmin = await findOne(adminCtx, created.id as string);
+
+    expect(visibleToEditor?.seo).toEqual({
+      metaTitle: "Updated visible title",
+    });
+    expect(visibleToAdmin?.seo).toEqual({
+      metaTitle: "Updated visible title",
+      internalNotes: "Secret note",
+    });
   });
 
   it("redacts auth-sensitive columns from read results", async () => {

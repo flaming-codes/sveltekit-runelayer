@@ -15,7 +15,7 @@ sveltekit-runelayer is a CMS-as-a-package for SvelteKit apps. It runs inside the
 ### Development
 
 ```bash
-pnpm dev                          # Start demo app dev server
+pnpm dev:web                      # Start web app dev server
 pnpm build                        # Build all packages recursively
 pnpm check                        # Lint + type check (vp check)
 pnpm ready                        # Full quality gate: fmt → lint → test → build
@@ -58,9 +58,8 @@ npx vp check --fix                # Combined format + lint + typecheck
 ### Monorepo Structure
 
 ```
-apps/demo/           → SvelteKit demo app (depends on @flaming-codes/sveltekit-runelayer workspace:*)
 packages/sveltekit-runelayer/   → Core CMS library
-docs/               → Internal design documentation (14 files)
+docs/               → Internal design documentation
 ```
 
 ### Module Structure (packages/sveltekit-runelayer/src/)

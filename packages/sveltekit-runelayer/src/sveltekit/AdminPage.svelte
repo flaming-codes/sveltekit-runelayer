@@ -79,10 +79,16 @@
       <AdminCollectionEditorPage
         collection={data.collection}
         document={data.document}
+        versions={data.versions ?? []}
         basePath={data.basePath}
       />
     {:else if data.view === "global-edit"}
-      <AdminGlobalEditorPage global={data.global} document={data.document} basePath={data.basePath} />
+      <AdminGlobalEditorPage
+        global={data.global}
+        document={data.document}
+        versions={data.versions ?? []}
+        basePath={data.basePath}
+      />
     {:else}
       <AdminErrorPage
         status={404}

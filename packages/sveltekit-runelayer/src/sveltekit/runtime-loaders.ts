@@ -27,9 +27,11 @@ import type {
   SvelteKitUtils,
 } from "./types.js";
 import { countDocuments, getUser } from "./admin-queries.js";
-import { readGlobalDocument } from "./globals.js";
+import { readGlobalDocument, findGlobalVersions } from "./globals.js";
+import { normalizeVersionConfig } from "../versions/config.js";
 import { toSerializable } from "./serializable.js";
 import { buildHealthPayload } from "./health.js";
+import { safeInt } from "./admin-runtime-utils.js";
 
 const USER_ROLES: RunelayerManagedUserRole[] = ["admin", "editor", "user"];
 
@@ -159,12 +161,6 @@ export async function loadUsersEdit(
   });
 }
 
-function safeInt(value: string | null, fallback: number, max?: number): number {
-  const parsed = Number.parseInt(value ?? "", 10);
-  const clamped = Number.isFinite(parsed) && parsed >= 1 ? parsed : fallback;
-  return max ? Math.min(clamped, max) : clamped;
-}
-
 export async function loadCollectionList(
   ctx: LoaderContext,
   event: RequestEvent,
@@ -175,7 +171,8 @@ export async function loadCollectionList(
   const page = safeInt(event.url.searchParams.get("page"), 1);
   const limit = safeInt(event.url.searchParams.get("limit"), 20, 100);
   const offset = (page - 1) * limit;
-  const docs = await query.find(collection, { limit, offset });
+  // Admin list shows all documents (drafts included) for versioned collections
+  const docs = await query.find(collection, { limit, offset, draft: true });
   const totalDocs = await countDocuments(ctx.runelayer, collection.slug);
   const totalPages = Math.max(1, Math.ceil(totalDocs / limit));
   return toSerializable<RunelayerAdminCollectionListData>({
@@ -215,11 +212,19 @@ export async function loadCollectionEdit(
     throw ctx.kit.error(404, `Document not found: ${route.id}`);
   }
   const document = documentRaw as RunelayerDocument;
+
+  // Load version history for versioned collections
+  const vc = normalizeVersionConfig(collection.versions);
+  const versions = vc
+    ? await query.findVersionHistory(collection, route.id, { limit: 20 })
+    : undefined;
+
   return toSerializable<RunelayerAdminCollectionEditData>({
     ...baseData(ctx, event),
     view: "collection-edit",
     collection,
     document,
+    versions,
   });
 }
 
@@ -230,11 +235,20 @@ export async function loadGlobalEdit(
 ): Promise<RunelayerAdminGlobalEditData> {
   const global = ctx.resolveGlobalBySlug(ctx.runelayer, route.slug);
   const document = await readGlobalDocument(ctx.runelayer, global, event.request);
+
+  // Load version history for versioned globals
+  const vc = normalizeVersionConfig(global.versions);
+  let versions;
+  if (vc) {
+    versions = await findGlobalVersions(ctx.runelayer, global, event.request, { limit: 20 });
+  }
+
   return toSerializable<RunelayerAdminGlobalEditData>({
     ...baseData(ctx, event),
     view: "global-edit",
     global,
     document,
+    versions,
   });
 }
 

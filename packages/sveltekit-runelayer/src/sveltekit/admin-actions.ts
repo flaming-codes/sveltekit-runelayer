@@ -1,8 +1,14 @@
 import type { Actions, RequestEvent } from "@sveltejs/kit";
 import type { RunelayerInstance } from "../plugin.js";
 import type { CollectionConfig } from "../schema/collections.js";
+import type { NamedField } from "../schema/fields.js";
 import type { GlobalConfig } from "../schema/globals.js";
-import { updateGlobalDocument } from "./globals.js";
+import {
+  updateGlobalDocument,
+  publishGlobal,
+  unpublishGlobal,
+  restoreGlobalVersion,
+} from "./globals.js";
 import { toSerializable } from "./serializable.js";
 import type { AdminRoute } from "./admin-routing.js";
 import { parseAdminRoute } from "./admin-routing.js";
@@ -15,6 +21,36 @@ import {
   parseAuthErrorMessage,
   parseManagedUser,
 } from "./admin-queries.js";
+import { authAdminPath } from "./admin-runtime-utils.js";
+import { RESERVED_WRITE_FIELDS } from "../query/enforcement.js";
+
+function parseDocumentPayload(
+  formData: FormData,
+  _fields: NamedField[],
+  kit: Pick<SvelteKitUtils, "error">,
+): Record<string, unknown> {
+  const payload = formField(formData, "payload");
+  if (!payload) {
+    throw kit.error(400, "Admin form payload is missing.");
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(payload);
+  } catch {
+    throw kit.error(400, "Admin form payload must be valid JSON.");
+  }
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw kit.error(400, "Admin form payload must be an object.");
+  }
+
+  const document = { ...(parsed as Record<string, unknown>) };
+  for (const key of RESERVED_WRITE_FIELDS) {
+    delete document[key];
+  }
+  return document;
+}
 
 export interface AdminActionsConfig {
   kit: SvelteKitUtils;
@@ -55,12 +91,6 @@ export async function resolveGuardedRoute<K extends AdminRoute["kind"]>(
 export function createAdminActions(cfg: AdminActionsConfig): Actions {
   const { redirect, error, fail } = cfg.kit;
 
-  const authAdminPath = (suffix: string, searchParams?: URLSearchParams): string => {
-    const query = searchParams?.toString();
-    const path = `${cfg.authBasePath}/admin/${suffix}`;
-    return query && query.length > 0 ? `${path}?${query}` : path;
-  };
-
   const callAuthAdmin = async (
     event: RequestEvent,
     suffix: string,
@@ -72,7 +102,7 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
   }> => {
     const headers = new Headers(init?.headers);
     headers.set("content-type", "application/json");
-    const response = await event.fetch(authAdminPath(suffix), {
+    const response = await event.fetch(authAdminPath(cfg.authBasePath, suffix), {
       ...init,
       headers,
     });
@@ -213,26 +243,25 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       const query = cfg.withRequest(event);
 
       const formData = await event.request.formData();
-      const data = Object.fromEntries(formData.entries()) as Record<string, unknown>;
+      const data = parseDocumentPayload(formData, collection.fields, cfg.kit);
       const document = await query.create(collection, data);
 
-      return {
-        success: true,
-        document: toSerializable(document),
-      };
+      const newId = (document as Record<string, string>).id;
+      throw redirect(303, `${cfg.adminPath}/collections/${route.slug}/${newId}`);
     },
 
     update: async (event) => {
       const route = await resolveGuardedRoute(event, ["collection-edit", "global-edit"], cfg);
       const formData = await event.request.formData();
-      const data = Object.fromEntries(formData.entries()) as Record<string, unknown>;
 
       let document: unknown;
       if (route.kind === "global-edit") {
         const global = cfg.resolveGlobalBySlug(cfg.runelayer, route.slug);
+        const data = parseDocumentPayload(formData, global.fields, cfg.kit);
         document = await updateGlobalDocument(cfg.runelayer, global, event.request, data);
       } else {
         const collection = cfg.getCollectionBySlug(cfg.runelayer, route.slug);
+        const data = parseDocumentPayload(formData, collection.fields, cfg.kit);
         const query = cfg.withRequest(event);
         const id = typeof data.id === "string" ? data.id : route.id;
         delete data.id;
@@ -295,7 +324,9 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
           : null;
       const createdUser = parseManagedUser(payloadRecord?.user);
       if (!createdUser) {
-        return fail(500, { error: "Auth provider returned an invalid user payload." });
+        return fail(500, {
+          error: "Auth provider returned an invalid user payload.",
+        });
       }
 
       throw redirect(303, `${cfg.adminPath}/users/${createdUser.id}`);
@@ -314,9 +345,12 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       }
 
       const currentUserParams = new URLSearchParams({ id: route.id });
-      const currentUserResponse = await event.fetch(authAdminPath("get-user", currentUserParams), {
-        method: "GET",
-      });
+      const currentUserResponse = await event.fetch(
+        authAdminPath(cfg.authBasePath, "get-user", currentUserParams),
+        {
+          method: "GET",
+        },
+      );
       const currentUserPayload = await currentUserResponse.json().catch(() => null);
       if (!currentUserResponse.ok) {
         return fail(currentUserResponse.status, {
@@ -326,7 +360,9 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
 
       const currentUser = parseManagedUser(currentUserPayload);
       if (!currentUser) {
-        return fail(500, { error: "Auth provider returned an invalid user payload." });
+        return fail(500, {
+          error: "Auth provider returned an invalid user payload.",
+        });
       }
 
       const updateResult = await callAuthAdmin(event, "update-user", {
@@ -395,9 +431,12 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       }
 
       const fetchUserParams = new URLSearchParams({ id: route.id });
-      const fetchUserResponse = await event.fetch(authAdminPath("get-user", fetchUserParams), {
-        method: "GET",
-      });
+      const fetchUserResponse = await event.fetch(
+        authAdminPath(cfg.authBasePath, "get-user", fetchUserParams),
+        {
+          method: "GET",
+        },
+      );
       const fetchUserPayload = await fetchUserResponse.json().catch(() => null);
       if (!fetchUserResponse.ok) {
         throw error(
@@ -426,6 +465,127 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       }
 
       throw redirect(303, `${cfg.adminPath}/users`);
+    },
+
+    publish: async (event) => {
+      const route = await resolveGuardedRoute(event, "collection-edit", cfg);
+      const collection = cfg.getCollectionBySlug(cfg.runelayer, route.slug);
+      const query = cfg.withRequest(event);
+
+      const formData = await event.request.formData();
+      const id = formField(formData, "id") || route.id;
+      const document = await query.publish(collection, id);
+
+      return {
+        success: true,
+        document: toSerializable(document),
+      };
+    },
+
+    unpublish: async (event) => {
+      const route = await resolveGuardedRoute(event, "collection-edit", cfg);
+      const collection = cfg.getCollectionBySlug(cfg.runelayer, route.slug);
+      const query = cfg.withRequest(event);
+
+      const formData = await event.request.formData();
+      const id = formField(formData, "id") || route.id;
+      const document = await query.unpublish(collection, id);
+
+      return {
+        success: true,
+        document: toSerializable(document),
+      };
+    },
+
+    saveDraft: async (event) => {
+      const route = await resolveGuardedRoute(event, "collection-edit", cfg);
+      const collection = cfg.getCollectionBySlug(cfg.runelayer, route.slug);
+      const query = cfg.withRequest(event);
+
+      const formData = await event.request.formData();
+      const data = parseDocumentPayload(formData, collection.fields, cfg.kit);
+      const id = typeof data.id === "string" ? data.id : route.id;
+      delete data.id;
+      const document = await query.saveDraft(collection, id, data);
+
+      return {
+        success: true,
+        document: toSerializable(document),
+      };
+    },
+
+    restoreVersion: async (event) => {
+      const route = await resolveGuardedRoute(event, "collection-edit", cfg);
+      const collection = cfg.getCollectionBySlug(cfg.runelayer, route.slug);
+      const query = cfg.withRequest(event);
+
+      const formData = await event.request.formData();
+      const id = formField(formData, "id") || route.id;
+      const versionId = formField(formData, "versionId");
+      if (!versionId) {
+        return fail(400, { error: "Version ID is required." });
+      }
+      const document = await query.restoreVersion(collection, id, versionId);
+
+      return {
+        success: true,
+        document: toSerializable(document),
+      };
+    },
+
+    publishGlobal: async (event) => {
+      const route = await resolveGuardedRoute(event, "global-edit", cfg);
+      const global = cfg.resolveGlobalBySlug(cfg.runelayer, route.slug);
+      const document = await publishGlobal(cfg.runelayer, global, event.request);
+
+      return {
+        success: true,
+        document: toSerializable(document),
+      };
+    },
+
+    unpublishGlobal: async (event) => {
+      const route = await resolveGuardedRoute(event, "global-edit", cfg);
+      const global = cfg.resolveGlobalBySlug(cfg.runelayer, route.slug);
+      const document = await unpublishGlobal(cfg.runelayer, global, event.request);
+
+      return {
+        success: true,
+        document: toSerializable(document),
+      };
+    },
+
+    saveDraftGlobal: async (event) => {
+      const route = await resolveGuardedRoute(event, "global-edit", cfg);
+      const global = cfg.resolveGlobalBySlug(cfg.runelayer, route.slug);
+
+      const formData = await event.request.formData();
+      const data = parseDocumentPayload(formData, global.fields, cfg.kit);
+      const document = await updateGlobalDocument(cfg.runelayer, global, event.request, data, {
+        forceDraft: true,
+      });
+
+      return {
+        success: true,
+        document: toSerializable(document),
+      };
+    },
+
+    restoreGlobalVersion: async (event) => {
+      const route = await resolveGuardedRoute(event, "global-edit", cfg);
+      const global = cfg.resolveGlobalBySlug(cfg.runelayer, route.slug);
+
+      const formData = await event.request.formData();
+      const versionId = formField(formData, "versionId");
+      if (!versionId) {
+        return fail(400, { error: "Version ID is required." });
+      }
+      const document = await restoreGlobalVersion(cfg.runelayer, global, event.request, versionId);
+
+      return {
+        success: true,
+        document: toSerializable(document),
+      };
     },
 
     logout: async (event) => {

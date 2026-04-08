@@ -1,6 +1,17 @@
 import type { RequestEvent } from "@sveltejs/kit";
 import type { RunelayerInstance } from "../plugin.js";
-import { create, find, findOne, remove, update } from "../query/index.js";
+import {
+  create,
+  find,
+  findOne,
+  remove,
+  update,
+  publish,
+  unpublish,
+  saveDraft,
+  findVersionHistory,
+  restoreVersion,
+} from "../query/index.js";
 import type { CollectionConfig } from "../schema/collections.js";
 import type { FindArgs } from "../query/types.js";
 import type { CollectionInput, RunelayerQueryApi } from "./types.js";
@@ -60,16 +71,6 @@ export function toRequest(eventOrRequest: RequestEvent | Request): Request {
   throw new Error("Expected Request or RequestEvent");
 }
 
-export function systemRequest(adminPath: string): Request {
-  return new Request(`http://localhost${adminPath}`, {
-    headers: {
-      "x-user-id": "runelayer-system",
-      "x-user-role": "admin",
-      "x-user-email": "system@runelayer.local",
-    },
-  });
-}
-
 export function createQueryApi(
   runelayer: RunelayerInstance,
   requestFactory: () => Request,
@@ -81,6 +82,7 @@ export function createQueryApi(
         {
           db: runelayer.database,
           collection,
+          collections: runelayer.collections,
           req: requestFactory(),
         },
         args,
@@ -89,22 +91,127 @@ export function createQueryApi(
 
     async findOne(collectionInput: CollectionInput, id: string) {
       const collection = resolveCollection(runelayer.collections, collectionInput);
-      return await findOne({ db: runelayer.database, collection, req: requestFactory() }, id);
+      return await findOne(
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
+        id,
+      );
     },
 
     async create(collectionInput: CollectionInput, data: Record<string, unknown>) {
       const collection = resolveCollection(runelayer.collections, collectionInput);
-      return await create({ db: runelayer.database, collection, req: requestFactory() }, data);
+      return await create(
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
+        data,
+      );
     },
 
     async update(collectionInput: CollectionInput, id: string, data: Record<string, unknown>) {
       const collection = resolveCollection(runelayer.collections, collectionInput);
-      return await update({ db: runelayer.database, collection, req: requestFactory() }, id, data);
+      return await update(
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
+        id,
+        data,
+      );
     },
 
     async remove(collectionInput: CollectionInput, id: string) {
       const collection = resolveCollection(runelayer.collections, collectionInput);
-      return await remove({ db: runelayer.database, collection, req: requestFactory() }, id);
+      return await remove(
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
+        id,
+      );
+    },
+
+    async publish(collectionInput: CollectionInput, id: string) {
+      const collection = resolveCollection(runelayer.collections, collectionInput);
+      return await publish(
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
+        id,
+      );
+    },
+
+    async unpublish(collectionInput: CollectionInput, id: string) {
+      const collection = resolveCollection(runelayer.collections, collectionInput);
+      return await unpublish(
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
+        id,
+      );
+    },
+
+    async saveDraft(collectionInput: CollectionInput, id: string, data: Record<string, unknown>) {
+      const collection = resolveCollection(runelayer.collections, collectionInput);
+      return await saveDraft(
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
+        id,
+        data,
+      );
+    },
+
+    async findVersionHistory(
+      collectionInput: CollectionInput,
+      id: string,
+      opts?: { limit?: number; offset?: number },
+    ) {
+      const collection = resolveCollection(runelayer.collections, collectionInput);
+      return await findVersionHistory(
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
+        id,
+        opts,
+      );
+    },
+
+    async restoreVersion(collectionInput: CollectionInput, id: string, versionId: string) {
+      const collection = resolveCollection(runelayer.collections, collectionInput);
+      return await restoreVersion(
+        {
+          db: runelayer.database,
+          collection,
+          collections: runelayer.collections,
+          req: requestFactory(),
+        },
+        id,
+        versionId,
+      );
     },
   };
 }
@@ -167,11 +274,12 @@ export function normalizeUserRole(input: string): string {
 export function parseAuthErrorMessage(payload: unknown, fallback: string): string {
   if (payload && typeof payload === "object") {
     const data = payload as Record<string, unknown>;
-    if (typeof data.message === "string" && data.message.trim().length > 0) {
-      return data.message;
-    }
-    if (typeof data.error === "string" && data.error.trim().length > 0) {
-      return data.error;
+    const rawMessage =
+      (typeof data.message === "string" && data.message.trim().length > 0 && data.message) ||
+      (typeof data.error === "string" && data.error.trim().length > 0 && data.error) ||
+      undefined;
+    if (rawMessage) {
+      console.error("[runelayer] Auth error:", rawMessage);
     }
   }
   return fallback;

@@ -11,6 +11,7 @@ export type AccessControl = {
   read?: AccessFn;
   update?: AccessFn;
   delete?: AccessFn;
+  publish?: AccessFn;
 };
 
 export type FieldAccess = {
@@ -24,23 +25,33 @@ export type ValidationFn<T = unknown> = (
   args: { data: Record<string, unknown> },
 ) => true | string;
 
-export type HookArgs = {
-  req: Request;
-  data: Record<string, unknown>;
-  originalDoc?: Record<string, unknown>;
+export type HookContext = {
+  collection: string;
+  operation: "create" | "read" | "update" | "delete" | "publish";
+  req?: Request;
+  data?: Record<string, unknown>;
   id?: string;
+  existingDoc?: Record<string, unknown>;
+  previousStatus?: string;
 };
 
-export type BeforeChangeHook = (
-  args: HookArgs,
-) => Record<string, unknown> | Promise<Record<string, unknown>>;
-export type AfterChangeHook = (args: HookArgs) => void | Promise<void>;
-export type BeforeDeleteHook = (args: Omit<HookArgs, "data">) => void | Promise<void>;
-export type AfterDeleteHook = (args: Omit<HookArgs, "data">) => void | Promise<void>;
+export type BeforeChangeHook = (ctx: HookContext) => HookContext | Promise<HookContext>;
+export type AfterChangeHook = (
+  ctx: HookContext & { doc: Record<string, unknown> },
+) => void | Promise<void>;
+export type BeforeDeleteHook = (ctx: HookContext) => HookContext | Promise<HookContext>;
+export type AfterDeleteHook = (
+  ctx: HookContext & { doc?: Record<string, unknown> },
+) => void | Promise<void>;
 
-export type BeforeReadHook = (args: Omit<HookArgs, "data">) => void | Promise<void>;
+export type BeforeReadHook = (ctx: HookContext) => HookContext | Promise<HookContext>;
 export type AfterReadHook = (
-  args: Omit<HookArgs, "data"> & { doc: Record<string, unknown> },
+  ctx: HookContext & { doc: Record<string, unknown> },
+) => void | Promise<void>;
+
+export type BeforePublishHook = (ctx: HookContext) => HookContext | Promise<HookContext>;
+export type AfterPublishHook = (
+  ctx: HookContext & { doc: Record<string, unknown> },
 ) => void | Promise<void>;
 
 export type Hooks = {
@@ -50,6 +61,8 @@ export type Hooks = {
   afterDelete?: AfterDeleteHook[];
   beforeRead?: BeforeReadHook[];
   afterRead?: AfterReadHook[];
+  beforePublish?: BeforePublishHook[];
+  afterPublish?: AfterPublishHook[];
 };
 
 export type CollectionAuthConfig = {

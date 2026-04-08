@@ -74,4 +74,67 @@ describe("runAfterHooks", () => {
     expect(tracker).toHaveBeenCalledOnce();
     spy.mockRestore();
   });
+
+  it("catches async rejections without throwing", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const asyncFailingHook = async () => {
+      throw new Error("async boom");
+    };
+    await expect(runAfterHooks([asyncFailingHook], baseCtx)).resolves.toBeUndefined();
+    expect(spy).toHaveBeenCalledWith(
+      expect.stringContaining("[runelayer]"),
+      expect.objectContaining({ message: "async boom" }),
+    );
+    spy.mockRestore();
+  });
+});
+
+describe("runBeforeHooks edge cases", () => {
+  it("propagates errors thrown by a beforeHook", async () => {
+    const throwingHook = (): HookContext => {
+      throw new Error("hook exploded");
+    };
+    await expect(runBeforeHooks([throwingHook], baseCtx)).rejects.toThrow("hook exploded");
+  });
+
+  it("throws when beforeHook forgets to return (returns undefined)", async () => {
+    const badHook = (() => undefined) as unknown as (ctx: HookContext) => HookContext;
+    await expect(runBeforeHooks([badHook], baseCtx)).rejects.toThrow("must return");
+  });
+
+  it("executes hooks in order and passes accumulated state", async () => {
+    const order: number[] = [];
+    const hookA = (ctx: HookContext): HookContext => {
+      order.push(1);
+      return { ...ctx, data: { ...ctx.data, step: 1 } };
+    };
+    const hookB = (ctx: HookContext): HookContext => {
+      order.push(2);
+      expect(ctx.data?.step).toBe(1);
+      return { ...ctx, data: { ...ctx.data, step: 2 } };
+    };
+    const hookC = (ctx: HookContext): HookContext => {
+      order.push(3);
+      expect(ctx.data?.step).toBe(2);
+      return { ...ctx, data: { ...ctx.data, step: 3 } };
+    };
+    const result = await runBeforeHooks([hookA, hookB, hookC], baseCtx);
+    expect(order).toEqual([1, 2, 3]);
+    expect(result.data?.step).toBe(3);
+  });
+
+  it("stops execution when a hook throws (subsequent hooks do not run)", async () => {
+    const tracker = vi.fn();
+    const throwingHook = (): HookContext => {
+      throw new Error("stop here");
+    };
+    const neverReachedHook = (ctx: HookContext): HookContext => {
+      tracker();
+      return ctx;
+    };
+    await expect(runBeforeHooks([throwingHook, neverReachedHook], baseCtx)).rejects.toThrow(
+      "stop here",
+    );
+    expect(tracker).not.toHaveBeenCalled();
+  });
 });

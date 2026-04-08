@@ -1,4 +1,5 @@
 import type { AccessFn } from "../schema/types.js";
+import { httpError } from "./errors.js";
 
 export async function checkAccess(
   accessFn: AccessFn | undefined,
@@ -10,12 +11,10 @@ export async function checkAccess(
   if (!accessFn) return;
   // Access function defined but no request = deny by default (server-side must explicitly bypass)
   if (!req) {
-    throw Object.assign(new Error("Forbidden: no request context for access check"), {
-      status: 403,
-    });
+    throw httpError(403, "Forbidden: no request context for access check");
   }
   const allowed = await accessFn({ req, id, data });
   if (!allowed) {
-    throw Object.assign(new Error("Forbidden"), { status: 403 });
+    throw httpError(403, "Forbidden");
   }
 }

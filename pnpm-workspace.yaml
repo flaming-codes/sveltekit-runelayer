@@ -19,8 +19,8 @@ catalog:
   svelte: ^5
   testcontainers: ^11.13.0
   typescript: ^5
-  vite: npm:@voidzero-dev/vite-plus-core@latest
-  vite-plus: latest
+  vite: npm:@voidzero-dev/vite-plus-core@^0.1.14
+  vite-plus: ^0.1.14
   vitest: npm:@voidzero-dev/vite-plus-test@^0.1.14
 
 catalogMode: prefer

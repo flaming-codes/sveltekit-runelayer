@@ -95,4 +95,46 @@ describe("createLocalStorage", () => {
     const url = storage.getUrl("some/path.jpg");
     expect(url).toBe("/files/some/path.jpg");
   });
+
+  it("getStream returns stream content for existing file", async () => {
+    const expectedContent = "stream me";
+    const uploaded = await storage.upload(Buffer.from(expectedContent), {
+      filename: "stream.txt",
+      mimeType: "text/plain",
+    });
+
+    const stream = storage.getStream(uploaded.path);
+    expect(stream).not.toBeNull();
+
+    const reader = stream!.getReader();
+    const chunks: Uint8Array[] = [];
+    let done = false;
+    while (!done) {
+      const chunk = await reader.read();
+      if (chunk.value) chunks.push(chunk.value);
+      done = chunk.done;
+    }
+
+    expect(Buffer.concat(chunks).toString("utf8")).toBe(expectedContent);
+  });
+
+  it("getStream returns a stream for missing file (caller checks existence)", () => {
+    const stream = storage.getStream("missing.txt");
+    expect(stream).toBeInstanceOf(ReadableStream);
+  });
+
+  it("getStream returns a stream for directories (caller checks existence)", async () => {
+    await storage.upload(Buffer.from("doc"), {
+      filename: "doc.txt",
+      mimeType: "text/plain",
+      folder: "documents",
+    });
+
+    const stream = storage.getStream("documents");
+    expect(stream).toBeInstanceOf(ReadableStream);
+  });
+
+  it("getStream rejects traversal paths", () => {
+    expect(() => storage.getStream("../etc/passwd")).toThrow();
+  });
 });

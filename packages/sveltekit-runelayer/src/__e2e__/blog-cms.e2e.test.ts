@@ -65,7 +65,6 @@ const Authors: CollectionConfig = defineCollection({
     { name: "active", label: "Active", ...checkbox({ defaultValue: true }) },
   ],
   admin: { useAsTitle: "name", defaultColumns: ["name", "email", "role"] },
-  timestamps: true,
 });
 
 const Categories: CollectionConfig = defineCollection({
@@ -108,7 +107,6 @@ const Posts: CollectionConfig = defineCollection({
     { name: "metadata", label: "SEO Metadata", ...json() },
   ],
   admin: { useAsTitle: "title", defaultColumns: ["title", "status", "author"] },
-  timestamps: true,
   versions: { drafts: true },
 });
 
@@ -282,8 +280,9 @@ describe("Blog CMS Platform — Full User Journey", () => {
     });
 
     expect(postSvelte.title).toBe("Getting Started with Svelte 5");
-    expect(postSvelte.author).toBe(authorAlice.id);
-    expect(postSvelte.category).toBe(catTech.id);
+    // Relationship fields are now stored as RefSentinel objects
+    expect((postSvelte.author as { _ref: string })._ref).toBe(authorAlice.id);
+    expect((postSvelte.category as { _ref: string })._ref).toBe(catTech.id);
     expect(postSvelte.featured).toBe(true);
     expect(postFigma.status).toBe("draft");
   });
@@ -291,23 +290,23 @@ describe("Blog CMS Platform — Full User Journey", () => {
   // --- Phase 3: Query content ---
 
   it("finds all posts (5 total)", async () => {
-    const allPosts = await find(postCtx);
+    const allPosts = await find(postCtx, { draft: true });
     expect(allPosts).toHaveLength(5);
   });
 
   it("finds posts with pagination", async () => {
-    const page1 = await find(postCtx, { limit: 2 });
+    const page1 = await find(postCtx, { limit: 2, draft: true });
     expect(page1).toHaveLength(2);
 
-    const page2 = await find(postCtx, { limit: 2, offset: 2 });
+    const page2 = await find(postCtx, { limit: 2, offset: 2, draft: true });
     expect(page2).toHaveLength(2);
 
-    const page3 = await find(postCtx, { limit: 2, offset: 4 });
+    const page3 = await find(postCtx, { limit: 2, offset: 4, draft: true });
     expect(page3).toHaveLength(1);
   });
 
   it("finds posts sorted by title", async () => {
-    const sorted = await find(postCtx, { sort: "title", sortOrder: "asc" });
+    const sorted = await find(postCtx, { sort: "title", sortOrder: "asc", draft: true });
     const titles = sorted.map((p: any) => p.title);
     expect(titles[0]).toBe("Figma to Code Workflows");
     expect(titles[4]).toBe("Why Rust for Web Tooling");
@@ -317,7 +316,7 @@ describe("Blog CMS Platform — Full User Journey", () => {
     const found = await findOne(postCtx, postSvelte.id as string);
     expect(found).toBeDefined();
     expect(found!.title).toBe("Getting Started with Svelte 5");
-    expect(found!.author).toBe(authorAlice.id);
+    expect((found!.author as { _ref: string })._ref).toBe(authorAlice.id);
   });
 
   it("finds all authors (2 total)", async () => {
@@ -356,29 +355,31 @@ describe("Blog CMS Platform — Full User Journey", () => {
   });
 
   it("now has 4 posts after deletion", async () => {
-    const allPosts = await find(postCtx);
+    const allPosts = await find(postCtx, { draft: true });
     expect(allPosts).toHaveLength(4);
   });
 
   // --- Phase 6: Cross-collection relationship integrity ---
 
   it("posts reference valid author IDs", async () => {
-    const posts = await find(postCtx);
+    const posts = await find(postCtx, { draft: true });
     for (const post of posts) {
       const p = post as Record<string, unknown>;
       if (p.author) {
-        const author = await findOne(authorCtx, p.author as string);
+        const ref = (p.author as { _ref: string })._ref;
+        const author = await findOne(authorCtx, ref);
         expect(author).toBeDefined();
       }
     }
   });
 
   it("posts reference valid category IDs", async () => {
-    const posts = await find(postCtx);
+    const posts = await find(postCtx, { draft: true });
     for (const post of posts) {
       const p = post as Record<string, unknown>;
       if (p.category) {
-        const cat = await findOne(categoryCtx, p.category as string);
+        const ref = (p.category as { _ref: string })._ref;
+        const cat = await findOne(categoryCtx, ref);
         expect(cat).toBeDefined();
       }
     }
@@ -387,7 +388,7 @@ describe("Blog CMS Platform — Full User Journey", () => {
   // --- Phase 7: Verify timestamps and metadata ---
 
   it("all documents have valid timestamps", async () => {
-    const posts = await find(postCtx);
+    const posts = await find(postCtx, { draft: true });
     for (const post of posts) {
       const p = post as Record<string, unknown>;
       expect(p.createdAt).toBeDefined();

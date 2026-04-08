@@ -1,9 +1,18 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { generateTables } from "../schema.js";
+import { generateTables, generateGlobalTables } from "../schema.js";
 import { createDatabase, type RunelayerDatabase } from "../init.js";
 import { insertOne, findById, findMany, updateOne, deleteOne } from "../operations.js";
-import { text, number, checkbox, json, array, relationship } from "../../schema/fields.js";
+import {
+  text,
+  number,
+  checkbox,
+  json,
+  blocks,
+  defineBlock,
+  relationship,
+} from "../../schema/fields.js";
 import type { CollectionConfig } from "../../schema/collections.js";
+import { defineGlobal } from "../../schema/globals.js";
 import { applySchemaForTests } from "../../__testutils__/migrations.js";
 
 const postsCollection: CollectionConfig = {
@@ -22,26 +31,34 @@ describe("generateTables", () => {
     expect(tables).toHaveProperty("posts");
   });
 
-  it("creates auxiliary tables for array fields", () => {
+  it("creates a JSON column for blocks fields (no auxiliary tables)", () => {
+    const ContentBlock = defineBlock({
+      slug: "content",
+      label: "Content",
+      fields: [{ name: "body", ...text() }],
+    });
     const col: CollectionConfig = {
       slug: "pages",
       fields: [
         { name: "title", ...text() },
-        { name: "blocks", ...array({ fields: [{ name: "content", ...text() }] }) },
+        { name: "layout", ...blocks({ blocks: [ContentBlock] }) },
       ],
     };
     const tables = generateTables([col]);
     expect(tables).toHaveProperty("pages");
-    expect(tables).toHaveProperty("pages_blocks");
+    // No auxiliary table — blocks stored as JSON column in main table
+    expect(tables).not.toHaveProperty("pages_layout");
   });
 
-  it("creates join tables for hasMany relationships", () => {
+  it("creates a JSON column for hasMany relationships (no join tables)", () => {
     const col: CollectionConfig = {
       slug: "articles",
       fields: [{ name: "tags", ...relationship({ relationTo: "tags", hasMany: true }) }],
     };
     const tables = generateTables([col]);
-    expect(tables).toHaveProperty("articles_rels_tags");
+    expect(tables).toHaveProperty("articles");
+    // No join table — hasMany stored as RefSentinel[] JSON column in main table
+    expect(tables).not.toHaveProperty("articles_rels_tags");
   });
 
   it("adds version columns when versions is enabled", () => {
@@ -62,6 +79,31 @@ describe("generateTables", () => {
     };
     const tables = generateTables([col]);
     expect(tables).toHaveProperty("users");
+  });
+});
+
+describe("generateGlobalTables", () => {
+  const SiteSettings = defineGlobal({
+    slug: "site-settings",
+    fields: [{ name: "siteName", ...text({ required: true }) }],
+  });
+
+  const VersionedSettings = defineGlobal({
+    slug: "versioned-settings",
+    fields: [{ name: "siteName", ...text({ required: true }) }],
+    versions: true,
+  });
+
+  it("creates the shared globals table when globals are configured", () => {
+    const tables = generateGlobalTables([SiteSettings]);
+    expect(tables).toHaveProperty("__runelayer_globals");
+    expect(tables).not.toHaveProperty("__runelayer_global_versions");
+  });
+
+  it("creates the globals versions table when versioning is enabled", () => {
+    const tables = generateGlobalTables([SiteSettings, VersionedSettings]);
+    expect(tables).toHaveProperty("__runelayer_globals");
+    expect(tables).toHaveProperty("__runelayer_global_versions");
   });
 });
 

@@ -4,13 +4,15 @@
 		BreadcrumbItem,
 		Button,
 		DataTable,
+		Heading,
 		Pagination,
+		Section,
 		Select,
 		SelectItem,
 		Tag,
-		TextInput,
 		Toolbar,
 		ToolbarContent,
+		ToolbarSearch,
 	} from "carbon-components-svelte";
 	import { goto } from "$app/navigation";
 
@@ -65,7 +67,7 @@
 		{ key: "email", value: "Email" },
 		{ key: "role", value: "Role" },
 		{ key: "status", value: "Status" },
-		{ key: "actions", value: "Actions" },
+		{ key: "actions", value: "" },
 	];
 
 	let rows: UserRow[] = $derived(
@@ -79,67 +81,96 @@
 		})),
 	);
 
-	function usersHref(nextPage: number, nextLimit: number = limit) {
+	function usersHref(nextPage: number, nextLimit: number = limit, q = searchTerm, role = roleFilter) {
 		const params = new URLSearchParams();
-		if (searchTerm.trim().length > 0) {
-			params.set("q", searchTerm.trim());
-		}
-		if (roleFilter.trim().length > 0) {
-			params.set("role", roleFilter.trim().toLowerCase());
-		}
-		if (nextPage > 1) {
-			params.set("page", String(nextPage));
-		}
-		if (nextLimit !== 20) {
-			params.set("limit", String(nextLimit));
-		}
+		if (q.trim().length > 0) params.set("q", q.trim());
+		if (role.trim().length > 0) params.set("role", role.trim().toLowerCase());
+		if (nextPage > 1) params.set("page", String(nextPage));
+		if (nextLimit !== 20) params.set("limit", String(nextLimit));
 		const query = params.toString();
 		return `${basePath}/users${query ? `?${query}` : ""}`;
 	}
+
+	function applyFilters(q: string, role: string) {
+		goto(usersHref(1, limit, q, role));
+	}
+
+	let localSearch = $state("");
+	let localRole = $state("");
+
+	$effect(() => {
+		localSearch = searchTerm;
+		localRole = roleFilter;
+	});
 </script>
 
 <section class="rk-page">
-	<div class="rk-page-header">
+	<!-- Header (sticky) -->
+	<div class="rk-page-header rk-page-header--sticky">
 		<div class="rk-page-header-inner">
 			<Breadcrumb noTrailingSlash>
 				<BreadcrumbItem href={basePath}>Dashboard</BreadcrumbItem>
 				<BreadcrumbItem href={`${basePath}/users`} isCurrentPage>Users</BreadcrumbItem>
 			</Breadcrumb>
+
 			<div class="rk-page-title-row">
-				<div>
-					<p class="rk-eyebrow">Access</p>
-					<h1>{totalUsers} Users</h1>
-				</div>
-				<Button href={`${basePath}/users/create`}>Create user</Button>
+				<Section>
+					<Heading>{totalUsers} Users</Heading>
+				</Section>
+			</div>
+
+			<!-- Action toolbar -->
+			<div class="rk-toolbar-row">
+				<Toolbar>
+					<ToolbarContent>
+						<Button href={`${basePath}/users/create`}>Create user</Button>
+					</ToolbarContent>
+				</Toolbar>
 			</div>
 		</div>
 	</div>
 
 	<div class="rk-page-body">
-		<form method="GET" action={`${basePath}/users`} class="rk-toolbar-filters">
-			<div class="rk-filter-fields">
-				<TextInput
-					name="q"
-					size="sm"
-					labelText=""
-					hideLabel
-					placeholder="Search name or email"
-					value={searchTerm}
-				/>
-				<Select name="role" size="sm" labelText="" hideLabel value={roleFilter}>
-					<SelectItem value="" text="All roles" />
-					<SelectItem value="admin" text="Admin" />
-					<SelectItem value="editor" text="Editor" />
-					<SelectItem value="user" text="User" />
-				</Select>
-				<Button type="submit" size="small" kind="primary">Apply</Button>
-				{#if searchTerm || roleFilter}
-					<Button size="small" kind="ghost" href={`${basePath}/users`}>Reset</Button>
-				{/if}
-			</div>
-		</form>
-
-		<DataTable {headers} rows={rows} sortable size="short">
+		<DataTable {headers} {rows} sortable size="short">
+			<Toolbar>
+				<ToolbarContent>
+					<ToolbarSearch
+						persistent
+						value={localSearch}
+						placeholder="Search name or email"
+						on:input={(e) => {
+							localSearch = (e.target as HTMLInputElement | null)?.value ?? "";
+						}}
+						on:clear={() => {
+							localSearch = "";
+							applyFilters("", localRole);
+						}}
+						on:keydown={(e: KeyboardEvent) => {
+							if (e.key === "Enter") applyFilters(localSearch, localRole);
+						}}
+					/>
+					<div class="rk-role-filter">
+						<Select
+							hideLabel
+							labelText="Role"
+							size="sm"
+							value={localRole}
+							on:change={(e) => {
+								localRole = (e.target as HTMLSelectElement | null)?.value ?? "";
+								applyFilters(localSearch, localRole);
+							}}
+						>
+							<SelectItem value="" text="All roles" />
+							<SelectItem value="admin" text="Admin" />
+							<SelectItem value="editor" text="Editor" />
+							<SelectItem value="user" text="User" />
+						</Select>
+					</div>
+					{#if searchTerm || roleFilter}
+						<Button kind="ghost" size="small" href={`${basePath}/users`}>Reset</Button>
+					{/if}
+				</ToolbarContent>
+			</Toolbar>
 			<svelte:fragment slot="cell" let:row let:cell>
 				{#if cell.key === "name"}
 					<a href={`${basePath}/users/${row.id}`} class="rk-table-link">{cell.value}</a>
@@ -178,15 +209,47 @@
 <style>
 	@import "./page-layout.css";
 
-	.rk-toolbar-filters {
-		margin-bottom: var(--cds-spacing-05);
+	/* Sticky header */
+	.rk-page-header--sticky {
+		position: sticky;
+		top: 0;
+		z-index: 200;
 	}
 
-	.rk-filter-fields {
+	.rk-page-header :global(h1) {
+		margin: 0;
+		font-size: 1.75rem;
+		font-weight: 300;
+		line-height: 1.2;
+	}
+
+	/* Toolbar row */
+	.rk-toolbar-row {
+		margin-top: var(--cds-spacing-04);
+		border-top: 1px solid var(--cds-border-subtle);
+	}
+
+	.rk-toolbar-row :global(.bx--table-toolbar) {
+		background: transparent;
+		min-height: 3rem;
+	}
+
+	.rk-toolbar-row :global(.bx--toolbar-content) {
+		padding: var(--cds-spacing-03) 0;
+	}
+
+	.rk-page-title-row {
+		margin-top: var(--cds-spacing-04);
+	}
+
+	/* Role filter inside DataTable toolbar */
+	.rk-role-filter {
 		display: flex;
-		align-items: flex-end;
-		gap: var(--cds-spacing-03);
-		flex-wrap: wrap;
+		align-items: center;
+	}
+
+	.rk-role-filter :global(.bx--select) {
+		min-width: 10rem;
 	}
 
 	.rk-table-link {
@@ -197,12 +260,5 @@
 
 	.rk-table-link:hover {
 		text-decoration: underline;
-	}
-
-	@media (max-width: 672px) {
-		.rk-filter-fields {
-			flex-direction: column;
-			align-items: stretch;
-		}
 	}
 </style>

@@ -25,7 +25,8 @@ export {
   slug,
   email,
   group,
-  array,
+  blocks,
+  defineBlock,
   row,
   collapsible,
 } from "./schema/index.js";
@@ -38,6 +39,12 @@ export type {
   AccessFn,
   AccessControl,
   ValidationFn,
+  BlocksField,
+  BlockConfig,
+  RefSentinel,
+  BlocksValue,
+  InferBlockData,
+  InferFieldsData,
 } from "./schema/index.js";
 
 // Auth
@@ -45,17 +52,59 @@ export { createAuth, createAuthHandler, isAdmin, isLoggedIn, hasRole } from "./a
 export type { AuthConfig, User, Session, Role } from "./auth/index.js";
 
 // Storage
-export { createLocalStorage } from "./storage/index.js";
-export type { StorageAdapter, StoredFile, UploadOptions } from "./storage/index.js";
+export { createLocalStorage, createUploadHandler, createServeHandler } from "./storage/index.js";
+export type {
+  StorageAdapter,
+  StoredFile,
+  UploadOptions,
+  LocalStorageConfig,
+  UploadHandlerConfig,
+  ServeHandlerConfig,
+} from "./storage/index.js";
 
 // Database
-export { createDatabase, createDrizzleKitSchema } from "./db/index.js";
-export type { RunelayerDatabase, DatabaseConfig, DatabaseConnectionConfig } from "./db/index.js";
+export {
+  createDatabase,
+  createDrizzleKitSchema,
+  findMany,
+  findById,
+  insertOne,
+  updateOne,
+  deleteOne,
+  createVersionSnapshot,
+  findVersions,
+  findVersionById,
+  getLatestVersionNumber,
+  deleteVersionsByParent,
+  pruneVersions,
+} from "./db/index.js";
+export type {
+  RunelayerDatabase,
+  DatabaseConfig,
+  DatabaseConnectionConfig,
+  FindManyOpts,
+} from "./db/index.js";
 
 // Hooks
 export { runBeforeHooks, runAfterHooks } from "./hooks/index.js";
 export type { HookContext, CollectionHooks, GlobalHooks } from "./hooks/index.js";
 
 // Query API
-export { find, findOne, create, update, remove } from "./query/index.js";
+export {
+  find,
+  findOne,
+  create,
+  update,
+  remove,
+  publish,
+  unpublish,
+  saveDraft,
+  findVersionHistory,
+  restoreVersion,
+  checkAccess,
+} from "./query/index.js";
 export type { QueryContext, FindArgs } from "./query/index.js";
+
+// Versions
+export { normalizeVersionConfig } from "./versions/config.js";
+export type { NormalizedVersionConfig } from "./versions/config.js";

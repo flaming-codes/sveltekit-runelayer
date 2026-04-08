@@ -1,8 +1,11 @@
-import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real, index } from "drizzle-orm/sqlite-core";
 import type { SQLiteTableWithColumns } from "drizzle-orm/sqlite-core";
 import type { SQLiteColumnBuilderBase } from "drizzle-orm/sqlite-core/columns/common";
 import type { CollectionConfig } from "../schema/collections.js";
+import type { GlobalConfig } from "../schema/globals.js";
 import type { NamedField } from "../schema/fields.js";
+import { getFieldLayout } from "../schema/document-shape.js";
+import { normalizeVersionConfig } from "../versions/config.js";
 
 type AnyTable = SQLiteTableWithColumns<any>;
 type ColumnDef = SQLiteColumnBuilderBase;
@@ -33,14 +36,14 @@ function mapField(field: NamedField, prefix = ""): Record<string, ColumnDef> {
       return { [col]: text(col, { mode: "json" }) };
 
     case "relationship":
-      if (field.hasMany) return {}; // handled via join table
-      return { [col]: text(col) };
+      // Both single and hasMany stored as RefSentinel / RefSentinel[] JSON
+      return { [col]: text(col, { mode: "json" }) };
 
     case "group":
       return fieldsToColumns(field.fields, prefix + field.name + "_");
 
-    case "array":
-      return {}; // handled via separate table
+    case "blocks":
+      return { [col]: text(col, { mode: "json" }) };
 
     case "row":
     case "collapsible":
@@ -66,6 +69,8 @@ function baseColumns() {
 }
 
 export type GeneratedTables = Record<string, AnyTable>;
+export const GLOBALS_TABLE_NAME = "__runelayer_globals";
+export const GLOBAL_VERSIONS_TABLE_NAME = "__runelayer_global_versions";
 
 /** Generate all Drizzle tables from an array of CollectionConfigs. */
 export function generateTables(collections: CollectionConfig[]): GeneratedTables {
@@ -73,6 +78,7 @@ export function generateTables(collections: CollectionConfig[]): GeneratedTables
 
   for (const collection of collections) {
     const { slug, fields, versions, auth } = collection;
+    getFieldLayout(fields);
     const fieldCols = fieldsToColumns(fields);
 
     const extras: Record<string, ColumnDef> = {};
@@ -87,29 +93,62 @@ export function generateTables(collections: CollectionConfig[]): GeneratedTables
       extras.tokenExpiry = text("tokenExpiry");
     }
 
-    tables[slug] = sqliteTable(slug, { ...baseColumns(), ...fieldCols, ...extras });
+    tables[slug] = sqliteTable(slug, {
+      ...baseColumns(),
+      ...fieldCols,
+      ...extras,
+    });
 
-    // Create auxiliary tables for array fields and hasMany relationships
-    for (const f of fields) {
-      if (f.type === "array") {
-        const arraySlug = `${slug}_${f.name}`;
-        const arrayCols = fieldsToColumns(f.fields);
-        tables[arraySlug] = sqliteTable(arraySlug, {
+    // Create version history table for versioned collections
+    if (versions) {
+      const versionsSlug = `${slug}_versions`;
+      tables[versionsSlug] = sqliteTable(
+        versionsSlug,
+        {
           id: text("id").primaryKey(),
           _parentId: text("_parentId").notNull(),
-          _order: integer("_order").notNull(),
-          ...arrayCols,
-        });
-      }
-      if (f.type === "relationship" && f.hasMany) {
-        const joinSlug = `${slug}_rels_${f.name}`;
-        tables[joinSlug] = sqliteTable(joinSlug, {
-          id: text("id").primaryKey(),
-          parentId: text("parentId").notNull(),
-          relatedId: text("relatedId").notNull(),
-        });
-      }
+          _version: integer("_version").notNull(),
+          _status: text("_status").notNull(),
+          _snapshot: text("_snapshot", { mode: "json" }),
+          _createdBy: text("_createdBy"),
+          createdAt: text("createdAt").notNull(),
+        },
+        (t) => [index(`${slug}_versions_parentId_idx`).on(t._parentId, t.createdAt)],
+      );
     }
+  }
+
+  return tables;
+}
+
+/** Generate Drizzle tables used by global document persistence. */
+export function generateGlobalTables(globals: GlobalConfig[]): GeneratedTables {
+  if (globals.length === 0) return {};
+
+  const tables: GeneratedTables = {
+    [GLOBALS_TABLE_NAME]: sqliteTable(GLOBALS_TABLE_NAME, {
+      slug: text("slug").primaryKey().notNull(),
+      data: text("data").notNull(),
+      updatedAt: text("updatedAt").notNull(),
+      _status: text("_status").$default(() => "draft"),
+      _version: integer("_version").$default(() => 1),
+    }),
+  };
+
+  if (globals.some((global) => normalizeVersionConfig(global.versions))) {
+    tables[GLOBAL_VERSIONS_TABLE_NAME] = sqliteTable(
+      GLOBAL_VERSIONS_TABLE_NAME,
+      {
+        id: text("id").primaryKey().notNull(),
+        _globalSlug: text("_globalSlug").notNull(),
+        _version: integer("_version").notNull(),
+        _status: text("_status").notNull(),
+        _snapshot: text("_snapshot", { mode: "json" }).notNull(),
+        _createdBy: text("_createdBy"),
+        createdAt: text("createdAt").notNull(),
+      },
+      (t) => [index("idx_global_versions_slug").on(t._globalSlug, t.createdAt)],
+    );
   }
 
   return tables;

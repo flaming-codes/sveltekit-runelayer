@@ -43,7 +43,6 @@ const Users: CollectionConfig = defineCollection({
     { name: "verified", ...checkbox() },
   ],
   auth: true,
-  timestamps: true,
 });
 
 const Notifications: CollectionConfig = defineCollection({
@@ -54,7 +53,6 @@ const Notifications: CollectionConfig = defineCollection({
     { name: "body", ...text() },
     { name: "sent", ...checkbox() },
   ],
-  timestamps: true,
 });
 
 // --- Mailpit helper ---

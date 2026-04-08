@@ -11,17 +11,19 @@ Feature-by-feature comparison of sveltekit-runelayer v1 against Payload CMS v3, 
 
 ### sveltekit-runelayer v1 Status
 
-| Feature                              | Status               | Notes                                                                                                                                          |
-| ------------------------------------ | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `slug`, `fields`, `labels`           | Implemented          | Core collection config                                                                                                                         |
-| `access` (CRUD)                      | Implemented          | Per-operation access functions                                                                                                                 |
-| `hooks` (6 lifecycle types)          | Implemented          | beforeChange, afterChange, beforeDelete, afterDelete, beforeRead, afterRead                                                                    |
-| `timestamps`                         | Implemented          | Auto createdAt/updatedAt                                                                                                                       |
-| `versions` / `drafts`                | Implemented (schema) | \_status/\_version columns; publish workflow not yet wired                                                                                     |
-| `admin` (useAsTitle, defaultColumns) | Implemented          | Basic admin config                                                                                                                             |
-| `auth` flag                          | Implemented          | Adds auth columns to collection                                                                                                                |
-| `upload` flag                        | Implemented          | Upload config with mimeTypes, maxSize, imageSizes                                                                                              |
-| 16 field types                       | Implemented          | text, textarea, number, email, select, multiSelect, checkbox, date, relationship, upload, richText, json, slug, group, array, row, collapsible |
+| Feature                              | Status      | Notes                                                                                                                                           |
+| ------------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slug`, `fields`, `labels`           | Implemented | Core collection config                                                                                                                          |
+| `access` (CRUD)                      | Implemented | Per-operation access functions                                                                                                                  |
+| `hooks` (6 lifecycle types)          | Implemented | beforeChange, afterChange, beforeDelete, afterDelete, beforeRead, afterRead                                                                     |
+| `timestamps`                         | Implemented | Auto createdAt/updatedAt                                                                                                                        |
+| `versions` / `drafts`                | Implemented | Full version history, publish/unpublish/saveDraft/restore, per-collection versions table, admin UI with history panel                           |
+| `admin` (useAsTitle, defaultColumns) | Implemented | Basic admin config                                                                                                                              |
+| `auth` flag                          | Implemented | Adds auth columns to collection                                                                                                                 |
+| `upload` flag                        | Implemented | Upload config with mimeTypes, maxSize, imageSizes                                                                                               |
+| 16 field types                       | Implemented | text, textarea, number, email, select, multiSelect, checkbox, date, relationship, upload, richText, json, slug, group, blocks, row, collapsible |
+
+**Note on relationship storage**: sveltekit-runelayer uses sentinel objects (`{ _ref, _collection }`) rather than Payload's bare ID strings. hasMany relationships use a JSON array of sentinels stored in the main table rather than join tables. This enables polymorphic relationship support and depth-controlled population without additional tables.
 
 ### Deferred to v2
 
@@ -44,7 +46,7 @@ Feature-by-feature comparison of sveltekit-runelayer v1 against Payload CMS v3, 
 - `slug`, `fields`, `label`, `admin.group` — Implemented
 - `access` (read, update) — Implemented
 - `hooks` (beforeChange, afterChange) — Implemented
-- `versions` — Implemented (schema level)
+- `versions` — Implemented (full: publish/unpublish/history/restore)
 
 ### Deferred to v2
 
@@ -119,12 +121,6 @@ Payload allows access functions to return WHERE clauses (e.g., "users can only r
 - `_version` counter — Implemented
 - `maxPerDoc` config — Implemented (schema)
 
-### Not Yet Wired
-
-- Publish/unpublish API operations
-- Version history storage and retrieval
-- Restore to previous version
-
 ### Deferred to v2
 
 - Autosave with interval
@@ -185,11 +181,11 @@ Dashboard, Collection List/Edit, Version History, Account, Login, Forgot Passwor
 - User management (list/create/edit/delete/reset-password) — Implemented (`/admin/users*`)
 - Profile view — Implemented (`/admin/profile`)
 - Admin layout with sidebar — Implemented
-- 10 field renderers — Implemented
+- Version history view — Implemented (tabbed interface in CollectionEdit/GlobalEdit with restore)
+- 12 field renderers — Implemented (includes BlocksField, updated RelationshipField with sentinel storage)
 
 ### Deferred to v2
 
-- Version history view
 - Forgot password view
 - Custom admin components API
 - Custom views/routes API
@@ -199,20 +195,17 @@ Dashboard, Collection List/Edit, Version History, Account, Login, Forgot Passwor
 
 ## Risk Register
 
-| #   | Risk                                                       | Impact                                           | Severity                |
-| --- | ---------------------------------------------------------- | ------------------------------------------------ | ----------------------- |
-| 1   | Access control lacks query constraints                     | Cannot implement "users see only their own docs" | High                    |
-| 2   | Rich text format lock-in (Tiptap vs Lexical)               | No content portability with Payload              | Medium                  |
-| 3   | Admin UI is the largest engineering effort                 | Must render 15+ field types correctly            | High                    |
-| 4   | Better Auth session ↔ access control mapping               | Needs careful design for req.user                | Medium                  |
-| 5   | Version storage with SQLite single-writer                  | Heavy autosave could bottleneck                  | Low (autosave deferred) |
-| 6   | Polymorphic relationships need depth-controlled population | Required for real content modeling               | Medium                  |
+| #   | Risk                                         | Impact                                           | Severity                |
+| --- | -------------------------------------------- | ------------------------------------------------ | ----------------------- |
+| 1   | Access control lacks query constraints       | Cannot implement "users see only their own docs" | High                    |
+| 2   | Rich text format lock-in (Tiptap vs Lexical) | No content portability with Payload              | Medium                  |
+| 3   | Admin UI is the largest engineering effort   | Must render 15+ field types correctly            | High                    |
+| 4   | Better Auth session ↔ access control mapping | Needs careful design for req.user                | Medium                  |
+| 5   | Version storage with SQLite single-writer    | Heavy autosave could bottleneck                  | Low (autosave deferred) |
 
 ## Recommendations for v1 Completion
 
-1. Wire up publish/unpublish API operations for versions/drafts
-2. Add query constraint support to access functions (`boolean | SQL`)
-3. Integrate Tiptap in the rich text field component
-4. Build polymorphic relationship support with configurable `depth`
-5. Add `overrideAccess` flag to query operations for server-side bypass
-6. Add `locale` parameter to query operations for i18n
+1. Add query constraint support to access functions (`boolean | SQL`)
+2. Integrate Tiptap in the rich text field component
+3. Add `overrideAccess` flag to query operations for server-side bypass
+4. Add `locale` parameter to query operations for i18n

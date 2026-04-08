@@ -14,7 +14,8 @@ import {
   slug,
   email,
   group,
-  array,
+  blocks,
+  defineBlock,
   row,
   collapsible,
   defineCollection,
@@ -38,7 +39,8 @@ describe("field builders", () => {
     expect(upload({ relationTo: "media" }).type).toBe("upload");
     expect(slug({ from: "title" }).type).toBe("slug");
     expect(group({ fields: [] }).type).toBe("group");
-    expect(array({ fields: [] }).type).toBe("array");
+    expect(blocks({ blocks: [] }).type).toBe("blocks");
+    expect(defineBlock({ slug: "item", label: "Item", fields: [] }).slug).toBe("item");
     expect(row({ fields: [] }).type).toBe("row");
     expect(collapsible({ label: "Meta", fields: [] }).type).toBe("collapsible");
   });

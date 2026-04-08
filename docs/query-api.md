@@ -16,6 +16,7 @@ interface QueryContext {
   db: RunelayerDatabase; // Database instance from createDatabase()
   collection: CollectionConfig; // Collection definition
   req?: Request; // Request for access control (optional)
+  collections?: CollectionConfig[]; // All registered collections (for ref population with read projection)
 }
 ```
 
@@ -40,17 +41,62 @@ const docs = await find(ctx, {
 
 ```ts
 interface FindArgs {
-  where?: Record<string, unknown>; // Allowlisted equality filters
+  where?: Record<string, unknown>; // Allowlisted equality filters using public field names or group dot paths
   limit?: number;
   offset?: number;
-  sort?: string; // Column name to sort by
+  sort?: string; // Field name or group dot path to sort by
   sortOrder?: "asc" | "desc";
+  draft?: boolean; // Include draft documents (default: false for versioned collections)
+  depth?: 0 | 1; // Relationship population depth (default: 0)
 }
 ```
 
-Returns an array of document objects.
+Returns an array of document objects using the public nested field shape.
 
 `where` uses simple equality checks and only allows schema-backed fields plus core system columns (`id`, `createdAt`, `updatedAt`, and version columns when enabled). Unknown keys are rejected with a 400 error.
+
+Group fields always use nested objects in payloads and returned documents. To address a grouped leaf in filters or sorting, use a dot path that matches the public document shape.
+
+```ts
+const docs = await find(ctx, {
+  where: { "seo.metaTitle": "Launch post" },
+  sort: "seo.metaTitle",
+});
+```
+
+For versioned collections, `find()` automatically filters to `_status = 'published'` unless `draft: true` is passed. This ensures public APIs only return published content by default.
+
+### Relationship Population (depth)
+
+Both `find()` and `findOne()` accept a `depth` option that controls how relationship fields are returned.
+
+```ts
+// depth: 0 (default) — relationship fields return sentinel objects
+const docs = await find(ctx, { depth: 0 });
+// doc.author === { _ref: "abc123", _collection: "users" }
+
+// depth: 1 — relationship fields are replaced with the full referenced document
+const docs = await find(ctx, { depth: 1 });
+// doc.author === { id: "abc123", name: "Alice", ... }
+// doc.author === null  // if the referenced document was deleted
+```
+
+Population behavior:
+
+- `depth: 0` (default): relationship fields return `RefSentinel` objects (`{ _ref: string, _collection: string }`)
+- `depth: 1`: relationship fields are replaced with the full referenced document fetched from the database, or `null` if the referenced document was deleted or does not exist
+- Population uses one batch query per distinct referenced collection — no N+1 queries
+- Populated sub-documents go through `enforceReadProjection` using the referenced collection's config, so field-level access rules on referenced collections are enforced. When `collections` is provided in the `QueryContext`, the referenced collection's config is looked up from that list; otherwise populated docs are returned without field-level projection.
+- `depth > 1` is not supported; references within populated documents are returned as-is (sentinel objects)
+- Population walks `group` and `blocks` fields recursively, resolving any relationship fields nested within them
+
+```ts
+interface FindOneOpts {
+  depth?: 0 | 1;
+}
+
+const doc = await findOne(ctx, "document-id", { depth: 1 });
+```
 
 ### findOne
 
@@ -68,13 +114,16 @@ Create a new document.
 ```ts
 const doc = await create(ctx, {
   title: "New Post",
-  status: "draft",
+  seo: {
+    metaTitle: "Launch post",
+  },
 });
 // Returns the created document with auto-generated id and timestamps
 ```
 
 - ID is auto-generated using `crypto.randomUUID()`
 - `createdAt` and `updatedAt` are auto-set to the current ISO timestamp
+- group fields are written as nested objects in the payload and returned as nested objects in the created document
 - payload is schema-allowlisted before write (unknown and reserved keys are rejected)
 - required fields and field validators are enforced
 - field-level `access.create` rules are enforced
@@ -87,13 +136,16 @@ Update an existing document.
 
 ```ts
 const doc = await update(ctx, "document-id", {
-  title: "Updated Title",
+  seo: {
+    metaTitle: "Updated title",
+  },
 });
 // Returns the updated document
 ```
 
 - `updatedAt` is auto-refreshed
 - The existing document is fetched and passed to hooks as `existingDoc`
+- grouped updates use nested objects and merge against the existing document by field path
 - payload is schema-allowlisted before write (unknown and reserved keys are rejected)
 - updated fields are validated against schema rules and validators
 - field-level `access.update` rules are enforced
@@ -111,6 +163,85 @@ const doc = await remove(ctx, "document-id");
 
 - `beforeDelete` hooks can throw to abort deletion
 - `afterDelete` hooks run after the delete
+
+## Version Operations
+
+These operations are available for collections with `versions` enabled.
+
+### publish
+
+Promote a document from draft to published. Enforces full validation (required fields must be present).
+
+```ts
+import { publish } from "@flaming-codes/sveltekit-runelayer";
+
+const doc = await publish(ctx, "document-id");
+// Sets _status = "published", increments _version, creates snapshot
+```
+
+- Checks `access.publish` (falls back to `access.update`)
+- Runs `beforePublish` / `afterPublish` hooks
+- Enforces all required field validation
+- Creates a version snapshot
+
+### unpublish
+
+Revert a published document to draft.
+
+```ts
+import { unpublish } from "@flaming-codes/sveltekit-runelayer";
+
+const doc = await unpublish(ctx, "document-id");
+// Sets _status = "draft", increments _version, creates snapshot
+```
+
+### saveDraft
+
+Save document data with relaxed validation (required fields are not enforced). Sets `_status` to "draft".
+
+```ts
+import { saveDraft } from "@flaming-codes/sveltekit-runelayer";
+
+const doc = await saveDraft(ctx, "document-id", { title: "Work in progress" });
+// Allows incomplete data, sets _status = "draft"
+```
+
+Saving a published document as draft will unpublish it (no longer returned by default `find()` calls).
+
+### findVersionHistory
+
+Retrieve the version history for a document.
+
+```ts
+import { findVersionHistory } from "@flaming-codes/sveltekit-runelayer";
+
+const versions = await findVersionHistory(ctx, "document-id", { limit: 20 });
+// Returns array of { id, _version, _status, createdAt, _createdBy }
+```
+
+### restoreVersion
+
+Copy an old version's content forward as a new draft. History is never mutated — the restore creates a new version record.
+
+```ts
+import { restoreVersion } from "@flaming-codes/sveltekit-runelayer";
+
+const doc = await restoreVersion(ctx, "document-id", "version-id");
+// Copies snapshot, sets _status = "draft", increments _version
+```
+
+New snapshots store the public nested document shape. Restore also accepts legacy flat snapshots, inflating grouped fields back to nested objects before validation and hooks run.
+
+### Versioned Collection Behavior
+
+When `versions` is enabled:
+
+- `create()` sets `_status = "draft"` and `_version = 1`, creates initial snapshot
+- `update()` increments `_version`, creates snapshot
+- `remove()` cascade-deletes all version records
+- Pruning runs automatically based on `maxPerDoc` config
+
+Calling version operations on a non-versioned collection throws a 400 error.
 
 ## Access Control Integration
 
