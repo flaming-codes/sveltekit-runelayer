@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { TextArea } from "carbon-components-svelte";
 
-	let { name, label, value = $bindable(), required = false, helperText = "JSON payload" }: {
+	let { name, label, value = $bindable(), required = false, helperText = "JSON payload", invalid = false, invalidText = "" }: {
 		name: string;
 		label?: string;
 		value?: unknown;
 		required?: boolean;
 		helperText?: string;
+		invalid?: boolean;
+		invalidText?: string;
 	} = $props();
 
 	let rawText = $state(serializeValue(value));
@@ -52,8 +54,8 @@
 		id={name}
 		{name}
 		labelText={label ?? name}
-		helperText={parseError || helperText}
-		invalid={!!parseError}
+		helperText={parseError || invalidText || helperText}
+		invalid={!!parseError || invalid}
 		value={rawText}
 		rows={8}
 		{required}

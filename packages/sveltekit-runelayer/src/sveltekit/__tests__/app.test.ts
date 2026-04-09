@@ -42,7 +42,7 @@ const Posts = defineCollection({
 const SiteSettings = defineGlobal({
   slug: "site-settings",
   label: "Site Settings",
-  fields: [{ name: "siteName", ...text({ required: true }) }],
+  fields: [{ name: "siteName", ...text({ required: true, maxLength: 24 }) }],
   access: {
     read: () => true,
     update: isLoggedIn(),
@@ -262,6 +262,29 @@ describe("createRunelayerApp", () => {
     expect(docs).toHaveLength(0);
   });
 
+  it("returns fail data for invalid collection creates instead of surfacing a 500", async () => {
+    const app = await createTestApp();
+
+    const result = await (app.admin.actions.create as any)(
+      adminEvent("collections/posts/create", {
+        form: { payload: JSON.stringify({ title: "" }) },
+      }),
+    );
+
+    expect(result).toMatchObject({
+      status: 400,
+      data: {
+        error: 'Field "title" is required',
+        fieldErrors: {
+          title: ['Field "title" is required'],
+        },
+        values: {
+          title: "",
+        },
+      },
+    });
+  });
+
   it("dispatches global update action and persists the singleton document", async () => {
     const app = await createTestApp();
 
@@ -281,6 +304,32 @@ describe("createRunelayerApp", () => {
     expect(globalView.document).toMatchObject({
       id: "site-settings",
       siteName: "Runelayer CMS",
+    });
+  });
+
+  it("returns fail data for invalid global updates", async () => {
+    const app = await createTestApp();
+    const siteName = "This site name is definitely longer than twenty four chars";
+
+    const result = await (app.admin.actions.update as any)(
+      adminEvent("globals/site-settings", {
+        form: {
+          payload: JSON.stringify({ siteName }),
+        },
+      }),
+    );
+
+    expect(result).toMatchObject({
+      status: 400,
+      data: {
+        error: 'Field "siteName" must be at most 24 characters',
+        fieldErrors: {
+          siteName: ['Field "siteName" must be at most 24 characters'],
+        },
+        values: {
+          siteName,
+        },
+      },
     });
   });
 

@@ -10,11 +10,13 @@
 
 	let {
 		field,
+		path,
 		values = $bindable({}),
 		errors = {},
 		disabled = false,
 	}: {
 		field: NamedField & BlocksField;
+		path: string;
 		values: Record<string, any>;
 		errors: Record<string, string[]>;
 		disabled: boolean;
@@ -27,6 +29,7 @@
 	});
 
 	let blocks = $derived<Record<string, any>[]>(values[field.name] ?? []);
+	let rootError = $derived(errors[path]?.[0] ?? "");
 
 	let canAdd = $derived(!field.maxBlocks || blocks.length < field.maxBlocks);
 	let canRemove = $derived(!field.minBlocks || blocks.length > field.minBlocks);
@@ -92,6 +95,10 @@
 		<span class="rk-blocks-count">{blocks.length} {blocks.length === 1 ? "block" : "blocks"}</span>
 	</div>
 
+	{#if rootError}
+		<p class="rk-field-error">{rootError}</p>
+	{/if}
+
 	{#if blocks.length > 0}
 		<div class="rk-blocks-list">
 			{#each blocks as block, index (block._key ?? index)}
@@ -106,7 +113,7 @@
 							aria-expanded={isOpen}
 							onclick={() => toggleBlock(key)}
 						>
-							<span class="rk-block-chevron" class:rk-block-chevron--open={isOpen}>
+							<span class="rk-block-chevron" class:rk-block-chevron--open={isOpen} aria-hidden="true">
 								<ChevronRight />
 							</span>
 							<span class="rk-block-label">{getBlockLabel(block.blockType)}</span>
@@ -149,6 +156,7 @@
 								<FieldRenderer
 									field={subField}
 									bind:values={blockArr[index]}
+									pathPrefix={`${path}[${index}]`}
 									{errors}
 									{disabled}
 								/>
@@ -189,6 +197,12 @@
 </Modal>
 
 <style>
+	.rk-field-error {
+		margin: 0;
+		font-size: 0.75rem;
+		color: var(--cds-support-error);
+	}
+
 	.rk-blocks-field {
 		display: grid;
 		gap: var(--cds-spacing-05);

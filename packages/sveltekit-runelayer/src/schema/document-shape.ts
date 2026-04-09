@@ -1,7 +1,14 @@
 import type { BlocksField, Field, NamedField } from "./fields.js";
 import type { FieldAccess } from "./types.js";
 
-export class DocumentShapeError extends Error {}
+export class DocumentShapeError extends Error {
+  constructor(
+    message: string,
+    readonly path?: string,
+  ) {
+    super(message);
+  }
+}
 
 export class FieldStorageCollisionError extends Error {}
 
@@ -210,7 +217,7 @@ function flattenFields(
         }
 
         if (!isRecord(value)) {
-          throw new DocumentShapeError(`Field "${documentPath}" must be an object`);
+          throw new DocumentShapeError(`Field "${documentPath}" must be an object`, documentPath);
         }
 
         flattenFields(field.fields, value, output, documentPath, `${storageKey}_`);
@@ -254,7 +261,7 @@ function flattenFields(
   for (const key of Object.keys(source)) {
     if (!consumed.has(key)) {
       const documentPath = joinPath(documentPrefix, key);
-      throw new DocumentShapeError(`Unknown field "${documentPath}"`);
+      throw new DocumentShapeError(`Unknown field "${documentPath}"`, documentPath);
     }
   }
 

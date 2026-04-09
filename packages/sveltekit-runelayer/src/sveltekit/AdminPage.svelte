@@ -120,13 +120,14 @@
             basePath={data.basePath}
           />
         {:else if data.view === "collection-create"}
-          <View collection={data.collection} document={null} basePath={data.basePath} />
+          <View collection={data.collection} document={null} basePath={data.basePath} {form} />
         {:else if data.view === "collection-edit"}
           <View
             collection={data.collection}
             document={data.document}
             versions={data.versions ?? []}
             basePath={data.basePath}
+            {form}
           />
         {:else if data.view === "global-edit"}
           <View
@@ -134,6 +135,7 @@
             document={data.document}
             versions={data.versions ?? []}
             basePath={data.basePath}
+            {form}
           />
         {/if}
       {:catch loadError}

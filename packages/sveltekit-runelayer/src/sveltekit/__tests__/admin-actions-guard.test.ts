@@ -3,6 +3,7 @@ import { createAdminActions, resolveGuardedRoute } from "../admin-actions.js";
 import type { AdminActionsConfig } from "../admin-actions.js";
 import type { SvelteKitUtils } from "../types.js";
 import { blocks, defineBlock, group, text, textarea } from "../../schema/index.js";
+import { WriteValidationError } from "../../schema/validation.js";
 
 const kit: SvelteKitUtils = {
   redirect(status: number, location: string | URL): never {
@@ -272,6 +273,97 @@ describe("createAdminActions", () => {
       document: {
         id: "doc-1",
         title: "Draft page",
+      },
+    });
+  });
+
+  it("returns fail data for collection validation errors instead of throwing", async () => {
+    const cfg = makeCfg({
+      getCollectionBySlug: () =>
+        ({
+          slug: "pages",
+          fields: [{ name: "title", ...text({ required: true }) }],
+        }) as any,
+      withRequest: () =>
+        ({
+          create: vi.fn(async () => {
+            throw new WriteValidationError([
+              {
+                path: "title",
+                code: "required",
+                message: 'Field "title" is required',
+              },
+            ]);
+          }),
+        }) as any,
+    });
+    const actions = createAdminActions(cfg);
+
+    const result = await (actions.create as any)(
+      actionEvent("collections/pages/create", {
+        method: "POST",
+        form: {
+          payload: JSON.stringify({ title: "" }),
+        },
+      }),
+    );
+
+    expect(result).toMatchObject({
+      status: 400,
+      data: {
+        error: 'Field "title" is required',
+        fieldErrors: {
+          title: ['Field "title" is required'],
+        },
+        values: {
+          title: "",
+        },
+      },
+    });
+  });
+
+  it("returns submitted values when publish fails validation", async () => {
+    const cfg = makeCfg({
+      getCollectionBySlug: () =>
+        ({
+          slug: "pages",
+          fields: [{ name: "title", ...text({ required: true }) }],
+        }) as any,
+      withRequest: () =>
+        ({
+          publish: vi.fn(async () => {
+            throw new WriteValidationError([
+              {
+                path: "title",
+                code: "required",
+                message: 'Field "title" is required',
+              },
+            ]);
+          }),
+        }) as any,
+    });
+    const actions = createAdminActions(cfg);
+
+    const result = await (actions.publish as any)(
+      actionEvent("collections/pages/doc-1", {
+        method: "POST",
+        form: {
+          id: "doc-1",
+          payload: JSON.stringify({ title: "" }),
+        },
+      }),
+    );
+
+    expect(result).toMatchObject({
+      status: 400,
+      data: {
+        error: 'Field "title" is required',
+        fieldErrors: {
+          title: ['Field "title" is required'],
+        },
+        values: {
+          title: "",
+        },
       },
     });
   });

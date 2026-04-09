@@ -9,6 +9,8 @@
 		relationTo = "",
 		hasMany = false,
 		required = false,
+		invalid = false,
+		invalidText = "",
 	}: {
 		name: string;
 		label?: string;
@@ -16,6 +18,8 @@
 		relationTo: string | string[];
 		hasMany?: boolean;
 		required?: boolean;
+		invalid?: boolean;
+		invalidText?: string;
 	} = $props();
 
 	// Polymorphic: array of collection slugs
@@ -166,6 +170,8 @@
 			items={docItems}
 			{selectedIds}
 			{required}
+			{invalid}
+			{invalidText}
 			on:select={(e) => handleMultiSelect(e.detail.selectedIds)}
 		/>
 	{:else}
@@ -176,6 +182,8 @@
 			items={docItems}
 			{selectedId}
 			{required}
+			{invalid}
+			{invalidText}
 			on:select={(e) => handleSelect(e.detail.selectedId ?? "")}
 			on:clear={() => handleSelect("")}
 		/>

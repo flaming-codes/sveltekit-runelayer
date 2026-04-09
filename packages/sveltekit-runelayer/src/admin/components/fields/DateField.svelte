@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { TextInput } from "carbon-components-svelte";
 
-	let { name, label, value = $bindable(), required = false, includeTime = false }: {
+	let { name, label, value = $bindable(), required = false, includeTime = false, invalid = false, invalidText = "" }: {
 		name: string;
 		label?: string;
 		value?: string;
 		required?: boolean;
 		includeTime?: boolean;
+		invalid?: boolean;
+		invalidText?: string;
 	} = $props();
 </script>
 
@@ -17,4 +19,6 @@
 	labelText={label ?? name}
 	bind:value
 	{required}
+	{invalid}
+	{invalidText}
 />

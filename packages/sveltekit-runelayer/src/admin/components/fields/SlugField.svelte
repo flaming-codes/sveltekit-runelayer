@@ -10,6 +10,8 @@
 		required = false,
 		sourceValue = "",
 		fromLabel = "",
+		invalid = false,
+		invalidText = "",
 	}: {
 		name: string;
 		label?: string;
@@ -17,6 +19,8 @@
 		required?: boolean;
 		sourceValue?: null | string;
 		fromLabel?: string;
+		invalid?: boolean;
+		invalidText?: string;
 	} = $props();
 
 	/** Whether the slug auto-syncs from the source field. */
@@ -62,6 +66,8 @@
 				labelText={label ?? name}
 				bind:value
 				{required}
+				{invalid}
+				{invalidText}
 				readonly={locked}
 				placeholder={locked ? "Auto-generated from {fromLabel}" : "e.g. my-page-slug"}
 				helperText={locked

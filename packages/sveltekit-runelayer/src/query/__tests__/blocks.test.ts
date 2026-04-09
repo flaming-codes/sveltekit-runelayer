@@ -166,7 +166,16 @@ describe("blocks field enforcement", () => {
       enforceWritePayload(
         blocksCollection,
         "update",
-        { layout: [{ blockType: "cta", _key: existingKey, label: "Click me", url: "/go" }] },
+        {
+          layout: [
+            {
+              blockType: "cta",
+              _key: existingKey,
+              label: "Click me",
+              url: "/go",
+            },
+          ],
+        },
         undefined,
         existingDoc,
       ),
@@ -185,7 +194,7 @@ describe("blocks field enforcement", () => {
         },
         undefined,
       ),
-    ).rejects.toThrow('Field "heading" is required');
+    ).rejects.toThrow('Field "layout[0].heading" is required');
   });
 
   it("does NOT enforce required sub-fields when relaxRequired is set (saveDraft path)", async () => {
@@ -317,7 +326,10 @@ async function makeBlocksCtx(): Promise<{
     fields: [
       { name: "heading", ...text() },
       { name: "author", ...relationship({ relationTo: "authors" }) },
-      { name: "coauthors", ...relationship({ relationTo: "authors", hasMany: true }) },
+      {
+        name: "coauthors",
+        ...relationship({ relationTo: "authors", hasMany: true }),
+      },
     ],
   });
 
@@ -338,7 +350,10 @@ async function makeBlocksCtx(): Promise<{
     fields: [{ name: "name", ...text({ required: true }) }],
   };
 
-  const db = createDatabase({ url: ":memory:", collections: [PagesCollection, AuthorsCollection] });
+  const db = createDatabase({
+    url: ":memory:",
+    collections: [PagesCollection, AuthorsCollection],
+  });
   await applySchemaForTests(db);
 
   return {
@@ -445,7 +460,10 @@ describe("populateRefs / depth parameter", () => {
       fields: [{ name: "body", ...text() }],
     };
 
-    const db = createDatabase({ url: ":memory:", collections: [simpleCollection] });
+    const db = createDatabase({
+      url: ":memory:",
+      collections: [simpleCollection],
+    });
     await applySchemaForTests(db);
     const ctx: QueryContext = { db, collection: simpleCollection };
 

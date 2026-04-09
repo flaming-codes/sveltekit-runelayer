@@ -215,15 +215,16 @@ describe("pruneVersions", () => {
    *   - v5 (most-recent — always)
    *   - No published version, so only one protected item
    *
-   * Non-protected budget = 3:
-   *   - v4 → slot 1
-   *   - v3 → slot 2
-   *   - v2 → slot 3
-   *   - v1 → evicted (budget exhausted)
+   * Budget counting (protected rows consume slots too):
+   *   - v5 → kept=1 (protected)
+   *   - v4 → kept=2
+   *   - v3 → kept=3 (budget full)
+   *   - v2 → evicted
+   *   - v1 → evicted
    *
-   * Survivors: v5, v4, v3, v2 (4 rows total — protected rows do not consume budget).
+   * Survivors: v5, v4, v3 (3 rows — maxPerDoc is the total cap).
    */
-  it("evicts oldest draft when all versions are drafts (maxPerDoc=3, 5 rows → 4 remain)", async () => {
+  it("evicts oldest drafts when all versions are drafts (maxPerDoc=3, 5 rows → 3 remain)", async () => {
     await insertVersionRow(rdb, {
       id: "v1",
       parentId: DOC_ID,
@@ -263,12 +264,12 @@ describe("pruneVersions", () => {
     await pruneVersions(rdb.db, versionsTable(), DOC_ID, 3);
 
     const remaining = await fetchVersionIds(rdb, DOC_ID);
-    // v5 (protected), v4/v3/v2 (consume budget), v1 (evicted)
-    expect(remaining).toHaveLength(4);
+    // v5 (protected, kept=1), v4 (kept=2), v3 (kept=3), v2+v1 evicted
+    expect(remaining).toHaveLength(3);
     expect(remaining).toContain("v5"); // most-recent — protected
-    expect(remaining).toContain("v4"); // slot 1
-    expect(remaining).toContain("v3"); // slot 2
-    expect(remaining).toContain("v2"); // slot 3
+    expect(remaining).toContain("v4"); // slot 2
+    expect(remaining).toContain("v3"); // slot 3
+    expect(remaining).not.toContain("v2"); // evicted
     expect(remaining).not.toContain("v1"); // evicted
   });
 
@@ -279,18 +280,20 @@ describe("pruneVersions", () => {
   /**
    * Scenario: [v5-draft, v4-draft, v3-published, v2-draft, v1-draft], maxPerDoc=2.
    *
-   * Protected items:
-   *   - v5 (most-recent, always kept regardless)
-   *   - v3 (latest published, always kept regardless)
+   * Protected items (always kept even if over budget):
+   *   - v5 (most-recent)
+   *   - v3 (latest published)
    *
-   * Non-protected budget is maxPerDoc=2 slots:
-   *   - v4 gets slot 1
-   *   - v2 gets slot 2
-   *   - v1 is evicted
+   * Budget counting (protected rows consume slots):
+   *   - v5 → kept=1 (protected)
+   *   - v4 → kept=2 (budget full)
+   *   - v3 → kept=3 (protected — always kept even over budget)
+   *   - v2 → evicted
+   *   - v1 → evicted
    *
-   * Total survivors: v5, v4, v3, v2 (4 rows).
+   * Total survivors: v5, v4, v3 (3 rows — protected can exceed maxPerDoc).
    */
-  it("protects most-recent and latest-published, keeps 2 non-protected with maxPerDoc=2", async () => {
+  it("protects most-recent and latest-published, respects maxPerDoc as total cap", async () => {
     await insertVersionRow(rdb, {
       id: "v1",
       parentId: DOC_ID,
@@ -332,19 +335,21 @@ describe("pruneVersions", () => {
     const remaining = await fetchVersionIds(rdb, DOC_ID);
     expect(remaining).toContain("v5"); // most-recent — always protected
     expect(remaining).toContain("v3"); // latest-published — always protected
-    expect(remaining).toContain("v4"); // non-protected slot 1
-    expect(remaining).toContain("v2"); // non-protected slot 2
+    expect(remaining).toContain("v4"); // fills budget slot 2
+    expect(remaining).not.toContain("v2"); // evicted
     expect(remaining).not.toContain("v1"); // evicted
   });
 
   /**
    * Edge: maxPerDoc=1 with a mix of draft and published.
    *
-   * Minimum guaranteed survivors: most-recent (v5) + latest-published (v3).
-   * Non-protected budget = 1: v4 keeps the budget.
-   * v2 and v1 are evicted.
+   * Protected items always kept even if over budget:
+   *   - v5 (most-recent) → kept=1 (budget full)
+   *   - v3 (latest-published) → kept=2 (over budget, but protected)
    *
-   * Total: 3 rows (v5, v4, v3).
+   * Non-protected: v4, v2, v1 all evicted (budget already exhausted).
+   *
+   * Total: 2 rows (v5, v3).
    */
   it("keeps both protected items even when maxPerDoc=1", async () => {
     await insertVersionRow(rdb, {
@@ -386,10 +391,12 @@ describe("pruneVersions", () => {
     await pruneVersions(rdb.db, versionsTable(), DOC_ID, 1);
 
     const remaining = await fetchVersionIds(rdb, DOC_ID);
+    expect(remaining).toHaveLength(2);
     expect(remaining).toContain("v5"); // most-recent protected
     expect(remaining).toContain("v3"); // latest-published protected
-    expect(remaining).not.toContain("v1");
+    expect(remaining).not.toContain("v4"); // evicted — budget full
     expect(remaining).not.toContain("v2");
+    expect(remaining).not.toContain("v1");
   });
 
   // -------------------------------------------------------------------------
@@ -450,12 +457,14 @@ describe("pruneVersions", () => {
     });
 
     // With maxPerDoc=1, most-recent (v5) and latest-published (v1) are both protected.
-    // Non-protected budget = 1: v4 keeps the slot. v3 and v2 are evicted.
+    // Budget: v5 (kept=1, full), v4/v3/v2 evicted, v1 protected (kept=2, over budget).
     await pruneVersions(rdb.db, versionsTable(), DOC_ID, 1);
 
     const remaining = await fetchVersionIds(rdb, DOC_ID);
-    expect(remaining).toContain("v1"); // published — always protected
+    expect(remaining).toHaveLength(2);
     expect(remaining).toContain("v5"); // most-recent — always protected
+    expect(remaining).toContain("v1"); // published — always protected
+    expect(remaining).not.toContain("v4");
     expect(remaining).not.toContain("v3");
     expect(remaining).not.toContain("v2");
   });
@@ -467,8 +476,8 @@ describe("pruneVersions", () => {
   /**
    * When the most-recent version is also the only published version,
    * protectedIds = { v3 } (the same id added twice deduplicates to one entry).
-   * Non-protected budget = maxPerDoc. With maxPerDoc=1: v2 gets slot 1, v1 evicted.
-   * Total survivors: v3 + v2 = 2.
+   * Budget: v3 protected (kept=1, budget full), v2 and v1 evicted.
+   * Total survivors: v3 only = 1.
    */
   it("deduplicates protected set when most-recent is also the latest-published", async () => {
     await insertVersionRow(rdb, {
@@ -496,19 +505,18 @@ describe("pruneVersions", () => {
     await pruneVersions(rdb.db, versionsTable(), DOC_ID, 1);
 
     const remaining = await fetchVersionIds(rdb, DOC_ID);
-    // v3: both protected roles → kept (counts as ONE protected item, not two)
-    // v2: non-protected slot 1 → kept
-    // v1: budget exhausted → evicted
+    // v3: protected (kept=1, budget full)
+    // v2, v1: evicted
     expect(remaining).toContain("v3");
-    expect(remaining).toContain("v2");
+    expect(remaining).not.toContain("v2");
     expect(remaining).not.toContain("v1");
-    expect(remaining).toHaveLength(2);
+    expect(remaining).toHaveLength(1);
   });
 
   /**
-   * Most-recent is published, maxPerDoc=2: budget fills v2 and v1 — nothing evicted.
+   * Most-recent is published, maxPerDoc=2: v3 protected (kept=1), v2 (kept=2, budget full), v1 evicted.
    */
-  it("does not evict when most-recent is published and total fits within maxPerDoc + 1 protected", async () => {
+  it("evicts oldest when most-recent is published and total exceeds maxPerDoc", async () => {
     await insertVersionRow(rdb, {
       id: "v1",
       parentId: DOC_ID,
@@ -533,8 +541,8 @@ describe("pruneVersions", () => {
 
     await pruneVersions(rdb.db, versionsTable(), DOC_ID, 2);
 
-    // v3 protected, v2 slot 1, v1 slot 2 — all kept
-    expect(await countVersions(rdb, DOC_ID)).toBe(3);
+    // v3 protected (kept=1), v2 (kept=2), v1 evicted
+    expect(await countVersions(rdb, DOC_ID)).toBe(2);
   });
 
   // -------------------------------------------------------------------------
@@ -545,7 +553,7 @@ describe("pruneVersions", () => {
     const OTHER_ID = "doc-other";
 
     // Target doc: 5 drafts.
-    // With maxPerDoc=3: v5 protected (most-recent), budget 3 → v4/v3/v2 kept, v1 evicted. Total=4.
+    // With maxPerDoc=3: t5 protected (kept=1), t4 (kept=2), t3 (kept=3, budget full), t2+t1 evicted. Total=3.
     await insertVersionRow(rdb, {
       id: "t1",
       parentId: DOC_ID,
@@ -600,8 +608,8 @@ describe("pruneVersions", () => {
 
     await pruneVersions(rdb.db, versionsTable(), DOC_ID, 3);
 
-    // v5 (protected) + v4/v3/v2 (budget) = 4; v1 evicted
-    expect(await countVersions(rdb, DOC_ID)).toBe(4);
+    // t5 (protected, kept=1) + t4 (kept=2) + t3 (kept=3) = 3; t2+t1 evicted
+    expect(await countVersions(rdb, DOC_ID)).toBe(3);
     // Other doc untouched
     expect(await countVersions(rdb, OTHER_ID)).toBe(2);
   });

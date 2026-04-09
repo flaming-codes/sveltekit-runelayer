@@ -155,6 +155,17 @@ The `FieldRenderer` component dispatches rendering based on field type. Supporte
 
 Unsupported field types render a fallback message.
 
+## Admin validation
+
+Collection and global editors submit a single nested JSON `payload` field, but validation now runs in two layers:
+
+- client-side validation reuses the same schema-driven built-in rules that the server uses for required fields, min/max constraints, minLength/maxLength, email/select validation, JSON parsing, relationship shape checks, and block count limits
+- server-side validation remains authoritative for every write and returns SvelteKit `fail(400, ...)` data instead of leaking validation failures as unhandled `500` responses
+- failed submissions re-render the same editor with the submitted `values`, a page-level `error`, and `fieldErrors` keyed by public document paths such as `seo.metaTitle` and `layout[0].heading`
+- versioned collection `saveDraft` and global draft-save/update actions keep relaxed `required` validation, while publish and strict save actions enforce required fields
+
+The package-owned admin UI performs immediate field-level validation for the serializable portion of the schema. Arbitrary field `validate` callbacks still run on the server, and thrown exceptions are converted into validation messages so the browser receives a normal form failure instead of a crash.
+
 ## Accessibility
 
 - Carbon `Button` is used for all interactive buttons, including the ErrorPage navigation. No hand-rolled button elements.

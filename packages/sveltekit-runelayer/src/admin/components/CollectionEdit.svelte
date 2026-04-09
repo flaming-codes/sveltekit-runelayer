@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from "svelte";
 	import {
 		Breadcrumb,
 		BreadcrumbItem,
@@ -15,7 +16,13 @@
 		ToolbarContent,
 	} from "carbon-components-svelte";
 	import type { CollectionConfig } from "../../schema/collections.js";
-	import type { VersionEntry } from "../../sveltekit/types.js";
+	import type { RunelayerAdminFormData, VersionEntry } from "../../sveltekit/types.js";
+	import {
+		mergeFieldErrors,
+		snapshotEditorValues,
+		type EditorValidationMode,
+		validateEditorValues,
+	} from "./editor-validation.js";
 	import FieldRenderer from "./fields/FieldRenderer.svelte";
 	import VersionHistory from "./VersionHistory.svelte";
 
@@ -24,22 +31,24 @@
 		document = null,
 		versions = [],
 		basePath = "/admin",
+		form = null,
 	}: {
 		collection: CollectionConfig;
 		document?: Record<string, any> | null;
 		versions?: VersionEntry[];
 		basePath?: string;
+		form?: RunelayerAdminFormData | null;
 	} = $props();
 
 	let values = $state<Record<string, any>>({});
-	let lastDocId = $state<string | undefined>(undefined);
-	$effect(() => {
-		const currentId = document?.id;
-		if (currentId !== lastDocId) {
-			values = document ? { ...document } : {};
-			lastDocId = currentId;
-		}
-	});
+	let clientFieldErrors = $state<Record<string, string[]>>({});
+	let serverFieldErrors = $state<Record<string, string[]>>({});
+	let pageError = $state("");
+	let serverSnapshot = $state<string | null>(null);
+	let initialSnapshot = $state("{}");
+	let hasInteracted = $state(false);
+	let validationMode = $state<EditorValidationMode>("strict");
+	let lastSeedKey = $state("");
 
 	let deleteModalOpen = $state(false);
 	let restoreModalOpen = $state(false);
@@ -58,6 +67,113 @@
 	let status = $derived<string>((document?._status as string) ?? "draft");
 	let isDraft = $derived(status === "draft");
 	let isPublished = $derived(status === "published");
+	let payload = $derived(snapshotEditorValues(values));
+	let payloadJson = $derived(JSON.stringify(payload));
+	let activeFieldErrors = $derived(mergeFieldErrors(serverFieldErrors, clientFieldErrors));
+
+	function validationModeForAction(action: string | null | undefined): EditorValidationMode {
+		return action === "?/saveDraft" ? "draft" : "strict";
+	}
+
+	function seedEditorState() {
+		const seedValues = (form?.values as Record<string, any> | undefined) ?? document ?? {};
+		const snapshot = JSON.stringify(snapshotEditorValues(seedValues));
+
+		values = structuredClone(seedValues);
+		serverFieldErrors = form?.fieldErrors ?? {};
+		clientFieldErrors = {};
+		pageError = form?.error ?? "";
+		serverSnapshot = form?.values ? snapshot : null;
+		initialSnapshot = snapshot;
+		hasInteracted = false;
+		validationMode = "strict";
+	}
+
+	$effect(() => {
+		const seedValues = (form?.values as Record<string, any> | undefined) ?? document ?? {};
+		const seedKey = JSON.stringify({
+			documentId: document?.id ?? null,
+			values: seedValues,
+			fieldErrors: form?.fieldErrors ?? {},
+			error: form?.error ?? "",
+		});
+
+		if (seedKey !== lastSeedKey) {
+			seedEditorState();
+			lastSeedKey = seedKey;
+		}
+	});
+
+	$effect(() => {
+		const currentPayload = payloadJson;
+		if (currentPayload !== initialSnapshot) {
+			hasInteracted = true;
+		}
+
+		if (serverSnapshot !== null && currentPayload !== serverSnapshot) {
+			serverSnapshot = null;
+			serverFieldErrors = {};
+			pageError = "";
+			hasInteracted = true;
+		}
+
+		// Debounce the validation pass to avoid O(N + B*F) work on every keystroke.
+		// Synchronous reads above ensure the effect tracks all reactive dependencies.
+		const timer = setTimeout(() => {
+			if (!hasInteracted) {
+				clientFieldErrors = {};
+				return;
+			}
+
+			const validation = validateEditorValues(
+				collection.fields,
+				payload,
+				isNew ? "create" : "update",
+				validationMode,
+			);
+
+			clientFieldErrors = validation.fieldErrors;
+			if (validation.issues.length === 0 && serverSnapshot === null) {
+				pageError = "";
+			}
+		}, 150);
+
+		return () => clearTimeout(timer);
+	});
+
+	async function handleSubmit(event: SubmitEvent) {
+		const submitter = event.submitter;
+		const action =
+			submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement
+				? submitter.getAttribute("formaction")
+				: null;
+
+		validationMode = validationModeForAction(action);
+		const validation = validateEditorValues(
+			collection.fields,
+			payload,
+			isNew ? "create" : "update",
+			validationMode,
+		);
+
+		hasInteracted = true;
+		clientFieldErrors = validation.fieldErrors;
+		if (validation.issues.length > 0) {
+			event.preventDefault();
+			serverSnapshot = null;
+			serverFieldErrors = {};
+			pageError = validation.error;
+			await tick();
+			const alertEl = document.querySelector<HTMLElement>('[role="alert"]');
+			if (alertEl) {
+				alertEl.setAttribute("tabindex", "-1");
+				alertEl.focus();
+			}
+			return;
+		}
+
+		pageError = "";
+	}
 </script>
 
 <section class="rk-page">
@@ -122,7 +238,7 @@
 							</Button>
 						{/if}
 						{#if !isNew}
-							<div class="rk-toolbar-spacer" />
+							<div class="rk-toolbar-spacer"></div>
 							<Button
 								kind="danger-ghost"
 								on:click={() => {
@@ -140,6 +256,18 @@
 
 	<!-- Body -->
 	<div class="rk-page-body">
+		<div role="alert" aria-atomic="true">
+			{#if pageError}
+				<InlineNotification
+					kind="error"
+					title="Validation failed"
+					subtitle={pageError}
+					hideCloseButton
+					lowContrast
+				/>
+			{/if}
+		</div>
+
 		{#if hasVersions && !isNew && isPublished}
 			<InlineNotification
 				kind="info"
@@ -151,11 +279,17 @@
 		{/if}
 
 		<!-- Shared form wraps everything so all tabs submit field data -->
-		<form id={formId} method="POST" action={isNew ? "?/create" : "?/update"} class="rk-form">
+		<form
+			id={formId}
+			method="POST"
+			action={isNew ? "?/create" : "?/update"}
+			class="rk-form"
+			onsubmit={handleSubmit}
+		>
 			{#if !isNew}
 				<input type="hidden" name="id" value={document?.id} />
 			{/if}
-			<input type="hidden" name="payload" value={JSON.stringify(values)} />
+			<input type="hidden" name="payload" value={payloadJson} />
 
 			<Tabs bind:selected={activeTab}>
 				<Tab label="Content" />
@@ -169,7 +303,12 @@
 						<div class="rk-tab-panel">
 							<div class="rk-fields-section">
 								{#each collection.fields as field}
-									<FieldRenderer {field} fields={collection.fields} bind:values />
+									<FieldRenderer
+										{field}
+										fields={collection.fields}
+										bind:values
+										errors={activeFieldErrors}
+									/>
 								{/each}
 							</div>
 						</div>

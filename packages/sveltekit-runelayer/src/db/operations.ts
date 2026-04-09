@@ -157,16 +157,18 @@ export async function pruneVersions(
   const latestPublished = all.find((v: any) => v._status === "published");
   if (latestPublished) protectedIds.add(String((latestPublished as any).id));
 
-  // Collect IDs to delete: everything beyond maxPerDoc that isn't protected
+  // Collect IDs to delete: everything beyond maxPerDoc.
+  // Protected rows have priority but consume budget slots.
   const toDelete: string[] = [];
-  let keptNonProtected = 0;
+  let kept = 0;
   for (const v of all) {
     const vid = (v as any).id as string;
     if (protectedIds.has(vid)) {
-      continue; // always keep protected, don't count against budget
+      kept++;
+      continue; // always keep
     }
-    if (keptNonProtected < maxPerDoc) {
-      keptNonProtected++;
+    if (kept < maxPerDoc) {
+      kept++;
       continue;
     }
     toDelete.push(vid);

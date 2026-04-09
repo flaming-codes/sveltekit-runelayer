@@ -88,3 +88,20 @@ export interface SchemaConfig {
 export function defineSchema(config: SchemaConfig): SchemaConfig {
   return config;
 }
+
+// Validation
+export {
+  validateWritePayload,
+  assertValidWritePayload,
+  isWriteValidationError,
+  WriteValidationError,
+  stripReservedWriteFields,
+  validationIssuesToFieldErrors,
+  firstValidationIssueMessage,
+} from "./validation.js";
+export type {
+  ValidationIssue,
+  WriteValidationResult,
+  WriteValidationOptions,
+  WriteOperation,
+} from "./validation.js";

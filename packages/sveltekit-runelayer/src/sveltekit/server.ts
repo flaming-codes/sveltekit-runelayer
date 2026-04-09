@@ -16,6 +16,8 @@ export type { RunelayerAppGetter } from "./helpers.js";
 export type {
   CollectionInput,
   RunelayerAdminConfig,
+  RunelayerAdminFormData,
+  RunelayerAdminPageProps,
   RunelayerAdminUIConfig,
   RunelayerAdminRuntime,
   RunelayerApp,

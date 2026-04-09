@@ -411,12 +411,15 @@ describe("Collection Versioning — E2E Journey", () => {
 
     it("update() creates a version snapshot in history", async () => {
       const historyBefore = await findVersionHistory(ctx(Articles), docId);
-      const countBefore = historyBefore.length;
+      const newestBefore = historyBefore[0]._version;
 
       await update(ctx(Articles), docId, { body: "Snapshot check." });
 
       const historyAfter = await findVersionHistory(ctx(Articles), docId);
-      expect(historyAfter.length).toBe(countBefore + 1);
+      // A new snapshot was created with a higher version number.
+      expect(historyAfter[0]._version).toBe(newestBefore + 1);
+      // Pruning caps total count at maxPerDoc (5).
+      expect(historyAfter.length).toBeLessThanOrEqual(5);
     });
 
     it("update() snapshot captures the correct status at time of write", async () => {
