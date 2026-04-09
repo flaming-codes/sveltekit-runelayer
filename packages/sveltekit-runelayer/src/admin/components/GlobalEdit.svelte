@@ -62,7 +62,7 @@
 	let status = $derived<string>((document?._status as string) ?? "draft");
 	let isDraft = $derived(status === "draft");
 	let isPublished = $derived(status === "published");
-	let payload = $derived(snapshotEditorValues(values));
+	let payload = $derived(snapshotEditorValues($state.snapshot(values)));
 	let payloadJson = $derived(JSON.stringify(payload));
 	let activeFieldErrors = $derived(mergeFieldErrors(serverFieldErrors, clientFieldErrors));
 
@@ -71,7 +71,9 @@
 	}
 
 	function seedEditorState() {
-		const seedValues = (form?.values as Record<string, any> | undefined) ?? document ?? {};
+		const seedValues = $state.snapshot(
+			(form?.values as Record<string, any> | undefined) ?? document ?? {},
+		);
 		const snapshot = JSON.stringify(snapshotEditorValues(seedValues));
 
 		values = structuredClone(seedValues);
