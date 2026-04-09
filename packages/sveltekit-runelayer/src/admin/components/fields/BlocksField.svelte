@@ -4,9 +4,15 @@
 	import ChevronRight from "carbon-icons-svelte/lib/ChevronRight.svelte";
 	import ChevronUp from "carbon-icons-svelte/lib/ChevronUp.svelte";
 	import ChevronDown from "carbon-icons-svelte/lib/ChevronDown.svelte";
+	import Draggable from "carbon-icons-svelte/lib/Draggable.svelte";
 	import TrashCan from "carbon-icons-svelte/lib/TrashCan.svelte";
+	import { flip } from "svelte/animate";
+	import { dragHandleZone, dragHandle } from "svelte-dnd-action";
+	import type { DndEvent } from "svelte-dnd-action";
 	import type { BlocksField, NamedField } from "../../../schema/fields.js";
 	import FieldRenderer from "./FieldRenderer.svelte";
+
+	const FLIP_DURATION_MS = 200;
 
 	let {
 		field,
@@ -28,7 +34,14 @@
 		}
 	});
 
+	// svelte-dnd-action requires each item to have an `id` property.
+	// Our blocks use `_key` as the stable identifier, so we map to/from `id`.
+	type DndBlock = Record<string, any> & { id: string };
+
 	let blocks = $derived<Record<string, any>[]>(values[field.name] ?? []);
+	let dndItems = $derived<DndBlock[]>(
+		blocks.map((b) => ({ ...b, id: b._key ?? crypto.randomUUID() })),
+	);
 	let rootError = $derived(errors[path]?.[0] ?? "");
 
 	let canAdd = $derived(!field.maxBlocks || blocks.length < field.maxBlocks);
@@ -36,6 +49,18 @@
 
 	// Track which blocks are expanded. New blocks auto-expand.
 	let openMap = $state<Record<string, boolean>>({});
+
+	function syncFromDnd(items: DndBlock[]) {
+		values[field.name] = items.map(({ id, ...rest }) => ({ ...rest, _key: id }));
+	}
+
+	function handleConsider(e: CustomEvent<DndEvent<DndBlock>>) {
+		syncFromDnd(e.detail.items);
+	}
+
+	function handleFinalize(e: CustomEvent<DndEvent<DndBlock>>) {
+		syncFromDnd(e.detail.items);
+	}
 
 	function addBlock(slug: string) {
 		if (!canAdd) return;
@@ -99,71 +124,89 @@
 		<p class="rk-field-error">{rootError}</p>
 	{/if}
 
-	{#if blocks.length > 0}
-		<div class="rk-blocks-list">
-			{#each blocks as block, index (block._key ?? index)}
-				{@const key = block._key ?? String(index)}
+	{#if dndItems.length > 0}
+		<div
+			class="rk-blocks-list"
+			use:dragHandleZone={{
+				items: dndItems,
+				flipDurationMs: FLIP_DURATION_MS,
+				dragDisabled: disabled,
+				dropTargetClasses: ["rk-blocks-list--drop-target"],
+				type: `blocks-${path}`,
+			}}
+			onconsider={handleConsider}
+			onfinalize={handleFinalize}
+		>
+			{#each dndItems as block, index (block.id)}
+				{@const key = block.id}
 				{@const isOpen = openMap[key] ?? false}
-				<Tile class="rk-block-tile">
-					<div class="rk-block-tile-header">
-						<!-- Expand/collapse toggle (plain button to avoid nesting buttons inside Carbon Button) -->
-						<button
-							class="rk-block-toggle"
-							type="button"
-							aria-expanded={isOpen}
-							onclick={() => toggleBlock(key)}
-						>
-							<span class="rk-block-chevron" class:rk-block-chevron--open={isOpen} aria-hidden="true">
-								<ChevronRight />
-							</span>
-							<span class="rk-block-label">{getBlockLabel(block.blockType)}</span>
-							<span class="rk-block-pos">#{index + 1}</span>
-						</button>
+				<div class="rk-block-item" animate:flip={{ duration: FLIP_DURATION_MS }}>
+					<Tile class="rk-block-tile">
+						<div class="rk-block-tile-header">
+							<!-- Drag handle -->
+							<div class="rk-block-drag-handle" use:dragHandle aria-label="Drag to reorder">
+								<Draggable />
+							</div>
 
-						<!-- Reorder + delete actions -->
-						<div class="rk-block-actions">
-							<Button
-								kind="ghost"
-								size="small"
-								icon={ChevronUp}
-								iconDescription="Move up"
-								disabled={disabled || index === 0}
-								on:click={() => moveBlock(index, -1)}
-							/>
-							<Button
-								kind="ghost"
-								size="small"
-								icon={ChevronDown}
-								iconDescription="Move down"
-								disabled={disabled || index === blocks.length - 1}
-								on:click={() => moveBlock(index, 1)}
-							/>
-							<Button
-								kind="danger-ghost"
-								size="small"
-								icon={TrashCan}
-								iconDescription="Remove block"
-								disabled={disabled || !canRemove}
-								on:click={() => removeBlock(index)}
-							/>
-						</div>
-					</div>
+							<!-- Expand/collapse toggle -->
+							<button
+								class="rk-block-toggle"
+								type="button"
+								aria-expanded={isOpen}
+								onclick={() => toggleBlock(key)}
+							>
+								<span class="rk-block-chevron" class:rk-block-chevron--open={isOpen} aria-hidden="true">
+									<ChevronRight />
+								</span>
+								<span class="rk-block-label">{getBlockLabel(block.blockType)}</span>
+								<span class="rk-block-pos">#{index + 1}</span>
+							</button>
 
-					{#if isOpen}
-						{@const blockArr = values[field.name] as Record<string, any>[]}
-						<div class="rk-block-fields">
-							{#each getBlockFields(block.blockType) as subField}
-								<FieldRenderer
-									field={subField}
-									bind:values={blockArr[index]}
-									pathPrefix={`${path}[${index}]`}
-									{errors}
-									{disabled}
+							<!-- Reorder + delete actions -->
+							<div class="rk-block-actions">
+								<Button
+									kind="ghost"
+									size="small"
+									icon={ChevronUp}
+									iconDescription="Move up"
+									disabled={disabled || index === 0}
+									on:click={() => moveBlock(index, -1)}
 								/>
-							{/each}
+								<Button
+									kind="ghost"
+									size="small"
+									icon={ChevronDown}
+									iconDescription="Move down"
+									disabled={disabled || index === blocks.length - 1}
+									on:click={() => moveBlock(index, 1)}
+								/>
+								<Button
+									kind="danger-ghost"
+									size="small"
+									icon={TrashCan}
+									iconDescription="Remove block"
+									disabled={disabled || !canRemove}
+									on:click={() => removeBlock(index)}
+								/>
+							</div>
 						</div>
-					{/if}
-				</Tile>
+
+						{#if isOpen}
+							{@const blockArr = values[field.name] as Record<string, any>[]}
+							<div class="rk-block-fields">
+								{#each getBlockFields(block.blockType) as subField}
+									<FieldRenderer
+										field={subField}
+										bind:values={blockArr[index]}
+										pathPrefix={`${path}[${index}]`}
+										{errors}
+										{disabled}
+									/>
+								{/each}
+							</div>
+						{/if}
+					</Tile>
+				</div>
 			{/each}
 		</div>
 	{/if}
@@ -229,11 +272,62 @@
 		gap: var(--cds-spacing-03);
 	}
 
+	/* Drop target highlight when dragging over */
+	.rk-blocks-list :global(.rk-blocks-list--drop-target) {
+		outline: 2px dashed var(--cds-focus);
+		outline-offset: 2px;
+		border-radius: 4px;
+	}
+
+	/* Block item wrapper for animation */
+	.rk-block-item {
+		/* The library injects a shadow placeholder with reduced opacity */
+	}
+
+	/* Dragged element styling — the library clones the element and applies this ID */
+	:global(#dnd-action-dragged-el) {
+		outline: 2px solid var(--cds-focus, #0f62fe);
+		border-radius: 4px;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+		opacity: 0.92;
+	}
+
+	/* Shadow placeholder (the slot left behind) */
+	:global([data-is-dnd-shadow-item-hint]) {
+		opacity: 0.35;
+		border: 2px dashed var(--cds-border-subtle, #e0e0e0);
+		border-radius: 4px;
+	}
+
 	/* Tile header row */
 	.rk-block-tile-header {
 		display: flex;
 		align-items: center;
 		gap: var(--cds-spacing-03);
+	}
+
+	/* Drag handle */
+	.rk-block-drag-handle {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		width: 1.5rem;
+		height: 1.5rem;
+		cursor: grab;
+		color: var(--cds-text-secondary);
+		border-radius: 2px;
+		transition: color 0.15s ease, background-color 0.15s ease;
+	}
+
+	.rk-block-drag-handle:hover {
+		color: var(--cds-text-primary);
+		background-color: var(--cds-layer-hover);
+	}
+
+	.rk-block-drag-handle:active {
+		cursor: grabbing;
+		color: var(--cds-text-primary);
 	}
 
 	/* Expand/collapse toggle — plain <button> so Carbon action buttons beside it are not nested */

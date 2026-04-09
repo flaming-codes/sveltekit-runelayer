@@ -350,9 +350,21 @@ The "Add Block" button opens a dropdown (Carbon `OverflowMenu`) listing availabl
 
 Each block renders as a Carbon `Tile`:
 
-- **Header**: block type label, up/down reorder buttons, delete button.
+- **Header**: drag handle (Carbon `Draggable` icon), block type label, up/down reorder buttons, delete button.
 - **Body**: `FieldRenderer` loop over the matching `BlockConfig.fields`. All existing field renderers work unchanged inside a block.
 - `blockType` and `_key` are never rendered as form inputs — they are managed programmatically.
+
+### Drag-and-Drop Reordering
+
+Blocks support drag-and-drop reordering via `svelte-dnd-action` with `dragHandleZone`/`dragHandle` actions:
+
+- **Drag handle**: a Carbon `Draggable` icon on each block tile. Users grab the handle to drag a block to a new position.
+- **FLIP animations**: blocks smoothly animate into place during and after a drag (200ms FLIP duration).
+- **Keyboard accessibility**: `svelte-dnd-action` provides built-in keyboard navigation (arrow keys to reorder) with ARIA live region announcements for screen readers.
+- **Button fallback**: `ChevronUp`/`ChevronDown` buttons remain for one-step reordering without drag.
+- **Visual feedback**: the dragged element gets a focus outline and elevated shadow; the placeholder slot shows reduced opacity with a dashed border.
+- Each block's `_key` maps to `svelte-dnd-action`'s required `id` property for stable item identity during reordering.
+- Drop zones are scoped per blocks field instance (`type: blocks-{path}`) to prevent cross-field drag.
 
 ### Relationship field inside blocks
 
