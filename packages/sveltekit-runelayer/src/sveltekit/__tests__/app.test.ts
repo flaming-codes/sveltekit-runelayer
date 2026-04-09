@@ -9,7 +9,7 @@ import { defineCollection } from "../../schema/collections.js";
 import { text } from "../../schema/fields.js";
 import { defineGlobal } from "../../schema/globals.js";
 import type { SvelteKitUtils } from "../types.js";
-import { createRunelayerRuntime } from "../runtime.js";
+import { createRunelayerApp } from "../app.js";
 
 // Test-compatible stubs that mirror @sveltejs/kit's redirect/error/fail behaviour.
 const kit: SvelteKitUtils = {
@@ -133,24 +133,21 @@ async function createTestApp(options?: { authUsers?: TestAuthUser[] }) {
   await migrateDatabaseForTests(dbUrl, [Posts], [SiteSettings]);
   await applyAuthSchemaForTests(dbUrl, options?.authUsers ?? [DEFAULT_ADMIN_USER]);
 
-  return createRunelayerRuntime(
-    {
-      kit,
-      collections: [Posts],
-      globals: [SiteSettings],
-      auth: {
-        secret: "test-secret-minimum-32-chars-long",
-        baseURL: "http://localhost:5173",
-      },
-      database: {
-        url: dbUrl,
-      },
-      admin: {
-        path: "/admin",
-      },
+  return createRunelayerApp({
+    kit,
+    collections: [Posts],
+    globals: [SiteSettings],
+    auth: {
+      secret: "test-secret-minimum-32-chars-long",
+      baseURL: "http://localhost:5173",
     },
-    {} as any,
-  );
+    database: {
+      url: dbUrl,
+    },
+    admin: {
+      path: "/admin",
+    },
+  });
 }
 
 function makeEvent(

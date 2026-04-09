@@ -52,14 +52,16 @@ packages/sveltekit-runelayer/src/
 ├── query/            # Access-controlled CRUD orchestration
 ├── admin/            # Admin Svelte components
 └── sveltekit/        # High-level app integration surface
-    ├── runtime.ts           # createRunelayerRuntime() — orchestration root
+    ├── runtime.ts           # Core runtime (handle + query APIs + lazy admin runtime bridge)
+    ├── admin-runtime.ts     # Admin load/action runtime (loaded on demand)
+    ├── helpers.ts           # SvelteKit host helpers (createRunelayerHandle/createRunelayerAdminRoute)
     ├── runtime-loaders.ts   # Per-route loaders returning typed admin view variants
     ├── health.ts            # buildHealthPayload() — shared health check logic
     ├── admin-actions.ts     # Form action handlers with resolveGuardedRoute() helper
     ├── admin-queries.ts     # Query helpers and user management utilities
     ├── admin-routing.ts     # AdminRoute type and parseAdminRoute()
     ├── globals.ts           # Global document CRUD (key-value table)
-    └── AdminPage.svelte     # Typed view router over RunelayerAdminPageData
+    └── AdminPage.svelte     # Typed view router with per-view lazy imports
 ```
 
 ## Runtime Flow
@@ -104,8 +106,8 @@ The project ships as `@flaming-codes/sveltekit-runelayer` with internal boundari
 
 The `sveltekit` subpath is split into server and client entry points to prevent server-only Node.js modules (e.g., `node:fs`) from leaking into browser bundles:
 
-- `@flaming-codes/sveltekit-runelayer/sveltekit/server` — server-only: `createRunelayerApp()`, `defineRunelayerDrizzleConfig()`, and all runtime types. Includes a `typeof window` poison pill that throws if accidentally imported in client code.
-- `@flaming-codes/sveltekit-runelayer/sveltekit/components` — client-safe: `AdminPage` and `AdminErrorPage` Svelte components.
+- `@flaming-codes/sveltekit-runelayer/sveltekit/server` — server-only: `createRunelayerApp()`, `createRunelayerHandle()`, `createRunelayerAdminRoute()`, `defineRunelayerDrizzleConfig()`, and all runtime types. Includes a `typeof window` poison pill that throws if accidentally imported in client code.
+- `@flaming-codes/sveltekit-runelayer/sveltekit/components` — client-safe: `AdminRoutePage`, `AdminPage`, and `AdminErrorPage` Svelte components.
 - `@flaming-codes/sveltekit-runelayer/sveltekit` — deprecated combined entry point (will be removed in a future major version).
 
 ### libsql-first SQLite compatibility
@@ -128,6 +130,8 @@ Access control receives only `Request` data with verified auth headers, avoiding
 The admin runtime uses a single discriminated union (`RunelayerAdminPageData`) shared by both server loaders (`runtime-loaders.ts`) and the client-facing `AdminPage.svelte`.
 The `view` field is the discriminant, so each loader returns an explicit variant and the page router narrows by `view` when rendering.
 This keeps runtime/UI coupling explicit in TypeScript and prevents drift between loader payloads and page branches.
+Server admin runtime code (`admin-runtime.ts`) is lazy-loaded only when admin `load`/`actions` are called.
+Client admin pages are imported per-view in `AdminPage.svelte` so route payloads load only the requested view module.
 
 ## Technology Stack
 

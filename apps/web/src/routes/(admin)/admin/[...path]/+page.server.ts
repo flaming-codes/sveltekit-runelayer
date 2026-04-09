@@ -1,6 +1,4 @@
+import { createRunelayerAdminRoute } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
 import { getRunelayerApp } from "$lib/server/runelayer.js";
 
-const app = getRunelayerApp();
-
-export const load = app.admin.load;
-export const actions = app.admin.actions;
+export const { load, actions } = createRunelayerAdminRoute(getRunelayerApp);

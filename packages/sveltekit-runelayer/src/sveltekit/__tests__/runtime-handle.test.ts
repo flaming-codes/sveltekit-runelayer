@@ -3,9 +3,7 @@ import type { SvelteKitUtils } from "../types.js";
 
 const mocks = vi.hoisted(() => ({
   createRunelayer: vi.fn(),
-  createAdminActions: vi.fn(() => ({})),
   createQueryApi: vi.fn(),
-  countAdminUsers: vi.fn(async () => 1),
   buildHealthPayload: vi.fn(async () => ({
     status: "ok",
     database: true,
@@ -13,6 +11,7 @@ const mocks = vi.hoisted(() => ({
     globals: 0,
     timestamp: new Date().toISOString(),
   })),
+  createAdminRuntime: vi.fn(),
 }));
 
 vi.mock("../../config.js", () => ({
@@ -23,22 +22,18 @@ vi.mock("../../plugin.js", () => ({
   createRunelayer: mocks.createRunelayer,
 }));
 
-vi.mock("../admin-actions.js", () => ({
-  createAdminActions: mocks.createAdminActions,
-}));
-
 vi.mock("../admin-queries.js", () => ({
-  countAdminUsers: mocks.countAdminUsers,
   createQueryApi: mocks.createQueryApi,
   getUser: (event: any) => event.locals?.user ?? null,
-  normalizeUserRole: (input: string) => input.trim().toLowerCase(),
-  parseAuthErrorMessage: (_payload: unknown, fallback: string) => fallback,
-  parseManagedUser: (payload: unknown) => payload,
   toRequest: (eventOrRequest: any) => eventOrRequest.request ?? eventOrRequest,
 }));
 
 vi.mock("../health.js", () => ({
   buildHealthPayload: mocks.buildHealthPayload,
+}));
+
+vi.mock("../admin-runtime.js", () => ({
+  createAdminRuntime: mocks.createAdminRuntime,
 }));
 
 import { createRunelayerRuntime } from "../runtime.js";
@@ -118,8 +113,12 @@ describe("runtime handle endpoint guards", () => {
       database: { client: { execute: vi.fn() } },
       handle: runelayerHandle,
     });
+    mocks.createAdminRuntime.mockReturnValue({
+      load: vi.fn(),
+      actions: {},
+    });
 
-    const app = createRunelayerRuntime(makeConfig(), {} as any);
+    const app = createRunelayerRuntime(makeConfig());
     const request = new Request("http://localhost/runelayer/api/posts?limit=25", {
       method: "GET",
     });
@@ -149,6 +148,7 @@ describe("runtime handle endpoint guards", () => {
       useAsTitle: "title",
     });
     expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(mocks.createAdminRuntime).not.toHaveBeenCalled();
   });
 
   it("returns 401 on /runelayer/api when shared auth layer has no admin user", async () => {
@@ -166,8 +166,12 @@ describe("runtime handle endpoint guards", () => {
       database: { client: { execute: vi.fn() } },
       handle: runelayerHandle,
     });
+    mocks.createAdminRuntime.mockReturnValue({
+      load: vi.fn(),
+      actions: {},
+    });
 
-    const app = createRunelayerRuntime(makeConfig(), {} as any);
+    const app = createRunelayerRuntime(makeConfig());
     const request = new Request("http://localhost/runelayer/api/posts", { method: "GET" });
     const event = {
       url: new URL(request.url),
@@ -185,6 +189,7 @@ describe("runtime handle endpoint guards", () => {
     expect(find).not.toHaveBeenCalled();
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toEqual({ error: "Unauthorized" });
+    expect(mocks.createAdminRuntime).not.toHaveBeenCalled();
   });
 
   it("keeps /admin/health JSON public without requiring auth middleware", async () => {
@@ -196,8 +201,12 @@ describe("runtime handle endpoint guards", () => {
       handle: runelayerHandle,
     });
     mocks.createQueryApi.mockReturnValue(makeQueryApi(vi.fn(async () => [])));
+    mocks.createAdminRuntime.mockReturnValue({
+      load: vi.fn(),
+      actions: {},
+    });
 
-    const app = createRunelayerRuntime(makeConfig(), {} as any);
+    const app = createRunelayerRuntime(makeConfig());
     const request = new Request("http://localhost/admin/health", {
       method: "GET",
       headers: { accept: "application/json" },
@@ -220,5 +229,42 @@ describe("runtime handle endpoint guards", () => {
       status: "ok",
       database: true,
     });
+    expect(mocks.createAdminRuntime).not.toHaveBeenCalled();
+  });
+
+  it("loads admin runtime lazily when admin load/actions are invoked", async () => {
+    mocks.createQueryApi.mockReturnValue(makeQueryApi(vi.fn(async () => [])));
+    mocks.createRunelayer.mockReturnValue({
+      collections: [],
+      globals: [],
+      database: { client: { execute: vi.fn() } },
+      handle: vi.fn(async ({ event, resolve }: any) => resolve(event)),
+    });
+
+    const load = vi.fn(async () => ({ view: "dashboard" }));
+    const login = vi.fn(async () => ({ ok: true }));
+    mocks.createAdminRuntime.mockResolvedValue({
+      load,
+      actions: {
+        login,
+      },
+    });
+
+    const app = createRunelayerRuntime(makeConfig());
+    const request = new Request("http://localhost/admin/login", { method: "POST" });
+    const event = {
+      url: new URL(request.url),
+      request,
+      params: { path: "login" },
+      locals: {},
+      fetch: vi.fn(),
+    } as any;
+
+    await app.admin.load(event);
+    await app.admin.actions.login?.(event);
+
+    expect(mocks.createAdminRuntime).toHaveBeenCalledTimes(1);
+    expect(load).toHaveBeenCalledOnce();
+    expect(login).toHaveBeenCalledOnce();
   });
 });

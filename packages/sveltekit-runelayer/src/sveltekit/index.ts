@@ -6,8 +6,11 @@
  */
 export { createRunelayerApp } from "./app.js";
 export { defineRunelayerDrizzleConfig } from "./drizzle-config.js";
+export { createRunelayerHandle, createRunelayerAdminRoute } from "./helpers.js";
+export type { RunelayerAppGetter } from "./helpers.js";
 export { default as AdminPage } from "./AdminPage.svelte";
 export { default as AdminErrorPage } from "./AdminErrorPage.svelte";
+export { default as AdminRoutePage } from "./AdminPage.svelte";
 export type {
   CollectionInput,
   RunelayerAdminConfig,

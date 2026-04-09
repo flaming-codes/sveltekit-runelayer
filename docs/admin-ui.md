@@ -10,24 +10,24 @@ Use one catch-all admin route:
 - `src/routes/(admin)/admin/[...path]/+page.svelte`
 
 ```ts
+import { createRunelayerAdminRoute } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
 import { getRunelayerApp } from "$lib/server/runelayer.js";
 
-const app = getRunelayerApp();
-
-export const load = app.admin.load;
-export const actions = app.admin.actions;
+export const { load, actions } = createRunelayerAdminRoute(getRunelayerApp);
 ```
 
 ```svelte
 <script lang="ts">
-  import { AdminPage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
-  let { data, form } = $props();
+  import { AdminRoutePage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
+  import type { RunelayerAdminPageProps } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
+
+  let { data, form }: RunelayerAdminPageProps = $props();
 </script>
 
-<AdminPage {data} {form} />
+<AdminRoutePage {data} {form} />
 ```
 
-Add a thin route-group layout to load Carbon styles for admin pages:
+Optional: add a thin route-group layout to load Carbon styles for admin pages:
 
 ```svelte
 <!-- src/routes/(admin)/+layout.svelte -->
@@ -39,7 +39,7 @@ Add a thin route-group layout to load Carbon styles for admin pages:
 {@render children()}
 ```
 
-Add a thin admin error route so package-owned error UI is used:
+Optional: add a thin admin error route so package-owned error UI is used:
 
 ```svelte
 <!-- src/routes/(admin)/admin/[...path]/+error.svelte -->

@@ -229,7 +229,6 @@ export interface RunelayerQueryApi {
 export interface RunelayerAdminRuntime {
   load: (event: RequestEvent) => Promise<RunelayerAdminPageData>;
   actions: Actions;
-  Page: RunelayerAdminPageComponent;
 }
 
 export interface RunelayerApp {
