@@ -2,9 +2,9 @@
 
 `sveltekit-runelayer` ships a high-level SvelteKit integration surface split into server and client entry points:
 
-- `@flaming-codes/sveltekit-runelayer/sveltekit/server` — server-only runtime (`createRunelayerApp`)
+- `@flaming-codes/sveltekit-runelayer/sveltekit/server` — server-only runtime (`createRunelayerApp`, `createRunelayerHandle`, `createRunelayerAdminRoute`)
 - `@flaming-codes/sveltekit-runelayer/sveltekit/drizzle` — drizzle-kit config helper (`defineRunelayerDrizzleConfig`)
-- `@flaming-codes/sveltekit-runelayer/sveltekit/components` — client-safe Svelte components (`AdminPage`, `AdminErrorPage`)
+- `@flaming-codes/sveltekit-runelayer/sveltekit/components` — client-safe Svelte components (`AdminRoutePage`, `AdminErrorPage`)
 
 Use these paths when integrating the CMS into an app.
 
@@ -18,9 +18,9 @@ Use these paths when integrating the CMS into an app.
 
 - Define collections/globals in TypeScript and export a drizzle-kit schema.
 - Configure drizzle-kit with `defineRunelayerDrizzleConfig()`.
-- Create one `createRunelayerApp()` instance and pass SvelteKit `redirect`, `error`, and `fail`.
-- Wire `runelayer.handle` in `hooks.server.ts`.
-- Mount admin load/actions in one catch-all route.
+- Create a memoized `getRunelayerApp()` and pass SvelteKit `redirect`, `error`, and `fail`.
+- Wire `createRunelayerHandle(getRunelayerApp)` in `hooks.server.ts`.
+- Mount admin load/actions with `createRunelayerAdminRoute(getRunelayerApp)` in one catch-all route.
 - Run migrations before startup.
 - Decide whether uploaded files should be public (`storage.publicRead: true`) or auth-protected (default).
 
@@ -126,30 +126,39 @@ import { redirect, error, fail } from "@sveltejs/kit";
 import { createRunelayerApp } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
 import { Posts } from "./schema.js";
 
-export const runelayer = createRunelayerApp({
-  kit: { redirect, error, fail },
-  collections: [Posts],
-  auth: {
-    secret: process.env.AUTH_SECRET ?? "dev-secret-change-in-production",
-    baseURL: process.env.ORIGIN ?? "http://localhost:5173",
-  },
-  database: {
-    url: process.env.DATABASE_URL ?? "file:./data/sveltekit-runelayer.db",
-    authToken: process.env.DATABASE_AUTH_TOKEN,
-  },
-  admin: {
-    path: "/admin",
-  },
-});
+let _runelayer: ReturnType<typeof createRunelayerApp> | undefined;
+
+export function getRunelayerApp() {
+  if (!_runelayer) {
+    _runelayer = createRunelayerApp({
+      kit: { redirect, error, fail },
+      collections: [Posts],
+      auth: {
+        secret: process.env.AUTH_SECRET ?? "dev-secret-change-in-production",
+        baseURL: process.env.ORIGIN ?? "http://localhost:5173",
+      },
+      database: {
+        url: process.env.DATABASE_URL ?? "file:./data/sveltekit-runelayer.db",
+        authToken: process.env.DATABASE_AUTH_TOKEN,
+      },
+      admin: {
+        path: "/admin",
+      },
+    });
+  }
+
+  return _runelayer;
+}
 ```
 
 ## 6. Wire the global handle hook
 
 ```ts
 // src/hooks.server.ts
-import { runelayer } from "$lib/server/runelayer";
+import { createRunelayerHandle } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
+import { getRunelayerApp } from "$lib/server/runelayer";
 
-export const handle = runelayer.handle;
+export const handle = createRunelayerHandle(getRunelayerApp);
 ```
 
 No extra auth route file is required for the default integration path.
@@ -160,20 +169,22 @@ Create an isolated admin route group:
 
 ```ts
 // src/routes/(admin)/admin/[...path]/+page.server.ts
-import { runelayer } from "$lib/server/runelayer";
+import { createRunelayerAdminRoute } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
+import { getRunelayerApp } from "$lib/server/runelayer";
 
-export const load = runelayer.admin.load;
-export const actions = runelayer.admin.actions;
+export const { load, actions } = createRunelayerAdminRoute(getRunelayerApp);
 ```
 
 ```svelte
 <!-- src/routes/(admin)/admin/[...path]/+page.svelte -->
 <script lang="ts">
-  import { AdminPage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
-  let { data, form } = $props();
+  import { AdminRoutePage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
+  import type { RunelayerAdminPageProps } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
+
+  let { data, form }: RunelayerAdminPageProps = $props();
 </script>
 
-<AdminPage {data} {form} />
+<AdminRoutePage {data} {form} />
 ```
 
 Keep the public site in a separate route group (for example, `src/routes/(site)`), so `/admin` does not inherit frontend layouts/data-loading.
@@ -183,7 +194,7 @@ First-time setup is automatic:
 - if an admin user already exists, unauthenticated users are sent to `/admin/login`
 - if no admin exists yet, users are sent to `/admin/create-first-user` to create the first admin account
 
-Also add thin admin-only layout and error wiring:
+Optional: add thin admin-only layout and error wiring:
 
 ```svelte
 <!-- src/routes/(admin)/+layout.svelte -->
@@ -209,10 +220,11 @@ Also add thin admin-only layout and error wiring:
 
 ```ts
 // src/routes/(site)/+page.server.ts
-import { runelayer } from "$lib/server/runelayer";
+import { getRunelayerApp } from "$lib/server/runelayer";
 import { Posts } from "$lib/server/schema";
 
 export async function load({ request }) {
+  const runelayer = getRunelayerApp();
   const posts = await runelayer.withRequest(request).find(Posts, {
     limit: 10,
     sort: "createdAt",

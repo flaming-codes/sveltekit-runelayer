@@ -93,48 +93,59 @@ import { redirect, error, fail } from "@sveltejs/kit";
 import { createRunelayerApp } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
 import { Posts } from "./schema.js";
 
-export const runelayer = createRunelayerApp({
-  kit: { redirect, error, fail },
-  collections: [Posts],
-  auth: {
-    secret: process.env.AUTH_SECRET ?? "dev-secret-change-in-production",
-    baseURL: process.env.ORIGIN ?? "http://localhost:5173",
-  },
-  database: {
-    url: process.env.DATABASE_URL ?? "file:./data/sveltekit-runelayer.db",
-    authToken: process.env.DATABASE_AUTH_TOKEN,
-  },
-  admin: {
-    path: "/admin",
-  },
-});
+let _runelayer: ReturnType<typeof createRunelayerApp> | undefined;
+
+export function getRunelayerApp() {
+  if (!_runelayer) {
+    _runelayer = createRunelayerApp({
+      kit: { redirect, error, fail },
+      collections: [Posts],
+      auth: {
+        secret: process.env.AUTH_SECRET ?? "dev-secret-change-in-production",
+        baseURL: process.env.ORIGIN ?? "http://localhost:5173",
+      },
+      database: {
+        url: process.env.DATABASE_URL ?? "file:./data/sveltekit-runelayer.db",
+        authToken: process.env.DATABASE_AUTH_TOKEN,
+      },
+      admin: {
+        path: "/admin",
+      },
+    });
+  }
+
+  return _runelayer;
+}
 ```
 
 ### 4. Wire hook and admin route
 
 ```ts
 // src/hooks.server.ts
-import { runelayer } from "$lib/server/runelayer";
+import { createRunelayerHandle } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
+import { getRunelayerApp } from "$lib/server/runelayer";
 
-export const handle = runelayer.handle;
+export const handle = createRunelayerHandle(getRunelayerApp);
 ```
 
 ```ts
 // src/routes/(admin)/admin/[...path]/+page.server.ts
-import { runelayer } from "$lib/server/runelayer";
+import { createRunelayerAdminRoute } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
+import { getRunelayerApp } from "$lib/server/runelayer";
 
-export const load = runelayer.admin.load;
-export const actions = runelayer.admin.actions;
+export const { load, actions } = createRunelayerAdminRoute(getRunelayerApp);
 ```
 
 ```svelte
 <!-- src/routes/(admin)/admin/[...path]/+page.svelte -->
 <script lang="ts">
-  import { AdminPage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
-  let { data, form } = $props();
+  import { AdminRoutePage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
+  import type { RunelayerAdminPageProps } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
+
+  let { data, form }: RunelayerAdminPageProps = $props();
 </script>
 
-<AdminPage {data} {form} />
+<AdminRoutePage {data} {form} />
 ```
 
 ### 5. Run migrations before startup
@@ -148,10 +159,11 @@ npx drizzle-kit migrate
 
 ```ts
 // src/routes/(site)/+page.server.ts
-import { runelayer } from "$lib/server/runelayer";
+import { getRunelayerApp } from "$lib/server/runelayer";
 import { Posts } from "$lib/server/schema";
 
 export async function load({ request }) {
+  const runelayer = getRunelayerApp();
   const posts = await runelayer.withRequest(request).find(Posts, {
     limit: 10,
     sort: "createdAt",
@@ -165,6 +177,8 @@ export async function load({ request }) {
 ## Host integration rules
 
 - Always pass SvelteKit's `redirect`, `error`, and `fail` into `kit` during `createRunelayerApp`.
+- Use `createRunelayerHandle(getRunelayerApp)` in `hooks.server.ts`.
+- Use `createRunelayerAdminRoute(getRunelayerApp)` in your admin `+page.server.ts`.
 - Use `runelayer.withRequest(request)` for request-bound access checks.
 - Use `runelayer.system` only for trusted server-side tasks (seeding, internal jobs, migrations).
 - Keep admin routes in a dedicated route group so frontend layouts do not bleed into `/admin`.

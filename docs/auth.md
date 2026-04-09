@@ -111,9 +111,10 @@ on how the E2E test harness handles this.
 In your `src/hooks.server.ts`:
 
 ```ts
-import { runelayer } from "$lib/runelayer";
+import { createRunelayerHandle } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
+import { getRunelayerApp } from "$lib/server/runelayer";
 
-export const handle = runelayer.handle;
+export const handle = createRunelayerHandle(getRunelayerApp);
 ```
 
 In the high-level `createRunelayerApp` integration, no separate `src/routes/api/auth/[...all]/+server.ts` route is required. The global `handle` hook routes auth requests at `auth.basePath` (default `/api/auth`).

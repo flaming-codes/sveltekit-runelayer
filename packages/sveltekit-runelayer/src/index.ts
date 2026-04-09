@@ -105,6 +105,22 @@ export {
 } from "./query/index.js";
 export type { QueryContext, FindArgs } from "./query/index.js";
 
+// Validation
+export {
+  validateWritePayload,
+  assertValidWritePayload,
+  isWriteValidationError,
+  WriteValidationError,
+  stripReservedWriteFields,
+  validationIssuesToFieldErrors,
+} from "./schema/index.js";
+export type {
+  ValidationIssue,
+  WriteValidationResult,
+  WriteValidationOptions,
+  WriteOperation,
+} from "./schema/index.js";
+
 // Versions
 export { normalizeVersionConfig } from "./versions/config.js";
 export type { NormalizedVersionConfig } from "./versions/config.js";

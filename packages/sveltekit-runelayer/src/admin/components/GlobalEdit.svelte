@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from "svelte";
 	import {
 		Breadcrumb,
 		BreadcrumbItem,
@@ -15,7 +16,13 @@
 		ToolbarContent,
 	} from "carbon-components-svelte";
 	import type { GlobalConfig } from "../../schema/globals.js";
-	import type { VersionEntry } from "../../sveltekit/types.js";
+	import type { RunelayerAdminFormData, VersionEntry } from "../../sveltekit/types.js";
+	import {
+		mergeFieldErrors,
+		snapshotEditorValues,
+		type EditorValidationMode,
+		validateEditorValues,
+	} from "./editor-validation.js";
 	import FieldRenderer from "./fields/FieldRenderer.svelte";
 	import VersionHistory from "./VersionHistory.svelte";
 
@@ -24,22 +31,24 @@
 		document = {},
 		versions = [],
 		basePath = "/admin",
+		form = null,
 	}: {
 		global: GlobalConfig;
 		document?: Record<string, any>;
 		versions?: VersionEntry[];
 		basePath?: string;
+		form?: RunelayerAdminFormData | null;
 	} = $props();
 
 	let values = $state<Record<string, any>>({});
-	let lastDocId = $state<string | undefined>(undefined);
-	$effect(() => {
-		const currentId = document?.id;
-		if (currentId !== lastDocId) {
-			values = document ? { ...document } : {};
-			lastDocId = currentId;
-		}
-	});
+	let clientFieldErrors = $state<Record<string, string[]>>({});
+	let serverFieldErrors = $state<Record<string, string[]>>({});
+	let pageError = $state("");
+	let serverSnapshot = $state<string | null>(null);
+	let initialSnapshot = $state("{}");
+	let hasInteracted = $state(false);
+	let validationMode = $state<EditorValidationMode>("draft");
+	let lastSeedKey = $state("");
 
 	let restoreModalOpen = $state(false);
 	let restoreVersionId = $state<string>("");
@@ -53,6 +62,104 @@
 	let status = $derived<string>((document?._status as string) ?? "draft");
 	let isDraft = $derived(status === "draft");
 	let isPublished = $derived(status === "published");
+	let payload = $derived(snapshotEditorValues($state.snapshot(values)));
+	let payloadJson = $derived(JSON.stringify(payload));
+	let activeFieldErrors = $derived(mergeFieldErrors(serverFieldErrors, clientFieldErrors));
+
+	function validationModeForAction(action: string | null | undefined): EditorValidationMode {
+		return action === "?/publishGlobal" ? "strict" : "draft";
+	}
+
+	function seedEditorState() {
+		const seedValues = $state.snapshot(
+			(form?.values as Record<string, any> | undefined) ?? document ?? {},
+		);
+		const snapshot = JSON.stringify(snapshotEditorValues(seedValues));
+
+		values = structuredClone(seedValues);
+		serverFieldErrors = form?.fieldErrors ?? {};
+		clientFieldErrors = {};
+		pageError = form?.error ?? "";
+		serverSnapshot = form?.values ? snapshot : null;
+		initialSnapshot = snapshot;
+		hasInteracted = false;
+		validationMode = "draft";
+	}
+
+	$effect(() => {
+		const seedValues = (form?.values as Record<string, any> | undefined) ?? document ?? {};
+		const seedKey = JSON.stringify({
+			values: seedValues,
+			fieldErrors: form?.fieldErrors ?? {},
+			error: form?.error ?? "",
+		});
+
+		if (seedKey !== lastSeedKey) {
+			seedEditorState();
+			lastSeedKey = seedKey;
+		}
+	});
+
+	$effect(() => {
+		const currentPayload = payloadJson;
+		if (currentPayload !== initialSnapshot) {
+			hasInteracted = true;
+		}
+
+		if (serverSnapshot !== null && currentPayload !== serverSnapshot) {
+			serverSnapshot = null;
+			serverFieldErrors = {};
+			pageError = "";
+			hasInteracted = true;
+		}
+
+		// Debounce the validation pass to avoid O(N + B*F) work on every keystroke.
+		// Synchronous reads above ensure the effect tracks all reactive dependencies.
+		const timer = setTimeout(() => {
+			if (!hasInteracted) {
+				clientFieldErrors = {};
+				return;
+			}
+
+			const validation = validateEditorValues(global.fields, payload, "update", validationMode);
+
+			clientFieldErrors = validation.fieldErrors;
+			if (validation.issues.length === 0 && serverSnapshot === null) {
+				pageError = "";
+			}
+		}, 150);
+
+		return () => clearTimeout(timer);
+	});
+
+	async function handleSubmit(event: SubmitEvent) {
+		const submitter = event.submitter;
+		const action =
+			submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement
+				? submitter.getAttribute("formaction")
+				: null;
+
+		validationMode = validationModeForAction(action);
+		const validation = validateEditorValues(global.fields, payload, "update", validationMode);
+
+		hasInteracted = true;
+		clientFieldErrors = validation.fieldErrors;
+		if (validation.issues.length > 0) {
+			event.preventDefault();
+			serverSnapshot = null;
+			serverFieldErrors = {};
+			pageError = validation.error;
+			await tick();
+			const alertEl = document.querySelector<HTMLElement>('[role="alert"]');
+			if (alertEl) {
+				alertEl.setAttribute("tabindex", "-1");
+				alertEl.focus();
+			}
+			return;
+		}
+
+		pageError = "";
+	}
 </script>
 
 <section class="rk-page">
@@ -116,6 +223,18 @@
 
 	<!-- Body -->
 	<div class="rk-page-body">
+		<div role="alert" aria-atomic="true">
+			{#if pageError}
+				<InlineNotification
+					kind="error"
+					title="Validation failed"
+					subtitle={pageError}
+					hideCloseButton
+					lowContrast
+				/>
+			{/if}
+		</div>
+
 		{#if hasVersions && isPublished}
 			<InlineNotification
 				kind="info"
@@ -126,9 +245,9 @@
 			/>
 		{/if}
 
-		<form id={formId} method="POST" action="?/update" class="rk-form">
+		<form id={formId} method="POST" action="?/update" class="rk-form" onsubmit={handleSubmit}>
 			<input type="hidden" name="id" value={document?.id ?? global.slug} />
-			<input type="hidden" name="payload" value={JSON.stringify(values)} />
+			<input type="hidden" name="payload" value={payloadJson} />
 
 			<Tabs bind:selected={activeTab}>
 				<Tab label="Configuration" />
@@ -142,7 +261,12 @@
 						<div class="rk-tab-panel">
 							<div class="rk-fields-section">
 								{#each global.fields as field}
-									<FieldRenderer {field} fields={global.fields} bind:values />
+									<FieldRenderer
+										{field}
+										fields={global.fields}
+										bind:values
+										errors={activeFieldErrors}
+									/>
 								{/each}
 							</div>
 						</div>

@@ -347,15 +347,16 @@ async function pruneGlobalVersions(
   const latestPublished = all.find((v) => v._status === "published");
   if (latestPublished) protectedIds.add(latestPublished.id ?? "");
 
-  let keptNonProtected = 0;
+  let kept = 0;
   const toDelete: string[] = [];
   for (const v of all) {
     const vid = v.id ?? "";
     if (protectedIds.has(vid)) {
-      continue; // always keep, don't count against budget
+      kept++;
+      continue; // always keep
     }
-    if (keptNonProtected < maxPerDoc) {
-      keptNonProtected++;
+    if (kept < maxPerDoc) {
+      kept++;
       continue;
     }
     toDelete.push(vid);
@@ -388,11 +389,20 @@ export async function publishGlobal(
 
   const row = await readStoredGlobal(runelayer, global.slug);
   const storedData = parseGlobalData(row?.data);
+  const currentDoc = materializeGlobalDoc(global, row);
+  const enforced = await enforceWritePayload(
+    globalAsCollection(global),
+    "update",
+    storedData,
+    req,
+    currentDoc,
+    global.slug,
+  );
   const currentVersion = (row?._version as number) ?? 0;
   const newVersion = currentVersion + 1;
   const updatedAt = new Date().toISOString();
 
-  const nextDoc = buildGlobalDoc(global, storedData, updatedAt, {
+  const nextDoc = buildGlobalDoc(global, enforced, updatedAt, {
     status: "published",
     version: newVersion,
   });
@@ -407,7 +417,7 @@ export async function publishGlobal(
           VALUES (?, ?, ?, 'published', ?)
           ON CONFLICT(slug) DO UPDATE SET _status = 'published', _version = excluded._version, updatedAt = excluded.updatedAt
         `,
-        args: [global.slug, JSON.stringify(storedData), updatedAt, newVersion],
+        args: [global.slug, JSON.stringify(enforced), updatedAt, newVersion],
       },
       buildSnapshotStatement(global.slug, newVersion, "published", nextDoc, getUserId(req)),
     ],

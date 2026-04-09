@@ -17,6 +17,7 @@ catalog:
   drizzle-kit: ^0.31.10
   drizzle-orm: ^0.45.2
   svelte: ^5
+  svelte-dnd-action: ^0.9.69
   testcontainers: ^11.13.0
   typescript: ^5
   vite: npm:@voidzero-dev/vite-plus-core@^0.1.14

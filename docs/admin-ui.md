@@ -10,24 +10,24 @@ Use one catch-all admin route:
 - `src/routes/(admin)/admin/[...path]/+page.svelte`
 
 ```ts
+import { createRunelayerAdminRoute } from "@flaming-codes/sveltekit-runelayer/sveltekit/server";
 import { getRunelayerApp } from "$lib/server/runelayer.js";
 
-const app = getRunelayerApp();
-
-export const load = app.admin.load;
-export const actions = app.admin.actions;
+export const { load, actions } = createRunelayerAdminRoute(getRunelayerApp);
 ```
 
 ```svelte
 <script lang="ts">
-  import { AdminPage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
-  let { data, form } = $props();
+  import { AdminRoutePage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
+  import type { RunelayerAdminPageProps } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
+
+  let { data, form }: RunelayerAdminPageProps = $props();
 </script>
 
-<AdminPage {data} {form} />
+<AdminRoutePage {data} {form} />
 ```
 
-Add a thin route-group layout to load Carbon styles for admin pages:
+Optional: add a thin route-group layout to load Carbon styles for admin pages:
 
 ```svelte
 <!-- src/routes/(admin)/+layout.svelte -->
@@ -39,7 +39,7 @@ Add a thin route-group layout to load Carbon styles for admin pages:
 {@render children()}
 ```
 
-Add a thin admin error route so package-owned error UI is used:
+Optional: add a thin admin error route so package-owned error UI is used:
 
 ```svelte
 <!-- src/routes/(admin)/admin/[...path]/+error.svelte -->
@@ -150,10 +150,21 @@ The `FieldRenderer` component dispatches rendering based on field type. Supporte
 - `richText` → `RichTextField` (placeholder for Tiptap integration)
 - `json` → `JsonField` (Carbon `TextArea` with JSON serialization)
 - `relationship` → `RelationshipField` — Carbon `ComboBox` (single) or `MultiSelect` (hasMany) with live document fetching from the `/runelayer/api/{collectionSlug}` admin API endpoint. Stores `RefSentinel` objects (`{ _ref, _collection }`) rather than bare ID strings.
-- `blocks` → `BlocksField` — renders a polymorphic block list. Each block instance is displayed as a Carbon `Tile` with `ChevronUp`/`ChevronDown`/`TrashCan` icon buttons for reorder and delete. Block fields are rendered recursively via `FieldRenderer`. A `BlockPalette` overflow menu lists available block types by label and appends a new block instance when selected. Respects `minBlocks`/`maxBlocks` constraints.
+- `blocks` → `BlocksField` — renders a polymorphic block list. Each block instance is displayed as a Carbon `Tile` with a `Draggable` drag handle, `ChevronUp`/`ChevronDown` button reorder controls, and a `TrashCan` delete button. Drag-and-drop reordering is powered by `svelte-dnd-action` (`dragHandleZone`/`dragHandle` actions) with FLIP animations (200ms) and built-in keyboard accessibility. Block fields are rendered recursively via `FieldRenderer`. An "Add block" button opens a Carbon `Modal` listing available block types by label and appends a new block instance when selected. Respects `minBlocks`/`maxBlocks` constraints.
 - `group` → `GroupField` — renders nested fields inline within a Carbon `FormGroup` with a left border accent. Stores values as a nested object keyed by the group name.
 
 Unsupported field types render a fallback message.
+
+## Admin validation
+
+Collection and global editors submit a single nested JSON `payload` field, but validation now runs in two layers:
+
+- client-side validation reuses the same schema-driven built-in rules that the server uses for required fields, min/max constraints, minLength/maxLength, email/select validation, JSON parsing, relationship shape checks, and block count limits
+- server-side validation remains authoritative for every write and returns SvelteKit `fail(400, ...)` data instead of leaking validation failures as unhandled `500` responses
+- failed submissions re-render the same editor with the submitted `values`, a page-level `error`, and `fieldErrors` keyed by public document paths such as `seo.metaTitle` and `layout[0].heading`
+- versioned collection `saveDraft` and global draft-save/update actions keep relaxed `required` validation, while publish and strict save actions enforce required fields
+
+The package-owned admin UI performs immediate field-level validation for the serializable portion of the schema. Arbitrary field `validate` callbacks still run on the server, and thrown exceptions are converted into validation messages so the browser receives a normal form failure instead of a crash.
 
 ## Accessibility
 

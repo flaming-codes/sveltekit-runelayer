@@ -18,7 +18,11 @@ import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { defineCollection, text, type CollectionConfig } from "../index.js";
 import type { SvelteKitUtils } from "../sveltekit/types.js";
 import type { RunelayerApp } from "../sveltekit/types.js";
-import { createRunelayerRuntime } from "../sveltekit/runtime.js";
+import {
+  createRunelayerAdminRoute,
+  createRunelayerApp,
+  createRunelayerHandle,
+} from "../sveltekit/server.js";
 import { migrateDatabaseForTests } from "../__testutils__/migrations.js";
 import { isDockerRunning } from "./docker-check.js";
 
@@ -205,21 +209,21 @@ async function createAuthJourneyHarness(): Promise<Harness> {
   await migrateDatabaseForTests(dbUrl, [Accounts]);
   await applyBetterAuthSchemaForTests(dbUrl);
 
-  const app = createRunelayerRuntime(
-    {
-      kit,
-      collections: [Accounts],
-      auth: {
-        secret: "auth-journey-secret-minimum-32-chars!",
-        baseURL: "http://localhost:3000",
-      },
-      database: { url: dbUrl },
-      admin: {
-        path: "/admin",
-      },
+  const app = createRunelayerApp({
+    kit,
+    collections: [Accounts],
+    auth: {
+      secret: "auth-journey-secret-minimum-32-chars!",
+      baseURL: "http://localhost:3000",
     },
-    {} as any,
-  );
+    database: { url: dbUrl },
+    admin: {
+      path: "/admin",
+    },
+  });
+  const getApp = () => app;
+  const handle = createRunelayerHandle(getApp);
+  const { load, actions } = createRunelayerAdminRoute(getApp);
 
   const dbClient = createClient({ url: dbUrl });
   const cookieJar = new CookieJar();
@@ -238,7 +242,7 @@ async function createAuthJourneyHarness(): Promise<Harness> {
       headers,
     });
 
-    const response = await app.handle({
+    const response = await handle({
       event: {
         request,
         url,
@@ -259,7 +263,7 @@ async function createAuthJourneyHarness(): Promise<Harness> {
     cookieJar.apply(headers);
 
     let locals: Record<string, unknown> = {};
-    await app.handle({
+    await handle({
       event: {
         request: new Request(url, { headers }),
         url,
@@ -311,10 +315,10 @@ async function createAuthJourneyHarness(): Promise<Harness> {
     app,
     dbClient,
     async adminLoad(path?: string) {
-      return await app.admin.load(await adminEvent(path));
+      return await load(await adminEvent(path));
     },
     async runAdminAction(action, path, options) {
-      const handler = app.admin.actions[action] as any;
+      const handler = actions[action] as any;
       if (typeof handler !== "function") {
         throw new Error(`Unsupported admin action: ${String(action)}`);
       }

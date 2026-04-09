@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { AdminErrorPage as AdminErrorView } from "../admin/index.js";
+	import AdminErrorView from "../admin/components/ErrorPage.svelte";
 
 	let {
 		status = 500,

@@ -200,6 +200,8 @@ export type RunelayerAdminPageData =
 
 export interface RunelayerAdminFormData {
   error?: string;
+  fieldErrors?: Record<string, string[]>;
+  values?: RunelayerDocument;
 }
 
 export interface RunelayerAdminPageProps {
@@ -229,7 +231,6 @@ export interface RunelayerQueryApi {
 export interface RunelayerAdminRuntime {
   load: (event: RequestEvent) => Promise<RunelayerAdminPageData>;
   actions: Actions;
-  Page: RunelayerAdminPageComponent;
 }
 
 export interface RunelayerApp {

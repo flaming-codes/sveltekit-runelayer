@@ -80,7 +80,8 @@
     "better-auth": "catalog:",
     "carbon-components-svelte": "catalog:",
     "carbon-icons-svelte": "catalog:",
-    "drizzle-orm": "catalog:"
+    "drizzle-orm": "catalog:",
+    "svelte-dnd-action": "catalog:"
   },
   "devDependencies": {
     "@sveltejs/kit": "catalog:",

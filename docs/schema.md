@@ -197,6 +197,8 @@ Fields also accept a `validate` function specific to their value type:
 
 The validator returns `true` on success or a string error message on failure.
 
+In the package-owned admin UI, the serializable portion of field validation metadata is reused on the client for immediate feedback. Arbitrary function values such as `validate` callbacks remain server-authoritative because loader serialization strips functions.
+
 ## Runtime Enforcement
 
 The query layer enforces schema constraints at write/read time:
@@ -208,6 +210,10 @@ The query layer enforces schema constraints at write/read time:
 - Field `validate` callbacks run during create/update
 - Field `access` rules are enforced for create/update/read
 - For `auth: true` collections, auth-internal fields are redacted from query read results
+
+Validation failures use public document paths in their messages so nested admin/query payloads map cleanly back to the schema. For example, grouped fields report paths like `seo.metaTitle` and nested block fields report paths like `layout[0].heading`.
+
+If a custom `validate` callback throws instead of returning a string, Runelayer converts that exception into a normal validation failure rather than surfacing it as an unhandled server error.
 
 Group field access is inherited by nested persisted fields, and child field access is applied on top.
 

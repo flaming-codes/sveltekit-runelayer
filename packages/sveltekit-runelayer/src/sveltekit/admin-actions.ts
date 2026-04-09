@@ -22,7 +22,7 @@ import {
   parseManagedUser,
 } from "./admin-queries.js";
 import { authAdminPath } from "./admin-runtime-utils.js";
-import { RESERVED_WRITE_FIELDS } from "../query/enforcement.js";
+import { isWriteValidationError, stripReservedWriteFields } from "../schema/validation.js";
 
 function parseDocumentPayload(
   formData: FormData,
@@ -45,11 +45,34 @@ function parseDocumentPayload(
     throw kit.error(400, "Admin form payload must be an object.");
   }
 
-  const document = { ...(parsed as Record<string, unknown>) };
-  for (const key of RESERVED_WRITE_FIELDS) {
-    delete document[key];
+  return stripReservedWriteFields(parsed as Record<string, unknown>);
+}
+
+function parseOptionalDocumentPayload(
+  formData: FormData,
+  fields: NamedField[],
+  kit: Pick<SvelteKitUtils, "error">,
+): Record<string, unknown> | undefined {
+  if (!formField(formData, "payload")) {
+    return undefined;
   }
-  return document;
+  return parseDocumentPayload(formData, fields, kit);
+}
+
+function validationFailure(
+  fail: SvelteKitUtils["fail"],
+  error: unknown,
+  values?: Record<string, unknown>,
+) {
+  if (!isWriteValidationError(error)) {
+    return null;
+  }
+
+  return fail(400, {
+    error: error.message,
+    fieldErrors: error.fieldErrors,
+    values: toSerializable(values ?? {}),
+  });
 }
 
 export interface AdminActionsConfig {
@@ -244,7 +267,16 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
 
       const formData = await event.request.formData();
       const data = parseDocumentPayload(formData, collection.fields, cfg.kit);
-      const document = await query.create(collection, data);
+      let document;
+      try {
+        document = await query.create(collection, data);
+      } catch (error) {
+        const failure = validationFailure(fail, error, data);
+        if (failure) {
+          return failure;
+        }
+        throw error;
+      }
 
       const newId = (document as Record<string, string>).id;
       throw redirect(303, `${cfg.adminPath}/collections/${route.slug}/${newId}`);
@@ -258,14 +290,30 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       if (route.kind === "global-edit") {
         const global = cfg.resolveGlobalBySlug(cfg.runelayer, route.slug);
         const data = parseDocumentPayload(formData, global.fields, cfg.kit);
-        document = await updateGlobalDocument(cfg.runelayer, global, event.request, data);
+        try {
+          document = await updateGlobalDocument(cfg.runelayer, global, event.request, data);
+        } catch (error) {
+          const failure = validationFailure(fail, error, data);
+          if (failure) {
+            return failure;
+          }
+          throw error;
+        }
       } else {
         const collection = cfg.getCollectionBySlug(cfg.runelayer, route.slug);
         const data = parseDocumentPayload(formData, collection.fields, cfg.kit);
         const query = cfg.withRequest(event);
         const id = typeof data.id === "string" ? data.id : route.id;
         delete data.id;
-        document = await query.update(collection, id, data);
+        try {
+          document = await query.update(collection, id, data);
+        } catch (error) {
+          const failure = validationFailure(fail, error, data);
+          if (failure) {
+            return failure;
+          }
+          throw error;
+        }
       }
 
       return {
@@ -474,7 +522,17 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
 
       const formData = await event.request.formData();
       const id = formField(formData, "id") || route.id;
-      const document = await query.publish(collection, id);
+      const values = parseOptionalDocumentPayload(formData, collection.fields, cfg.kit);
+      let document;
+      try {
+        document = await query.publish(collection, id);
+      } catch (error) {
+        const failure = validationFailure(fail, error, values);
+        if (failure) {
+          return failure;
+        }
+        throw error;
+      }
 
       return {
         success: true,
@@ -506,7 +564,16 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
       const data = parseDocumentPayload(formData, collection.fields, cfg.kit);
       const id = typeof data.id === "string" ? data.id : route.id;
       delete data.id;
-      const document = await query.saveDraft(collection, id, data);
+      let document;
+      try {
+        document = await query.saveDraft(collection, id, data);
+      } catch (error) {
+        const failure = validationFailure(fail, error, data);
+        if (failure) {
+          return failure;
+        }
+        throw error;
+      }
 
       return {
         success: true,
@@ -536,7 +603,18 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
     publishGlobal: async (event) => {
       const route = await resolveGuardedRoute(event, "global-edit", cfg);
       const global = cfg.resolveGlobalBySlug(cfg.runelayer, route.slug);
-      const document = await publishGlobal(cfg.runelayer, global, event.request);
+      const formData = await event.request.formData();
+      const values = parseOptionalDocumentPayload(formData, global.fields, cfg.kit);
+      let document;
+      try {
+        document = await publishGlobal(cfg.runelayer, global, event.request);
+      } catch (error) {
+        const failure = validationFailure(fail, error, values);
+        if (failure) {
+          return failure;
+        }
+        throw error;
+      }
 
       return {
         success: true,
@@ -561,9 +639,18 @@ export function createAdminActions(cfg: AdminActionsConfig): Actions {
 
       const formData = await event.request.formData();
       const data = parseDocumentPayload(formData, global.fields, cfg.kit);
-      const document = await updateGlobalDocument(cfg.runelayer, global, event.request, data, {
-        forceDraft: true,
-      });
+      let document;
+      try {
+        document = await updateGlobalDocument(cfg.runelayer, global, event.request, data, {
+          forceDraft: true,
+        });
+      } catch (error) {
+        const failure = validationFailure(fail, error, data);
+        if (failure) {
+          return failure;
+        }
+        throw error;
+      }
 
       return {
         success: true,

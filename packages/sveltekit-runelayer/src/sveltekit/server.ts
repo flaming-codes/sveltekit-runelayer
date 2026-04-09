@@ -11,9 +11,13 @@ if (typeof window !== "undefined") {
 
 export { createRunelayerApp } from "./app.js";
 export { defineRunelayerDrizzleConfig } from "./drizzle-config.js";
+export { createRunelayerHandle, createRunelayerAdminRoute } from "./helpers.js";
+export type { RunelayerAppGetter } from "./helpers.js";
 export type {
   CollectionInput,
   RunelayerAdminConfig,
+  RunelayerAdminFormData,
+  RunelayerAdminPageProps,
   RunelayerAdminUIConfig,
   RunelayerAdminRuntime,
   RunelayerApp,

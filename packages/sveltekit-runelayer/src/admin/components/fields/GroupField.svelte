@@ -5,17 +5,22 @@
 
 	let {
 		name,
+		path,
 		label,
 		fields,
 		values = $bindable({}),
+		errors = {},
 	}: {
 		name: string;
+		path: string;
 		label?: string;
 		fields: NamedField[];
 		values: Record<string, any>;
+		errors?: Record<string, string[]>;
 	} = $props();
 
 	let groupValues = $state<Record<string, any>>({});
+	let rootError = $derived(errors[path]?.[0] ?? "");
 
 	// Initialize group values from parent
 	$effect(() => {
@@ -38,13 +43,22 @@
 
 <FormGroup legendText={label ?? name}>
 	<div class="rk-group-fields">
+		{#if rootError}
+			<p class="rk-field-error">{rootError}</p>
+		{/if}
 		{#each fields as field}
-			<FieldRenderer {field} bind:values={groupValues} />
+			<FieldRenderer {field} bind:values={groupValues} {errors} pathPrefix={path} />
 		{/each}
 	</div>
 </FormGroup>
 
 <style>
+	.rk-field-error {
+		margin: 0;
+		font-size: 0.75rem;
+		color: var(--cds-support-error);
+	}
+
 	.rk-group-fields {
 		display: grid;
 		gap: var(--cds-spacing-05);

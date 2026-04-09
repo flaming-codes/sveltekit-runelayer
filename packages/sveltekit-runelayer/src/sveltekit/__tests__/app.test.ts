@@ -9,7 +9,7 @@ import { defineCollection } from "../../schema/collections.js";
 import { text } from "../../schema/fields.js";
 import { defineGlobal } from "../../schema/globals.js";
 import type { SvelteKitUtils } from "../types.js";
-import { createRunelayerRuntime } from "../runtime.js";
+import { createRunelayerApp } from "../app.js";
 
 // Test-compatible stubs that mirror @sveltejs/kit's redirect/error/fail behaviour.
 const kit: SvelteKitUtils = {
@@ -42,7 +42,7 @@ const Posts = defineCollection({
 const SiteSettings = defineGlobal({
   slug: "site-settings",
   label: "Site Settings",
-  fields: [{ name: "siteName", ...text({ required: true }) }],
+  fields: [{ name: "siteName", ...text({ required: true, maxLength: 24 }) }],
   access: {
     read: () => true,
     update: isLoggedIn(),
@@ -133,24 +133,21 @@ async function createTestApp(options?: { authUsers?: TestAuthUser[] }) {
   await migrateDatabaseForTests(dbUrl, [Posts], [SiteSettings]);
   await applyAuthSchemaForTests(dbUrl, options?.authUsers ?? [DEFAULT_ADMIN_USER]);
 
-  return createRunelayerRuntime(
-    {
-      kit,
-      collections: [Posts],
-      globals: [SiteSettings],
-      auth: {
-        secret: "test-secret-minimum-32-chars-long",
-        baseURL: "http://localhost:5173",
-      },
-      database: {
-        url: dbUrl,
-      },
-      admin: {
-        path: "/admin",
-      },
+  return createRunelayerApp({
+    kit,
+    collections: [Posts],
+    globals: [SiteSettings],
+    auth: {
+      secret: "test-secret-minimum-32-chars-long",
+      baseURL: "http://localhost:5173",
     },
-    {} as any,
-  );
+    database: {
+      url: dbUrl,
+    },
+    admin: {
+      path: "/admin",
+    },
+  });
 }
 
 function makeEvent(
@@ -265,6 +262,29 @@ describe("createRunelayerApp", () => {
     expect(docs).toHaveLength(0);
   });
 
+  it("returns fail data for invalid collection creates instead of surfacing a 500", async () => {
+    const app = await createTestApp();
+
+    const result = await (app.admin.actions.create as any)(
+      adminEvent("collections/posts/create", {
+        form: { payload: JSON.stringify({ title: "" }) },
+      }),
+    );
+
+    expect(result).toMatchObject({
+      status: 400,
+      data: {
+        error: 'Field "title" is required',
+        fieldErrors: {
+          title: ['Field "title" is required'],
+        },
+        values: {
+          title: "",
+        },
+      },
+    });
+  });
+
   it("dispatches global update action and persists the singleton document", async () => {
     const app = await createTestApp();
 
@@ -284,6 +304,32 @@ describe("createRunelayerApp", () => {
     expect(globalView.document).toMatchObject({
       id: "site-settings",
       siteName: "Runelayer CMS",
+    });
+  });
+
+  it("returns fail data for invalid global updates", async () => {
+    const app = await createTestApp();
+    const siteName = "This site name is definitely longer than twenty four chars";
+
+    const result = await (app.admin.actions.update as any)(
+      adminEvent("globals/site-settings", {
+        form: {
+          payload: JSON.stringify({ siteName }),
+        },
+      }),
+    );
+
+    expect(result).toMatchObject({
+      status: 400,
+      data: {
+        error: 'Field "siteName" must be at most 24 characters',
+        fieldErrors: {
+          siteName: ['Field "siteName" must be at most 24 characters'],
+        },
+        values: {
+          siteName,
+        },
+      },
     });
   });
 

@@ -4,4 +4,9 @@
  */
 export { default as AdminPage } from "./AdminPage.svelte";
 export { default as AdminErrorPage } from "./AdminErrorPage.svelte";
-export type { RunelayerAdminUIConfig } from "./types.js";
+export { default as AdminRoutePage } from "./AdminPage.svelte";
+export type {
+  RunelayerAdminFormData,
+  RunelayerAdminPageProps,
+  RunelayerAdminUIConfig,
+} from "./types.js";

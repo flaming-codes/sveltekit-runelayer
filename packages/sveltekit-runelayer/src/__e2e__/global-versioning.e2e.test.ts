@@ -270,12 +270,15 @@ describe("Global Versioning — E2E Journey", () => {
 
     it("creates a new version snapshot after restore", async () => {
       const versionsBefore = await findGlobalVersions(kit, OtherGlobal, adminReq());
-      const countBefore = versionsBefore.length;
+      const newestBefore = versionsBefore[0]._version;
 
       await restoreGlobalVersion(kit, OtherGlobal, adminReq(), initialVersionId);
 
       const versionsAfter = await findGlobalVersions(kit, OtherGlobal, adminReq());
-      expect(versionsAfter.length).toBe(countBefore + 1);
+      // A new snapshot was created with a higher version number.
+      expect(versionsAfter[0]._version).toBe(newestBefore + 1);
+      // Pruning caps total count at maxPerDoc (5).
+      expect(versionsAfter.length).toBeLessThanOrEqual(5);
     });
 
     it("restoreGlobalVersion() with a nonexistent version ID throws 404", async () => {

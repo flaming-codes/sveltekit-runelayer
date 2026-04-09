@@ -1,6 +1,8 @@
 <script lang="ts">
-  import { AdminPage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
-  let { data, form } = $props();
+  import { AdminRoutePage } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
+  import type { RunelayerAdminPageProps } from "@flaming-codes/sveltekit-runelayer/sveltekit/components";
+
+  let { data, form }: RunelayerAdminPageProps = $props();
 </script>
 
-<AdminPage {data} {form} />
+<AdminRoutePage {data} {form} />
