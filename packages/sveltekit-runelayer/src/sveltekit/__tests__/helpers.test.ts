@@ -81,4 +81,28 @@ describe("sveltekit helpers", () => {
     expect(loginImpl).toHaveBeenCalledOnce();
     expect(appReads).toBeGreaterThan(0);
   });
+
+  it("throws a 404 HttpError when a delegated action is missing", async () => {
+    const app = {
+      handle: vi.fn(async () => new Response("ok", { status: 200 })),
+      admin: {
+        load: vi.fn(async () => ({ view: "dashboard" })),
+        actions: {},
+      },
+    } as any;
+
+    const route = createRunelayerAdminRouteFromHelpers(() => app);
+    const request = new Request("http://localhost/admin/users/123", { method: "POST" });
+    const event = {
+      url: new URL(request.url),
+      request,
+      params: { path: "users/123" },
+      locals: {},
+      fetch: vi.fn(),
+    } as any;
+
+    await expect(route.actions.update?.(event)).rejects.toMatchObject({
+      status: 404,
+    });
+  });
 });

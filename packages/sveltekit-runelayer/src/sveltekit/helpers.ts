@@ -1,25 +1,6 @@
-import type { Actions, Handle } from "@sveltejs/kit";
+import { error as kitError, type Actions, type Handle } from "@sveltejs/kit";
 import type { RunelayerApp } from "./types.js";
-
-const ADMIN_ACTION_NAMES = [
-  "login",
-  "createFirstUser",
-  "create",
-  "update",
-  "delete",
-  "publish",
-  "unpublish",
-  "saveDraft",
-  "restoreVersion",
-  "publishGlobal",
-  "unpublishGlobal",
-  "saveDraftGlobal",
-  "restoreGlobalVersion",
-  "logout",
-  "createUser",
-  "updateUser",
-  "deleteUser",
-] as const;
+import { ADMIN_ACTION_NAMES } from "./admin-action-names.js";
 
 export type RunelayerAppGetter = () => RunelayerApp;
 
@@ -49,7 +30,7 @@ export function createRunelayerAdminRoute(
     actions[actionName] = async (event) => {
       const action = getApp().admin.actions[actionName];
       if (typeof action !== "function") {
-        throw new Error(`Unknown admin action: ${actionName}`);
+        throw kitError(404, `Unknown admin action: ${actionName}`);
       }
       return action(event);
     };

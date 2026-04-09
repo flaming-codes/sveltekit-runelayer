@@ -12,26 +12,7 @@ import type {
 } from "./types.js";
 import { buildHealthPayload } from "./health.js";
 import type { CreateAdminRuntimeInput } from "./admin-runtime.js";
-
-const ADMIN_ACTION_NAMES = [
-  "login",
-  "createFirstUser",
-  "create",
-  "update",
-  "delete",
-  "publish",
-  "unpublish",
-  "saveDraft",
-  "restoreVersion",
-  "publishGlobal",
-  "unpublishGlobal",
-  "saveDraftGlobal",
-  "restoreGlobalVersion",
-  "logout",
-  "createUser",
-  "updateUser",
-  "deleteUser",
-] as const;
+import { ADMIN_ACTION_NAMES } from "./admin-action-names.js";
 
 export function createRunelayerRuntime(config: RunelayerAppConfig): RunelayerApp {
   const adminPath = normalizeAdminPath(config.admin?.path ?? "/admin");
