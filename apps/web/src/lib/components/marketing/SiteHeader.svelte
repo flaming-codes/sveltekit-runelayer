@@ -8,6 +8,7 @@
     LogoGithub,
     Menu,
   } from "carbon-icons-svelte";
+  import { Pattern as PictoPattern } from "carbon-pictograms-svelte";
   import type { SiteChrome } from "$lib/marketing.js";
   import { asLinkItems, asText } from "$lib/marketing.js";
 
@@ -44,7 +45,7 @@
 
   <div class="rl-container rl-header__bar rl-shell-grid">
     <a href="/" class="rl-header__brand" aria-label="Runelayer home" onclick={closeMenu}>
-      <span class="rl-header__brand-mark">RL</span>
+      <span class="rl-header__brand-mark"><PictoPattern /></span>
       <span class="rl-header__brand-copy">
         <strong>{chrome.siteName}</strong>
         <span>{chrome.siteTagline}</span>
@@ -166,11 +167,12 @@
     place-items: center;
     width: 2.5rem;
     height: 2.5rem;
-    background: #161616;
-    color: #ffffff;
-    font-size: 0.875rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    color: #161616;
+  }
+
+  .rl-header__brand-mark :global(svg) {
+    width: 2.5rem;
+    height: 2.5rem;
   }
 
   .rl-header__brand-copy {

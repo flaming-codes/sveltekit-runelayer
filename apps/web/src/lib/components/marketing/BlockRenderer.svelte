@@ -1,48 +1,42 @@
 <script lang="ts">
+  import { Accordion, AccordionItem, Button, Tag } from "carbon-components-svelte";
   import {
-    Accordion,
-    AccordionItem,
-    Button,
-    ClickableTile,
-    Tag,
-    Tile,
-  } from "carbon-components-svelte";
-  import {
-    Api,
     Application,
     ArrowRight,
     Catalog,
     CheckmarkFilled,
-    CheckmarkOutline,
-    CloudApp,
     Code,
-    CodeReference,
-    DataBase,
     Document,
     Flash,
-    Flow,
     Idea,
     Information,
     Launch,
     Layers,
-    Notebook,
     Rule,
-    Security,
-    Task,
-    Terminal,
     WorkflowAutomation,
   } from "carbon-icons-svelte";
   import {
+    ActiveServer as PictoActiveServer,
+    Api as PictoApi,
     Application as PictoApplication,
+    ApplicationSecurity as PictoApplicationSecurity,
     Build as PictoBuild,
     Carbon as PictoCarbon,
-    ContentDesign as PictoContentDesign,
-    Database as PictoDatabase,
-    ContinuousDelivery as PictoContinuousDelivery,
-    Api as PictoApi,
-    ActiveServer as PictoActiveServer,
-    ApplicationSecurity as PictoApplicationSecurity,
     Connect as PictoConnect,
+    ContentDesign as PictoContentDesign,
+    ContinuousDelivery as PictoContinuousDelivery,
+    Database as PictoDatabase,
+    Documentation as PictoDocumentation,
+    Embed as PictoEmbed,
+    Launch as PictoLaunch,
+    OpenSource as PictoOpenSource,
+    OperationalMetrics as PictoOperationalMetrics,
+    Question as PictoQuestion,
+    ReferenceArchitecture as PictoReferenceArchitecture,
+    Rocket as PictoRocket,
+    Speedometer as PictoSpeedometer,
+    SystemsDevopsRelease as PictoRelease,
+    UserInsights as PictoUserInsights,
   } from "carbon-pictograms-svelte";
   import type { MarketingBlock, MarketingDoc } from "$lib/marketing.js";
   import { asBlocks, asDocs, asParagraphs, asText } from "$lib/marketing.js";
@@ -59,25 +53,6 @@
 
   let tone = $derived(asText(block.themeTone, "light"));
 
-  const iconMap: Record<string, typeof Application> = {
-    Api,
-    Application,
-    Catalog,
-    CloudApp,
-    Code,
-    CodeReference,
-    DataBase,
-    Document,
-    Flash,
-    Flow,
-    Layers,
-    Notebook,
-    Security,
-    Task,
-    Terminal,
-    WorkflowAutomation,
-  };
-
   const sectionIconMap: Record<string, typeof Application> = {
     hero: Application,
     editorial: Idea,
@@ -91,9 +66,9 @@
   };
 
   const pictogramMap: Record<string, typeof PictoApplication> = {
+    ActiveServer: PictoActiveServer,
     Api: PictoApi,
     Application: PictoApplication,
-    ActiveServer: PictoActiveServer,
     ApplicationSecurity: PictoApplicationSecurity,
     Build: PictoBuild,
     Carbon: PictoCarbon,
@@ -101,11 +76,18 @@
     ContentDesign: PictoContentDesign,
     ContinuousDelivery: PictoContinuousDelivery,
     Database: PictoDatabase,
+    Documentation: PictoDocumentation,
+    Embed: PictoEmbed,
+    Launch: PictoLaunch,
+    OpenSource: PictoOpenSource,
+    OperationalMetrics: PictoOperationalMetrics,
+    Question: PictoQuestion,
+    ReferenceArchitecture: PictoReferenceArchitecture,
+    Rocket: PictoRocket,
+    Speedometer: PictoSpeedometer,
+    SystemsDevopsRelease: PictoRelease,
+    UserInsights: PictoUserInsights,
   };
-
-  function iconFor(name: unknown) {
-    return iconMap[asText(name)] ?? Application;
-  }
 
   function pictogramFor(name: unknown) {
     return pictogramMap[asText(name)] ?? PictoApplication;
@@ -173,122 +155,84 @@
       .join(" ");
   }
 
-  function proofSpan(item: MarketingDoc) {
-    return asText(item.kind) === "testimonial" ? "rl-span--six" : "rl-span--three";
-  }
-
-  function proofIcon(item: MarketingDoc, itemIndex: number) {
-    if (asText(item.kind) === "testimonial") return Idea;
-    return itemIndex === 0 ? CheckmarkOutline : Rule;
-  }
-
-  function pricingSpan(itemIndex: number, itemCount: number) {
-    if (itemCount <= 1) return "rl-span--full";
-    return itemIndex === 0 ? "rl-span--five" : "rl-span--seven";
-  }
-
-  function pricingIcon(item: MarketingDoc, itemIndex: number) {
-    return asText(item.badge).toLowerCase().includes("recommended")
-      ? WorkflowAutomation
-      : itemIndex === 0
-        ? Layers
-        : Catalog;
-  }
-
   function pricingKind(item: MarketingDoc) {
     return asText(item.badge).toLowerCase().includes("recommended") ? "primary" : "ghost";
-  }
-
-  function resourceSpan(itemIndex: number) {
-    if (itemIndex === 0) return "rl-span--five";
-    if (itemIndex === 1) return "rl-span--three";
-    return "rl-span--four";
-  }
-
-  function resourceIcon(item: MarketingDoc) {
-    if (asText(item.kind) === "reference") return CodeReference;
-    if (asText(item.kind) === "example") return Launch;
-    return Document;
-  }
-
-  function releaseSpan(itemIndex: number, itemCount: number) {
-    if (itemCount <= 1) return "rl-span--full";
-    return itemIndex === 0 ? "rl-span--seven" : "rl-span--five";
   }
 </script>
 
 {#if block.blockType === "hero"}
-  {#snippet heroContent()}
-    {@const SectionIcon = sectionIcon(block.blockType)}
-    <div class="rl-hero" data-tone={tone}>
-      <div class="rl-hero__copy">
-        {#if asText(block.eyebrow)}
-          <div class="rl-section-kicker">
-            <span class="rl-section-kicker__icon">
-              <SectionIcon size={18} />
-            </span>
-            <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
-          </div>
-        {/if}
-
-        <h1 class="rl-section-heading">{asText(block.heading)}</h1>
-
-        <div class="rl-hero__body">
-          {#each asParagraphs(block.body) as paragraph}
-            <p class="rl-section-copy">{paragraph}</p>
-          {/each}
-        </div>
-
-        <div class="rl-action-group rl-action-group--hero">
-          {#if asText(block.primaryLabel) && asText(block.primaryUrl)}
-            <Button
-              expressive
-              size="xl"
-              icon={actionIcon(asText(block.primaryUrl))}
-              href={asText(block.primaryUrl)}
-              {...linkProps(asText(block.primaryUrl))}
-            >
-              {asText(block.primaryLabel)}
-            </Button>
-          {/if}
-
-          {#if asText(block.secondaryLabel) && asText(block.secondaryUrl)}
-            <Button
-              expressive
-              size="xl"
-              kind={actionKind(tone, "secondary")}
-              icon={actionIcon(asText(block.secondaryUrl))}
-              href={asText(block.secondaryUrl)}
-              {...linkProps(asText(block.secondaryUrl))}
-            >
-              {asText(block.secondaryLabel)}
-            </Button>
-          {/if}
-        </div>
-
-      </div>
-
-      <div class="rl-hero__panel">
-        <div class="rl-hero__panel-head">
-          <span class="rl-hero__panel-icon">
-            <Code size={18} />
-          </span>
-          <div>
-            {#if asText(block.panelEyebrow)}
-              <p class="rl-eyebrow">{asText(block.panelEyebrow)}</p>
-            {/if}
-            <h2>{asText(block.panelTitle)}</h2>
-          </div>
-        </div>
-        <pre>{asText(block.panelCode)}</pre>
-      </div>
-    </div>
-  {/snippet}
-
+  {@const SectionIcon = sectionIcon(block.blockType)}
   <section class={sectionClass(block.blockType)}>
     <div class="rl-container">
-      {@render heroContent()}
+      <div class="rl-hero" data-tone={tone}>
+        <div class="rl-hero__copy">
+          {#if asText(block.eyebrow)}
+            <div class="rl-section-kicker">
+              <span class="rl-section-kicker__icon">
+                <SectionIcon size={18} />
+              </span>
+              <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
+            </div>
+          {/if}
+
+          <h1 class="rl-section-heading">{asText(block.heading)}</h1>
+
+          <div class="rl-hero__body">
+            {#each asParagraphs(block.body) as paragraph}
+              <p class="rl-section-copy">{paragraph}</p>
+            {/each}
+          </div>
+
+          <div class="rl-action-group rl-action-group--hero">
+            {#if asText(block.primaryLabel) && asText(block.primaryUrl)}
+              <Button
+                expressive
+                size="xl"
+                icon={actionIcon(asText(block.primaryUrl))}
+                href={asText(block.primaryUrl)}
+                {...linkProps(asText(block.primaryUrl))}
+              >
+                {asText(block.primaryLabel)}
+              </Button>
+            {/if}
+
+            {#if asText(block.secondaryLabel) && asText(block.secondaryUrl)}
+              <Button
+                expressive
+                size="xl"
+                kind={actionKind(tone, "secondary")}
+                icon={actionIcon(asText(block.secondaryUrl))}
+                href={asText(block.secondaryUrl)}
+                {...linkProps(asText(block.secondaryUrl))}
+              >
+                {asText(block.secondaryLabel)}
+              </Button>
+            {/if}
+          </div>
+        </div>
+      </div>
     </div>
+
+    {#if asText(block.panelCode)}
+      <div class="rl-container">
+        <div class="rl-hero__code-row">
+          <div class="rl-hero__code-panel">
+            <div class="rl-hero__panel-head">
+              <span class="rl-hero__panel-icon">
+                <Code size={18} />
+              </span>
+              <div>
+                {#if asText(block.panelEyebrow)}
+                  <p class="rl-eyebrow">{asText(block.panelEyebrow)}</p>
+                {/if}
+                <h2>{asText(block.panelTitle)}</h2>
+              </div>
+            </div>
+            <pre>{asText(block.panelCode)}</pre>
+          </div>
+        </div>
+      </div>
+    {/if}
   </section>
 {:else if block.blockType === "editorial"}
   {@const SectionIcon = sectionIcon(block.blockType)}
@@ -392,31 +336,29 @@
         {/if}
       </div>
 
-      <div class="rl-card-grid rl-proof-grid">
+      <div class="rl-tile-grid rl-tile-grid--proof">
         {#each blockItems("items") as item, itemIndex}
-          {@const ProofIcon = proofIcon(item, itemIndex)}
-          <article class={`rl-proof-card rl-surface ${proofSpan(item)}`}>
-            <div class="rl-proof-card__meta">
-              <span class="rl-proof-card__icon">
-                <ProofIcon size={20} />
-              </span>
-              {#if asText(item.kind) === "testimonial"}
-                <Tag type="cool-gray">{asText(item.company)}</Tag>
-              {:else}
-                <p class="rl-eyebrow">{asText(item.metricLabel)}</p>
-              {/if}
-            </div>
-
+          <article class="rl-tile-grid__cell rl-tile-grid__cell--proof">
             {#if asText(item.kind) === "testimonial"}
-              <p class="rl-proof-card__quote">“{asText(item.quote)}”</p>
+              <p class="rl-proof-card__quote">"{asText(item.quote)}"</p>
               <div class="rl-proof-card__person">
                 <strong>{asText(item.personName)}</strong>
-                <span>{asText(item.personRole)}</span>
+                <span>{asText(item.personRole)}, {asText(item.company)}</span>
               </div>
-              <p>{asText(item.company)}</p>
+              <div class="rl-tile-grid__foot">
+                <span class="rl-tile-grid__pictogram">
+                  <PictoUserInsights />
+                </span>
+              </div>
             {:else}
+              <p class="rl-eyebrow">{asText(item.metricLabel)}</p>
               <strong class="rl-proof-card__metric">{asText(item.metricValue)}</strong>
               <p>{asText(item.label)}</p>
+              <div class="rl-tile-grid__foot">
+                <span class="rl-tile-grid__pictogram">
+                  <PictoSpeedometer />
+                </span>
+              </div>
             {/if}
           </article>
         {/each}
@@ -445,45 +387,43 @@
         {/if}
       </div>
 
-      <div class="rl-card-grid rl-pricing-grid">
+      <div class="rl-tile-grid rl-tile-grid--pricing">
         {#each blockItems("plans") as item, itemIndex}
-          {@const PlanIcon = pricingIcon(item, itemIndex)}
-          <div class={`rl-card-shell ${pricingSpan(itemIndex, blockItems("plans").length)}`}>
-            <Tile
-              class={`rl-surface rl-tile rl-tile--pricing ${
-                asText(item.badge).toLowerCase().includes("recommended")
-                  ? "rl-tile--pricing-recommended"
-                  : ""
-              }`}
-            >
-              <div class="rl-pricing-card__head">
-                <div class="rl-pricing-card__identity">
-                  <span class="rl-pricing-card__icon">
-                    <PlanIcon size={24} />
-                  </span>
-                  <div>
-                    <p class="rl-eyebrow">{asText(item.audience)}</p>
-                    <h3>{asText(item.title)}</h3>
-                  </div>
-                </div>
-
-                {#if asText(item.badge)}
-                  <Tag type={tagType(asText(item.badge))}>{asText(item.badge)}</Tag>
-                {/if}
+          {@const isRecommended = asText(item.badge).toLowerCase().includes("recommended")}
+          <div
+            class="rl-tile-grid__cell rl-tile-grid__cell--pricing"
+            class:rl-tile-grid__cell--recommended={isRecommended}
+          >
+            <div class="rl-pricing-card__head">
+              <div>
+                <p class="rl-eyebrow">{asText(item.audience)}</p>
+                <h3>{asText(item.title)}</h3>
               </div>
+              {#if asText(item.badge)}
+                <Tag type={tagType(asText(item.badge))}>{asText(item.badge)}</Tag>
+              {/if}
+            </div>
 
-              <p class="rl-pricing-card__price">{asText(item.priceLabel)}</p>
-              <p>{asText(item.description)}</p>
+            <p class="rl-pricing-card__price">{asText(item.priceLabel)}</p>
+            <p>{asText(item.description)}</p>
 
-              <ul class="rl-pricing-card__list">
-                {#each asBlocks(item.planFeatures) as feature}
-                  <li>
-                    <CheckmarkFilled size={16} />
-                    <span>{asText(feature.label)}</span>
-                  </li>
-                {/each}
-              </ul>
+            <ul class="rl-pricing-card__list">
+              {#each asBlocks(item.planFeatures) as feature}
+                <li>
+                  <CheckmarkFilled size={16} />
+                  <span>{asText(feature.label)}</span>
+                </li>
+              {/each}
+            </ul>
 
+            <div class="rl-tile-grid__foot">
+              <span class="rl-tile-grid__pictogram">
+                {#if itemIndex === 0}
+                  <PictoOpenSource />
+                {:else}
+                  <PictoBuild />
+                {/if}
+              </span>
               {#if asText(item.ctaLabel) && asText(item.ctaUrl)}
                 <Button
                   kind={pricingKind(item)}
@@ -494,7 +434,7 @@
                   {asText(item.ctaLabel)}
                 </Button>
               {/if}
-            </Tile>
+            </div>
           </div>
         {/each}
       </div>
@@ -522,39 +462,33 @@
         {/if}
       </div>
 
-      <div class="rl-card-grid rl-resource-grid">
+      <div class="rl-tile-grid">
         {#each blockItems("items") as item, itemIndex}
-          {@const ResourceIcon = resourceIcon(item)}
-          <div class={`rl-card-shell ${resourceSpan(itemIndex)}`}>
-            <ClickableTile
-              class="rl-surface rl-tile rl-tile--resource"
-              href={asText(item.href)}
-              {...linkProps(asText(item.href))}
-            >
-              <div class="rl-resource-card__head">
-                <span class="rl-resource-card__icon">
-                  <ResourceIcon size={24} />
-                </span>
-                <Tag type={tagType(asText(item.badge, asText(item.kind)))}>
-                  {asText(item.badge, asText(item.kind))}
-                </Tag>
-              </div>
-
-              <div class="rl-card-copy">
-                <h3>{asText(item.title)}</h3>
-                <p>{asText(item.description)}</p>
-              </div>
-
-              <div class="rl-resource-card__foot">
-                <span>{isExternal(asText(item.href)) ? "Open resource" : "Read more"}</span>
-                {#if isExternal(asText(item.href))}
-                  <Launch size={16} />
+          <a
+            href={asText(item.href)}
+            class="rl-tile-grid__cell"
+            {...linkProps(asText(item.href))}
+          >
+            <div class="rl-tile-grid__cell-head">
+              <h3>{asText(item.title)}</h3>
+              <Tag type={tagType(asText(item.badge, asText(item.kind)))}>
+                {asText(item.badge, asText(item.kind))}
+              </Tag>
+            </div>
+            <p>{asText(item.description)}</p>
+            <div class="rl-tile-grid__foot">
+              <span class="rl-tile-grid__pictogram">
+                {#if asText(item.kind) === "reference"}
+                  <PictoReferenceArchitecture />
+                {:else if isExternal(asText(item.href))}
+                  <PictoLaunch />
                 {:else}
-                  <ArrowRight size={16} />
+                  <PictoDocumentation />
                 {/if}
-              </div>
-            </ClickableTile>
-          </div>
+              </span>
+              <ArrowRight size={20} />
+            </div>
+          </a>
         {/each}
       </div>
     </div>
@@ -613,22 +547,25 @@
         {/if}
       </div>
 
-      <div class="rl-card-grid rl-release-strip">
+      <div class="rl-tile-grid rl-tile-grid--release">
         {#each blockItems("items") as item, itemIndex}
-          <article class={`rl-release-item rl-surface ${releaseSpan(itemIndex, blockItems("items").length)}`}>
-            <div class="rl-release-item__meta">
-              <span class="rl-release-item__icon">
-                <Flash size={20} />
-              </span>
+          <a
+            href={asText(item.href)}
+            class="rl-tile-grid__cell"
+            {...linkProps(asText(item.href))}
+          >
+            <div class="rl-tile-grid__cell-head">
+              <h3>{asText(item.title)}</h3>
               <Tag type="cool-gray">{asText(item.releaseLabel)}</Tag>
             </div>
-            <h3>{asText(item.title)}</h3>
             <p>{asText(item.summary)}</p>
-            <a href={asText(item.href)} class="rl-link-arrow" {...linkProps(asText(item.href))}>
-              Read more
-              <ArrowRight size={16} />
-            </a>
-          </article>
+            <div class="rl-tile-grid__foot">
+              <span class="rl-tile-grid__pictogram">
+                <PictoRelease />
+              </span>
+              <ArrowRight size={20} />
+            </div>
+          </a>
         {/each}
       </div>
     </div>
@@ -761,12 +698,14 @@
     gap: clamp(1.5rem, 4vw, 3rem);
   }
 
-  .rl-hero__copy,
+  .rl-hero__copy {
+    grid-column: span 8;
+  }
+
   .rl-cta-band__intro {
     grid-column: span 7;
   }
 
-  .rl-hero__panel,
   .rl-cta-band__content {
     grid-column: 9 / span 4;
   }
@@ -792,16 +731,17 @@
     margin-top: var(--cds-spacing-06);
   }
 
-  .rl-hero__panel {
-    display: grid;
-    gap: var(--cds-spacing-04);
-    background: var(--cds-layer-01);
-    border: 1px solid var(--cds-border-subtle);
+  .rl-hero__code-row {
+    margin-top: clamp(2rem, 5vw, 3.5rem);
   }
 
-  .rl-hero__panel {
+  .rl-hero__code-panel {
+    display: grid;
+    gap: var(--cds-spacing-04);
     padding: clamp(1.5rem, 4vw, 2rem);
-    align-content: start;
+    background: #161616;
+    color: #f4f4f4;
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .rl-hero__panel-head {
@@ -815,23 +755,29 @@
     place-items: center;
     width: 2.5rem;
     height: 2.5rem;
-    background: color-mix(in srgb, var(--cds-link-primary) 10%, transparent);
+    background: rgba(255, 255, 255, 0.08);
     color: var(--cds-link-primary);
   }
 
-  .rl-hero__panel h2 {
+  .rl-hero__code-panel h2 {
     margin: 0;
     font-size: 1.35rem;
     font-weight: 300;
     line-height: 1.1;
+    color: #f4f4f4;
   }
 
-  .rl-hero__panel pre {
+  .rl-hero__code-panel :global(.rl-eyebrow) {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .rl-hero__code-panel pre {
     overflow: auto;
     margin: 0;
     padding: var(--cds-spacing-05);
-    background: color-mix(in srgb, var(--cds-layer-02) 92%, transparent);
-    color: var(--cds-text-primary);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: #c6c6c6;
     font-size: 0.875rem;
     line-height: 1.55;
     white-space: pre-wrap;
@@ -902,6 +848,7 @@
     padding: clamp(1.25rem, 3vw, 2rem);
     border: 1px solid var(--cds-border-subtle);
     margin: -1px 0 0 -1px;
+    background: var(--cds-layer);
     color: inherit;
     text-decoration: none;
     transition: background-color 120ms ease;
@@ -954,140 +901,56 @@
     }
   }
 
-  .rl-card-grid {
-    align-items: stretch;
-  }
-
-  .rl-card-shell,
-  .rl-proof-card,
-  .rl-release-item {
-    display: grid;
-    gap: var(--cds-spacing-04);
-    height: 100%;
-  }
-
-  .rl-span--three {
-    grid-column: span 3;
-  }
-
-  .rl-span--four {
-    grid-column: span 4;
-  }
-
-  .rl-span--five {
-    grid-column: span 5;
-  }
-
-  .rl-span--six {
-    grid-column: span 6;
-  }
-
-  .rl-span--seven {
-    grid-column: span 7;
-  }
-
-  .rl-span--full {
-    grid-column: 1 / -1;
-  }
-
-  .rl-tile,
-  .rl-proof-card,
-  .rl-release-item {
-    display: grid;
-    gap: var(--cds-spacing-05);
-    height: 100%;
-    padding: var(--cds-spacing-06);
-  }
-
-  .rl-card-copy {
-    display: grid;
-    gap: var(--cds-spacing-03);
-  }
-
-  .rl-card-copy h3,
-  .rl-release-item h3 {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 400;
-    line-height: 1.15;
-  }
-
-  .rl-card-copy p,
-  .rl-proof-card p,
-  .rl-release-item p {
-    margin: 0;
-    color: var(--cds-text-secondary);
-    line-height: 1.6;
-  }
-
-  .rl-pricing-card__head,
-  .rl-resource-card__head,
-  .rl-proof-card__meta,
-  .rl-release-item__meta {
+  .rl-tile-grid__cell-head {
     display: flex;
     justify-content: space-between;
     gap: var(--cds-spacing-04);
     align-items: start;
   }
 
-  .rl-pricing-card__icon,
-  .rl-resource-card__icon,
-  .rl-proof-card__icon,
-  .rl-release-item__icon {
-    display: inline-grid;
-    place-items: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    flex: 0 0 auto;
-    background: color-mix(in srgb, var(--cds-link-primary) 10%, transparent);
-    color: var(--cds-link-primary);
+  .rl-tile-grid--proof {
+    grid-template-columns: repeat(3, 1fr);
   }
 
-  .rl-resource-card__foot {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--cds-spacing-04);
-    align-items: center;
-    margin-top: auto;
-  }
-
-  .rl-resource-card__foot {
-    color: var(--cds-text-secondary);
-    font-size: 0.875rem;
-  }
-
-  .rl-proof-grid {
-    gap: var(--cds-spacing-04);
-  }
-
-  .rl-proof-card__metric {
+  .rl-tile-grid__cell--proof .rl-proof-card__metric {
     display: block;
     font-size: clamp(2rem, 5vw, 3.25rem);
     font-weight: 300;
     line-height: 0.95;
   }
 
-  .rl-proof-card__quote {
+  .rl-tile-grid__cell--proof .rl-proof-card__quote {
+    margin: 0;
     font-size: 1.1rem;
     line-height: 1.65;
     color: var(--cds-text-primary);
   }
 
-  .rl-proof-card__person {
+  .rl-tile-grid__cell--proof .rl-proof-card__person {
     display: grid;
     gap: 0.2rem;
   }
 
-  .rl-proof-card__person span {
+  .rl-tile-grid__cell--proof .rl-proof-card__person span {
     color: var(--cds-text-secondary);
   }
 
-  .rl-pricing-grid {
-    gap: var(--cds-spacing-05);
+  .rl-tile-grid--pricing {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .rl-pricing-card__identity {
+  .rl-tile-grid__cell--pricing {
+    grid-template-rows: auto auto auto 1fr auto;
+  }
+
+  .rl-tile-grid__cell--recommended {
+    border-color: color-mix(in srgb, var(--cds-link-primary) 32%, var(--cds-border-subtle));
+    box-shadow: inset 0 3px 0 var(--cds-link-primary);
+  }
+
+  .rl-pricing-card__head {
     display: flex;
+    justify-content: space-between;
     gap: var(--cds-spacing-04);
     align-items: start;
   }
@@ -1126,20 +989,8 @@
     color: var(--cds-icon-primary);
   }
 
-  .rl-tile--pricing-recommended {
-    border-color: color-mix(in srgb, var(--cds-link-primary) 32%, var(--cds-border-subtle));
-    box-shadow:
-      inset 0 3px 0 var(--cds-link-primary),
-      0 1px 0 rgba(0, 0, 0, 0.02);
-  }
-
-  .rl-tile--resource {
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .rl-resource-card__foot {
-    font-weight: 500;
+  .rl-tile-grid--release {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .rl-faq {
@@ -1169,10 +1020,6 @@
 
   .rl-faq__panel :global(.bx--accordion__content p + p) {
     margin-top: var(--cds-spacing-04);
-  }
-
-  .rl-release-strip {
-    gap: var(--cds-spacing-05);
   }
 
   .rl-cta-band {
@@ -1212,10 +1059,6 @@
     .rl-editorial__aside {
       grid-column: 1 / -1;
     }
-
-    .rl-span--three {
-      grid-column: span 6;
-    }
   }
 
   @media (max-width: 960px) {
@@ -1230,7 +1073,6 @@
     .rl-section-head__title,
     .rl-section-head__copy,
     .rl-hero__copy,
-    .rl-hero__panel,
     .rl-editorial__intro,
     .rl-editorial__content,
     .rl-editorial__aside,
@@ -1241,13 +1083,9 @@
       grid-column: 1 / -1;
     }
 
-    .rl-span--three,
-    .rl-span--four,
-    .rl-span--five,
-    .rl-span--six,
-    .rl-span--seven,
-    .rl-span--full {
-      grid-column: 1 / -1;
+    .rl-tile-grid--pricing,
+    .rl-tile-grid--release {
+      grid-template-columns: 1fr;
     }
   }
 </style>
