@@ -20,23 +20,26 @@
     Api as PictoApi,
     Application as PictoApplication,
     ApplicationSecurity as PictoApplicationSecurity,
-    Build as PictoBuild,
+    BuildApplicationsAnywhere as PictoBuildApplicationsAnywhere,
     Carbon as PictoCarbon,
-    Connect as PictoConnect,
+    ConnectedEcosystem as PictoConnectedEcosystem,
     ContentDesign as PictoContentDesign,
     ContinuousDelivery as PictoContinuousDelivery,
+    ControlPanel as PictoControlPanel,
+    Conversation as PictoConversation,
+    DataSet as PictoDataSet,
     Database as PictoDatabase,
     Documentation as PictoDocumentation,
     Embed as PictoEmbed,
     Launch as PictoLaunch,
     OpenSource as PictoOpenSource,
     OperationalMetrics as PictoOperationalMetrics,
-    Question as PictoQuestion,
+    QuestionAndAnswer as PictoQuestionAndAnswer,
     ReferenceArchitecture as PictoReferenceArchitecture,
     Rocket as PictoRocket,
     Speedometer as PictoSpeedometer,
     SystemsDevopsRelease as PictoRelease,
-    UserInsights as PictoUserInsights,
+    TextLayout as PictoTextLayout,
   } from "carbon-pictograms-svelte";
   import type { MarketingBlock, MarketingDoc } from "$lib/marketing.js";
   import { asBlocks, asDocs, asParagraphs, asText } from "$lib/marketing.js";
@@ -70,23 +73,26 @@
     Api: PictoApi,
     Application: PictoApplication,
     ApplicationSecurity: PictoApplicationSecurity,
-    Build: PictoBuild,
+    BuildApplicationsAnywhere: PictoBuildApplicationsAnywhere,
     Carbon: PictoCarbon,
-    Connect: PictoConnect,
+    ConnectedEcosystem: PictoConnectedEcosystem,
     ContentDesign: PictoContentDesign,
     ContinuousDelivery: PictoContinuousDelivery,
+    ControlPanel: PictoControlPanel,
+    Conversation: PictoConversation,
+    DataSet: PictoDataSet,
     Database: PictoDatabase,
     Documentation: PictoDocumentation,
     Embed: PictoEmbed,
     Launch: PictoLaunch,
     OpenSource: PictoOpenSource,
     OperationalMetrics: PictoOperationalMetrics,
-    Question: PictoQuestion,
+    QuestionAndAnswer: PictoQuestionAndAnswer,
     ReferenceArchitecture: PictoReferenceArchitecture,
     Rocket: PictoRocket,
     Speedometer: PictoSpeedometer,
     SystemsDevopsRelease: PictoRelease,
-    UserInsights: PictoUserInsights,
+    TextLayout: PictoTextLayout,
   };
 
   function pictogramFor(name: unknown) {
@@ -162,6 +168,7 @@
 
 {#if block.blockType === "hero"}
   {@const SectionIcon = sectionIcon(block.blockType)}
+  {@const HeroPictogram = pictogramFor(block.pictogram)}
   <section class={sectionClass(block.blockType)}>
     <div class="rl-container">
       <div class="rl-hero" data-tone={tone}>
@@ -209,6 +216,10 @@
               </Button>
             {/if}
           </ButtonSet>
+        </div>
+
+        <div class="rl-hero__pictogram" aria-hidden="true">
+          <HeroPictogram />
         </div>
       </div>
     </div>
@@ -347,7 +358,7 @@
               </div>
               <div class="rl-tile-grid__foot">
                 <span class="rl-tile-grid__pictogram">
-                  <PictoUserInsights />
+                  <PictoConversation />
                 </span>
               </div>
             {:else}
@@ -421,7 +432,7 @@
                 {#if itemIndex === 0}
                   <PictoOpenSource />
                 {:else}
-                  <PictoBuild />
+                  <PictoBuildApplicationsAnywhere />
                 {/if}
               </span>
               {#if asText(item.ctaLabel) && asText(item.ctaUrl)}
@@ -512,7 +523,7 @@
         {/if}
       </div>
 
-      <div class="rl-faq__panel rl-surface">
+      <div class="rl-faq__panel">
         <Accordion align="start">
           {#each blockItems("items") as item}
             <AccordionItem title={asText(item.question)}>
@@ -695,11 +706,33 @@
   .rl-cta-band {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: clamp(1.5rem, 4vw, 3rem);
+    gap: var(--rl-grid-gap);
+    align-items: start;
   }
 
   .rl-hero__copy {
-    grid-column: span 8;
+    grid-column: span 7;
+    display: flex;
+    flex-direction: column;
+    gap: var(--cds-spacing-06);
+  }
+
+  .rl-hero__copy .rl-section-kicker {
+    margin-bottom: 0;
+  }
+
+  .rl-hero__pictogram {
+    grid-column: 9 / span 4;
+    display: flex;
+    align-items: start;
+    justify-content: center;
+    padding-top: var(--cds-spacing-09);
+    color: color-mix(in srgb, var(--cds-link-primary) 18%, transparent);
+  }
+
+  .rl-hero__pictogram :global(svg) {
+    width: 160px;
+    height: 160px;
   }
 
   .rl-cta-band__intro {
@@ -716,7 +749,7 @@
 
   .rl-hero__body {
     display: grid;
-    gap: var(--cds-spacing-05);
+    gap: var(--cds-spacing-04);
   }
 
   .rl-hero__body :global(.rl-section-copy) {
@@ -725,7 +758,7 @@
   }
 
   :global(.rl-action-group) {
-    margin-top: var(--cds-spacing-06);
+    margin-top: 0;
   }
 
   .rl-hero__code-row {
@@ -993,26 +1026,48 @@
   .rl-faq {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: clamp(1.25rem, 4vw, 3rem);
+    gap: var(--rl-grid-gap);
     align-items: start;
   }
 
   .rl-faq__intro {
     grid-column: span 4;
+    position: sticky;
+    top: calc(var(--rl-section-compact) + 1rem);
   }
 
   .rl-faq__panel {
-    grid-column: span 8;
-    padding: clamp(1.25rem, 3vw, 2rem);
+    grid-column: 6 / -1;
   }
 
   .rl-faq__panel :global(.bx--accordion__item) {
-    border-top-color: var(--cds-border-subtle);
+    border-color: var(--cds-border-subtle);
+  }
+
+  .rl-faq__panel :global(.bx--accordion__item:last-child) {
+    border-bottom: 1px solid var(--cds-border-subtle);
+  }
+
+  .rl-faq__panel :global(.bx--accordion__heading) {
+    padding: var(--cds-spacing-05) 0;
+    min-height: auto;
   }
 
   .rl-faq__panel :global(.bx--accordion__title) {
     color: var(--cds-text-primary);
     font-weight: 400;
+    font-size: clamp(0.95rem, 1.2vw, 1.05rem);
+  }
+
+  .rl-faq__panel :global(.bx--accordion__content) {
+    padding-bottom: var(--cds-spacing-06);
+  }
+
+  .rl-faq__panel :global(.bx--accordion__content p) {
+    color: var(--cds-text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    max-width: 52ch;
   }
 
   .rl-faq__panel :global(.bx--accordion__content p + p) {
@@ -1048,9 +1103,12 @@
       grid-column: span 5;
     }
 
-    .rl-editorial__content,
-    .rl-faq__panel {
+    .rl-editorial__content {
       grid-column: span 7;
+    }
+
+    .rl-faq__panel {
+      grid-column: 6 / -1;
     }
 
     .rl-editorial__aside {
@@ -1078,6 +1136,14 @@
     .rl-cta-band__intro,
     .rl-cta-band__content {
       grid-column: 1 / -1;
+    }
+
+    .rl-faq__intro {
+      position: static;
+    }
+
+    .rl-hero__pictogram {
+      display: none;
     }
 
     .rl-tile-grid--pricing,
