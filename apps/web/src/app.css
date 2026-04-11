@@ -1,10 +1,18 @@
-@import "@flaming-codes/sveltekit-runelayer/admin/styles/carbon-white.css";
+@import "carbon-components-svelte/css/all.css" layer(carbon);
 
 :root {
   --rl-grid-max: 90rem;
   --rl-grid-padding: clamp(1rem, 2vw, 2rem);
+  --rl-grid-gap: clamp(1rem, 1.75vw, 1.5rem);
+  --rl-grid-columns: repeat(12, minmax(0, 1fr));
+  --rl-section-compact: clamp(2.75rem, 5vw, 4rem);
+  --rl-section-standard: clamp(3.25rem, 7vw, 5.5rem);
+  --rl-section-emphasis: clamp(4rem, 8vw, 6.5rem);
   --rl-accent-soft: color-mix(in srgb, var(--cds-link-primary) 12%, white);
   --rl-border-strong: color-mix(in srgb, var(--cds-border-strong) 70%, black);
+  --rl-surface-border: color-mix(in srgb, var(--cds-border-subtle) 78%, white);
+  --rl-surface-shadow: 0 1px 0 rgba(22, 22, 22, 0.08);
+  --rl-shell-line: color-mix(in srgb, var(--cds-border-subtle) 55%, transparent);
 }
 
 html {
@@ -14,25 +22,45 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    linear-gradient(180deg, rgba(15, 98, 254, 0.03), transparent 18rem),
-    linear-gradient(90deg, rgba(141, 141, 141, 0.12) 1px, transparent 1px);
-  background-size:
-    auto,
-    clamp(3rem, 8vw, 6rem) 100%;
-  background-position:
-    0 0,
-    center top;
-  color: var(--cds-text-primary);
+  background: #ffffff;
+  color: #161616;
 }
 
-a {
+a:not([class*="bx--btn"]) {
   color: inherit;
 }
 
 .rl-shell {
+  position: relative;
+  z-index: 1;
   min-height: 100vh;
   color: var(--cds-text-primary);
+  overflow-x: clip;
+}
+
+.rl-main {
+  position: relative;
+  display: block;
+}
+
+.rl-grid-lines {
+  position: fixed;
+  inset: 0;
+  width: min(var(--rl-grid-max), calc(100% - (2 * var(--rl-grid-padding))));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: var(--rl-grid-columns);
+  gap: var(--rl-grid-gap);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.rl-grid-lines > div {
+  border-inline-end: 1px solid var(--rl-shell-line);
+}
+
+.rl-grid-lines > div:first-child {
+  border-inline-start: 1px solid var(--rl-shell-line);
 }
 
 .rl-container {
@@ -40,18 +68,37 @@ a {
   margin: 0 auto;
 }
 
-.rl-section {
-  padding: clamp(3.5rem, 8vw, 6.5rem) 0;
+.rl-shell-grid {
+  display: grid;
+  grid-template-columns: var(--rl-grid-columns);
+  gap: var(--rl-grid-gap);
 }
 
-.rl-section + .rl-section {
-  border-top: 1px solid var(--cds-border-subtle);
+.rl-section {
+  position: relative;
+  padding: var(--rl-section-standard) 0;
+}
+
+.rl-section + .rl-section,
+.rl-page__block + .rl-page__block .rl-section {
+  border-top: 1px solid var(--rl-shell-line);
+}
+
+.rl-section--compact {
+  padding: var(--rl-section-compact) 0;
+}
+
+.rl-section--band,
+.rl-section--emphasis {
+  padding: var(--rl-section-emphasis) 0;
 }
 
 .rl-eyebrow {
   margin: 0 0 var(--cds-spacing-04);
   color: var(--cds-text-secondary);
   font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.3;
   letter-spacing: 0.32px;
   text-transform: uppercase;
 }
@@ -65,30 +112,45 @@ a {
   letter-spacing: -0.04em;
 }
 
+.rl-section-heading--productive {
+  max-width: 15ch;
+  font-size: clamp(1.8rem, 3.3vw, 2.85rem);
+  letter-spacing: -0.03em;
+}
+
 .rl-section-copy {
   max-width: 42rem;
   color: var(--cds-text-secondary);
-  font-size: 1rem;
-  line-height: 1.6;
+  font-size: clamp(1rem, 1.3vw, 1.125rem);
+  line-height: 1.7;
 }
 
 .rl-card-grid {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: var(--cds-spacing-05);
+  grid-template-columns: var(--rl-grid-columns);
+  gap: var(--rl-grid-gap);
 }
 
 .rl-surface {
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--cds-border-subtle);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+  background: color-mix(in srgb, white 90%, var(--cds-layer) 10%);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--rl-surface-border);
+  box-shadow: var(--rl-surface-shadow);
 }
 
 .rl-button-row {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--cds-spacing-04);
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rl-button-row .bx--btn-set {
+  flex-wrap: wrap;
+}
+
+.rl-button-row .bx--btn {
+  min-width: 11rem;
 }
 
 .rl-link-arrow {
@@ -97,6 +159,11 @@ a {
   gap: 0.35rem;
   color: var(--cds-link-primary);
   font-weight: 500;
+  text-decoration: none;
+}
+
+.rl-link-arrow:hover {
+  color: var(--cds-link-primary-hover);
 }
 
 @media (max-width: 800px) {
