@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { Button } from "carbon-components-svelte";
   import {
     ArrowUpRight,
     Close,
@@ -48,7 +47,7 @@
       <span class="rl-header__brand-mark"><PictoPattern /></span>
       <span class="rl-header__brand-copy">
         <strong>{chrome.siteName}</strong>
-        <span>{chrome.siteTagline}</span>
+        <span>CMS-as-a-package</span>
       </span>
     </a>
 
@@ -103,17 +102,6 @@
           </a>
         {/each}
 
-        {#if asText(chrome.headerPrimaryCtaLabel) && asText(chrome.headerPrimaryCtaUrl)}
-          <Button
-            href={asText(chrome.headerPrimaryCtaUrl)}
-            target={isExternal(asText(chrome.headerPrimaryCtaUrl)) ? "_blank" : undefined}
-            rel={isExternal(asText(chrome.headerPrimaryCtaUrl)) ? "noreferrer" : undefined}
-            kind="tertiary"
-            size="small"
-          >
-            {asText(chrome.headerPrimaryCtaLabel)}
-          </Button>
-        {/if}
       </div>
     </div>
   </div>
@@ -254,14 +242,6 @@
     justify-content: flex-end;
   }
 
-  .rl-header__actions :global(.bx--btn) {
-    min-height: 2.5rem;
-  }
-
-  .rl-header__actions :global(.bx--btn--tertiary) {
-    color: #161616;
-    border-color: #161616;
-  }
 
   @media (max-width: 960px) {
     .rl-header__bar {
@@ -312,9 +292,6 @@
       padding: 0.3rem 0;
     }
 
-    .rl-header__actions :global(.bx--btn) {
-      width: 100%;
-    }
 
     .rl-header__brand-copy span {
       max-width: 26ch;

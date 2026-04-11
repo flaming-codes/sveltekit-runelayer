@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Accordion, AccordionItem, Button, Tag } from "carbon-components-svelte";
+  import { Accordion, AccordionItem, Button, ButtonSet, Tag } from "carbon-components-svelte";
   import {
     Application,
     ArrowRight,
@@ -183,7 +183,7 @@
             {/each}
           </div>
 
-          <div class="rl-action-group rl-action-group--hero">
+          <ButtonSet class="rl-action-group rl-action-group--hero">
             {#if asText(block.primaryLabel) && asText(block.primaryUrl)}
               <Button
                 expressive
@@ -208,7 +208,7 @@
                 {asText(block.secondaryLabel)}
               </Button>
             {/if}
-          </div>
+          </ButtonSet>
         </div>
       </div>
     </div>
@@ -591,7 +591,7 @@
           <p class="rl-section-copy">{paragraph}</p>
         {/each}
 
-        <div class="rl-action-group">
+        <ButtonSet class="rl-action-group">
           {#if asText(block.primaryLabel) && asText(block.primaryUrl)}
             <Button
               size="lg"
@@ -614,7 +614,7 @@
               {asText(block.secondaryLabel)}
             </Button>
           {/if}
-        </div>
+        </ButtonSet>
       </div>
     </div>
   {/snippet}
@@ -724,10 +724,7 @@
     color: var(--cds-text-secondary);
   }
 
-  .rl-action-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--cds-spacing-04);
+  :global(.rl-action-group) {
     margin-top: var(--cds-spacing-06);
   }
 
