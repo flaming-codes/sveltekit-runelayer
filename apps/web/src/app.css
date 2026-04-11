@@ -1,0 +1,106 @@
+@import "@flaming-codes/sveltekit-runelayer/admin/styles/carbon-white.css";
+
+:root {
+  --rl-grid-max: 90rem;
+  --rl-grid-padding: clamp(1rem, 2vw, 2rem);
+  --rl-accent-soft: color-mix(in srgb, var(--cds-link-primary) 12%, white);
+  --rl-border-strong: color-mix(in srgb, var(--cds-border-strong) 70%, black);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(15, 98, 254, 0.03), transparent 18rem),
+    linear-gradient(90deg, rgba(141, 141, 141, 0.12) 1px, transparent 1px);
+  background-size:
+    auto,
+    clamp(3rem, 8vw, 6rem) 100%;
+  background-position:
+    0 0,
+    center top;
+  color: var(--cds-text-primary);
+}
+
+a {
+  color: inherit;
+}
+
+.rl-shell {
+  min-height: 100vh;
+  color: var(--cds-text-primary);
+}
+
+.rl-container {
+  width: min(var(--rl-grid-max), calc(100% - (2 * var(--rl-grid-padding))));
+  margin: 0 auto;
+}
+
+.rl-section {
+  padding: clamp(3.5rem, 8vw, 6.5rem) 0;
+}
+
+.rl-section + .rl-section {
+  border-top: 1px solid var(--cds-border-subtle);
+}
+
+.rl-eyebrow {
+  margin: 0 0 var(--cds-spacing-04);
+  color: var(--cds-text-secondary);
+  font-size: 0.75rem;
+  letter-spacing: 0.32px;
+  text-transform: uppercase;
+}
+
+.rl-section-heading {
+  margin: 0;
+  max-width: 22ch;
+  font-size: clamp(2rem, 5vw, 3.75rem);
+  font-weight: 300;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.rl-section-copy {
+  max-width: 42rem;
+  color: var(--cds-text-secondary);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.rl-card-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--cds-spacing-05);
+}
+
+.rl-surface {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--cds-border-subtle);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+}
+
+.rl-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cds-spacing-04);
+}
+
+.rl-link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--cds-link-primary);
+  font-weight: 500;
+}
+
+@media (max-width: 800px) {
+  .rl-card-grid {
+    grid-template-columns: 1fr;
+  }
+}

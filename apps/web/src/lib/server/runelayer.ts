@@ -26,8 +26,8 @@ export function getRunelayerApp(): RunelayerApp {
         path: "/admin",
         ui: {
           appName: "Runelayer",
-          productName: "Web Test",
-          footerText: "Block-based page testing app.",
+          productName: "Marketing site",
+          footerText: "Runelayer example site and CMS workspace.",
         },
       },
     });

@@ -97,6 +97,9 @@ importers:
       carbon-components-svelte:
         specifier: 'catalog:'
         version: 0.105.0
+      carbon-icons-svelte:
+        specifier: 'catalog:'
+        version: 13.10.0
     devDependencies:
       '@sveltejs/adapter-auto':
         specifier: 'catalog:'

@@ -16,39 +16,17 @@ CREATE TABLE `account` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `account_provider_account_idx` ON `account` (`providerId`,`accountId`);--> statement-breakpoint
-CREATE TABLE `articles` (
-	`id` text PRIMARY KEY NOT NULL,
-	`createdAt` text NOT NULL,
-	`updatedAt` text NOT NULL,
-	`title` text,
-	`slug` text,
-	`summary` text,
-	`featured` integer,
-	`readingTime` real,
-	`content` text,
-	`_status` text,
-	`_version` integer
-);
---> statement-breakpoint
-CREATE TABLE `articles_versions` (
-	`id` text PRIMARY KEY NOT NULL,
-	`_parentId` text NOT NULL,
-	`_version` integer NOT NULL,
-	`_status` text NOT NULL,
-	`_snapshot` text,
-	`_createdBy` text,
-	`createdAt` text NOT NULL
-);
---> statement-breakpoint
 CREATE TABLE `pages` (
 	`id` text PRIMARY KEY NOT NULL,
 	`createdAt` text NOT NULL,
 	`updatedAt` text NOT NULL,
 	`title` text,
 	`slug` text,
-	`description` text,
-	`published` integer,
-	`blocks` text,
+	`teaser` text,
+	`pageType` text,
+	`seo_metaTitle` text,
+	`seo_metaDescription` text,
+	`layout` text,
 	`_status` text,
 	`_version` integer
 );
@@ -63,6 +41,7 @@ CREATE TABLE `pages_versions` (
 	`createdAt` text NOT NULL
 );
 --> statement-breakpoint
+CREATE INDEX `pages_versions_parentId_idx` ON `pages_versions` (`_parentId`,`createdAt`);--> statement-breakpoint
 CREATE TABLE `session` (
 	`id` text PRIMARY KEY NOT NULL,
 	`expiresAt` integer NOT NULL,
@@ -77,6 +56,44 @@ CREATE TABLE `session` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `session_token_unique` ON `session` (`token`);--> statement-breakpoint
+CREATE TABLE `site_chrome` (
+	`id` text PRIMARY KEY NOT NULL,
+	`createdAt` text NOT NULL,
+	`updatedAt` text NOT NULL,
+	`title` text,
+	`handle` text,
+	`siteName` text,
+	`siteTagline` text,
+	`siteDescription` text,
+	`announcementTitle` text,
+	`announcementUrl` text,
+	`headerLinks` text,
+	`utilityLinks` text,
+	`headerPrimaryCtaLabel` text,
+	`headerPrimaryCtaUrl` text,
+	`footerBlurb` text,
+	`footerProductLinks` text,
+	`footerResourceLinks` text,
+	`footerCompanyLinks` text,
+	`footerLegalLinks` text,
+	`socialGithubUrl` text,
+	`socialDocsUrl` text,
+	`socialAdminUrl` text,
+	`_status` text,
+	`_version` integer
+);
+--> statement-breakpoint
+CREATE TABLE `site_chrome_versions` (
+	`id` text PRIMARY KEY NOT NULL,
+	`_parentId` text NOT NULL,
+	`_version` integer NOT NULL,
+	`_status` text NOT NULL,
+	`_snapshot` text,
+	`_createdBy` text,
+	`createdAt` text NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX `site_chrome_versions_parentId_idx` ON `site_chrome_versions` (`_parentId`,`createdAt`);--> statement-breakpoint
 CREATE TABLE `user` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,

@@ -6,12 +6,13 @@
 
 ```
 sveltekit-runelayer/
+├── apps/
+│   └── web/
 ├── packages/sveltekit-runelayer/
 ├── docs/
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
 ├── LICENSE
-├── .harness/
 ├── package.json
 ├── pnpm-workspace.yaml
 └── vite.config.ts
@@ -23,6 +24,7 @@ Workspace packages:
 
 ```yaml
 packages:
+  - apps/*
   - packages/*
 ```
 
@@ -81,7 +83,7 @@ Shared catalog includes:
 
 ```bash
 pnpm install
-pnpm dev
+pnpm dev:web
 npx vitest run
 pnpm ready
 ```
@@ -94,3 +96,9 @@ pnpm add -D <pkg> --filter @flaming-codes/sveltekit-runelayer
 ```
 
 For shared versions, add to `pnpm-workspace.yaml` catalog and reference with `"catalog:"`.
+
+## Example app
+
+- `apps/web` is the example SvelteKit application used to exercise the package in a host app.
+- It mounts the package-owned admin and renders a public marketing site from Runelayer-managed content.
+- App-specific scripts such as `pnpm dev:web`, `pnpm --filter web check`, and `pnpm --filter web build` run against this workspace app.

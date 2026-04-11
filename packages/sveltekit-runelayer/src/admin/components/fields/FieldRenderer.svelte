@@ -81,7 +81,6 @@
 		/>
 	{:else if field.type === "multiSelect"}
 		<MultiSelect
-			titleText={label}
 			{label}
 			items={field.options.map((o) => ({ id: o.value, text: o.label }))}
 			selectedIds={values[field.name] ?? []}
