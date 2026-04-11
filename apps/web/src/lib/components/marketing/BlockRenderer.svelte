@@ -32,6 +32,18 @@
     Terminal,
     WorkflowAutomation,
   } from "carbon-icons-svelte";
+  import {
+    Application as PictoApplication,
+    Build as PictoBuild,
+    Carbon as PictoCarbon,
+    ContentDesign as PictoContentDesign,
+    Database as PictoDatabase,
+    ContinuousDelivery as PictoContinuousDelivery,
+    Api as PictoApi,
+    ActiveServer as PictoActiveServer,
+    ApplicationSecurity as PictoApplicationSecurity,
+    Connect as PictoConnect,
+  } from "carbon-pictograms-svelte";
   import type { MarketingBlock, MarketingDoc } from "$lib/marketing.js";
   import { asBlocks, asDocs, asParagraphs, asText } from "$lib/marketing.js";
 
@@ -78,8 +90,25 @@
     cta_band: WorkflowAutomation,
   };
 
+  const pictogramMap: Record<string, typeof PictoApplication> = {
+    Api: PictoApi,
+    Application: PictoApplication,
+    ActiveServer: PictoActiveServer,
+    ApplicationSecurity: PictoApplicationSecurity,
+    Build: PictoBuild,
+    Carbon: PictoCarbon,
+    Connect: PictoConnect,
+    ContentDesign: PictoContentDesign,
+    ContinuousDelivery: PictoContinuousDelivery,
+    Database: PictoDatabase,
+  };
+
   function iconFor(name: unknown) {
     return iconMap[asText(name)] ?? Application;
+  }
+
+  function pictogramFor(name: unknown) {
+    return pictogramMap[asText(name)] ?? PictoApplication;
   }
 
   function sectionIcon(type: string) {
@@ -142,13 +171,6 @@
     ]
       .filter(Boolean)
       .join(" ");
-  }
-
-  function featureSpan(itemIndex: number) {
-    if (itemIndex === 0) return "rl-span--five";
-    if (itemIndex === 1) return "rl-span--three";
-    if (itemIndex === 2) return "rl-span--four";
-    return "rl-span--six";
   }
 
   function proofSpan(item: MarketingDoc) {
@@ -244,12 +266,6 @@
           {/if}
         </div>
 
-        {#if asText(block.signalLabel) || asText(block.signalValue)}
-          <div class="rl-hero__signal">
-            <span class="rl-hero__signal-label">{asText(block.signalLabel)}</span>
-            <strong>{asText(block.signalValue)}</strong>
-          </div>
-        {/if}
       </div>
 
       <div class="rl-hero__panel">
@@ -331,36 +347,25 @@
         {/if}
       </div>
 
-      <div class="rl-card-grid rl-feature-grid">
+      <div class="rl-tile-grid">
         {#each blockItems("features") as item, itemIndex}
-          {@const FeatureIcon = iconFor(item.icon)}
-          <div class={`rl-card-shell ${featureSpan(itemIndex)}`}>
-            <Tile class="rl-surface rl-tile rl-tile--feature">
-              <div class="rl-feature-card__top">
-                <span class="rl-feature-card__icon">
-                  <FeatureIcon size={24} />
-                </span>
-                {#if asText(item.badge)}
-                  <Tag type={tagType(asText(item.badge))}>{asText(item.badge)}</Tag>
-                {/if}
-              </div>
-
-              <div class="rl-card-copy">
-                <h3>{asText(item.title)}</h3>
-                <p>{asText(item.summary)}</p>
-              </div>
-
-              <div class="rl-feature-card__foot">
-                <span class="rl-feature-card__stat">{asText(item.stat)}</span>
-                {#if asText(item.href)}
-                  <a href={asText(item.href)} class="rl-link-arrow" {...linkProps(asText(item.href))}>
-                    Explore
-                    <ArrowRight size={16} />
-                  </a>
-                {/if}
-              </div>
-            </Tile>
-          </div>
+          {@const Pictogram = pictogramFor(item.icon)}
+          <a
+            href={asText(item.href) || undefined}
+            class="rl-tile-grid__cell"
+            {...linkProps(asText(item.href))}
+          >
+            <h3>{asText(item.title)}</h3>
+            <p>{asText(item.summary)}</p>
+            <div class="rl-tile-grid__foot">
+              <span class="rl-tile-grid__pictogram">
+                <Pictogram />
+              </span>
+              {#if asText(item.href)}
+                <ArrowRight size={20} />
+              {/if}
+            </div>
+          </a>
         {/each}
       </div>
     </div>
@@ -787,30 +792,11 @@
     margin-top: var(--cds-spacing-06);
   }
 
-  .rl-hero__signal,
   .rl-hero__panel {
     display: grid;
     gap: var(--cds-spacing-04);
     background: var(--cds-layer-01);
     border: 1px solid var(--cds-border-subtle);
-  }
-
-  .rl-hero__signal {
-    width: fit-content;
-    margin-top: var(--cds-spacing-06);
-    padding: var(--cds-spacing-04) var(--cds-spacing-05);
-  }
-
-  .rl-hero__signal-label {
-    color: var(--cds-text-secondary);
-    font-size: 0.75rem;
-    letter-spacing: 0.32px;
-    text-transform: uppercase;
-  }
-
-  .rl-hero__signal strong {
-    font-size: 1rem;
-    font-weight: 600;
   }
 
   .rl-hero__panel {
@@ -903,6 +889,71 @@
     line-height: 0.95;
   }
 
+  .rl-tile-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--cds-border-subtle);
+  }
+
+  .rl-tile-grid__cell {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: var(--cds-spacing-05);
+    padding: clamp(1.25rem, 3vw, 2rem);
+    border: 1px solid var(--cds-border-subtle);
+    margin: -1px 0 0 -1px;
+    color: inherit;
+    text-decoration: none;
+    transition: background-color 120ms ease;
+  }
+
+  .rl-tile-grid__cell:hover {
+    background: var(--cds-layer-hover);
+  }
+
+  .rl-tile-grid__cell h3 {
+    margin: 0;
+    font-size: clamp(1.1rem, 1.5vw, 1.35rem);
+    font-weight: 400;
+    line-height: 1.2;
+  }
+
+  .rl-tile-grid__cell p {
+    margin: 0;
+    color: var(--cds-text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+
+  .rl-tile-grid__foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: auto;
+    color: var(--cds-link-primary);
+  }
+
+  .rl-tile-grid__pictogram {
+    color: var(--cds-icon-secondary);
+  }
+
+  .rl-tile-grid__pictogram :global(svg) {
+    width: 48px;
+    height: 48px;
+  }
+
+  @media (max-width: 800px) {
+    .rl-tile-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (min-width: 801px) and (max-width: 1100px) {
+    .rl-tile-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
   .rl-card-grid {
     align-items: stretch;
   }
@@ -969,7 +1020,6 @@
     line-height: 1.6;
   }
 
-  .rl-feature-card__top,
   .rl-pricing-card__head,
   .rl-resource-card__head,
   .rl-proof-card__meta,
@@ -980,7 +1030,6 @@
     align-items: start;
   }
 
-  .rl-feature-card__icon,
   .rl-pricing-card__icon,
   .rl-resource-card__icon,
   .rl-proof-card__icon,
@@ -994,7 +1043,6 @@
     color: var(--cds-link-primary);
   }
 
-  .rl-feature-card__foot,
   .rl-resource-card__foot {
     display: flex;
     justify-content: space-between;
@@ -1003,7 +1051,6 @@
     margin-top: auto;
   }
 
-  .rl-feature-card__stat,
   .rl-resource-card__foot {
     color: var(--cds-text-secondary);
     font-size: 0.875rem;
