@@ -223,7 +223,6 @@ export const pages = defineCollection({
         options: [
           { label: "Home", value: "home" },
           { label: "Platform", value: "platform" },
-          { label: "Pricing", value: "pricing" },
           { label: "Docs", value: "docs" },
           { label: "Changelog", value: "changelog" },
         ],

@@ -8,7 +8,6 @@ let seedPromise: Promise<void> | undefined;
 const pageTypeOptions = [
   { label: "Home", value: "home" },
   { label: "Platform", value: "platform" },
-  { label: "Pricing", value: "pricing" },
   { label: "Docs", value: "docs" },
   { label: "Changelog", value: "changelog" },
 ];
@@ -46,30 +45,6 @@ function proofMetric(metricValue: string, metricLabel: string) {
 
 function proofTestimonial(company: string, quote: string, personName: string, personRole: string) {
   return { label: company, kind: "testimonial", company, quote, personName, personRole };
-}
-
-function pricingPlan(
-  title: string,
-  slug: string,
-  priceLabel: string,
-  audience: string,
-  description: string,
-  badge: string,
-  ctaLabel: string,
-  ctaUrl: string,
-  features: string[],
-) {
-  return {
-    title,
-    slug,
-    priceLabel,
-    audience,
-    description,
-    badge,
-    ctaLabel,
-    ctaUrl,
-    planFeatures: features.map((item) => ({ blockType: "plan_feature", label: item })),
-  };
 }
 
 function resource(title: string, kind: string, description: string, href: string, badge: string) {
@@ -121,7 +96,7 @@ async function seedCollections(app: RunelayerApp) {
       "Catalog",
       "Structured layouts, measured spacing, and expressive typography keep the admin and public site speaking the same visual language.",
       "Design",
-      "/pricing",
+      "/docs",
       "Design system ready",
     ),
   ];
@@ -143,39 +118,6 @@ async function seedCollections(app: RunelayerApp) {
     ),
   ];
 
-  const plans = [
-    pricingPlan(
-      "Starter",
-      "starter",
-      "Open source",
-      "For teams validating the package inside a real app.",
-      "Use the package, wire the admin, and iterate on the schema with full local control.",
-      "MIT",
-      "Read the docs",
-      "/docs",
-      [
-        "Run in-process with SvelteKit",
-        "LibSQL + Drizzle schema control",
-        "Public-site and admin from the same source",
-      ],
-    ),
-    pricingPlan(
-      "Production",
-      "production",
-      "Bring your stack",
-      "For teams shipping content-heavy products.",
-      "Keep auth, storage, deployment, and monitoring inside your existing platform standards.",
-      "Recommended",
-      "View the platform",
-      "/platform",
-      [
-        "Better Auth integration",
-        "Versioned collections and globals",
-        "Local filesystem uploads with security guards",
-      ],
-    ),
-  ];
-
   const faqs = [
     faq(
       "Is Runelayer headless or page-builder-first?",
@@ -191,6 +133,16 @@ async function seedCollections(app: RunelayerApp) {
       "Can I keep using Drizzle migrations?",
       "Yes. Host-managed migrations are the intended workflow. Runelayer exports Drizzle helpers so the app keeps control over schema application before startup.",
       "Data",
+    ),
+    faq(
+      "Does Runelayer support Turso?",
+      "Yes. The database client is libsql, which works with both a local SQLite file and a Turso remote endpoint. Switch by updating the url and adding an authToken in defineConfig().",
+      "Data",
+    ),
+    faq(
+      "How does authentication work?",
+      "Runelayer uses Better Auth with role-based access (admin, editor, user). Sessions are managed via HTTP-only cookies. The first admin is created through a bootstrap flow at /admin/create-first-user.\n\nAccess functions on collections and fields receive the Request object and deny access by default when no request context is present.",
+      "Security",
     ),
   ];
 
@@ -220,17 +172,45 @@ async function seedCollections(app: RunelayerApp) {
 
   const releases = [
     changelog(
-      "Marketing-site example rebuilt",
-      "marketing-site-rebuild",
-      "Wave 1",
-      "The example app now demonstrates a CMS-driven SvelteKit marketing site with Carbon-inspired blocks and seeded content.",
+      "v0.3 — Carbon admin rebuild",
+      "v0-3-carbon-admin",
+      "v0.3",
+      "Admin rebuilt with Carbon Design System. Includes drag-and-drop block reordering, version history tabs, relationship ComboBox with live document fetching, and paginated collection tables.",
       "/changelog",
     ),
     changelog(
-      "Versioned singletons for site chrome",
-      "site-chrome-versioning",
+      "v0.2 — Draft and publish workflow",
+      "v0-2-versioning",
+      "v0.2",
+      "Collections and globals gained full versioning support: save as draft, publish, unpublish, browse history, and restore from any snapshot.",
+      "/changelog",
+    ),
+    changelog(
+      "v0.1 — Initial package release",
+      "v0-1-initial",
+      "v0.1",
+      "First release of @flaming-codes/sveltekit-runelayer with schema-driven collections, 16 field types, Better Auth, local filesystem storage, lifecycle hooks, and the query API.",
+      "/changelog",
+    ),
+    changelog(
+      "Example site: tile grid system",
+      "example-tile-grid",
+      "Wave 3",
+      "The example app switched to a 12-column tile grid system aligned to the background grid. All block sections use the unified layout.",
+      "/changelog",
+    ),
+    changelog(
+      "Versioned site chrome",
+      "versioned-chrome",
       "Wave 2",
       "Navigation, footer, and site metadata moved into a versioned collection so public chrome is authored like the rest of the site.",
+      "/changelog",
+    ),
+    changelog(
+      "Marketing site rebuilt on Runelayer",
+      "marketing-site-initial",
+      "Wave 1",
+      "The example app demonstrates a CMS-driven SvelteKit marketing site with Carbon-inspired blocks, seeded collections, and live admin editing.",
       "/changelog",
     ),
   ];
@@ -247,7 +227,6 @@ async function seedCollections(app: RunelayerApp) {
     announcementUrl: "/changelog",
     headerLinks: [
       link("Platform", "/platform"),
-      link("Pricing", "/pricing"),
       link("Docs", "/docs"),
       link("Changelog", "/changelog"),
     ],
@@ -256,7 +235,7 @@ async function seedCollections(app: RunelayerApp) {
     headerPrimaryCtaUrl: "/admin",
     footerBlurb:
       "Runelayer keeps content modeling, authoring, and rendering in one SvelteKit-native stack.",
-    footerProductLinks: [link("Platform", "/platform"), link("Pricing", "/pricing")],
+    footerProductLinks: [link("Platform", "/platform")],
     footerResourceLinks: [
       link("Docs", "/docs"),
       link("Changelog", "/changelog"),
@@ -319,12 +298,14 @@ async function seedCollections(app: RunelayerApp) {
         variant: "mixed",
       },
       {
-        blockType: "pricing_teaser",
-        eyebrow: "Adoption path",
-        title: "Start by proving the model inside one SvelteKit app.",
-        intro:
-          "The package is open source. The hard part is not buying a CMS, it is deciding how much of your runtime you want to externalize.",
-        plans,
+        blockType: "editorial",
+        eyebrow: "License",
+        title: "MIT licensed. No SaaS control plane added to your stack.",
+        lead: "Runelayer ships as a standard npm package. No metered API, no managed cloud, no vendor runtime.",
+        body: "You bring your own infrastructure. The package wires into what you already run: your SvelteKit server, your database, your storage, your auth.\n\nTeams that want to keep their deployment surface small do not benefit from a separately hosted CMS. They benefit from keeping the content layer in the same process as the rest of the application.",
+        asideTitle: "License",
+        asideValue: "MIT",
+        asideCaption: "Clone, fork, and ship it as part of your product without asking permission.",
       },
       {
         blockType: "faq_panel",
@@ -365,8 +346,8 @@ async function seedCollections(app: RunelayerApp) {
         body: "Runelayer does not ask product teams to re-platform around a separate CMS service.\n\nYou keep routing, auth, migration ownership, and deployment in the SvelteKit app that already runs the product.",
         primaryLabel: "Read docs",
         primaryUrl: "/docs",
-        secondaryLabel: "View pricing",
-        secondaryUrl: "/pricing",
+        secondaryLabel: "See releases",
+        secondaryUrl: "/changelog",
         signalLabel: "Runtime",
         signalValue: "In-process",
         panelEyebrow: "Included",
@@ -415,65 +396,10 @@ async function seedCollections(app: RunelayerApp) {
   });
 
   await createPublished(app, "pages", {
-    title: "Pricing",
-    slug: "pricing",
-    teaser: "The package is open source. The real decision is which operational model you prefer.",
-    pageType: pageTypeOptions[2].value,
-    seo: {
-      metaTitle: "Pricing | Runelayer",
-      metaDescription:
-        "Understand the adoption path for Runelayer and how teams evaluate the package inside a SvelteKit app.",
-    },
-    layout: [
-      {
-        blockType: "hero",
-        eyebrow: "Pricing",
-        heading: "Open source package, product-team economics.",
-        body: "Runelayer does not add a SaaS control plane to your stack.\n\nTeams evaluate it by the amount of custom CMS infrastructure they no longer need to build and maintain.",
-        primaryLabel: "Read the docs",
-        primaryUrl: "/docs",
-        secondaryLabel: "See the platform",
-        secondaryUrl: "/platform",
-        signalLabel: "License",
-        signalValue: "MIT",
-        panelEyebrow: "Adoption",
-        panelTitle: "Start with the example app",
-        panelCode: "pnpm install\npnpm dev:web\nvisit /admin",
-        themeTone: "dark",
-      },
-      {
-        blockType: "pricing_teaser",
-        eyebrow: "Packages",
-        title: "Choose the operating model, not a feature gate.",
-        intro: "These plans describe team posture more than software access.",
-        plans,
-      },
-      {
-        blockType: "faq_panel",
-        eyebrow: "Budget questions",
-        title: "Most pricing conversations are really architecture conversations.",
-        intro: "If the package fits your deployment model, the rest becomes implementation detail.",
-        items: faqs,
-      },
-      {
-        blockType: "cta_band",
-        eyebrow: "Proof",
-        title: "Use the example site to evaluate authoring and runtime fit.",
-        body: "If the model works for a marketing site, it is easier to extrapolate to docs, changelogs, release hubs, and product-control surfaces.",
-        primaryLabel: "Open admin",
-        primaryUrl: "/admin",
-        secondaryLabel: "Go home",
-        secondaryUrl: "/",
-        themeTone: "dark",
-      },
-    ],
-  });
-
-  await createPublished(app, "pages", {
     title: "Docs",
     slug: "docs",
     teaser: "Reference the docs, inspect the example, then change the schema yourself.",
-    pageType: pageTypeOptions[3].value,
+    pageType: pageTypeOptions[2].value,
     seo: {
       metaTitle: "Docs | Runelayer",
       metaDescription:
@@ -497,11 +423,49 @@ async function seedCollections(app: RunelayerApp) {
         themeTone: "light",
       },
       {
+        blockType: "editorial",
+        eyebrow: "Getting started",
+        title: "Four steps from install to your first authored page.",
+        lead: "Runelayer integrates at the SvelteKit layer. The setup uses the tools your project already has.",
+        body: "Install the package and define your collections in TypeScript. Export a Drizzle Kit schema and run migrations before startup.\n\nWire createRunelayerHandle() into hooks.server.ts and mount the admin catch-all route. The admin surface, auth flow, and query API are ready immediately after.\n\nThe example app in this repository demonstrates each step end to end.",
+        asideTitle: "Node requirement",
+        asideValue: ">= 22.18",
+        asideCaption: "Required for native TypeScript support in the toolchain.",
+      },
+      {
         blockType: "resource_cards",
         eyebrow: "References",
         title: "Use the docs as the operational map.",
         intro: "These cards mirror the first surfaces most teams need during adoption.",
         items: resources,
+      },
+      {
+        blockType: "faq_panel",
+        eyebrow: "Integration questions",
+        title: "The setup surface is small by design.",
+        intro: "These questions cover the decisions most teams encounter when wiring the package.",
+        items: [
+          faq(
+            "What does the integration actually look like?",
+            "Define collections with defineCollection(), wire createRunelayerHandle() in hooks.server.ts, and mount the admin catch-all route. Drizzle Kit generates and applies the migrations before startup.",
+            "Setup",
+          ),
+          faq(
+            "How does Runelayer handle migrations?",
+            "It does not run migrations automatically. You call createDrizzleKitSchema() to export the schema and use drizzle-kit generate + migrate in your build pipeline. The host application controls when changes are applied.",
+            "Data",
+          ),
+          faq(
+            "Can I restrict which users can edit content?",
+            "Yes. Every collection and field can define access functions that receive the current Request. Built-in helpers (isAdmin, hasRole) cover common cases. Access is denied by default when no request context is present.",
+            "Security",
+          ),
+          faq(
+            "Does the package work with SvelteKit adapter-node?",
+            "Yes. Runelayer targets Node-hosted SvelteKit applications. The libsql client, local storage adapter, and Better Auth session management all assume a persistent Node process.",
+            "Deployment",
+          ),
+        ],
       },
       {
         blockType: "release_strip",
@@ -528,7 +492,7 @@ async function seedCollections(app: RunelayerApp) {
     title: "Changelog",
     slug: "changelog",
     teaser: "The example app evolves in visible waves so the package stays honest.",
-    pageType: pageTypeOptions[4].value,
+    pageType: pageTypeOptions[3].value,
     seo: {
       metaTitle: "Changelog | Runelayer",
       metaDescription:
