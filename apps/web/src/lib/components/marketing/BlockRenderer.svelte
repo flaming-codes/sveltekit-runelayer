@@ -22,18 +22,24 @@
     ApplicationSecurity as PictoApplicationSecurity,
     BuildApplicationsAnywhere as PictoBuildApplicationsAnywhere,
     Carbon as PictoCarbon,
+    CloudStorage as PictoCloudStorage,
     ConnectedEcosystem as PictoConnectedEcosystem,
     ContentDesign as PictoContentDesign,
     ContinuousDelivery as PictoContinuousDelivery,
-    ControlPanel as PictoControlPanel,
     Conversation as PictoConversation,
+    Dashboard as PictoDashboard,
+    DataManagement as PictoDataManagement,
     DataSet as PictoDataSet,
     Database as PictoDatabase,
     Documentation as PictoDocumentation,
     Embed as PictoEmbed,
+    EventProcessing as PictoEventProcessing,
+    IdentifyAndAccess as PictoIdentifyAndAccess,
     Launch as PictoLaunch,
+    Migrate as PictoMigrate,
     OpenSource as PictoOpenSource,
     OperationalMetrics as PictoOperationalMetrics,
+    Pattern as PictoPattern,
     QuestionAndAnswer as PictoQuestionAndAnswer,
     ReferenceArchitecture as PictoReferenceArchitecture,
     Rocket as PictoRocket,
@@ -75,18 +81,24 @@
     ApplicationSecurity: PictoApplicationSecurity,
     BuildApplicationsAnywhere: PictoBuildApplicationsAnywhere,
     Carbon: PictoCarbon,
+    CloudStorage: PictoCloudStorage,
     ConnectedEcosystem: PictoConnectedEcosystem,
     ContentDesign: PictoContentDesign,
     ContinuousDelivery: PictoContinuousDelivery,
-    ControlPanel: PictoControlPanel,
     Conversation: PictoConversation,
+    Dashboard: PictoDashboard,
+    DataManagement: PictoDataManagement,
     DataSet: PictoDataSet,
     Database: PictoDatabase,
     Documentation: PictoDocumentation,
     Embed: PictoEmbed,
+    EventProcessing: PictoEventProcessing,
+    IdentifyAndAccess: PictoIdentifyAndAccess,
     Launch: PictoLaunch,
+    Migrate: PictoMigrate,
     OpenSource: PictoOpenSource,
     OperationalMetrics: PictoOperationalMetrics,
+    Pattern: PictoPattern,
     QuestionAndAnswer: PictoQuestionAndAnswer,
     ReferenceArchitecture: PictoReferenceArchitecture,
     Rocket: PictoRocket,
@@ -168,7 +180,6 @@
 
 {#if block.blockType === "hero"}
   {@const SectionIcon = sectionIcon(block.blockType)}
-  {@const HeroPictogram = pictogramFor(block.pictogram)}
   <section class={sectionClass(block.blockType)}>
     <div class="rl-container">
       <div class="rl-hero" data-tone={tone}>
@@ -219,7 +230,7 @@
         </div>
 
         <div class="rl-hero__pictogram" aria-hidden="true">
-          <HeroPictogram />
+          <PictoPattern />
         </div>
       </div>
     </div>
@@ -680,8 +691,8 @@
 
   .rl-section-head {
     display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: clamp(1rem, 3vw, 2rem);
+    grid-template-columns: var(--rl-grid-columns);
+    gap: var(--rl-grid-gap);
     align-items: end;
     margin-bottom: clamp(1.75rem, 5vw, 3.5rem);
   }
@@ -705,7 +716,7 @@
   .rl-hero,
   .rl-cta-band {
     display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-columns: var(--rl-grid-columns);
     gap: var(--rl-grid-gap);
     align-items: start;
   }
@@ -727,7 +738,7 @@
     align-items: start;
     justify-content: center;
     padding-top: var(--cds-spacing-09);
-    color: color-mix(in srgb, var(--cds-link-primary) 18%, transparent);
+    color: #161616;
   }
 
   .rl-hero__pictogram :global(svg) {
@@ -769,9 +780,10 @@
     display: grid;
     gap: var(--cds-spacing-04);
     padding: clamp(1.5rem, 4vw, 2rem);
-    background: #161616;
-    color: #f4f4f4;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--cds-layer);
+    color: var(--cds-text-primary);
+    border: 1px solid var(--rl-surface-border);
+    box-shadow: var(--rl-surface-shadow);
   }
 
   .rl-hero__panel-head {
@@ -785,7 +797,7 @@
     place-items: center;
     width: 2.5rem;
     height: 2.5rem;
-    background: rgba(255, 255, 255, 0.08);
+    background: color-mix(in srgb, var(--cds-link-primary) 12%, transparent);
     color: var(--cds-link-primary);
   }
 
@@ -794,20 +806,20 @@
     font-size: 1.35rem;
     font-weight: 300;
     line-height: 1.1;
-    color: #f4f4f4;
+    color: var(--cds-text-primary);
   }
 
   .rl-hero__code-panel :global(.rl-eyebrow) {
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--cds-text-secondary);
   }
 
   .rl-hero__code-panel pre {
     overflow: auto;
     margin: 0;
     padding: var(--cds-spacing-05);
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    color: #c6c6c6;
+    background: color-mix(in srgb, var(--cds-layer) 90%, var(--cds-background));
+    border: 1px solid var(--rl-surface-border);
+    color: var(--cds-text-secondary);
     font-size: 0.875rem;
     line-height: 1.55;
     white-space: pre-wrap;
@@ -815,8 +827,8 @@
 
   .rl-editorial {
     display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: clamp(1rem, 3vw, 2rem);
+    grid-template-columns: var(--rl-grid-columns);
+    gap: var(--rl-grid-gap);
     align-items: start;
   }
 
@@ -1029,7 +1041,7 @@
 
   .rl-faq {
     display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-columns: var(--rl-grid-columns);
     gap: var(--rl-grid-gap);
     align-items: start;
   }
@@ -1057,14 +1069,21 @@
     min-height: auto;
   }
 
+  .rl-faq__panel :global(.bx--accordion__arrow) {
+    margin: 0;
+  }
+
   .rl-faq__panel :global(.bx--accordion__title) {
     color: var(--cds-text-primary);
     font-weight: 400;
     font-size: clamp(0.95rem, 1.2vw, 1.05rem);
+    margin-left: var(--cds-spacing-03);
   }
 
   .rl-faq__panel :global(.bx--accordion__content) {
     padding-bottom: var(--cds-spacing-06);
+    padding-left: 0;
+    margin-left: calc(16px + var(--cds-spacing-03));
   }
 
   .rl-faq__panel :global(.bx--accordion__content p) {
