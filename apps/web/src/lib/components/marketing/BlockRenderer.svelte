@@ -867,17 +867,17 @@
 
   .rl-tile-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    border: 1px solid var(--cds-border-subtle);
+    grid-template-columns: var(--rl-grid-columns);
+    gap: var(--rl-grid-gap);
   }
 
   .rl-tile-grid__cell {
+    grid-column: span 4;
     display: grid;
     grid-template-rows: auto 1fr auto;
     gap: var(--cds-spacing-05);
     padding: clamp(1.25rem, 3vw, 2rem);
     border: 1px solid var(--cds-border-subtle);
-    margin: -1px 0 0 -1px;
     background: var(--cds-layer);
     color: inherit;
     text-decoration: none;
@@ -923,11 +923,15 @@
     .rl-tile-grid {
       grid-template-columns: 1fr;
     }
+
+    .rl-tile-grid__cell {
+      grid-column: span 1;
+    }
   }
 
   @media (min-width: 801px) and (max-width: 1100px) {
-    .rl-tile-grid {
-      grid-template-columns: repeat(2, 1fr);
+    .rl-tile-grid__cell {
+      grid-column: span 6;
     }
   }
 
@@ -938,8 +942,8 @@
     align-items: start;
   }
 
-  .rl-tile-grid--proof {
-    grid-template-columns: repeat(3, 1fr);
+  .rl-tile-grid--proof .rl-tile-grid__cell {
+    grid-column: span 4;
   }
 
   .rl-tile-grid__cell--proof .rl-proof-card__metric {
@@ -965,8 +969,8 @@
     color: var(--cds-text-secondary);
   }
 
-  .rl-tile-grid--pricing {
-    grid-template-columns: repeat(2, 1fr);
+  .rl-tile-grid--pricing .rl-tile-grid__cell {
+    grid-column: span 6;
   }
 
   .rl-tile-grid__cell--pricing {
@@ -1019,8 +1023,8 @@
     color: var(--cds-icon-primary);
   }
 
-  .rl-tile-grid--release {
-    grid-template-columns: repeat(2, 1fr);
+  .rl-tile-grid--release .rl-tile-grid__cell {
+    grid-column: span 6;
   }
 
   .rl-faq {
@@ -1146,9 +1150,9 @@
       display: none;
     }
 
-    .rl-tile-grid--pricing,
-    .rl-tile-grid--release {
-      grid-template-columns: 1fr;
+    .rl-tile-grid--pricing .rl-tile-grid__cell,
+    .rl-tile-grid--release .rl-tile-grid__cell {
+      grid-column: span 1;
     }
   }
 </style>
