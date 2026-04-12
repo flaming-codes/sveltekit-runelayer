@@ -6,13 +6,16 @@
     Catalog,
     CheckmarkFilled,
     Code,
+    Compare,
     Document,
     Flash,
     Idea,
     Information,
     Launch,
     Layers,
+    ListChecked,
     Rule,
+    Roadmap,
     WorkflowAutomation,
   } from "carbon-icons-svelte";
   import {
@@ -71,6 +74,9 @@
     resource_cards: Document,
     faq_panel: Information,
     release_strip: Flash,
+    step_list: ListChecked,
+    compare_table: Compare,
+    roadmap_strip: Roadmap,
     cta_band: WorkflowAutomation,
   };
 
@@ -175,6 +181,18 @@
 
   function pricingKind(item: MarketingDoc) {
     return asText(item.badge).toLowerCase().includes("recommended") ? "primary" : "ghost";
+  }
+
+  function roadmapTagType(status: string) {
+    if (status === "shipped") return "green";
+    if (status === "in_progress") return "blue";
+    return "cool-gray";
+  }
+
+  function roadmapLabel(status: string) {
+    if (status === "shipped") return "Shipped";
+    if (status === "in_progress") return "In progress";
+    return "Planned";
   }
 </script>
 
@@ -588,6 +606,117 @@
               <ArrowRight size={20} />
             </div>
           </a>
+        {/each}
+      </div>
+    </div>
+  </section>
+{:else if block.blockType === "step_list"}
+  {@const SectionIcon = sectionIcon(block.blockType)}
+  <section class={sectionClass(block.blockType)}>
+    <div class="rl-container rl-step-list">
+      <div class="rl-step-list__intro">
+        {#if asText(block.eyebrow)}
+          <div class="rl-section-kicker">
+            <span class="rl-section-kicker__icon"><SectionIcon size={18} /></span>
+            <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
+          </div>
+        {/if}
+        <h2 class="rl-section-heading rl-section-heading--productive">{asText(block.title)}</h2>
+        {#if asText(block.intro)}
+          <p class="rl-section-copy">{asText(block.intro)}</p>
+        {/if}
+      </div>
+      <ol class="rl-step-list__steps">
+        {#each blockItems("steps") as step, i}
+          <li class="rl-step-list__item">
+            <span class="rl-step-list__number" aria-hidden="true">{asText(step.number, String(i + 1).padStart(2, "0"))}</span>
+            <div class="rl-step-list__content">
+              <h3 class="rl-step-list__heading">{asText(step.title)}</h3>
+              {#each asParagraphs(step.body) as paragraph}
+                <p class="rl-section-copy">{paragraph}</p>
+              {/each}
+            </div>
+          </li>
+        {/each}
+      </ol>
+    </div>
+  </section>
+{:else if block.blockType === "compare_table"}
+  {@const SectionIcon = sectionIcon(block.blockType)}
+  <section class={sectionClass(block.blockType)}>
+    <div class="rl-container">
+      <div class="rl-section-head">
+        <div class="rl-section-head__title">
+          {#if asText(block.eyebrow)}
+            <div class="rl-section-kicker">
+              <span class="rl-section-kicker__icon"><SectionIcon size={18} /></span>
+              <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
+            </div>
+          {/if}
+          <h2 class="rl-section-heading rl-section-heading--productive">{asText(block.title)}</h2>
+        </div>
+        {#if asText(block.intro)}
+          <p class="rl-section-copy rl-section-head__copy">{asText(block.intro)}</p>
+        {/if}
+      </div>
+
+      <div class="rl-compare-table" role="table">
+        <div class="rl-compare-table__head" role="row">
+          <div class="rl-compare-table__row-label" role="columnheader"></div>
+          <div class="rl-compare-table__col rl-compare-table__col--left" role="columnheader">
+            <span>{asText(block.leftLabel)}</span>
+          </div>
+          <div class="rl-compare-table__col rl-compare-table__col--right" role="columnheader">
+            <span>{asText(block.rightLabel)}</span>
+          </div>
+        </div>
+        {#each blockItems("rows") as row}
+          <div class="rl-compare-table__row" role="row">
+            <div class="rl-compare-table__row-label" role="rowheader">
+              <span class="rl-eyebrow">{asText(row.label)}</span>
+            </div>
+            <div class="rl-compare-table__col rl-compare-table__col--left" role="cell">
+              <p>{asText(row.left)}</p>
+            </div>
+            <div class="rl-compare-table__col rl-compare-table__col--right" role="cell">
+              <p>{asText(row.right)}</p>
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
+  </section>
+{:else if block.blockType === "roadmap_strip"}
+  {@const SectionIcon = sectionIcon(block.blockType)}
+  <section class={sectionClass(block.blockType)}>
+    <div class="rl-container">
+      <div class="rl-section-head">
+        <div class="rl-section-head__title">
+          {#if asText(block.eyebrow)}
+            <div class="rl-section-kicker">
+              <span class="rl-section-kicker__icon"><SectionIcon size={18} /></span>
+              <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
+            </div>
+          {/if}
+          <h2 class="rl-section-heading rl-section-heading--productive">{asText(block.title)}</h2>
+        </div>
+        {#if asText(block.intro)}
+          <p class="rl-section-copy rl-section-head__copy">{asText(block.intro)}</p>
+        {/if}
+      </div>
+
+      <div class="rl-roadmap">
+        {#each blockItems("items") as item}
+          {@const status = asText(item.status)}
+          <div class="rl-roadmap__item" data-status={status}>
+            <div class="rl-roadmap__status">
+              <Tag type={roadmapTagType(status)}>{roadmapLabel(status)}</Tag>
+            </div>
+            <div class="rl-roadmap__content">
+              <h3 class="rl-roadmap__heading">{asText(item.label)}</h3>
+              <p class="rl-roadmap__body">{asText(item.description)}</p>
+            </div>
+          </div>
         {/each}
       </div>
     </div>
@@ -1172,6 +1301,234 @@
     .rl-tile-grid--pricing .rl-tile-grid__cell,
     .rl-tile-grid--release .rl-tile-grid__cell {
       grid-column: span 1;
+    }
+  }
+
+  /* ── Step list ─────────────────────────────────────── */
+
+  .rl-step-list {
+    display: grid;
+    grid-template-columns: var(--rl-grid-columns);
+    gap: var(--rl-grid-gap);
+    align-items: start;
+  }
+
+  .rl-step-list__intro {
+    grid-column: span 4;
+    position: sticky;
+    top: 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--cds-spacing-05);
+  }
+
+  .rl-step-list__intro .rl-section-kicker {
+    margin-bottom: 0;
+  }
+
+  .rl-step-list__intro .rl-section-copy {
+    margin: 0;
+    color: var(--cds-text-secondary);
+  }
+
+  .rl-step-list__steps {
+    grid-column: 6 / span 7;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .rl-step-list__item {
+    display: grid;
+    grid-template-columns: 3rem 1fr;
+    gap: var(--cds-spacing-06);
+    padding: var(--cds-spacing-07) 0;
+    border-top: 1px solid var(--rl-shell-line);
+  }
+
+  .rl-step-list__number {
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: var(--cds-text-placeholder);
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rl-step-list__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cds-spacing-04);
+  }
+
+  .rl-step-list__heading {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  .rl-step-list__content .rl-section-copy {
+    margin: 0;
+  }
+
+  /* ── Compare table ─────────────────────────────────── */
+
+  .rl-compare-table {
+    border-top: 2px solid #161616;
+    font-size: 0.875rem;
+  }
+
+  .rl-compare-table__head,
+  .rl-compare-table__row {
+    display: grid;
+    grid-template-columns: minmax(7rem, 12rem) 1fr 1fr;
+  }
+
+  .rl-compare-table__head {
+    border-bottom: 1px solid var(--rl-shell-line);
+    background: var(--cds-layer);
+  }
+
+  .rl-compare-table__row {
+    border-bottom: 1px solid var(--rl-shell-line);
+  }
+
+  .rl-compare-table__row:hover {
+    background: color-mix(in srgb, var(--cds-layer) 60%, transparent);
+  }
+
+  .rl-compare-table__row-label {
+    padding: var(--cds-spacing-05) var(--cds-spacing-05) var(--cds-spacing-05) 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .rl-compare-table__row-label .rl-eyebrow {
+    margin: 0;
+    font-size: 0.6875rem;
+  }
+
+  .rl-compare-table__col {
+    padding: var(--cds-spacing-05);
+    border-left: 1px solid var(--rl-shell-line);
+  }
+
+  .rl-compare-table__col p {
+    margin: 0;
+    line-height: 1.5;
+    color: var(--cds-text-secondary);
+  }
+
+  .rl-compare-table__col--right {
+    background: color-mix(in srgb, var(--cds-link-primary) 5%, transparent);
+  }
+
+  .rl-compare-table__col--right p {
+    color: var(--cds-text-primary);
+  }
+
+  .rl-compare-table__head .rl-compare-table__col span {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.32px;
+    text-transform: uppercase;
+    color: var(--cds-text-secondary);
+  }
+
+  .rl-compare-table__head .rl-compare-table__col--right span {
+    color: var(--cds-link-primary);
+  }
+
+  /* ── Roadmap strip ─────────────────────────────────── */
+
+  .rl-roadmap {
+    border-top: 1px solid var(--rl-shell-line);
+  }
+
+  .rl-roadmap__item {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    gap: var(--cds-spacing-06);
+    padding: var(--cds-spacing-05) 0;
+    border-bottom: 1px solid var(--rl-shell-line);
+    align-items: baseline;
+  }
+
+  .rl-roadmap__status {
+    display: flex;
+    align-items: center;
+  }
+
+  .rl-roadmap__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cds-spacing-03);
+  }
+
+  .rl-roadmap__heading {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  .rl-roadmap__body {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--cds-text-secondary);
+    line-height: 1.5;
+  }
+
+  .rl-roadmap__item[data-status="shipped"] .rl-roadmap__heading {
+    color: var(--cds-text-secondary);
+  }
+
+  @media (max-width: 860px) {
+    .rl-step-list {
+      display: block;
+    }
+
+    .rl-step-list__intro {
+      position: static;
+      margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+    }
+
+    .rl-step-list__steps {
+      grid-column: 1 / -1;
+    }
+
+    .rl-compare-table__head,
+    .rl-compare-table__row {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .rl-compare-table__row-label {
+      display: none;
+    }
+
+    .rl-roadmap__item {
+      grid-template-columns: 7rem 1fr;
+      gap: var(--cds-spacing-04);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .rl-compare-table__head,
+    .rl-compare-table__row {
+      grid-template-columns: 1fr;
+    }
+
+    .rl-compare-table__col--left {
+      display: none;
+    }
+
+    .rl-compare-table__head .rl-compare-table__col--right {
+      border-left: none;
+    }
+
+    .rl-roadmap__item {
+      grid-template-columns: 1fr;
+      gap: var(--cds-spacing-03);
     }
   }
 </style>

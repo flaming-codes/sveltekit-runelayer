@@ -143,6 +143,41 @@ const releaseStripBlock = defineBlock({
   ],
 });
 
+const stepListBlock = defineBlock({
+  slug: "step_list",
+  label: "Step list",
+  fields: [
+    { name: "eyebrow", label: "Eyebrow", ...text() },
+    { name: "title", label: "Title", ...text({ required: true }) },
+    { name: "intro", label: "Intro", ...textarea() },
+    { name: "steps", label: "Steps", ...json() },
+  ],
+});
+
+const compareTableBlock = defineBlock({
+  slug: "compare_table",
+  label: "Compare table",
+  fields: [
+    { name: "eyebrow", label: "Eyebrow", ...text() },
+    { name: "title", label: "Title", ...text({ required: true }) },
+    { name: "intro", label: "Intro", ...textarea() },
+    { name: "leftLabel", label: "Left column label", ...text() },
+    { name: "rightLabel", label: "Right column label", ...text() },
+    { name: "rows", label: "Rows", ...json() },
+  ],
+});
+
+const roadmapStripBlock = defineBlock({
+  slug: "roadmap_strip",
+  label: "Roadmap strip",
+  fields: [
+    { name: "eyebrow", label: "Eyebrow", ...text() },
+    { name: "title", label: "Title", ...text({ required: true }) },
+    { name: "intro", label: "Intro", ...textarea() },
+    { name: "items", label: "Items", ...json() },
+  ],
+});
+
 const ctaBandBlock = defineBlock({
   slug: "cta_band",
   label: "CTA band",
@@ -252,6 +287,9 @@ export const pages = defineCollection({
           resourceCardsBlock,
           faqPanelBlock,
           releaseStripBlock,
+          stepListBlock,
+          compareTableBlock,
+          roadmapStripBlock,
           ctaBandBlock,
         ],
         minBlocks: 1,
