@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Runelayer">
+  <rect width="64" height="64" fill="#161616" rx="12" />
+  <path d="M17 16h16c8.3 0 15 6.7 15 15s-6.7 15-15 15H25v12H17V16Zm8 8v14h7.5c3.9 0 7-3.1 7-7s-3.1-7-7-7H25Z" fill="#f4f4f4" />
+  <path d="M36 18h11v30H36z" fill="#0f62fe" />
+</svg>

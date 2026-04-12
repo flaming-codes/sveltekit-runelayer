@@ -20,7 +20,7 @@
 	let visibleVersions = $derived(versions.slice(0, showCount));
 	let hasMore = $derived(versions.length > showCount);
 
-	let headers = [
+	let headers: any = [
 		{ key: "version", value: "Version" },
 		{ key: "status", value: "Status" },
 		{ key: "author", value: "Author" },

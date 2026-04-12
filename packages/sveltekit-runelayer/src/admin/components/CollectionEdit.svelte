@@ -166,7 +166,7 @@
 			serverFieldErrors = {};
 			pageError = validation.error;
 			await tick();
-			const alertEl = document.querySelector<HTMLElement>('[role="alert"]');
+			const alertEl = globalThis.document?.querySelector('[role="alert"]') as HTMLElement | null;
 			if (alertEl) {
 				alertEl.setAttribute("tabindex", "-1");
 				alertEl.focus();

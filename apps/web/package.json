@@ -14,7 +14,9 @@
   },
   "dependencies": {
     "@flaming-codes/sveltekit-runelayer": "workspace:*",
-    "carbon-components-svelte": "catalog:"
+    "carbon-components-svelte": "catalog:",
+    "carbon-icons-svelte": "catalog:",
+    "carbon-pictograms-svelte": "catalog:"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "catalog:",

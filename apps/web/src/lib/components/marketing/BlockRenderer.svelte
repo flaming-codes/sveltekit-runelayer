@@ -1,0 +1,1551 @@
+<script lang="ts">
+  import { Accordion, AccordionItem, Button, ButtonSet, Tag } from "carbon-components-svelte";
+  import {
+    Application,
+    ArrowRight,
+    Catalog,
+    CheckmarkFilled,
+    Code,
+    Compare,
+    Document,
+    Flash,
+    Idea,
+    Information,
+    Launch,
+    Layers,
+    ListChecked,
+    Rule,
+    Roadmap,
+    WorkflowAutomation,
+  } from "carbon-icons-svelte";
+  import {
+    ActiveServer as PictoActiveServer,
+    Api as PictoApi,
+    Application as PictoApplication,
+    ApplicationSecurity as PictoApplicationSecurity,
+    BuildApplicationsAnywhere as PictoBuildApplicationsAnywhere,
+    Carbon as PictoCarbon,
+    CloudStorage as PictoCloudStorage,
+    ConnectedEcosystem as PictoConnectedEcosystem,
+    ContentDesign as PictoContentDesign,
+    ContinuousDelivery as PictoContinuousDelivery,
+    Conversation as PictoConversation,
+    Dashboard as PictoDashboard,
+    DataManagement as PictoDataManagement,
+    DataSet as PictoDataSet,
+    Database as PictoDatabase,
+    Documentation as PictoDocumentation,
+    Embed as PictoEmbed,
+    EventProcessing as PictoEventProcessing,
+    IdentifyAndAccess as PictoIdentifyAndAccess,
+    Launch as PictoLaunch,
+    Migrate as PictoMigrate,
+    OpenSource as PictoOpenSource,
+    OperationalMetrics as PictoOperationalMetrics,
+    Pattern as PictoPattern,
+    QuestionAndAnswer as PictoQuestionAndAnswer,
+    ReferenceArchitecture as PictoReferenceArchitecture,
+    Rocket as PictoRocket,
+    Speedometer as PictoSpeedometer,
+    SystemsDevopsRelease as PictoRelease,
+    TextLayout as PictoTextLayout,
+  } from "carbon-pictograms-svelte";
+  import type { MarketingBlock, MarketingDoc } from "$lib/marketing.js";
+  import { asBlocks, asDocs, asParagraphs, asText } from "$lib/marketing.js";
+
+  let {
+    block,
+    index = 0,
+    total = 1,
+  }: {
+    block: MarketingBlock;
+    index?: number;
+    total?: number;
+  } = $props();
+
+  let tone = $derived(asText(block.themeTone, "light"));
+
+  const sectionIconMap: Record<string, typeof Application> = {
+    hero: Application,
+    editorial: Idea,
+    feature_grid: Layers,
+    proof_band: Rule,
+    pricing_teaser: Catalog,
+    resource_cards: Document,
+    faq_panel: Information,
+    release_strip: Flash,
+    step_list: ListChecked,
+    compare_table: Compare,
+    roadmap_strip: Roadmap,
+    cta_band: WorkflowAutomation,
+  };
+
+  const pictogramMap: Record<string, typeof PictoApplication> = {
+    ActiveServer: PictoActiveServer,
+    Api: PictoApi,
+    Application: PictoApplication,
+    ApplicationSecurity: PictoApplicationSecurity,
+    BuildApplicationsAnywhere: PictoBuildApplicationsAnywhere,
+    Carbon: PictoCarbon,
+    CloudStorage: PictoCloudStorage,
+    ConnectedEcosystem: PictoConnectedEcosystem,
+    ContentDesign: PictoContentDesign,
+    ContinuousDelivery: PictoContinuousDelivery,
+    Conversation: PictoConversation,
+    Dashboard: PictoDashboard,
+    DataManagement: PictoDataManagement,
+    DataSet: PictoDataSet,
+    Database: PictoDatabase,
+    Documentation: PictoDocumentation,
+    Embed: PictoEmbed,
+    EventProcessing: PictoEventProcessing,
+    IdentifyAndAccess: PictoIdentifyAndAccess,
+    Launch: PictoLaunch,
+    Migrate: PictoMigrate,
+    OpenSource: PictoOpenSource,
+    OperationalMetrics: PictoOperationalMetrics,
+    Pattern: PictoPattern,
+    QuestionAndAnswer: PictoQuestionAndAnswer,
+    ReferenceArchitecture: PictoReferenceArchitecture,
+    Rocket: PictoRocket,
+    Speedometer: PictoSpeedometer,
+    SystemsDevopsRelease: PictoRelease,
+    TextLayout: PictoTextLayout,
+  };
+
+  function pictogramFor(name: unknown) {
+    return pictogramMap[asText(name)] ?? PictoApplication;
+  }
+
+  function sectionIcon(type: string) {
+    return sectionIconMap[type] ?? Application;
+  }
+
+  function isExternal(url: string) {
+    return /^https?:\/\//.test(url);
+  }
+
+  function actionIcon(url: string) {
+    return isExternal(url) ? Launch : ArrowRight;
+  }
+
+  function actionKind(surfaceTone: string, priority: "primary" | "secondary") {
+    if (priority === "primary") return "primary";
+    return surfaceTone === "dark" ? "ghost" : "tertiary";
+  }
+
+  function tagType(value: string) {
+    const lower = value.toLowerCase();
+    if (lower.includes("recommended")) return "green";
+    if (lower.includes("mit")) return "teal";
+    if (lower.includes("guide")) return "blue";
+    if (lower.includes("reference")) return "purple";
+    if (lower.includes("live")) return "magenta";
+    return "gray";
+  }
+
+  function blockItems(field: string) {
+    return asDocs(block[field]);
+  }
+
+  function linkProps(url: string) {
+    return {
+      target: isExternal(url) ? "_blank" : undefined,
+      rel: isExternal(url) ? "noreferrer" : undefined,
+    };
+  }
+
+  function slugify(type: string) {
+    return type.replaceAll("_", "-");
+  }
+
+  function density(type: string) {
+    if (type === "hero" || type === "cta_band") return "emphasis";
+    if (type === "proof_band" || type === "release_strip" || type === "resource_cards") {
+      return "compact";
+    }
+    return "standard";
+  }
+
+  function sectionClass(type: string) {
+    return [
+      "rl-section",
+      `rl-section--${slugify(type)}`,
+      `rl-section--${density(type)}`,
+      index === 0 ? "rl-section--first" : "",
+      index === total - 1 ? "rl-section--last" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  function pricingKind(item: MarketingDoc) {
+    return asText(item.badge).toLowerCase().includes("recommended") ? "primary" : "ghost";
+  }
+
+  function roadmapTagType(status: string) {
+    if (status === "shipped") return "green";
+    if (status === "in_progress") return "blue";
+    return "cool-gray";
+  }
+
+  function roadmapLabel(status: string) {
+    if (status === "shipped") return "Shipped";
+    if (status === "in_progress") return "In progress";
+    return "Planned";
+  }
+</script>
+
+{#if block.blockType === "hero"}
+  {@const SectionIcon = sectionIcon(block.blockType)}
+  <section class={sectionClass(block.blockType)}>
+    <div class="rl-container">
+      <div class="rl-hero" data-tone={tone}>
+        <div class="rl-hero__copy">
+          {#if asText(block.eyebrow)}
+            <div class="rl-section-kicker">
+              <span class="rl-section-kicker__icon">
+                <SectionIcon size={18} />
+              </span>
+              <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
+            </div>
+          {/if}
+
+          <h1 class="rl-section-heading">{asText(block.heading)}</h1>
+
+          <div class="rl-hero__body">
+            {#each asParagraphs(block.body) as paragraph}
+              <p class="rl-section-copy">{paragraph}</p>
+            {/each}
+          </div>
+
+          <ButtonSet class="rl-action-group rl-action-group--hero">
+            {#if asText(block.primaryLabel) && asText(block.primaryUrl)}
+              <Button
+                expressive
+                size="xl"
+                icon={actionIcon(asText(block.primaryUrl))}
+                href={asText(block.primaryUrl)}
+                {...linkProps(asText(block.primaryUrl))}
+              >
+                {asText(block.primaryLabel)}
+              </Button>
+            {/if}
+
+            {#if asText(block.secondaryLabel) && asText(block.secondaryUrl)}
+              <Button
+                expressive
+                size="xl"
+                kind="secondary"
+                icon={actionIcon(asText(block.secondaryUrl))}
+                href={asText(block.secondaryUrl)}
+                {...linkProps(asText(block.secondaryUrl))}
+              >
+                {asText(block.secondaryLabel)}
+              </Button>
+            {/if}
+          </ButtonSet>
+        </div>
+
+        <div class="rl-hero__pictogram" aria-hidden="true">
+          <PictoPattern />
+        </div>
+      </div>
+    </div>
+
+    {#if asText(block.panelCode)}
+      <div class="rl-container">
+        <div class="rl-hero__code-row">
+          <div class="rl-hero__code-panel">
+            <div class="rl-hero__panel-head">
+              <span class="rl-hero__panel-icon">
+                <Code size={18} />
+              </span>
+              <div>
+                {#if asText(block.panelEyebrow)}
+                  <p class="rl-eyebrow">{asText(block.panelEyebrow)}</p>
+                {/if}
+                <h2>{asText(block.panelTitle)}</h2>
+              </div>
+            </div>
+            <pre>{asText(block.panelCode)}</pre>
+          </div>
+        </div>
+      </div>
+    {/if}
+  </section>
+{:else if block.blockType === "editorial"}
+  {@const SectionIcon = sectionIcon(block.blockType)}
+  <section class={sectionClass(block.blockType)}>
+    <div class="rl-container rl-editorial">
+      <div class="rl-editorial__intro">
+        {#if asText(block.eyebrow)}
+          <div class="rl-section-kicker">
+            <span class="rl-section-kicker__icon">
+              <SectionIcon size={18} />
+            </span>
+            <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
+          </div>
+        {/if}
+        <h2 class="rl-section-heading">{asText(block.title)}</h2>
+      </div>
+
+      <div class="rl-editorial__content">
+        <p class="rl-editorial__lead">{asText(block.lead)}</p>
+        {#each asParagraphs(block.body) as paragraph}
+          <p class="rl-section-copy">{paragraph}</p>
+        {/each}
+      </div>
+
+      <aside class="rl-editorial__aside rl-surface">
+        <div class="rl-editorial__aside-head">
+          <span class="rl-editorial__aside-icon">
+            <Idea size={20} />
+          </span>
+          <p class="rl-eyebrow">{asText(block.asideTitle)}</p>
+        </div>
+        <strong>{asText(block.asideValue)}</strong>
+        <p>{asText(block.asideCaption)}</p>
+      </aside>
+    </div>
+  </section>
+{:else if block.blockType === "feature_grid"}
+  {@const SectionIcon = sectionIcon(block.blockType)}
+  <section class={sectionClass(block.blockType)}>
+    <div class="rl-container">
+      <div class="rl-section-head">
+        <div class="rl-section-head__title">
+          {#if asText(block.eyebrow)}
+            <div class="rl-section-kicker">
+              <span class="rl-section-kicker__icon">
+                <SectionIcon size={18} />
+              </span>
+              <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
+            </div>
+          {/if}
+          <h2 class="rl-section-heading rl-section-heading--productive">{asText(block.title)}</h2>
+        </div>
+
+        {#if asText(block.intro)}
+          <p class="rl-section-copy rl-section-head__copy">{asText(block.intro)}</p>
+        {/if}
+      </div>
+
+      <div class="rl-tile-grid">
+        {#each blockItems("features") as item, itemIndex}
+          {@const Pictogram = pictogramFor(item.icon)}
+          <a
+            href={asText(item.href) || undefined}
+            class="rl-tile-grid__cell"
+            {...linkProps(asText(item.href))}
+          >
+            <h3>{asText(item.title)}</h3>
+            <p>{asText(item.summary)}</p>
+            <div class="rl-tile-grid__foot">
+              <span class="rl-tile-grid__pictogram">
+                <Pictogram />
+              </span>
+              {#if asText(item.href)}
+                <ArrowRight size={20} />
+              {/if}
+            </div>
+          </a>
+        {/each}
+      </div>
+    </div>
+  </section>
+{:else if block.blockType === "proof_band"}
+  {@const SectionIcon = sectionIcon(block.blockType)}
+  <section class={sectionClass(block.blockType)}>
+    <div class="rl-container">
+      <div class="rl-section-head">
+        <div class="rl-section-head__title">
+          {#if asText(block.eyebrow)}
+            <div class="rl-section-kicker">
+              <span class="rl-section-kicker__icon">
+                <SectionIcon size={18} />
+              </span>
+              <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
+            </div>
+          {/if}
+          <h2 class="rl-section-heading rl-section-heading--productive">{asText(block.title)}</h2>
+        </div>
+
+        {#if asText(block.intro)}
+          <p class="rl-section-copy rl-section-head__copy">{asText(block.intro)}</p>
+        {/if}
+      </div>
+
+      <div class="rl-tile-grid rl-tile-grid--proof">
+        {#each blockItems("items") as item, itemIndex}
+          <article class="rl-tile-grid__cell rl-tile-grid__cell--proof">
+            {#if asText(item.kind) === "testimonial"}
+              <p class="rl-proof-card__quote">"{asText(item.quote)}"</p>
+              <div class="rl-proof-card__person">
+                <strong>{asText(item.personName)}</strong>
+                <span>{asText(item.personRole)}, {asText(item.company)}</span>
+              </div>
+              <div class="rl-tile-grid__foot">
+                <span class="rl-tile-grid__pictogram">
+                  <PictoConversation />
+                </span>
+              </div>
+            {:else}
+              <p class="rl-eyebrow">{asText(item.metricLabel)}</p>
+              <strong class="rl-proof-card__metric">{asText(item.metricValue)}</strong>
+              <p>{asText(item.label)}</p>
+              <div class="rl-tile-grid__foot">
+                <span class="rl-tile-grid__pictogram">
+                  <PictoSpeedometer />
+                </span>
+              </div>
+            {/if}
+          </article>
+        {/each}
+      </div>
+    </div>
+  </section>
+{:else if block.blockType === "pricing_teaser"}
+  {@const SectionIcon = sectionIcon(block.blockType)}
+  <section class={sectionClass(block.blockType)}>
+    <div class="rl-container">
+      <div class="rl-section-head">
+        <div class="rl-section-head__title">
+          {#if asText(block.eyebrow)}
+            <div class="rl-section-kicker">
+              <span class="rl-section-kicker__icon">
+                <SectionIcon size={18} />
+              </span>
+              <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
+            </div>
+          {/if}
+          <h2 class="rl-section-heading rl-section-heading--productive">{asText(block.title)}</h2>
+        </div>
+
+        {#if asText(block.intro)}
+          <p class="rl-section-copy rl-section-head__copy">{asText(block.intro)}</p>
+        {/if}
+      </div>
+
+      <div class="rl-tile-grid rl-tile-grid--pricing">
+        {#each blockItems("plans") as item, itemIndex}
+          {@const isRecommended = asText(item.badge).toLowerCase().includes("recommended")}
+          <div
+            class="rl-tile-grid__cell rl-tile-grid__cell--pricing"
+            class:rl-tile-grid__cell--recommended={isRecommended}
+          >
+            <div class="rl-pricing-card__head">
+              <div>
+                <p class="rl-eyebrow">{asText(item.audience)}</p>
+                <h3>{asText(item.title)}</h3>
+              </div>
+              {#if asText(item.badge)}
+                <Tag type={tagType(asText(item.badge))}>{asText(item.badge)}</Tag>
+              {/if}
+            </div>
+
+            <p class="rl-pricing-card__price">{asText(item.priceLabel)}</p>
+            <p>{asText(item.description)}</p>
+
+            <ul class="rl-pricing-card__list">
+              {#each asBlocks(item.planFeatures) as feature}
+                <li>
+                  <CheckmarkFilled size={16} />
+                  <span>{asText(feature.label)}</span>
+                </li>
+              {/each}
+            </ul>
+
+            <div class="rl-tile-grid__foot">
+              <span class="rl-tile-grid__pictogram">
+                {#if itemIndex === 0}
+                  <PictoOpenSource />
+                {:else}
+                  <PictoBuildApplicationsAnywhere />
+                {/if}
+              </span>
+              {#if asText(item.ctaLabel) && asText(item.ctaUrl)}
+                <Button
+                  kind={pricingKind(item)}
+                  icon={actionIcon(asText(item.ctaUrl))}
+                  href={asText(item.ctaUrl)}
+                  {...linkProps(asText(item.ctaUrl))}
+                >
+                  {asText(item.ctaLabel)}
+                </Button>
+              {/if}
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
+  </section>
+{:else if block.blockType === "resource_cards"}
+  {@const SectionIcon = sectionIcon(block.blockType)}
+  <section class={sectionClass(block.blockType)}>
+    <div class="rl-container">
+      <div class="rl-section-head">
+        <div class="rl-section-head__title">
+          {#if asText(block.eyebrow)}
+            <div class="rl-section-kicker">
+              <span class="rl-section-kicker__icon">
+                <SectionIcon size={18} />
+              </span>
+              <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
+            </div>
+          {/if}
+          <h2 class="rl-section-heading rl-section-heading--productive">{asText(block.title)}</h2>
+        </div>
+
+        {#if asText(block.intro)}
+          <p class="rl-section-copy rl-section-head__copy">{asText(block.intro)}</p>
+        {/if}
+      </div>
+
+      <div class="rl-tile-grid">
+        {#each blockItems("items") as item, itemIndex}
+          <a
+            href={asText(item.href)}
+            class="rl-tile-grid__cell"
+            {...linkProps(asText(item.href))}
+          >
+            <div class="rl-tile-grid__cell-head">
+              <h3>{asText(item.title)}</h3>
+              <Tag type={tagType(asText(item.badge, asText(item.kind)))}>
+                {asText(item.badge, asText(item.kind))}
+              </Tag>
+            </div>
+            <p>{asText(item.description)}</p>
+            <div class="rl-tile-grid__foot">
+              <span class="rl-tile-grid__pictogram">
+                {#if asText(item.kind) === "reference"}
+                  <PictoReferenceArchitecture />
+                {:else if isExternal(asText(item.href))}
+                  <PictoLaunch />
+                {:else}
+                  <PictoDocumentation />
+                {/if}
+              </span>
+              <ArrowRight size={20} />
+            </div>
+          </a>
+        {/each}
+      </div>
+    </div>
+  </section>
+{:else if block.blockType === "faq_panel"}
+  {@const SectionIcon = sectionIcon(block.blockType)}
+  <section class={sectionClass(block.blockType)}>
+    <div class="rl-container rl-faq">
+      <div class="rl-faq__intro">
+        {#if asText(block.eyebrow)}
+          <div class="rl-section-kicker">
+            <span class="rl-section-kicker__icon">
+              <SectionIcon size={18} />
+            </span>
+            <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
+          </div>
+        {/if}
+        <h2 class="rl-section-heading rl-section-heading--productive">{asText(block.title)}</h2>
+        {#if asText(block.intro)}
+          <p class="rl-section-copy">{asText(block.intro)}</p>
+        {/if}
+      </div>
+
+      <div class="rl-faq__panel">
+        <Accordion align="start">
+          {#each blockItems("items") as item}
+            <AccordionItem title={asText(item.question)}>
+              {#each asParagraphs(item.answer) as paragraph}
+                <p>{paragraph}</p>
+              {/each}
+            </AccordionItem>
+          {/each}
+        </Accordion>
+      </div>
+    </div>
+  </section>
+{:else if block.blockType === "release_strip"}
+  {@const SectionIcon = sectionIcon(block.blockType)}
+  <section class={sectionClass(block.blockType)}>
+    <div class="rl-container">
+      <div class="rl-section-head">
+        <div class="rl-section-head__title">
+          {#if asText(block.eyebrow)}
+            <div class="rl-section-kicker">
+              <span class="rl-section-kicker__icon">
+                <SectionIcon size={18} />
+              </span>
+              <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
+            </div>
+          {/if}
+          <h2 class="rl-section-heading rl-section-heading--productive">{asText(block.title)}</h2>
+        </div>
+
+        {#if asText(block.intro)}
+          <p class="rl-section-copy rl-section-head__copy">{asText(block.intro)}</p>
+        {/if}
+      </div>
+
+      <div class="rl-tile-grid rl-tile-grid--release">
+        {#each blockItems("items") as item, itemIndex}
+          <a
+            href={asText(item.href)}
+            class="rl-tile-grid__cell"
+            {...linkProps(asText(item.href))}
+          >
+            <div class="rl-tile-grid__cell-head">
+              <h3>{asText(item.title)}</h3>
+              <Tag type="cool-gray">{asText(item.releaseLabel)}</Tag>
+            </div>
+            <p>{asText(item.summary)}</p>
+            <div class="rl-tile-grid__foot">
+              <span class="rl-tile-grid__pictogram">
+                <PictoRelease />
+              </span>
+              <ArrowRight size={20} />
+            </div>
+          </a>
+        {/each}
+      </div>
+    </div>
+  </section>
+{:else if block.blockType === "step_list"}
+  {@const SectionIcon = sectionIcon(block.blockType)}
+  <section class={sectionClass(block.blockType)}>
+    <div class="rl-container rl-step-list">
+      <div class="rl-step-list__intro">
+        {#if asText(block.eyebrow)}
+          <div class="rl-section-kicker">
+            <span class="rl-section-kicker__icon"><SectionIcon size={18} /></span>
+            <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
+          </div>
+        {/if}
+        <h2 class="rl-section-heading rl-section-heading--productive">{asText(block.title)}</h2>
+        {#if asText(block.intro)}
+          <p class="rl-section-copy">{asText(block.intro)}</p>
+        {/if}
+      </div>
+      <ol class="rl-step-list__steps">
+        {#each blockItems("steps") as step, i}
+          <li class="rl-step-list__item">
+            <span class="rl-step-list__number" aria-hidden="true">{asText(step.number, String(i + 1).padStart(2, "0"))}</span>
+            <div class="rl-step-list__content">
+              <h3 class="rl-step-list__heading">{asText(step.title)}</h3>
+              {#each asParagraphs(step.body) as paragraph}
+                <p class="rl-section-copy">{paragraph}</p>
+              {/each}
+            </div>
+          </li>
+        {/each}
+      </ol>
+    </div>
+  </section>
+{:else if block.blockType === "compare_table"}
+  {@const SectionIcon = sectionIcon(block.blockType)}
+  <section class={sectionClass(block.blockType)}>
+    <div class="rl-container">
+      <div class="rl-section-head">
+        <div class="rl-section-head__title">
+          {#if asText(block.eyebrow)}
+            <div class="rl-section-kicker">
+              <span class="rl-section-kicker__icon"><SectionIcon size={18} /></span>
+              <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
+            </div>
+          {/if}
+          <h2 class="rl-section-heading rl-section-heading--productive">{asText(block.title)}</h2>
+        </div>
+        {#if asText(block.intro)}
+          <p class="rl-section-copy rl-section-head__copy">{asText(block.intro)}</p>
+        {/if}
+      </div>
+
+      <div class="rl-compare-table" role="table">
+        <div class="rl-compare-table__head" role="row">
+          <div class="rl-compare-table__row-label" role="columnheader"></div>
+          <div class="rl-compare-table__col rl-compare-table__col--left" role="columnheader">
+            <span>{asText(block.leftLabel)}</span>
+          </div>
+          <div class="rl-compare-table__col rl-compare-table__col--right" role="columnheader">
+            <span>{asText(block.rightLabel)}</span>
+          </div>
+        </div>
+        {#each blockItems("rows") as row}
+          <div class="rl-compare-table__row" role="row">
+            <div class="rl-compare-table__row-label" role="rowheader">
+              <span class="rl-eyebrow">{asText(row.label)}</span>
+            </div>
+            <div class="rl-compare-table__col rl-compare-table__col--left" role="cell">
+              <p>{asText(row.left)}</p>
+            </div>
+            <div class="rl-compare-table__col rl-compare-table__col--right" role="cell">
+              <p>{asText(row.right)}</p>
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
+  </section>
+{:else if block.blockType === "roadmap_strip"}
+  {@const SectionIcon = sectionIcon(block.blockType)}
+  <section class={sectionClass(block.blockType)}>
+    <div class="rl-container">
+      <div class="rl-section-head">
+        <div class="rl-section-head__title">
+          {#if asText(block.eyebrow)}
+            <div class="rl-section-kicker">
+              <span class="rl-section-kicker__icon"><SectionIcon size={18} /></span>
+              <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
+            </div>
+          {/if}
+          <h2 class="rl-section-heading rl-section-heading--productive">{asText(block.title)}</h2>
+        </div>
+        {#if asText(block.intro)}
+          <p class="rl-section-copy rl-section-head__copy">{asText(block.intro)}</p>
+        {/if}
+      </div>
+
+      <div class="rl-roadmap">
+        {#each blockItems("items") as item}
+          {@const status = asText(item.status)}
+          <div class="rl-roadmap__item" data-status={status}>
+            <div class="rl-roadmap__status">
+              <Tag type={roadmapTagType(status)}>{roadmapLabel(status)}</Tag>
+            </div>
+            <div class="rl-roadmap__content">
+              <h3 class="rl-roadmap__heading">{asText(item.label)}</h3>
+              <p class="rl-roadmap__body">{asText(item.description)}</p>
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
+  </section>
+{:else if block.blockType === "cta_band"}
+  {#snippet ctaContent()}
+    {@const SectionIcon = sectionIcon(block.blockType)}
+    <div class="rl-cta-band" data-tone={tone}>
+      <div class="rl-cta-band__intro">
+        {#if asText(block.eyebrow)}
+          <div class="rl-section-kicker">
+            <span class="rl-section-kicker__icon">
+              <SectionIcon size={18} />
+            </span>
+            <p class="rl-eyebrow">{asText(block.eyebrow)}</p>
+          </div>
+        {/if}
+        <h2 class="rl-section-heading">{asText(block.title)}</h2>
+      </div>
+
+      <div class="rl-cta-band__content">
+        {#each asParagraphs(block.body) as paragraph}
+          <p class="rl-section-copy">{paragraph}</p>
+        {/each}
+
+        <ButtonSet class="rl-action-group">
+          {#if asText(block.primaryLabel) && asText(block.primaryUrl)}
+            <Button
+              size="lg"
+              icon={actionIcon(asText(block.primaryUrl))}
+              href={asText(block.primaryUrl)}
+              {...linkProps(asText(block.primaryUrl))}
+            >
+              {asText(block.primaryLabel)}
+            </Button>
+          {/if}
+
+          {#if asText(block.secondaryLabel) && asText(block.secondaryUrl)}
+            <Button
+              size="lg"
+              kind={actionKind(tone, "secondary")}
+              icon={actionIcon(asText(block.secondaryUrl))}
+              href={asText(block.secondaryUrl)}
+              {...linkProps(asText(block.secondaryUrl))}
+            >
+              {asText(block.secondaryLabel)}
+            </Button>
+          {/if}
+        </ButtonSet>
+      </div>
+    </div>
+  {/snippet}
+
+  <section class={sectionClass(block.blockType)}>
+    <div class="rl-container">
+      {@render ctaContent()}
+    </div>
+  </section>
+{/if}
+
+<style>
+  .rl-section--compact {
+    padding-block: clamp(2.75rem, 6vw, 4.5rem);
+  }
+
+  .rl-section--standard {
+    padding-block: clamp(3.5rem, 8vw, 6rem);
+  }
+
+  .rl-section--emphasis {
+    padding-block: clamp(4.5rem, 9vw, 7rem);
+  }
+
+  .rl-section--first {
+    padding-top: clamp(3rem, 6vw, 5rem);
+  }
+
+  .rl-section--last {
+    padding-bottom: clamp(5rem, 10vw, 7.5rem);
+  }
+
+  .rl-section-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: var(--cds-spacing-04);
+  }
+
+  .rl-section-kicker__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    background: color-mix(in srgb, var(--cds-link-primary) 12%, transparent);
+    color: var(--cds-link-primary);
+  }
+
+  .rl-section-kicker :global(.rl-eyebrow) {
+    margin: 0;
+  }
+
+  .rl-section-head {
+    display: grid;
+    grid-template-columns: var(--rl-grid-columns);
+    gap: var(--rl-grid-gap);
+    align-items: end;
+    margin-bottom: clamp(1.75rem, 5vw, 3.5rem);
+  }
+
+  .rl-section-head__title {
+    grid-column: span 6;
+  }
+
+  .rl-section-head__copy {
+    grid-column: 8 / span 5;
+    margin: 0;
+  }
+
+  .rl-section-heading--productive {
+    max-width: 18ch;
+    font-size: clamp(1.9rem, 4vw, 3rem);
+    line-height: 1;
+    letter-spacing: -0.035em;
+  }
+
+  .rl-hero,
+  .rl-cta-band {
+    display: grid;
+    grid-template-columns: var(--rl-grid-columns);
+    gap: var(--rl-grid-gap);
+    align-items: start;
+  }
+
+  .rl-hero__copy {
+    grid-column: span 7;
+    display: flex;
+    flex-direction: column;
+    gap: var(--cds-spacing-06);
+  }
+
+  .rl-hero__copy .rl-section-kicker {
+    margin-bottom: 0;
+  }
+
+  .rl-hero__pictogram {
+    grid-column: 9 / span 4;
+    display: flex;
+    align-items: start;
+    justify-content: center;
+    padding-top: var(--cds-spacing-09);
+    color: #161616;
+  }
+
+  .rl-hero__pictogram :global(svg) {
+    width: 160px;
+    height: 160px;
+  }
+
+  .rl-cta-band__intro {
+    grid-column: span 7;
+  }
+
+  .rl-cta-band__content {
+    grid-column: 9 / span 4;
+  }
+
+  .rl-hero {
+    color: var(--cds-text-primary);
+  }
+
+  .rl-hero__body {
+    display: grid;
+    gap: var(--cds-spacing-04);
+  }
+
+  .rl-hero__body :global(.rl-section-copy) {
+    margin: 0;
+    color: var(--cds-text-secondary);
+  }
+
+  :global(.rl-action-group) {
+    margin-top: 0;
+  }
+
+  @media (max-width: 640px) {
+    :global(.rl-action-group) {
+      flex-wrap: wrap;
+    }
+
+    :global(.rl-action-group .bx--btn) {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+
+  .rl-hero__code-row {
+    margin-top: clamp(2rem, 5vw, 3.5rem);
+  }
+
+  .rl-hero__code-panel {
+    display: grid;
+    gap: var(--cds-spacing-04);
+    padding: clamp(1.5rem, 4vw, 2rem);
+    background: var(--cds-layer);
+    color: var(--cds-text-primary);
+    border: 1px solid var(--rl-surface-border);
+    box-shadow: var(--rl-surface-shadow);
+  }
+
+  .rl-hero__panel-head {
+    display: flex;
+    gap: var(--cds-spacing-04);
+    align-items: start;
+  }
+
+  .rl-hero__panel-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: color-mix(in srgb, var(--cds-link-primary) 12%, transparent);
+    color: var(--cds-link-primary);
+  }
+
+  .rl-hero__code-panel h2 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 300;
+    line-height: 1.1;
+    color: var(--cds-text-primary);
+  }
+
+  .rl-hero__code-panel :global(.rl-eyebrow) {
+    color: var(--cds-text-secondary);
+  }
+
+  .rl-hero__code-panel pre {
+    overflow: auto;
+    margin: 0;
+    padding: var(--cds-spacing-05);
+    background: color-mix(in srgb, var(--cds-layer) 90%, var(--cds-background));
+    border: 1px solid var(--rl-surface-border);
+    color: var(--cds-text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+
+  .rl-editorial {
+    display: grid;
+    grid-template-columns: var(--rl-grid-columns);
+    gap: var(--rl-grid-gap);
+    align-items: start;
+  }
+
+  .rl-editorial__intro {
+    grid-column: span 4;
+  }
+
+  .rl-editorial__content {
+    grid-column: span 5;
+    display: grid;
+    gap: var(--cds-spacing-05);
+  }
+
+  .rl-editorial__content :global(.rl-section-copy) {
+    margin: 0;
+  }
+
+  .rl-editorial__lead {
+    margin: 0;
+    color: var(--cds-text-primary);
+    font-size: clamp(1.1rem, 2vw, 1.35rem);
+    line-height: 1.55;
+  }
+
+  .rl-editorial__aside {
+    grid-column: span 3;
+    display: grid;
+    gap: var(--cds-spacing-04);
+    padding: clamp(1.5rem, 4vw, 2rem);
+  }
+
+  .rl-editorial__aside-head {
+    display: flex;
+    gap: var(--cds-spacing-03);
+    align-items: center;
+  }
+
+  .rl-editorial__aside-icon {
+    color: var(--cds-link-primary);
+  }
+
+  .rl-editorial__aside strong {
+    display: block;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 300;
+    line-height: 0.95;
+  }
+
+  .rl-tile-grid {
+    display: grid;
+    grid-template-columns: var(--rl-grid-columns);
+    gap: var(--rl-grid-gap);
+  }
+
+  .rl-tile-grid__cell {
+    grid-column: span 4;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: var(--cds-spacing-05);
+    padding: clamp(1.25rem, 3vw, 2rem);
+    border: 1px solid var(--cds-border-subtle);
+    background: var(--cds-layer);
+    color: inherit;
+    text-decoration: none;
+    transition: background-color 120ms ease;
+  }
+
+  .rl-tile-grid__cell:hover {
+    background: var(--cds-layer-hover);
+  }
+
+  .rl-tile-grid__cell h3 {
+    margin: 0;
+    font-size: clamp(1.1rem, 1.5vw, 1.35rem);
+    font-weight: 400;
+    line-height: 1.2;
+  }
+
+  .rl-tile-grid__cell p {
+    margin: 0;
+    color: var(--cds-text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+
+  .rl-tile-grid__foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: auto;
+    color: var(--cds-link-primary);
+  }
+
+  .rl-tile-grid__pictogram {
+    color: var(--cds-icon-secondary);
+  }
+
+  .rl-tile-grid__pictogram :global(svg) {
+    width: 48px;
+    height: 48px;
+  }
+
+  @media (max-width: 800px) {
+    .rl-tile-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .rl-tile-grid__cell {
+      grid-column: span 1;
+    }
+
+    .rl-tile-grid--pricing .rl-tile-grid__cell,
+    .rl-tile-grid--release .rl-tile-grid__cell {
+      grid-column: span 1;
+    }
+  }
+
+  @media (min-width: 801px) and (max-width: 1100px) {
+    .rl-tile-grid__cell {
+      grid-column: span 6;
+    }
+  }
+
+  .rl-tile-grid__cell-head {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--cds-spacing-04);
+    align-items: start;
+  }
+
+  @media (min-width: 801px) {
+    .rl-tile-grid--proof .rl-tile-grid__cell {
+      grid-column: span 4;
+    }
+  }
+
+  .rl-tile-grid__cell--proof .rl-proof-card__metric {
+    display: block;
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    font-weight: 300;
+    line-height: 0.95;
+  }
+
+  .rl-tile-grid__cell--proof .rl-proof-card__quote {
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1.65;
+    color: var(--cds-text-primary);
+  }
+
+  .rl-tile-grid__cell--proof .rl-proof-card__person {
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  .rl-tile-grid__cell--proof .rl-proof-card__person span {
+    color: var(--cds-text-secondary);
+  }
+
+  @media (min-width: 801px) {
+    .rl-tile-grid--pricing .rl-tile-grid__cell {
+      grid-column: span 6;
+    }
+  }
+
+  .rl-tile-grid__cell--pricing {
+    grid-template-rows: auto auto auto 1fr auto;
+  }
+
+  .rl-tile-grid__cell--recommended {
+    border-color: color-mix(in srgb, var(--cds-link-primary) 32%, var(--cds-border-subtle));
+    box-shadow: inset 0 3px 0 var(--cds-link-primary);
+  }
+
+  .rl-pricing-card__head {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--cds-spacing-04);
+    align-items: start;
+  }
+
+  .rl-pricing-card__head h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 400;
+    line-height: 1.15;
+  }
+
+  .rl-pricing-card__price {
+    margin: 0;
+    font-size: clamp(2.25rem, 5vw, 3.6rem);
+    font-weight: 300;
+    line-height: 0.95;
+  }
+
+  .rl-pricing-card__list {
+    display: grid;
+    gap: var(--cds-spacing-03);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .rl-pricing-card__list li {
+    display: flex;
+    align-items: start;
+    gap: 0.55rem;
+    color: var(--cds-text-secondary);
+  }
+
+  .rl-pricing-card__list :global(svg) {
+    margin-top: 0.1rem;
+    color: var(--cds-icon-primary);
+  }
+
+  @media (min-width: 801px) {
+    .rl-tile-grid--release .rl-tile-grid__cell {
+      grid-column: span 6;
+    }
+  }
+
+  .rl-faq {
+    display: grid;
+    grid-template-columns: var(--rl-grid-columns);
+    gap: var(--rl-grid-gap);
+    align-items: start;
+  }
+
+  .rl-faq__intro {
+    grid-column: span 4;
+    position: sticky;
+    top: calc(var(--rl-section-compact) + 1rem);
+  }
+
+  .rl-faq__panel {
+    grid-column: 6 / -1;
+  }
+
+  .rl-faq__panel :global(.bx--accordion__item) {
+    border-color: var(--cds-border-subtle);
+  }
+
+  .rl-faq__panel :global(.bx--accordion__item:last-child) {
+    border-bottom: 1px solid var(--cds-border-subtle);
+  }
+
+  .rl-faq__panel :global(.bx--accordion__heading) {
+    padding: var(--cds-spacing-05) 0;
+    min-height: auto;
+  }
+
+  .rl-faq__panel :global(.bx--accordion__arrow) {
+    margin: 0;
+  }
+
+  .rl-faq__panel :global(.bx--accordion__title) {
+    color: var(--cds-text-primary);
+    font-weight: 400;
+    font-size: clamp(0.95rem, 1.2vw, 1.05rem);
+    margin-left: var(--cds-spacing-03);
+  }
+
+  .rl-faq__panel :global(.bx--accordion__content) {
+    padding-bottom: var(--cds-spacing-06);
+    padding-left: 0;
+    margin-left: calc(16px + var(--cds-spacing-03));
+  }
+
+  .rl-faq__panel :global(.bx--accordion__content p) {
+    color: var(--cds-text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    max-width: 52ch;
+  }
+
+  .rl-faq__panel :global(.bx--accordion__content p + p) {
+    margin-top: var(--cds-spacing-04);
+  }
+
+  .rl-cta-band {
+    color: var(--cds-text-primary);
+  }
+
+  .rl-cta-band__content {
+    display: grid;
+    align-content: end;
+    gap: var(--cds-spacing-05);
+  }
+
+  .rl-cta-band__content :global(.rl-section-copy) {
+    margin: 0;
+    color: var(--cds-text-secondary);
+  }
+
+  @media (max-width: 1100px) {
+    .rl-section-head__title {
+      grid-column: span 7;
+    }
+
+    .rl-section-head__copy {
+      grid-column: 8 / span 5;
+    }
+
+    .rl-editorial__intro,
+    .rl-faq__intro {
+      grid-column: span 5;
+    }
+
+    .rl-editorial__content {
+      grid-column: span 7;
+    }
+
+    .rl-faq__panel {
+      grid-column: 6 / -1;
+    }
+
+    .rl-editorial__aside {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 960px) {
+    .rl-section-head,
+    .rl-hero,
+    .rl-editorial,
+    .rl-faq,
+    .rl-cta-band {
+      grid-template-columns: 1fr;
+    }
+
+    .rl-section-head__title,
+    .rl-section-head__copy,
+    .rl-hero__copy,
+    .rl-editorial__intro,
+    .rl-editorial__content,
+    .rl-editorial__aside,
+    .rl-faq__intro,
+    .rl-faq__panel,
+    .rl-cta-band__intro,
+    .rl-cta-band__content {
+      grid-column: 1 / -1;
+    }
+
+    .rl-faq__intro {
+      position: static;
+    }
+
+    .rl-hero__pictogram {
+      display: none;
+    }
+  }
+
+  /* ── Step list ─────────────────────────────────────── */
+
+  .rl-step-list {
+    display: grid;
+    grid-template-columns: var(--rl-grid-columns);
+    gap: var(--rl-grid-gap);
+    align-items: start;
+  }
+
+  .rl-step-list__intro {
+    grid-column: span 4;
+    position: sticky;
+    top: 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--cds-spacing-05);
+  }
+
+  .rl-step-list__intro .rl-section-kicker {
+    margin-bottom: 0;
+  }
+
+  .rl-step-list__intro .rl-section-copy {
+    margin: 0;
+    color: var(--cds-text-secondary);
+  }
+
+  .rl-step-list__steps {
+    grid-column: 6 / span 7;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .rl-step-list__item {
+    display: grid;
+    grid-template-columns: 3rem 1fr;
+    gap: var(--cds-spacing-06);
+    padding: var(--cds-spacing-07) 0;
+    border-top: 1px solid var(--rl-shell-line);
+  }
+
+  .rl-step-list__number {
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: var(--cds-text-placeholder);
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rl-step-list__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cds-spacing-04);
+  }
+
+  .rl-step-list__heading {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  .rl-step-list__content .rl-section-copy {
+    margin: 0;
+  }
+
+  /* ── Compare table ─────────────────────────────────── */
+
+  .rl-compare-table {
+    border-top: 2px solid #161616;
+    font-size: 0.875rem;
+  }
+
+  .rl-compare-table__head,
+  .rl-compare-table__row {
+    display: grid;
+    grid-template-columns: minmax(7rem, 12rem) 1fr 1fr;
+  }
+
+  .rl-compare-table__head {
+    border-bottom: 1px solid var(--rl-shell-line);
+    background: var(--cds-layer);
+  }
+
+  .rl-compare-table__row {
+    border-bottom: 1px solid var(--rl-shell-line);
+  }
+
+  .rl-compare-table__row:hover {
+    background: color-mix(in srgb, var(--cds-layer) 60%, transparent);
+  }
+
+  .rl-compare-table__row-label {
+    padding: var(--cds-spacing-05) var(--cds-spacing-05) var(--cds-spacing-05) 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .rl-compare-table__row-label .rl-eyebrow {
+    margin: 0;
+    font-size: 0.6875rem;
+  }
+
+  .rl-compare-table__col {
+    padding: var(--cds-spacing-05);
+    border-left: 1px solid var(--rl-shell-line);
+  }
+
+  .rl-compare-table__col p {
+    margin: 0;
+    line-height: 1.5;
+    color: var(--cds-text-secondary);
+  }
+
+  .rl-compare-table__col--right {
+    background: color-mix(in srgb, var(--cds-link-primary) 5%, transparent);
+  }
+
+  .rl-compare-table__col--right p {
+    color: var(--cds-text-primary);
+  }
+
+  .rl-compare-table__head .rl-compare-table__col span {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.32px;
+    text-transform: uppercase;
+    color: var(--cds-text-secondary);
+  }
+
+  .rl-compare-table__head .rl-compare-table__col--right span {
+    color: var(--cds-link-primary);
+  }
+
+  /* ── Roadmap strip ─────────────────────────────────── */
+
+  .rl-roadmap {
+    border-top: 1px solid var(--rl-shell-line);
+  }
+
+  .rl-roadmap__item {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    gap: var(--cds-spacing-06);
+    padding: var(--cds-spacing-05) 0;
+    border-bottom: 1px solid var(--rl-shell-line);
+    align-items: baseline;
+  }
+
+  .rl-roadmap__status {
+    display: flex;
+    align-items: center;
+  }
+
+  .rl-roadmap__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--cds-spacing-03);
+  }
+
+  .rl-roadmap__heading {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  .rl-roadmap__body {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--cds-text-secondary);
+    line-height: 1.5;
+  }
+
+  .rl-roadmap__item[data-status="shipped"] .rl-roadmap__heading {
+    color: var(--cds-text-secondary);
+  }
+
+  @media (max-width: 860px) {
+    .rl-step-list {
+      display: block;
+    }
+
+    .rl-step-list__intro {
+      position: static;
+      margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+    }
+
+    .rl-step-list__steps {
+      grid-column: 1 / -1;
+    }
+
+    .rl-compare-table__head,
+    .rl-compare-table__row {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .rl-compare-table__row-label {
+      display: none;
+    }
+
+    .rl-roadmap__item {
+      grid-template-columns: 7rem 1fr;
+      gap: var(--cds-spacing-04);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .rl-compare-table__head,
+    .rl-compare-table__row {
+      grid-template-columns: 1fr;
+    }
+
+    .rl-compare-table__col--left {
+      display: none;
+    }
+
+    .rl-compare-table__head .rl-compare-table__col--right {
+      border-left: none;
+    }
+
+    .rl-roadmap__item {
+      grid-template-columns: 1fr;
+      gap: var(--cds-spacing-03);
+    }
+  }
+</style>
