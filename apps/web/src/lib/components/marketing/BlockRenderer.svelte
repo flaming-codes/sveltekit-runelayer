@@ -236,7 +236,7 @@
               <Button
                 expressive
                 size="xl"
-                kind={actionKind(tone, "secondary")}
+                kind="secondary"
                 icon={actionIcon(asText(block.secondaryUrl))}
                 href={asText(block.secondaryUrl)}
                 {...linkProps(asText(block.secondaryUrl))}
@@ -1068,6 +1068,11 @@
     .rl-tile-grid__cell {
       grid-column: span 1;
     }
+
+    .rl-tile-grid--pricing .rl-tile-grid__cell,
+    .rl-tile-grid--release .rl-tile-grid__cell {
+      grid-column: span 1;
+    }
   }
 
   @media (min-width: 801px) and (max-width: 1100px) {
@@ -1083,8 +1088,10 @@
     align-items: start;
   }
 
-  .rl-tile-grid--proof .rl-tile-grid__cell {
-    grid-column: span 4;
+  @media (min-width: 801px) {
+    .rl-tile-grid--proof .rl-tile-grid__cell {
+      grid-column: span 4;
+    }
   }
 
   .rl-tile-grid__cell--proof .rl-proof-card__metric {
@@ -1110,8 +1117,10 @@
     color: var(--cds-text-secondary);
   }
 
-  .rl-tile-grid--pricing .rl-tile-grid__cell {
-    grid-column: span 6;
+  @media (min-width: 801px) {
+    .rl-tile-grid--pricing .rl-tile-grid__cell {
+      grid-column: span 6;
+    }
   }
 
   .rl-tile-grid__cell--pricing {
@@ -1164,8 +1173,10 @@
     color: var(--cds-icon-primary);
   }
 
-  .rl-tile-grid--release .rl-tile-grid__cell {
-    grid-column: span 6;
+  @media (min-width: 801px) {
+    .rl-tile-grid--release .rl-tile-grid__cell {
+      grid-column: span 6;
+    }
   }
 
   .rl-faq {
@@ -1296,11 +1307,6 @@
 
     .rl-hero__pictogram {
       display: none;
-    }
-
-    .rl-tile-grid--pricing .rl-tile-grid__cell,
-    .rl-tile-grid--release .rl-tile-grid__cell {
-      grid-column: span 1;
     }
   }
 
