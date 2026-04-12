@@ -901,6 +901,17 @@
     margin-top: 0;
   }
 
+  @media (max-width: 640px) {
+    :global(.rl-action-group) {
+      flex-wrap: wrap;
+    }
+
+    :global(.rl-action-group .bx--btn) {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+
   .rl-hero__code-row {
     margin-top: clamp(2rem, 5vw, 3.5rem);
   }

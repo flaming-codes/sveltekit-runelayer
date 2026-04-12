@@ -69,7 +69,7 @@ async function seedCollections(app: RunelayerApp) {
   const features = [
     feature(
       "Schema drives everything",
-      "Code",
+      "ReferenceArchitecture",
       "Collections and blocks define the database, admin editors, validation rules, and public rendering in one place.",
       "Core",
       "/platform",
@@ -77,7 +77,7 @@ async function seedCollections(app: RunelayerApp) {
     ),
     feature(
       "Admin included",
-      "Application",
+      "Dashboard",
       "Route wiring, authentication, version history, and collection editors ship inside the package instead of becoming a second project.",
       "Ops",
       "/platform",
@@ -85,7 +85,7 @@ async function seedCollections(app: RunelayerApp) {
     ),
     feature(
       "SvelteKit-native runtime",
-      "CloudApp",
+      "Embed",
       "Runelayer runs inside the host Node process, shares the app's auth context, and keeps deployment simple for product teams.",
       "Infra",
       "/docs",
@@ -93,7 +93,7 @@ async function seedCollections(app: RunelayerApp) {
     ),
     feature(
       "Carbon-shaped authoring",
-      "Catalog",
+      "ContentDesign",
       "Structured layouts, measured spacing, and expressive typography keep the admin and public site speaking the same visual language.",
       "Design",
       "/docs",
